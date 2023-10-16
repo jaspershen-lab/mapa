@@ -1,11 +1,20 @@
 Package: mapa
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Moudule Annotation for Pathway Enrichment Analysis Result
 Version: 0.1.0
-Author: Who wrote it
+Date: 2023-10-15
+Authors@R: c(
+    person(given = "Xiaotao",
+           family = "Shen",
+           role = c("aut", "cre"),
+           email = "shenxt1990@outlook.com",
+           comment = c(ORCID = "0000-0002-9608-9964")),
+        person(given = "Chuchu",
+           family = "Wang",
+           role = c("aut", "ctb"))
+           )
 Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Description: Moudule Annotation for Pathway Enrichment Analysis Result
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
