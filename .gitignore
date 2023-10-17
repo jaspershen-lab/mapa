@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+
+demo_data
+demo_data/
+
+logo.txt

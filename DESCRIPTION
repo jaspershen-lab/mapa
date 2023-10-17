@@ -13,8 +13,59 @@ Authors@R: c(
            family = "Wang",
            role = c("aut", "ctb"))
            )
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: Moudule Annotation for Pathway Enrichment Analysis Result
+Description: Moudule Annotation for Pathway Enrichment Analysis Result.
+    This is used for transcriptomics and proteomics data.
+URL: https://github.com/jaspershen/mapa
+BugReports: https://github.com/jaspershen/mapa/issues
+Depends: R (>= 4.1)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+VignetteBuilder: knitr
+Imports: 
+    dplyr,
+    magrittr,
+    tibble,
+    rstudioapi,
+    ggplot2,
+    methods,
+    openxlsx,
+    crayon,
+    cli,
+    purrr,
+    massdataset,
+    grid,
+    stats,
+    utils,
+    tidyr,
+    GOSim,
+    ReactomePA,
+    clusterProfiler,
+    extrafont,
+    ggraph,
+    ggsci,
+    igraph,
+    pRoloc,
+    patchwork,
+    plyr,
+    simplifyEnrichment,
+    stringr,
+    tidygraph,
+    ggwordcloud
+Suggests: 
+    knitr,
+    rmarkdown,
+    BiocStyle,
+    RUnit,
+    BiocGenerics,
+    tidyverse,
+    testthat (>= 3.0.0),
+    ggplotify,
+    plotly
+Note:
+Remotes: 
+    gitlab::tidymass/massdataset
+biocViews: transcriptomics, proteomics
+Config/testthat/edition: 3

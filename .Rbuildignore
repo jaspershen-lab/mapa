@@ -1,3 +1,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+
+
+demo_data
+demo_data/
+
+logo.txt
