@@ -18,11 +18,18 @@
 #' @importFrom utils read.table
 #' @importFrom tibble add_column
 #' @importFrom magrittr %>%
-#' @importFrom tidygraph activate
+#' @importFrom tidygraph activate tbl_graph centrality_degree as_tbl_graph
 #' @importFrom stringr str_wrap
 #' @importFrom ggwordcloud geom_text_wordcloud
+#' @importFrom pRoloc goIdToTerm
+#' @importFrom GOSim getGOGraph
+#' @importFrom grid arrow
+#' @importFrom extrafont loadfonts
 #' @import ggraph
 #' @import igraph
+#' @importFrom plyr dlply .
+#' @import patchwork
+#' @importClassesFrom massdataset tidymass_parameter
 #' @export
 #' @examples
 #' mapa_logo()

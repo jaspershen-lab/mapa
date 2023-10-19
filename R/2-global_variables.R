@@ -38,5 +38,6 @@ globalVariables(names = c(
   "annotation",
   "from",
   "r",
-  "marker"
+  "marker",
+  "module_content_number"
 ))

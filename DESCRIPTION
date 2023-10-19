@@ -45,7 +45,6 @@ Imports:
     clusterProfiler,
     extrafont,
     ggraph,
-    ggsci,
     igraph,
     pRoloc,
     patchwork,

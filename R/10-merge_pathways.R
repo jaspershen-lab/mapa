@@ -6,75 +6,228 @@
 # library(tidyverse)
 # library(extrafont)
 # library(simplifyEnrichment)
-# library(plyr)
-# library(openxlsx)
-# library(ggwordcloud)
-# library(patchwork)
 # library(pRoloc)
 # library(GOSim)
 #
-# load("result/enrichment_go_result")
-# load("result/enrichment_kegg_result")
-# load("result/enrichment_reactome_result")
+# load("result/enriched_pathways")
 #
-# merge_pathways(pathway_result = enrichment_go_result,
-#                p.adjust.cutoff = 0.05,
-#                count.cutoff = 5,
-#                database = "go",
-#                sim.cutoff = 0.5,
-#                measure_method = "Wang",
-#                path = "result")
+# modules <-
+#   merge_pathways(
+#     object = enriched_pathways,
+#     p.adjust.cutoff.go = 0.05,
+#     p.adjust.cutoff.kegg = 0.05,
+#     p.adjust.cutoff.reactome = 0.05,
+#     count.cutoff.go = 5,
+#     count.cutoff.kegg = 5,
+#     count.cutoff.reactome = 5,
+#     sim.cutoff.go = 0.5,
+#     sim.cutoff.kegg = 0.5,
+#     sim.cutoff.reactome = 0.5,
+#     measure.method.go = "Wang",
+#     measure.method.kegg = "jaccard",
+#     measure.method.reactome = "jaccard",
+#     path = "result",
+#     save_to_local = FALSE
+#   )
 #
-# merge_pathways(pathway_result = enrichment_kegg_result,
-#                p.adjust.cutoff = 0.05,
-#                count.cutoff = 5,
-#                database = "kegg",
-#                sim.cutoff = 0.5,
-#                path = "result")
-#
-# merge_pathways(pathway_result = enrichment_reactome_result,
-#                p.adjust.cutoff = 0.05,
-#                count.cutoff = 5,
-#                database = "reactome",
-#                sim.cutoff = 0.5,
-#                path = "result")
+# save(modules, file = "result/modules")
 
-#' Merge Pathways and Analyze Semantic Similarity
+
+#' Merge Pathways from Multiple Databases
 #'
-#' This function performs a merging of pathways from enrichment analysis, calculates
-#' semantic similarity among terms, and identifies modules within the pathways.
-#' It also generates various plots and outputs results into organized files.
+#' This function merges pathway enrichment results from multiple databases (GO, KEGG, and Reactome)
+#' into a single object. The function takes an object of class "functional_module" and various
+#' parameters to filter and compute similarity measures.
 #'
-#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
-#' @param pathway_result A result object from pathway enrichment analysis.
-#' @param p.adjust.cutoff A numeric value for the adjusted p-value cutoff (default: 0.05).
-#' @param count.cutoff A numeric value for the count cutoff (default: 5).
-#' @param database A character vector specifying the database (default: c("go", "kegg", "reactome")).
-#' @param sim.cutoff A numeric value for the similarity cutoff (default: 0.5).
-#' @param measure_method A character vector specifying the similarity measure method (default: c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard")).
-#' @param path A character string specifying the path for result output (default: "result").
-#' @return NULL. Results are written to files.
+#' @param object An object of class "functional_module", typically a result from enrich_pathway function.
+#' @param p.adjust.cutoff.go Adjusted p-value cutoff for GO database. Default is 0.05.
+#' @param p.adjust.cutoff.kegg Adjusted p-value cutoff for KEGG database. Default is 0.05.
+#' @param p.adjust.cutoff.reactome Adjusted p-value cutoff for Reactome database. Default is 0.05.
+#' @param count.cutoff.go Count cutoff for GO database. Default is 5.
+#' @param count.cutoff.kegg Count cutoff for KEGG database. Default is 5.
+#' @param count.cutoff.reactome Count cutoff for Reactome database. Default is 5.
+#' @param sim.cutoff.go Similarity cutoff for GO database. Default is 0.5.
+#' @param sim.cutoff.kegg Similarity cutoff for KEGG database. Default is 0.5.
+#' @param sim.cutoff.reactome Similarity cutoff for Reactome database. Default is 0.5.
+#' @param measure.method.go A character vector specifying the similarity measure method for GO. Choices are "Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard". Default is "Wang".
+#' @param measure.method.kegg A character vector specifying the similarity measure method for KEGG. Default is "jaccard".
+#' @param measure.method.reactome A character vector specifying the similarity measure method for Reactome. Default is "jaccard".
+#' @param path Directory path to save the results. Default is "result".
+#' @param save_to_local Logical, if TRUE the results will be saved to local disk.
+#'
+#' @return An object of class "functional_module" with slots for merged pathways from each database.
+#'
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
-#' @examples
-#' \dontrun{
-#' # Assuming `pathway_result` is the result from your pathway enrichment analysis.
-#' merge_pathways(pathway_result = pathway_result)
-#' }
 #' @export
+#'
 
 merge_pathways <-
+  function(object,
+           p.adjust.cutoff.go = 0.05,
+           p.adjust.cutoff.kegg = 0.05,
+           p.adjust.cutoff.reactome = 0.05,
+           count.cutoff.go = 5,
+           count.cutoff.kegg = 5,
+           count.cutoff.reactome = 5,
+           sim.cutoff.go = 0.5,
+           sim.cutoff.kegg = 0.5,
+           sim.cutoff.reactome = 0.5,
+           measure.method.go = c("Wang", "Resnik",
+                                 "Rel", "Jiang",
+                                 "Lin", "TCSS",
+                                 "jaccard"),
+           measure.method.kegg = c("jaccard"),
+           measure.method.reactome = c("jaccard"),
+           path = "result",
+           save_to_local = FALSE) {
+    measure.method.go <-
+      match.arg(measure.method.go)
+    measure.method.kegg <-
+      match.arg(measure.method.kegg)
+    measure.method.reactome <-
+      match.arg(measure.method.reactome)
+
+    if (missing(object)) {
+      stop("object is required")
+    }
+
+    if (!is(object, "functional_module")) {
+      stop("object must be result from enrich_pathway function")
+    }
+
+    if (save_to_local) {
+      dir.create(path, recursive = TRUE, showWarnings = FALSE)
+    }
+    ###GO database
+    message("GO database...")
+    merged_pathway_go <-
+      merge_pathways_internal(
+        pathway_result = object@enrichment_go_result,
+        p.adjust.cutoff = p.adjust.cutoff.go,
+        count.cutoff = count.cutoff.go,
+        database = "go",
+        sim.cutoff = sim.cutoff.go,
+        measure.method = measure.method.go,
+        path = path,
+        save_to_local = save_to_local
+      )
+    ###KEGG database
+    message("KEGG database...")
+    merged_pathway_kegg <-
+      merge_pathways_internal(
+        pathway_result = object@enrichment_kegg_result,
+        p.adjust.cutoff = p.adjust.cutoff.kegg,
+        count.cutoff = count.cutoff.kegg,
+        database = "kegg",
+        sim.cutoff = sim.cutoff.kegg,
+        measure.method = measure.method.kegg,
+        path = path,
+        save_to_local = save_to_local
+      )
+
+    ###Reactome database
+    message("Reactome database...")
+    merged_pathway_reactome <-
+      merge_pathways_internal(
+        pathway_result = object@enrichment_reactome_result,
+        p.adjust.cutoff = p.adjust.cutoff.reactome,
+        count.cutoff = count.cutoff.reactome,
+        database = "reactome",
+        sim.cutoff = sim.cutoff.reactome,
+        measure.method = measure.method.reactome,
+        path = path,
+        save_to_local = save_to_local
+      )
+
+    slot(object, "merged_pathway_go") <-
+      merged_pathway_go
+    slot(object, "merged_pathway_kegg") <-
+      merged_pathway_kegg
+    slot(object, "merged_pathway_reactome") <-
+      merged_pathway_reactome
+    slot(object, "merged_module") <-
+      list()
+
+    parameter = new(
+      Class = "tidymass_parameter",
+      pacakge_name = "mapa",
+      function_name = "merge_pathways()",
+      parameter = list(
+        p.adjust.cutoff.go = p.adjust.cutoff.go,
+        p.adjust.cutoff.kegg = p.adjust.cutoff.kegg,
+        p.adjust.cutoff.reactome = p.adjust.cutoff.reactome,
+        count.cutoff.go = count.cutoff.go,
+        count.cutoff.kegg = count.cutoff.kegg,
+        count.cutoff.reactome = count.cutoff.reactome,
+        sim.cutoff.go = sim.cutoff.go,
+        sim.cutoff.kegg = sim.cutoff.kegg,
+        sim.cutoff.reactome = sim.cutoff.reactome,
+        measure.method.go = measure.method.go,
+        measure.method.kegg = measure.method.kegg,
+        measure.method.reactome = measure.method.reactome,
+        path = path
+      ),
+      time = Sys.time()
+    )
+
+    process_info <-
+      slot(object, "process_info")
+
+    process_info$merge_pathways <-
+      parameter
+
+    slot(object, "process_info") <-
+      process_info
+
+    message("\nDone")
+
+    object
+  }
+
+
+
+
+#' Merge Pathway Enrichment Results Internally
+#'
+#' This function merges pathway enrichment results obtained through various databases (GO, KEGG, Reactome).
+#' It applies similarity measures to find closely related pathways and categorizes them into modules.
+#'
+#' @param pathway_result A required object containing results from the `enrich_pathway` function.
+#' @param p.adjust.cutoff Numeric, p-adjusted value cutoff for filtering enriched pathways.
+#' @param count.cutoff Numeric, count cutoff for filtering enriched pathways.
+#' @param database Character vector, the database from which the enrichment results were obtained ('go', 'kegg', 'reactome').
+#' @param sim.cutoff Numeric, similarity cutoff for clustering pathways.
+#' @param measure.method Character, method for calculating term similarity.
+#' @param path Character, directory to save intermediate and final results.
+#' @param save_to_local Logical, if TRUE the results will be saved to local disk.
+#'
+#' @return A list containing `graph_data`, `module_result`, and `result_with_module`.
+#'
+#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
+#'
+#' @examples
+#' \dontrun{
+#' # Load pathway results obtained through `enrich_pathway` function
+#' pathway_results <- load_pathway_results("path/to/results")
+#'
+#' # Merge pathways and find modules
+#' merged_results <- merge_pathways_internal(pathway_result = pathway_results)
+#'}
+
+merge_pathways_internal <-
   function(pathway_result,
            p.adjust.cutoff = 0.05,
            count.cutoff = 5,
            database = c("go", "kegg", "reactome"),
            sim.cutoff = 0.5,
-           measure_method = c("Wang", "Resnik",
+           measure.method = c("Wang", "Resnik",
                               "Rel", "Jiang",
                               "Lin", "TCSS",
                               "jaccard"),
-           path = "result") {
-    measure_method <-
-      match.arg(measure_method)
+           path = "result",
+           save_to_local = FALSE) {
+    measure.method <-
+      match.arg(measure.method)
     database <- match.arg(database)
     path <- file.path(path, database)
 
@@ -86,13 +239,14 @@ merge_pathways <-
       stop("pathway_result must be result from enrich_pathway function")
     }
 
-    dir.create(path, recursive = TRUE, showWarnings = FALSE)
-
-    dir.create(
-      file.path(path, "intermediate_data"),
-      showWarnings = FALSE,
-      recursive = TRUE
-    )
+    if (save_to_local) {
+      dir.create(path, recursive = TRUE, showWarnings = FALSE)
+      dir.create(
+        file.path(path, "intermediate_data"),
+        showWarnings = FALSE,
+        recursive = TRUE
+      )
+    }
 
     result <-
       pathway_result@result %>%
@@ -105,200 +259,102 @@ merge_pathways <-
     }
 
     ##get the similartiy matrix
-    ######get the similarity between GO terms
     message("Calculating similartiy matrix, it may take a while...")
+    if (database == "go") {
+      sim_matrix <-
+        get_go_result_sim(
+          result = result,
+          sim.cutoff = sim.cutoff,
+          measure.method = measure.method
+        )
+    }
 
-    if (any(dir(file.path(path, "intermediate_data")) == "sim_matrix")) {
-      load(file.path(path, "intermediate_data/sim_matrix"))
-    } else{
-      if (database == "go") {
-        sim_matrix <-
-          get_go_result_sim(
-            result = result,
-            sim.cutoff = sim.cutoff,
-            measure_method = measure_method
-          )
-      }
+    if (database == "kegg") {
+      sim_matrix <-
+        tryCatch(
+          sim_matrix <-
+            simplifyEnrichment::term_similarity_from_KEGG(term_id = c(result$ID),
+                                                          method = "jaccard") %>%
+            as.data.frame() %>%
+            tibble::rownames_to_column(var = "name1") %>%
+            tidyr::pivot_longer(
+              cols = -name1,
+              names_to = "name2",
+              values_to = "sim"
+            ) %>%
+            dplyr::filter(name1 != name2),
+          error = function(x) {
+            data.frame(name1 = character(),
+                       name2 = character(),
+                       sim = numeric())
+          }
+        )
+    }
 
-      if (database == "kegg") {
-        sim_matrix <-
-          tryCatch(
-            sim_matrix <-
-              simplifyEnrichment::term_similarity_from_KEGG(term_id = c(result$ID),
-                                                            method = "jaccard") %>%
-              as.data.frame() %>%
-              tibble::rownames_to_column(var = "name1") %>%
-              tidyr::pivot_longer(
-                cols = -name1,
-                names_to = "name2",
-                values_to = "sim"
-              ) %>%
-              dplyr::filter(name1 != name2),
-            error = function(x) {
-              data.frame(name1 = character(),
-                         name2 = character(),
-                         sim = numeric())
-            }
-          )
-      }
+    if (database == "reactome") {
+      sim_matrix <-
+        tryCatch(
+          sim_matrix <-
+            simplifyEnrichment::term_similarity_from_Reactome(term_id = c(result$ID),
+                                                              method = "jaccard") %>%
+            as.data.frame() %>%
+            tibble::rownames_to_column(var = "name1") %>%
+            tidyr::pivot_longer(
+              cols = -name1,
+              names_to = "name2",
+              values_to = "sim"
+            ) %>%
+            dplyr::filter(name1 != name2),
+          error = function(x) {
+            data.frame(name1 = character(),
+                       name2 = character(),
+                       sim = numeric())
+          }
+        )
+    }
 
-      if (database == "reactome") {
-        sim_matrix <-
-          tryCatch(
-            sim_matrix <-
-              simplifyEnrichment::term_similarity_from_Reactome(term_id = c(result$ID),
-                                                                method = "jaccard") %>%
-              as.data.frame() %>%
-              tibble::rownames_to_column(var = "name1") %>%
-              tidyr::pivot_longer(
-                cols = -name1,
-                names_to = "name2",
-                values_to = "sim"
-              ) %>%
-              dplyr::filter(name1 != name2),
-            error = function(x) {
-              data.frame(name1 = character(),
-                         name2 = character(),
-                         sim = numeric())
-            }
-          )
-      }
-
-      save(sim_matrix, file = file.path(path, "intermediate_data/sim_matrix"))
+    if (save_to_local) {
+      save(sim_matrix,
+           file = file.path(path, "intermediate_data/sim_matrix"))
     }
 
     ####module detection
     message("Identifying modules...")
 
-    if (any(dir(file.path(path, "intermediate_data")) == "graph_data")) {
-      load(file.path(path, "intermediate_data/graph_data"))
-    } else{
-      edge_data <-
-        rbind(sim_matrix) %>%
-        dplyr::rename(from = name1, to = name2) %>%
-        dplyr::filter(sim > sim.cutoff)
+    edge_data <-
+      rbind(sim_matrix) %>%
+      dplyr::rename(from = name1, to = name2) %>%
+      dplyr::filter(sim > sim.cutoff)
 
-      node_data <-
-        rbind(result) %>%
-        as.data.frame() %>%
-        dplyr::select(ID, everything()) %>%
-        dplyr::rename(node = ID)
+    node_data <-
+      rbind(result) %>%
+      as.data.frame() %>%
+      dplyr::select(ID, everything()) %>%
+      dplyr::rename(node = ID)
 
-      graph_data <-
-        tidygraph::tbl_graph(nodes = node_data,
-                             edges = edge_data,
-                             directed = FALSE) %>%
-        dplyr::mutate(degree = tidygraph::centrality_degree())
+    graph_data <-
+      tidygraph::tbl_graph(nodes = node_data,
+                           edges = edge_data,
+                           directed = FALSE) %>%
+      dplyr::mutate(degree = tidygraph::centrality_degree())
 
-      subnetwork <-
-        igraph::cluster_edge_betweenness(graph = graph_data,
-                                         weights = abs(edge_attr(graph_data,
-                                                                 "sim")))
+    subnetwork <-
+      igraph::cluster_edge_betweenness(graph = graph_data,
+                                       weights = abs(edge_attr(graph_data,
+                                                               "sim")))
 
-      # save(subnetwork, file = file.path(path, "subnetwork"))
-      cluster <-
-        paste(database,
-              "Module",
-              as.character(igraph::membership(subnetwork)),
-              sep = "_")
+    # save(subnetwork, file = file.path(path, "subnetwork"))
+    cluster <-
+      paste(database,
+            "Module",
+            as.character(igraph::membership(subnetwork)),
+            sep = "_")
 
-      graph_data <-
-        graph_data %>%
-        tidygraph::mutate(module = cluster)
-
-      ###clustered different GO terms
-      result_with_module <-
-        igraph::vertex_attr(graph_data) %>%
-        do.call(cbind, .) %>%
-        as.data.frame() %>%
-        dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
-        dplyr::arrange(module, p.adjust)
-
-      if (database == "go") {
-        result_with_module <-
-          result_with_module %>%
-          dplyr::arrange(ONTOLOGY, module, p.adjust)
-      }
-
-      ###add module content number
-      module_content_number <-
-        result_with_module %>%
-        dplyr::count(module) %>%
-        dplyr::rename(module_content_number = n)
-
-      result_with_module <-
-        result_with_module %>%
-        dplyr::left_join(module_content_number, by = "module")
-
-      save(result_with_module,
-           file = file.path(path, "intermediate_data/result_with_module"))
-      graph_data <-
-        graph_data %>%
-        activate(what = "nodes") %>%
-        dplyr::left_join(module_content_number, by = "module")
-
-      save(graph_data, file = file.path(path, "intermediate_data/graph_data"))
-    }
-
-    ###plot to show the clusters of GO terms
-    cluster_label_module <-
-      igraph::as_data_frame(graph_data, what = "vertices") %>%
-      dplyr::group_by(module) %>%
-      dplyr::filter(p.adjust == min(p.adjust) &
-                      Count == max(Count)) %>%
-      dplyr::slice_head(n = 1) %>%
-      pull(Description)
-
-    cluster_label_all <-
-      igraph::as_data_frame(graph_data, what = "vertices")$Description
-
-    plot <-
+    graph_data <-
       graph_data %>%
-      ggraph(layout = 'fr',
-             circular = FALSE) +
-      geom_edge_link(
-        aes(width = sim),
-        strength = 1,
-        color = "black",
-        alpha = 1,
-        show.legend = TRUE
-      ) +
-      geom_node_point(
-        aes(fill = module,
-            size = -log(p.adjust, 10)),
-        shape = 21,
-        alpha = 1,
-        show.legend = TRUE
-      ) +
-      geom_node_text(aes(
-        x = x,
-        y = y,
-        label = ifelse(Description %in% cluster_label_module, Description, NA)
-      ),
-      size = 3,
-      repel = TRUE) +
-      guides(fill = guide_legend(ncol = 1)) +
-      scale_edge_width_continuous(range = c(0.1, 2)) +
-      scale_size_continuous(range = c(1, 7)) +
-      ggraph::theme_graph() +
-      theme(
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.background = element_rect(fill = "transparent", color = NA),
-        legend.position = "right",
-        legend.background = element_rect(fill = "transparent", color = NA)
-      )
+      mutate(module = cluster)
 
-    extrafont::loadfonts()
-
-    ggplot2::ggsave(
-      plot,
-      filename =
-        file.path(path, "similarity_network_plot.pdf"),
-      width = 9,
-      height = 7
-    )
-
-    ###output some files
+    ###clustered different GO terms
     result_with_module <-
       igraph::vertex_attr(graph_data) %>%
       do.call(cbind, .) %>%
@@ -310,6 +366,28 @@ merge_pathways <-
       result_with_module <-
         result_with_module %>%
         dplyr::arrange(ONTOLOGY, module, p.adjust)
+    }
+
+    ###add module content number
+    module_content_number <-
+      result_with_module %>%
+      dplyr::count(module) %>%
+      dplyr::rename(module_content_number = n)
+
+    result_with_module <-
+      result_with_module %>%
+      dplyr::left_join(module_content_number, by = "module")
+
+    graph_data <-
+      graph_data %>%
+      activate(what = "nodes") %>%
+      dplyr::left_join(module_content_number, by = "module")
+
+    if (save_to_local) {
+      save(result_with_module,
+           file = file.path(path, "intermediate_data/result_with_module"))
+      save(graph_data,
+           file = file.path(path, "intermediate_data/graph_data"))
     }
 
     module_result <-
@@ -374,271 +452,28 @@ merge_pathways <-
       }) %>%
       unlist()
 
-    save(module_result,
-         file = file.path(path, "intermediate_data/module_result"))
+    module_result$Count <-
+      as.numeric(module_result$Count)
 
-    wb = openxlsx::createWorkbook()
-    openxlsx::modifyBaseFont(wb, fontSize = 12, fontName = "Times New Roma")
-    addWorksheet(wb, sheetName = "enriched_pathway_result", gridLines = TRUE)
-    addWorksheet(wb, sheetName = "enriched_module_result", gridLines = TRUE)
-    freezePane(wb,
-               sheet = 1,
-               firstRow = TRUE,
-               firstCol = TRUE)
-    freezePane(wb,
-               sheet = 2,
-               firstRow = TRUE,
-               firstCol = TRUE)
-    writeDataTable(
-      wb,
-      sheet = 1,
-      x = result_with_module,
-      colNames = TRUE,
-      rowNames = FALSE
-    )
+    module_result$p.adjust <-
+      as.numeric(module_result$p.adjust)
 
-    writeDataTable(
-      wb,
-      sheet = 2,
-      x = module_result,
-      colNames = TRUE,
-      rowNames = FALSE
-    )
+    module_result$qvalue <-
+      as.numeric(module_result$qvalue)
 
-    saveWorkbook(wb,
-                 file = file.path(path, "enriched_result.xlsx"),
-                 overwrite = TRUE)
+    module_result$degree <-
+      as.numeric(module_result$degree)
 
-
-    ####output some results
-    dir.create(
-      file.path(path, "Similarity_plot"),
-      recursive = TRUE,
-      showWarnings = FALSE
-    )
-
-    message("Output module plot...")
-
-    for (temp_cluster in unique(result_with_module$module)) {
-      cat(temp_cluster, " ")
-
-      if (sum(result_with_module$module == temp_cluster) == 1) {
-        next()
-      }
-
-      plot1 <-
-        graph_data %>%
-        tidygraph::filter(module == temp_cluster) %>%
-        ggraph(layout = 'fr',
-               circular = FALSE) +
-        geom_edge_link(
-          aes(width = sim),
-          color = "black",
-          alpha = 1,
-          show.legend = TRUE
-        ) +
-        geom_node_point(
-          aes(fill = -log(p.adjust, 10),
-              size = Count),
-          shape = 21,
-          alpha = 1,
-          show.legend = TRUE
-        ) +
-        geom_node_text(aes(x = x,
-                           y = y,
-                           label = Description),
-                       check_overlap = TRUE) +
-        guides(fill = guide_legend(ncol = 1)) +
-        scale_edge_width_continuous(range = c(0.1, 2)) +
-        scale_size_continuous(range = c(3, 10)) +
-        ggraph::theme_graph() +
-        theme(
-          plot.background = element_rect(fill = "transparent", color = NA),
-          panel.background = element_rect(fill = "transparent", color = NA),
-          legend.position = "left",
-          legend.background = element_rect(fill = "transparent", color = NA)
-        )
-
-      plot2 <-
-        result_with_module %>%
-        dplyr::filter(module == temp_cluster) %>%
-        dplyr::mutate(p.adjust = -log(as.numeric(p.adjust, 10))) %>%
-        dplyr::arrange(p.adjust) %>%
-        dplyr::mutate(Description = factor(Description, levels = Description)) %>%
-        ggplot(aes(p.adjust, Description)) +
-        geom_bar(stat = "identity", fill = "black") +
-        geom_text(
-          aes(x = 0, Description, label = Description),
-          hjust = 0,
-          size = 5,
-          color = "red"
-        ) +
-        theme_bw() +
-        labs(y = "", x = "-log10(FDR adjusted P value)") +
-        scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-        theme(
-          panel.grid = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank()
-        )
-
-      temp_data =
-        result_with_module %>%
-        dplyr::filter(module == temp_cluster) %>%
-        dplyr::mutate(p.adjust = -log(as.numeric(p.adjust, 10))) %>%
-        dplyr::select(Description, p.adjust) %>%
-        dplyr::mutate(Description = stringr::str_replace_all(Description, ",", "")) %>%
-        plyr::dlply(.variables = .(Description)) %>%
-        purrr::map(function(x) {
-          data.frame(
-            word = stringr::str_split(x$Description, " ")[[1]],
-            p.adjust = x$p.adjust
-          )
-        }) %>%
-        do.call(rbind, .) %>%
-        as.data.frame() %>%
-        plyr::dlply(.variables = .(word)) %>%
-        purrr::map(function(x) {
-          x$p.adjust <- sum(x$p.adjust)
-          x %>%
-            dplyr::distinct(word, .keep_all = TRUE)
-        }) %>%
-        do.call(rbind, .) %>%
-        as.data.frame() %>%
-        dplyr::filter(!word %in% remove_words)
-
-      plot3 =
-        temp_data %>%
-        ggplot(aes(label = word, size = p.adjust)) +
-        ggwordcloud::geom_text_wordcloud() +
-        scale_radius(range = c(5, 15), limits = c(0, NA)) +
-        theme_minimal()
-
-      plot <-
-        plot1 + plot2 + plot3 + patchwork::plot_layout(nrow = 1)
-
-      ggsave(
-        plot,
-        filename = file.path(
-          path,
-          "Similarity_plot",
-          paste(temp_cluster, "sim_plot.pdf", sep = "_")
-        ),
-        width = 21,
-        height = 7
-      )
+    if (save_to_local) {
+      save(module_result,
+           file = file.path(path, "intermediate_data/module_result"))
     }
 
-
-    # ##matrix tow show the cluster GO terms
-    # result_with_module %>%
-    #   dplyr::group_by(ONTOLOGY) %>%
-    #   dplyr::summarise(n = n()) %>%
-    #   dplyr::mutate(n = n * 10 / max(n) + 2)
-    #output the correlation matrix
-
-    # if(database == "go"){
-    #   message("Output correlation matrix plot...")
-    #   for(ont in c('MF', "BP", "CC")) {
-    #     cat(ont, " ")
-    #     show_matrix_cluster(
-    #       result = result_with_module %>% dplyr::mutate(Direction = "UP"),
-    #       ont = ont,
-    #       measure = "Wang",
-    #       remove_words = remove_words,
-    #       margin = 15,
-    #       width = 14,
-    #       height = 8,
-    #       path = path,
-    #       top = 15
-    #     )
-    #   }
-    # }
-
-    ###output the cluster annotation for each cluster
-    if (database == "go") {
-      dir.create(file.path(path, "GO_module_graph"), showWarnings = FALSE)
-
-      unique(module_result$module) %>%
-        purrr::map(
-          .f = function(x) {
-            cat(x, " ")
-            number <- module_result %>%
-              dplyr::filter(module == x) %>%
-              pull(module_content_number) %>%
-              as.numeric()
-            if (number == 1) {
-              return(NULL)
-            }
-
-            temp_id <-
-              module_result %>%
-              dplyr::filter(module == x) %>%
-              dplyr::pull(node) %>%
-              stringr::str_split(";") %>%
-              `[[`(1) %>%
-              pRoloc::goIdToTerm(keepNA = FALSE) %>%
-              data.frame(id = ., class = "YES") %>%
-              tibble::rownames_to_column(var = "name")
-
-            temp_plot =
-              GOSim::getGOGraph(term = temp_id$name, prune = Inf) %>%
-              igraph::igraph.from.graphNEL() %>%
-              tidygraph::as_tbl_graph() %>%
-              tidygraph::left_join(temp_id, by = "name") %>%
-              dplyr::mutate(class = case_when(is.na(class) ~ "NO",
-                                              TRUE ~ class))
-
-            plot =
-              temp_plot %>%
-              ggraph(layout = 'kk',
-                     circular = FALSE) +
-              geom_edge_link(
-                color = ggsci::pal_aaas()(n = 10)[1],
-                alpha = 1,
-                arrow = grid::arrow(
-                  angle = 10,
-                  length = unit(0.2, "inches"),
-                  type = "closed"
-                ),
-                show.legend = FALSE
-              ) +
-              geom_node_point(
-                aes(fill = class),
-                shape = 21,
-                alpha = 1,
-                size = 6,
-                show.legend = FALSE
-              ) +
-              geom_node_text(aes(
-                x = x,
-                y = y,
-                label = ifelse(class == "YES", id, NA)
-              ),
-              size = 3,
-              repel = TRUE) +
-              scale_fill_manual(values = c('YES' = "red", 'NO' = "white")) +
-              ggraph::theme_graph() +
-              theme(
-                plot.background = element_rect(fill = "transparent", color = NA),
-                panel.background = element_rect(fill = "transparent", color = NA),
-                legend.position = "left",
-                legend.background = element_rect(fill = "transparent", color = NA)
-              )
-            # plot
-            ggsave(
-              plot,
-              filename = file.path(
-                path,
-                "GO_module_graph",
-                paste(x, "_GO graph.pdf", sep = "")
-              ),
-              width = 7,
-              height = 7
-            )
-          }
-        )
-    }
     message("\nDone")
 
+    list(
+      graph_data = graph_data,
+      module_result = module_result,
+      result_with_module = result_with_module
+    )
   }

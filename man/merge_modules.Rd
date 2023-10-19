@@ -2,40 +2,43 @@
 % Please edit documentation in R/11-merge_modules.R
 \name{merge_modules}
 \alias{merge_modules}
-\title{merge_modules Function}
+\title{Identify Functional Modules Across Different Databases}
 \usage{
 merge_modules(
+  variable_info,
   object,
-  module_result_go,
-  module_result_kegg,
-  module_result_reactome,
   sim.cutoff = 0.5,
   measure_method = c("jaccard"),
-  path = "result"
+  path = "result",
+  save_to_local = FALSE
 )
 }
 \arguments{
-\item{object}{An mass_dataset object containing gene information.}
+\item{variable_info}{A data frame or tibble containing variable information.}
 
-\item{module_result_go}{A data frame containing module results from GO database.}
+\item{object}{An S4 object, expected to be processed by \code{merge_pathways()}.}
 
-\item{module_result_kegg}{A data frame containing module results from KEGG database.}
+\item{sim.cutoff}{A numerical value for similarity cutoff, default is 0.5.}
 
-\item{module_result_reactome}{A data frame containing module results from Reactome database.}
+\item{measure_method}{A character vector indicating the method for measuring similarity, default is "jaccard".}
 
-\item{sim.cutoff}{A numeric value for similarity cutoff. Default is 0.5.}
+\item{path}{A character string for the directory where to save results, default is "result".}
 
-\item{measure_method}{A character vector specifying the method of similarity measurement. Default is "jaccard".}
-
-\item{path}{A character string specifying the directory to save results. Default is "result".}
-}
-\value{
-Outputs an Excel file and a PDF containing the merged and analyzed data.
+\item{save_to_local}{Logical, if TRUE the results will be saved to local disk.}
 }
 \description{
-This function merges information from three databases (GO, KEGG, Reactome) and performs similarity analysis among pathways/modules across these databases.
-It filters, rearranges, and aggregates the data before computing the Jaccard Index for similarity.
-The function also creates network visualizations and saves the results to an Excel file.
+This function identify functional modules from various databases, such as GO, KEGG, and Reactome.
+It calculates the similarity matrix between all the pathways and clusters them into functional modules.
+}
+\note{
+Please ensure that \code{object} has been processed by \code{merge_pathways()}
+before using this function.
+}
+\examples{
+\dontrun{
+merge_modules(variable_info = my_var_info, object = my_object)
+}
+
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}

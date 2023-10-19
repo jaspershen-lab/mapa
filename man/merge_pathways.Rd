@@ -2,46 +2,64 @@
 % Please edit documentation in R/10-merge_pathways.R
 \name{merge_pathways}
 \alias{merge_pathways}
-\title{Merge Pathways and Analyze Semantic Similarity}
+\title{Merge Pathways from Multiple Databases}
 \usage{
 merge_pathways(
-  pathway_result,
-  p.adjust.cutoff = 0.05,
-  count.cutoff = 5,
-  database = c("go", "kegg", "reactome"),
-  sim.cutoff = 0.5,
-  measure_method = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
-  path = "result"
+  object,
+  p.adjust.cutoff.go = 0.05,
+  p.adjust.cutoff.kegg = 0.05,
+  p.adjust.cutoff.reactome = 0.05,
+  count.cutoff.go = 5,
+  count.cutoff.kegg = 5,
+  count.cutoff.reactome = 5,
+  sim.cutoff.go = 0.5,
+  sim.cutoff.kegg = 0.5,
+  sim.cutoff.reactome = 0.5,
+  measure.method.go = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
+  measure.method.kegg = c("jaccard"),
+  measure.method.reactome = c("jaccard"),
+  path = "result",
+  save_to_local = FALSE
 )
 }
 \arguments{
-\item{pathway_result}{A result object from pathway enrichment analysis.}
+\item{object}{An object of class "functional_module", typically a result from enrich_pathway function.}
 
-\item{p.adjust.cutoff}{A numeric value for the adjusted p-value cutoff (default: 0.05).}
+\item{p.adjust.cutoff.go}{Adjusted p-value cutoff for GO database. Default is 0.05.}
 
-\item{count.cutoff}{A numeric value for the count cutoff (default: 5).}
+\item{p.adjust.cutoff.kegg}{Adjusted p-value cutoff for KEGG database. Default is 0.05.}
 
-\item{database}{A character vector specifying the database (default: c("go", "kegg", "reactome")).}
+\item{p.adjust.cutoff.reactome}{Adjusted p-value cutoff for Reactome database. Default is 0.05.}
 
-\item{sim.cutoff}{A numeric value for the similarity cutoff (default: 0.5).}
+\item{count.cutoff.go}{Count cutoff for GO database. Default is 5.}
 
-\item{measure_method}{A character vector specifying the similarity measure method (default: c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard")).}
+\item{count.cutoff.kegg}{Count cutoff for KEGG database. Default is 5.}
 
-\item{path}{A character string specifying the path for result output (default: "result").}
+\item{count.cutoff.reactome}{Count cutoff for Reactome database. Default is 5.}
+
+\item{sim.cutoff.go}{Similarity cutoff for GO database. Default is 0.5.}
+
+\item{sim.cutoff.kegg}{Similarity cutoff for KEGG database. Default is 0.5.}
+
+\item{sim.cutoff.reactome}{Similarity cutoff for Reactome database. Default is 0.5.}
+
+\item{measure.method.go}{A character vector specifying the similarity measure method for GO. Choices are "Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard". Default is "Wang".}
+
+\item{measure.method.kegg}{A character vector specifying the similarity measure method for KEGG. Default is "jaccard".}
+
+\item{measure.method.reactome}{A character vector specifying the similarity measure method for Reactome. Default is "jaccard".}
+
+\item{path}{Directory path to save the results. Default is "result".}
+
+\item{save_to_local}{Logical, if TRUE the results will be saved to local disk.}
 }
 \value{
-NULL. Results are written to files.
+An object of class "functional_module" with slots for merged pathways from each database.
 }
 \description{
-This function performs a merging of pathways from enrichment analysis, calculates
-semantic similarity among terms, and identifies modules within the pathways.
-It also generates various plots and outputs results into organized files.
-}
-\examples{
-\dontrun{
-# Assuming `pathway_result` is the result from your pathway enrichment analysis.
-merge_pathways(pathway_result = pathway_result)
-}
+This function merges pathway enrichment results from multiple databases (GO, KEGG, and Reactome)
+into a single object. The function takes an object of class "functional_module" and various
+parameters to filter and compute similarity measures.
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}

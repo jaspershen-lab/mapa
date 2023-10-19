@@ -5,14 +5,14 @@
 \title{get_jaccard_index_for_three_databases Function}
 \usage{
 get_jaccard_index_for_three_databases(
-  object,
+  variable_info,
   module_result_go,
   module_result_kegg,
   module_result_reactome
 )
 }
 \arguments{
-\item{object}{An mass_dataset object containing gene information.}
+\item{variable_info}{An variable_info containing gene information.}
 
 \item{module_result_go}{A data frame containing module results from GO database.}
 

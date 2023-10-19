@@ -1,78 +1,72 @@
 # setwd(r4projects::get_project_wd())
 # setwd("demo_data/")
 #
-# if (any(dir("result/go/intermediate_data/") == "module_result")) {
-#   load("result/go/intermediate_data/module_result")
-#   module_result_go <- module_result
+# load("demo_data.rda")
+# load("result/modules")
 #
-# } else{
-#   module_result_go <- NULL
-# }
+# variable_info <-
+#   extract_variable_info(demo_data)
 #
-# if (any(dir("result/kegg/intermediate_data/") == "module_result")) {
-#   load("result/kegg/intermediate_data/module_result")
-#   module_result_kegg <- module_result
+# functional_module <-
+#   merge_modules(
+#     variable_info = variable_info,
+#     object = modules,
+#     sim.cutoff = 0.5,
+#     measure_method = c("jaccard"),
+#     path = "result",
+#     save_to_local = TRUE
+#   )
 #
-# } else{
-#   module_result_kegg <- NULL
-# }
-#
-# if (any(dir("result/reactome/intermediate_data/") == "module_result")) {
-#   load("result/reactome/intermediate_data/module_result")
-#   module_result_reactome <- module_result
-# } else{
-#   module_result_reactome <- NULL
-# }
-#
-# load("demo_data")
-#
-#
-# merge_modules(
-#   object = demo_data,
-#   module_result_go = module_result_go,
-#   module_result_kegg = module_result_kegg,
-#   module_result_reactome = module_result_reactome,
-#   sim.cutoff = 0.5,
-#   measure_method = "jaccard"
-# )
+# save(functional_module, file = "result/functional_module")
 
-#' merge_modules Function
+#' Identify Functional Modules Across Different Databases
 #'
-#' This function merges information from three databases (GO, KEGG, Reactome) and performs similarity analysis among pathways/modules across these databases.
-#' It filters, rearranges, and aggregates the data before computing the Jaccard Index for similarity.
-#' The function also creates network visualizations and saves the results to an Excel file.
+#' This function identify functional modules from various databases, such as GO, KEGG, and Reactome.
+#' It calculates the similarity matrix between all the pathways and clusters them into functional modules.
 #'
-#' @param object An mass_dataset object containing gene information.
-#' @param module_result_go A data frame containing module results from GO database.
-#' @param module_result_kegg A data frame containing module results from KEGG database.
-#' @param module_result_reactome A data frame containing module results from Reactome database.
-#' @param sim.cutoff A numeric value for similarity cutoff. Default is 0.5.
-#' @param measure_method A character vector specifying the method of similarity measurement. Default is "jaccard".
-#' @param path A character string specifying the directory to save results. Default is "result".
+#' @param variable_info A data frame or tibble containing variable information.
+#' @param object An S4 object, expected to be processed by `merge_pathways()`.
+#' @param sim.cutoff A numerical value for similarity cutoff, default is 0.5.
+#' @param measure_method A character vector indicating the method for measuring similarity, default is "jaccard".
+#' @param path A character string for the directory where to save results, default is "result".
+#' @param save_to_local Logical, if TRUE the results will be saved to local disk.
 #'
-#' @return Outputs an Excel file and a PDF containing the merged and analyzed data.
+#' @examples
+#' \dontrun{
+#' merge_modules(variable_info = my_var_info, object = my_object)
+#' }
 #'
-#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @note Please ensure that `object` has been processed by `merge_pathways()`
+#' before using this function.
+#'
+#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #' @export
 
 merge_modules <-
-  function(object,
-           module_result_go,
-           module_result_kegg,
-           module_result_reactome,
+  function(variable_info,
+           object,
            sim.cutoff = 0.5,
            measure_method = c("jaccard"),
-           path = "result") {
-    path <- file.path(path, "function_modules")
-    dir.create(path, showWarnings = FALSE, recursive = TRUE)
-
-    variable_info <-
-      massdataset::extract_variable_info(object)
+           path = "result",
+           save_to_local = FALSE) {
+    if(save_to_local){
+      path <- file.path(path, "functional_modules")
+      dir.create(path, showWarnings = FALSE, recursive = TRUE)
+      dir.create(
+        file.path(path, "intermediate_data"),
+        showWarnings = FALSE,
+        recursive = TRUE
+      )
+    }
+    ###check if it is been processed by merge_pathways
+    if (all(names(object@process_info) != "merge_pathways")) {
+      stop("Use merge_pathways() function to process first")
+    }
 
     ######calculate the similarity (jaccard index) between all the pathways
-    if (!is.null(module_result_go)) {
+    if (length(object@merged_pathway_go) != 0) {
       module_result_go <-
-        module_result_go %>%
+        object@merged_pathway_go$module_result %>%
         dplyr::filter(ONTOLOGY != "CC") %>%
         dplyr::arrange(p.adjust) %>%
         dplyr::mutate(database = "GO") %>%
@@ -91,11 +85,13 @@ merge_modules <-
         ) %>%
         dplyr::mutate(Count = as.numeric(Count)) %>%
         dplyr::filter(!is.na(module_annotation))
+    } else{
+      module_result_go <- NULL
     }
 
-    if (!is.null(module_result_kegg)) {
+    if (length(object@merged_pathway_kegg) != 0) {
       module_result_kegg <-
-        module_result_kegg %>%
+        object@merged_pathway_kegg$module_result %>%
         dplyr::arrange(p.adjust) %>%
         dplyr::mutate(database = "KEGG") %>%
         dplyr::select(
@@ -113,11 +109,13 @@ merge_modules <-
         ) %>%
         dplyr::mutate(Count = as.numeric(Count)) %>%
         dplyr::filter(!is.na(module_annotation))
+    } else{
+      module_result_kegg <- NULL
     }
 
-    if (!is.null(module_result_reactome)) {
+    if (length(object@merged_pathway_reactome) != 0) {
       module_result_reactome <-
-        module_result_reactome %>%
+        object@merged_pathway_reactome$module_result %>%
         dplyr::arrange(p.adjust) %>%
         dplyr::mutate(database = "Reactome") %>%
         dplyr::select(
@@ -135,6 +133,8 @@ merge_modules <-
         ) %>%
         dplyr::mutate(Count = as.numeric(Count)) %>%
         dplyr::filter(!is.na(module_annotation))
+    } else{
+      module_result_reactome <- NULL
     }
 
     message("Calculating the similarity matrix...")
@@ -143,7 +143,7 @@ merge_modules <-
         module_result_go = module_result_go,
         module_result_kegg = module_result_kegg,
         module_result_reactome = module_result_reactome,
-        object = object
+        variable_info = variable_info
       )
 
     edge_data =
@@ -169,11 +169,13 @@ merge_modules <-
                                        weights = abs(edge_attr(graph_data,
                                                                "sim")))
     cluster <-
-      paste("Function_module", as.character(igraph::membership(subnetwork)), sep = "_")
+      paste("Functional_module",
+            as.character(igraph::membership(subnetwork)),
+            sep = "_")
 
     graph_data <-
       graph_data %>%
-      tidygraph::mutate(module = cluster)
+      mutate(module = cluster)
 
     ###clustered different GO terms
     result_with_module <-
@@ -193,22 +195,21 @@ merge_modules <-
       result_with_module %>%
       dplyr::left_join(module_content_number, by = "module")
 
-    dir.create(
-      file.path(path, "intermediate_data"),
-      showWarnings = FALSE,
-      recursive = TRUE
-    )
-    save(result_with_module,
-         file = file.path(path, "intermediate_data/result_with_module"))
+    if(save_to_local){
+      save(result_with_module,
+           file = file.path(path, "intermediate_data/result_with_module"))
+    }
 
     graph_data <-
       graph_data %>%
       activate(what = "nodes") %>%
       dplyr::left_join(module_content_number, by = "module")
 
-    save(graph_data, file = file.path(path, "intermediate_data/graph_data"))
+    if(save_to_local){
+      save(graph_data, file = file.path(path, "intermediate_data/graph_data"))
+    }
 
-    module_result <-
+    functional_module_result <-
       result_with_module %>%
       plyr::dlply(.variables = .(module)) %>%
       purrr::map(function(x) {
@@ -269,108 +270,57 @@ merge_modules <-
       dplyr::arrange(p.adjust) %>%
       dplyr::select(module_annotation, everything())
 
-    module_result$module_annotation <-
-      stringr::str_split(module_result$Description, ";") %>%
+    functional_module_result$module_annotation <-
+      stringr::str_split(functional_module_result$Description, ";") %>%
       purrr::map(function(x) {
         x[1]
       }) %>%
       unlist()
 
-    save(module_result,
-         file = file.path(path, "intermediate_data/module_result"))
+    functional_module_result$Count <-
+      as.numeric(functional_module_result$Count)
+    functional_module_result$pvalue <-
+      as.numeric(functional_module_result$pvalue)
+    functional_module_result$degree <-
+      as.numeric(functional_module_result$degree)
+    functional_module_result$qvalue <-
+      as.numeric(functional_module_result$qvalue)
 
-    wb = openxlsx::createWorkbook()
-    openxlsx::modifyBaseFont(wb, fontSize = 12, fontName = "Times New Roma")
-    addWorksheet(wb, sheetName = "enriched_pathway_result", gridLines = TRUE)
-    addWorksheet(wb, sheetName = "enriched_module_result", gridLines = TRUE)
-    freezePane(wb,
-               sheet = 1,
-               firstRow = TRUE,
-               firstCol = TRUE)
-    freezePane(wb,
-               sheet = 2,
-               firstRow = TRUE,
-               firstCol = TRUE)
-    writeDataTable(
-      wb,
-      sheet = 1,
-      x = result_with_module,
-      colNames = TRUE,
-      rowNames = FALSE
-    )
+    if(save_to_local){
+      save(
+        functional_module_result,
+        file = file.path(path, "intermediate_data/functional_module_result")
+      )
+    }
 
-    writeDataTable(
-      wb,
-      sheet = 2,
-      x = module_result,
-      colNames = TRUE,
-      rowNames = FALSE
-    )
-
-    saveWorkbook(wb,
-                 file = file.path(path, "enriched_result.xlsx"),
-                 overwrite = TRUE)
-
-    ###plot to show the clusters of GO terms
-    cluster_label_module <-
-      igraph::as_data_frame(graph_data, what = "vertices") %>%
-      dplyr::group_by(module) %>%
-      dplyr::filter(p.adjust == min(p.adjust) &
-                      Count == max(Count)) %>%
-      dplyr::slice_head(n = 1) %>%
-      pull(Description)
-
-    cluster_label_all <-
-      node_data$Description
-
-    plot <-
-      graph_data %>%
-      ggraph(layout = 'fr',
-             circular = FALSE) +
-      geom_edge_link(
-        aes(width = sim),
-        strength = 1,
-        color = "black",
-        alpha = 1,
-        show.legend = TRUE
-      ) +
-      geom_node_point(
-        aes(fill = database,
-            size = -log(p.adjust, 10)),
-        shape = 21,
-        alpha = 1,
-        show.legend = TRUE
-      ) +
-      geom_node_text(aes(
-        x = x,
-        y = y,
-        label = ifelse(Description %in% cluster_label_module, Description, NA)
-      ),
-      size = 3,
-      repel = TRUE) +
-      guides(fill = guide_legend(ncol = 1)) +
-      scale_edge_width_continuous(range = c(0.1, 2)) +
-      scale_size_continuous(range = c(1, 7)) +
-      scale_fill_manual(values = database_color) +
-      ggraph::theme_graph() +
-      theme(
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.background = element_rect(fill = "transparent", color = NA),
-        legend.position = "right",
-        legend.background = element_rect(fill = "transparent", color = NA),
+    slot(object, "merged_module") <-
+      list(
+        graph_data = graph_data,
+        functional_module_result = functional_module_result,
+        result_with_module = result_with_module
       )
 
-    plot
-
-    extrafont::loadfonts()
-
-    ggsave(
-      plot,
-      filename = file.path(path, "/combined_similarity_plot.pdf"),
-      width = 9,
-      height = 7
+    parameter = new(
+      Class = "tidymass_parameter",
+      pacakge_name = "mapa",
+      function_name = "merge_modules()",
+      parameter = list(
+        sim.cutoff = sim.cutoff,
+        measure_method = measure_method,
+        path = path
+      ),
+      time = Sys.time()
     )
 
-    message("\nDone")
+    process_info <-
+      slot(object, "process_info")
 
+    process_info$merge_modules <-
+      parameter
+
+    slot(object, "process_info") <-
+      process_info
+
+    message("\nDone")
+    object
   }

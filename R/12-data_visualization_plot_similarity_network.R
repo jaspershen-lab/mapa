@@ -1,0 +1,374 @@
+# setwd(r4projects::get_project_wd())
+# setwd("demo_data/")
+#
+# load("demo_data.rda")
+# load("result/modules")
+# load("result/enriched_pathways")
+# load("result/functional_module")
+#
+# variable_info <-
+#   extract_variable_info(demo_data)
+#
+# object <-
+#   functional_module
+#
+# plot_similarity_network(object,
+#                         level = "module",
+#                         database = "go",
+#                         degree_cutoff = 10)
+#
+#
+# plot_similarity_network(
+#   object,
+#   level = "module",
+#   database = "go",
+#   degree_cutoff = 10,
+#   module_id = "go_Module_10",
+#   text_all = TRUE
+# )
+#
+# plot_similarity_network(
+#   object,
+#   level = "functional_module",
+#   database = "go",
+#   degree_cutoff = 1,
+#   module_id = "Functional_module_53",
+#   text_all = FALSE
+# )
+
+
+#' Plot Similarity Network
+#'
+#' This function plots a similarity network based on the given parameters.
+#' It can operate on different levels and databases, and provides options for
+#' text annotations.
+#'
+#' @param object An object of class "functional_module" containing
+#' the necessary data for plotting.
+#' @param level A character string indicating the level of analysis,
+#' either "module" or "functional_module".
+#' @param database A character string indicating the database to be used,
+#' either "go", "kegg", or "reactome".
+#' @param degree_cutoff A numeric value indicating the degree cutoff for
+#' filtering nodes in the network.
+#' @param module_id Optional, a character or numeric vector of module IDs
+#' to include in the plot.
+#' @param text Logical, whether to include text annotations on the plot.
+#' @param text_all Logical, whether to include text annotations for all nodes.
+#'
+#' @return A ggplot object representing the similarity network.
+#'
+#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
+#'
+#' @examples
+#' \dontrun{
+#' # Assume `obj` is a prepared object containing relevant data
+#' plot_similarity_network(obj, level = "module", database = "go")
+#' plot_similarity_network(obj, level = "functional_module", degree_cutoff = 2)
+#' }
+#'
+#' @export
+
+plot_similarity_network <-
+  function(object,
+           level = c("module",
+                     "functional_module"),
+           database = c("go", "kegg", "reactome"),
+           degree_cutoff = 0,
+           module_id,
+           text = TRUE,
+           text_all = FALSE) {
+    level <-
+      match.arg(level)
+    database <-
+      match.arg(database)
+
+    if(!is(object, "functional_module")){
+      stop("object must be functional_module class")
+    }
+
+    if (level == "module") {
+      ###GO
+      if (database == "go") {
+        if (length(object@merged_pathway_go) == 0) {
+          stop("Please use the merge_pathways() function to process first")
+        } else{
+          graph_data <-
+            object@merged_pathway_go$graph_data
+        }
+      }
+
+      ###KEGG
+      if (database == "kegg") {
+        if (length(object@merged_pathway_kegg) == 0) {
+          stop("Please use the merge_pathways() function to process first")
+        } else{
+          graph_data <-
+            object@merged_pathway_kegg$graph_data
+        }
+      }
+
+      ###Reactome
+      if (database == "reactome") {
+        if (length(object@merged_pathway_reactome) == 0) {
+          stop("Please use the merge_pathways() function to process first")
+        } else{
+          graph_data <-
+            object@merged_pathway_reactome$graph_data
+        }
+      }
+    }
+
+
+    if (level == "functional_module") {
+      if (length(object@merged_module) == 0) {
+        stop("Please use the merge_modules() function to process first")
+      } else{
+        graph_data <-
+          object@merged_module$graph_data
+      }
+    }
+
+    graph_data <-
+      graph_data %>%
+      tidygraph::activate(what = "nodes") %>%
+      dplyr::filter(module_content_number > degree_cutoff)
+
+    if (!missing(module_id)) {
+      graph_data <-
+        graph_data %>%
+        tidygraph::activate(what = "nodes") %>%
+        dplyr::filter(module %in% module_id)
+    }
+
+    ###plot to show the clusters of GO terms
+    cluster_label_module <-
+      tryCatch(
+        expr = {
+          igraph::as_data_frame(graph_data, what = "vertices") %>%
+            dplyr::group_by(module) %>%
+            dplyr::filter(p.adjust == min(p.adjust) &
+                            Count == max(Count)) %>%
+            dplyr::slice_head(n = 1) %>%
+            dplyr::pull(Description)
+        },
+        error = function(e) {
+        },
+        warning = function(w) {
+          # Handle warning here if needed
+        }
+      )
+
+    if(is.null(cluster_label_module)){
+      cluster_label_module <- ""
+    }
+
+    cluster_label_all <-
+      igraph::as_data_frame(graph_data, what = "vertices")$Description
+
+    plot <-
+      graph_data %>%
+      ggraph(layout = 'fr',
+             circular = FALSE) +
+      geom_edge_link(
+        aes(width = sim),
+        color = "black",
+        alpha = 1,
+        show.legend = TRUE
+      ) +
+      geom_node_point(
+        aes(fill = module,
+            size = -log(p.adjust, 10)),
+        shape = 21,
+        alpha = 1,
+        show.legend = TRUE
+      ) +
+      guides(fill = guide_legend(ncol = 1)) +
+      scale_edge_width_continuous(range = c(0.1, 2)) +
+      scale_size_continuous(range = c(1, 7)) +
+      ggraph::theme_graph() +
+      theme(
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA),
+        legend.position = "right",
+        legend.background = element_rect(fill = "transparent", color = NA)
+      )
+
+    if (text) {
+      if (text_all) {
+        plot <-
+          plot +
+          geom_node_text(aes(x = x,
+                             y = y,
+                             label = Description),
+                         size = 3,
+                         repel = TRUE)
+      } else{
+        plot <-
+          plot +
+          geom_node_text(aes(
+            x = x,
+            y = y,
+            label = ifelse(Description %in% cluster_label_module, Description, NA)
+          ),
+          size = 3,
+          repel = TRUE)
+      }
+    }
+    plot
+  }
+
+
+
+
+
+# wb = openxlsx::createWorkbook()
+# openxlsx::modifyBaseFont(wb, fontSize = 12, fontName = "Times New Roma")
+# addWorksheet(wb, sheetName = "enriched_pathway_result", gridLines = TRUE)
+# addWorksheet(wb, sheetName = "enriched_module_result", gridLines = TRUE)
+# freezePane(wb,
+#            sheet = 1,
+#            firstRow = TRUE,
+#            firstCol = TRUE)
+# freezePane(wb,
+#            sheet = 2,
+#            firstRow = TRUE,
+#            firstCol = TRUE)
+# writeDataTable(
+#   wb,
+#   sheet = 1,
+#   x = result_with_module,
+#   colNames = TRUE,
+#   rowNames = FALSE
+# )
+#
+# writeDataTable(
+#   wb,
+#   sheet = 2,
+#   x = module_result,
+#   colNames = TRUE,
+#   rowNames = FALSE
+# )
+#
+# saveWorkbook(wb,
+#              file = file.path(path, "enriched_result.xlsx"),
+#              overwrite = TRUE)
+
+####output some results
+# dir.create(
+#   file.path(path, "Similarity_plot"),
+#   recursive = TRUE,
+#   showWarnings = FALSE
+# )
+#
+
+
+# ##matrix tow show the cluster GO terms
+# result_with_module %>%
+#   dplyr::group_by(ONTOLOGY) %>%
+#   dplyr::summarise(n = n()) %>%
+#   dplyr::mutate(n = n * 10 / max(n) + 2)
+#output the correlation matrix
+
+# if(database == "go"){
+#   message("Output correlation matrix plot...")
+#   for(ont in c('MF', "BP", "CC")) {
+#     cat(ont, " ")
+#     show_matrix_cluster(
+#       result = result_with_module %>% dplyr::mutate(Direction = "UP"),
+#       ont = ont,
+#       measure = "Wang",
+#       remove_words = remove_words,
+#       margin = 15,
+#       width = 14,
+#       height = 8,
+#       path = path,
+#       top = 15
+#     )
+#   }
+# }
+
+###output the cluster annotation for each cluster
+# if (database == "go") {
+#   dir.create(file.path(path, "GO_module_graph"), showWarnings = FALSE)
+#
+#   unique(module_result$module) %>%
+#     purrr::map(
+#       .f = function(x) {
+#         cat(x, " ")
+#         number <- module_result %>%
+#           dplyr::filter(module == x) %>%
+#           pull(module_content_number) %>%
+#           as.numeric()
+#         if (number == 1) {
+#           return(NULL)
+#         }
+#
+#         temp_id <-
+#           module_result %>%
+#           dplyr::filter(module == x) %>%
+#           dplyr::pull(node) %>%
+#           stringr::str_split(";") %>%
+#           `[[`(1) %>%
+#           pRoloc::goIdToTerm(keepNA = FALSE) %>%
+#           data.frame(id = ., class = "YES") %>%
+#           tibble::rownames_to_column(var = "name")
+#
+#         temp_plot =
+#           GOSim::getGOGraph(term = temp_id$name, prune = Inf) %>%
+#           igraph::igraph.from.graphNEL() %>%
+#           tidygraph::as_tbl_graph() %>%
+#           left_join(temp_id, by = "name") %>%
+#           dplyr::mutate(class = case_when(is.na(class) ~ "NO",
+#                                           TRUE ~ class))
+#
+#         plot =
+#           temp_plot %>%
+#           ggraph(layout = 'kk',
+#                  circular = FALSE) +
+#           geom_edge_link(
+#             color = "#3B4992FF",
+#             alpha = 1,
+#             arrow = grid::arrow(
+#               angle = 10,
+#               length = unit(0.2, "inches"),
+#               type = "closed"
+#             ),
+#             show.legend = FALSE
+#           ) +
+#           geom_node_point(
+#             aes(fill = class),
+#             shape = 21,
+#             alpha = 1,
+#             size = 6,
+#             show.legend = FALSE
+#           ) +
+#           geom_node_text(aes(
+#             x = x,
+#             y = y,
+#             label = ifelse(class == "YES", id, NA)
+#           ),
+#           size = 3,
+#           repel = TRUE) +
+#           scale_fill_manual(values = c('YES' = "red", 'NO' = "white")) +
+#           ggraph::theme_graph() +
+#           theme(
+#             plot.background = element_rect(fill = "transparent", color = NA),
+#             panel.background = element_rect(fill = "transparent", color = NA),
+#             legend.position = "left",
+#             legend.background = element_rect(fill = "transparent", color = NA)
+#           )
+#         # plot
+#         ggsave(
+#           plot,
+#           filename = file.path(
+#             path,
+#             "GO_module_graph",
+#             paste(x, "_GO graph.pdf", sep = "")
+#           ),
+#           width = 7,
+#           height = 7
+#         )
+#       }
+#     )
+# }
