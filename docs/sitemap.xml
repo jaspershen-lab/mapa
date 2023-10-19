@@ -16,6 +16,9 @@
     <loc>/index.html</loc>
   </url>
   <url>
+    <loc>/reference/check_variable_info.html</loc>
+  </url>
+  <url>
     <loc>/reference/demo_data.html</loc>
   </url>
   <url>
@@ -23,6 +26,12 @@
   </url>
   <url>
     <loc>/reference/enrich_pathway_internal.html</loc>
+  </url>
+  <url>
+    <loc>/reference/export_module_info_plot.html</loc>
+  </url>
+  <url>
+    <loc>/reference/functional_module-class.html</loc>
   </url>
   <url>
     <loc>/reference/get_go_result_sim.html</loc>
@@ -52,9 +61,21 @@
     <loc>/reference/merge_pathways.html</loc>
   </url>
   <url>
+    <loc>/reference/merge_pathways_internal.html</loc>
+  </url>
+  <url>
     <loc>/reference/plot_module_bar.html</loc>
   </url>
   <url>
+    <loc>/reference/plot_module_info.html</loc>
+  </url>
+  <url>
     <loc>/reference/plot_network.html</loc>
+  </url>
+  <url>
+    <loc>/reference/plot_pathway_bar.html</loc>
+  </url>
+  <url>
+    <loc>/reference/plot_similarity_network.html</loc>
   </url>
 </urlset>

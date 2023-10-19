@@ -42,7 +42,7 @@ measurement of semantic similarity among Gene Ontology (GO) terms."><!-- mathjax
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Pathway Enrichment Analysis and GO Similarity Measurement</h1>
-    <small class="dont-index">Source: <a href="https://github.com/jaspershen/mapa/blob/HEAD/R/9-get_go_result_sim.R" class="external-link"><code>R/9-get_go_result_sim.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/jaspershen/mapa/blob/HEAD/R/6-utils.R" class="external-link"><code>R/6-utils.R</code></a></small>
     <div class="hidden name"><code>get_go_result_sim.Rd</code></div>
     </div>
 
@@ -55,7 +55,7 @@ measurement of semantic similarity among Gene Ontology (GO) terms.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_go_result_sim</span><span class="op">(</span></span>
 <span>  <span class="va">result</span>,</span>
 <span>  sim.cutoff <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  measure_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Wang"</span>, <span class="st">"Resnik"</span>, <span class="st">"Rel"</span>, <span class="st">"Jiang"</span>, <span class="st">"Lin"</span>, <span class="st">"TCSS"</span><span class="op">)</span></span>
+<span>  measure.method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Wang"</span>, <span class="st">"Resnik"</span>, <span class="st">"Rel"</span>, <span class="st">"Jiang"</span>, <span class="st">"Lin"</span>, <span class="st">"TCSS"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -69,7 +69,7 @@ measurement of semantic similarity among Gene Ontology (GO) terms.</p>
 <dd><p>A numeric value for the similarity cutoff (default: 0).</p></dd>
 
 
-<dt>measure_method</dt>
+<dt>measure.method</dt>
 <dd><p>A character vector specifying the semantic similarity measure method
 (default: c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS")).</p></dd>
 
