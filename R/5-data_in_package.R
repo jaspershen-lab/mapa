@@ -7,7 +7,7 @@
 #' @keywords data
 #' @examples
 #' data(demo_data)
-NA
+"demo_data"
 
 
 #' @title enriched_functional_module
@@ -19,4 +19,4 @@ NA
 #' @keywords data
 #' @examples
 #' data(enriched_functional_module)
-NA
+"enriched_functional_module"

@@ -69,7 +69,8 @@
 #' @export
 #'
 #' @examples
-#' data("demo_data", package = "mapa")
+#' \dontrun{
+#' data(demo_data)
 #'
 #' variable_info <-
 #'   demo_data %>%
@@ -94,6 +95,7 @@
 #'     readable = FALSE,
 #'     pool = FALSE
 #'   )
+#'   }
 
 
 enrich_pathway <-

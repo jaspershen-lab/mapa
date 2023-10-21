@@ -1,81 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://github.com/jaspershen/mapa/404.html</loc>
   </url>
   <url>
-    <loc>/LICENSE-text.html</loc>
+    <loc>https://github.com/jaspershen/mapa/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>/LICENSE.html</loc>
+    <loc>https://github.com/jaspershen/mapa/LICENSE.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://github.com/jaspershen/mapa/articles/index.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://github.com/jaspershen/mapa/articles/mapa.html</loc>
   </url>
   <url>
-    <loc>/reference/check_variable_info.html</loc>
+    <loc>https://github.com/jaspershen/mapa/authors.html</loc>
   </url>
   <url>
-    <loc>/reference/demo_data.html</loc>
+    <loc>https://github.com/jaspershen/mapa/index.html</loc>
   </url>
   <url>
-    <loc>/reference/enrich_pathway.html</loc>
+    <loc>https://github.com/jaspershen/mapa/news/index.html</loc>
   </url>
   <url>
-    <loc>/reference/enrich_pathway_internal.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/check_variable_info.html</loc>
   </url>
   <url>
-    <loc>/reference/export_module_info_plot.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/create_relation_network.html</loc>
   </url>
   <url>
-    <loc>/reference/functional_module-class.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/demo_data.html</loc>
   </url>
   <url>
-    <loc>/reference/get_go_result_sim.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/enrich_pathway.html</loc>
   </url>
   <url>
-    <loc>/reference/get_jaccard_index_for_three_databases.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/enrich_pathway_internal.html</loc>
   </url>
   <url>
-    <loc>/reference/get_mapa_version.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/enriched_functional_module.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/export_functional_module.html</loc>
   </url>
   <url>
-    <loc>/reference/mapa_conflicts.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/export_module_info_plot.html</loc>
   </url>
   <url>
-    <loc>/reference/mapa_logo.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/functional_module-class.html</loc>
   </url>
   <url>
-    <loc>/reference/mapa_packages.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/get_go_result_sim.html</loc>
   </url>
   <url>
-    <loc>/reference/merge_modules.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/get_jaccard_index_for_three_databases.html</loc>
   </url>
   <url>
-    <loc>/reference/merge_pathways.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/get_mapa_version.html</loc>
   </url>
   <url>
-    <loc>/reference/merge_pathways_internal.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_module_bar.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/mapa_conflicts.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_module_info.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/mapa_logo.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_network.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/mapa_packages.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_pathway_bar.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/merge_modules.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_similarity_network.html</loc>
+    <loc>https://github.com/jaspershen/mapa/reference/merge_pathways.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/jaspershen/mapa/reference/merge_pathways_internal.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/jaspershen/mapa/reference/plot_module_bar.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/jaspershen/mapa/reference/plot_module_info.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/jaspershen/mapa/reference/plot_network.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/jaspershen/mapa/reference/plot_pathway_bar.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/jaspershen/mapa/reference/plot_relationship_network.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/jaspershen/mapa/reference/plot_similarity_network.html</loc>
   </url>
 </urlset>

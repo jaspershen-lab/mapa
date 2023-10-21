@@ -77,7 +77,8 @@ This function performs enrichment analysis on various databases such as GO, KEGG
 It's a generic function that dispatches to specific methods based on the class of the 'object' parameter.
 }
 \examples{
-data("demo_data")
+\dontrun{
+data(demo_data)
 
 variable_info <-
   demo_data \%>\%
@@ -102,6 +103,7 @@ enriched_pathways <-
     readable = FALSE,
     pool = FALSE
   )
+  }
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}

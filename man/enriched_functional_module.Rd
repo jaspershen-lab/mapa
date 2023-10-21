@@ -7,6 +7,9 @@
 \format{
 A enriched_functional_module object.
 }
+\usage{
+enriched_functional_module
+}
 \description{
 enriched_functional_module
 }

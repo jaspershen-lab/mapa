@@ -17,11 +17,13 @@ Description: Moudule Annotation for Pathway Enrichment Analysis Result.
     This is used for transcriptomics and proteomics data.
 URL: https://github.com/jaspershen/mapa
 BugReports: https://github.com/jaspershen/mapa/issues
-Depends: R (>= 4.1)
+Depends: 
+    R (>= 4.1),
+    massdataset
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-LazyDataCompression: xz  # or 'gzip', 'bzip2'
+LazyDataCompression: xz
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 VignetteBuilder: knitr
@@ -29,14 +31,12 @@ Imports:
     dplyr,
     magrittr,
     tibble,
-    rstudioapi,
     ggplot2,
     methods,
     openxlsx,
     crayon,
     cli,
     purrr,
-    massdataset,
     grid,
     stats,
     utils,

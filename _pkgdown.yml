@@ -1,0 +1,58 @@
+destination: docs
+
+url: https://github.com/jaspershen/mapa
+
+home:
+  strip_header: false
+  title: mapa package
+  links:
+  - text: Find me
+    href: https://www.shenxt.info/
+
+development:
+  mode: auto
+  version_label: danger
+  version_tooltip: "Under development"
+
+template:
+  params:
+    docsearch:
+      api_key: 21ff2860978c5d2ceb7d4150364070ff
+      index_name: mapa
+    bootswatch: flatly
+    ganalytics: UA-000000-01
+
+reference:
+
+navbar:
+  title: "sparklyr"
+  # type: inverse
+  structure:
+    left: [home, articles, news, reference, contact]
+    right: [github, twitter]
+  components:
+    articles:
+      text: Help documents
+      menu:
+      - text: "Get started"
+        href: articles/mapa.html
+    twitter:
+      icon: "fab fa-twitter fa-lg"
+      href: https://twitter.com/xiaotaoshen1990
+    contact:
+      text: Contact us
+      href: articles/contact_us.html
+
+footer:
+  structure:
+    left: [package, developed_by, from]
+    right: [contact, email, wechat]
+  components:
+    from: <br> from <i class="fa fa-university"></i> Stanford University <br> <i class="fa fa-clinic-medical"></i>School of Medicine <br> <i class="fa fa-dna"></i> Genetics Department
+    more_sofware: <br> <i class="fa fa-laptop-code"></i> [More softare](https://jaspershen.github.io/image/wechat_QR.jpg)
+    contact: <b>Contact Us:</b> <br>
+    email: <i class="fa fa-envelope"></i> shenxt1990@outlook.com <br>
+    wechat: <i class="fa fa-weixin"></i>  [shenxt1990](https://jaspershen.github.io/image/wechat_QR.jpg)
+
+toc:
+  depth: 3

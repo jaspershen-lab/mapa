@@ -7,6 +7,9 @@
 \format{
 A mass_dataset object.
 }
+\usage{
+demo_data
+}
 \description{
 Demo data
 }

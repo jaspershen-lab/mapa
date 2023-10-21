@@ -1,0 +1,12 @@
+mapa
+ggplot2
+dplyr
+magrittr
+massdataset
+masstools
+BiocGenerics
+Biobase
+S4Vectors
+IRanges
+AnnotationDbi
+org.Hs.eg.db
