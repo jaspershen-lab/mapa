@@ -409,13 +409,13 @@ modules/modules/pathways/molecules<a class="anchor" aria-label="anchor" href="#r
 <span><span class="fu"><a href="../reference/plot_relationship_network.html">plot_relationship_network</a></span><span class="op">(</span></span>
 <span>  object <span class="op">=</span> <span class="va">object</span>,</span>
 <span>  include_functional_modules <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  include_modules <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  include_modules <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  include_pathways <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  include_molecules <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  include_molecules <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  functional_module_text <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  module_text <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  pathway_text <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  molecule_text <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  molecule_text <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  circular_plot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  functional_module_arrange_position <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  module_arrange_position <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -427,17 +427,40 @@ modules/modules/pathways/molecules<a class="anchor" aria-label="anchor" href="#r
 <span>  molecule_position_limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="mapa_files/figure-html/unnamed-chunk-11-1.png" width="100%"></p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="../reference/plot_relationship_network.html">plot_relationship_network</a></span><span class="op">(</span></span>
+<span>  object <span class="op">=</span> <span class="va">object</span>,</span>
+<span>  include_functional_modules <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  include_modules <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  include_pathways <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  include_molecules <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  functional_module_text <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  module_text <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  pathway_text <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  molecule_text <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  circular_plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  functional_module_arrange_position <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  module_arrange_position <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  pathway_arrange_position <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  molecule_arrange_position <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  functional_module_position_limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  module_position_limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  pathway_position_limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  molecule_position_limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="mapa_files/figure-html/unnamed-chunk-11-2.png" width="100%"></p>
 </div>
 <div class="section level2">
 <h2 id="export-results-as-excel">Export results as excel<a class="anchor" aria-label="anchor" href="#export-results-as-excel"></a>
 </h2>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/export_functional_module.html">export_functional_module</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">object</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.3.0 (2023-04-21)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-apple-darwin20 (64-bit)</span></span>

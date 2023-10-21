@@ -3,7 +3,7 @@
 # mapa <img src="man/figures/mapa_logo.png" align="right" alt="" width="120" />
 
 [![](https://www.r-pkg.org/badges/version/mapa?color=green)](https://cran.r-project.org/package=mapa)
-[![](https://img.shields.io/github/languages/code-size/tidymass/mapa.svg)](https://github.com/jaspershen/mapa)
+[![](https://img.shields.io/github/languages/code-size/jaspershen/mapa.svg)](https://github.com/jaspershen/mapa)
 [![Dependencies](https://tinyverse.netlify.com/badge/mapa)](https://cran.r-project.org/package=mapa)
 [![](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 
@@ -22,7 +22,7 @@ You can install `mapa` from [GitHub](https://github.com/jaspershen/mapa)
 if(!require(remotes)){
 install.packages("remotes")
 }
-remotes::install_github("tidymass/mapa")
+remotes::install_github("jaspershen/mapa")
 ```
 
 More information can be found [here](https://jaspershen.github.com/mapa).
