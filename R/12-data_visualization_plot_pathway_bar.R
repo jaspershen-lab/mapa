@@ -168,8 +168,8 @@ plot_pathway_bar <-
         } else{
           if (!is.null(module_result_go)) {
             temp_data <-
-              module_result_go %>%
-              dplyr::full_join(temp_data,
+              temp_data %>%
+              dplyr::full_join(module_result_go,
                                by = intersect(colnames(.),
                                               colnames(module_result_go)))
           }
