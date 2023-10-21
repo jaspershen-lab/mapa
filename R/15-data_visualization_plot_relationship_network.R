@@ -233,7 +233,7 @@ plot_relationship_network <-
           functional_module_position_limits[2] * max(coords$x),
           length.out = nrow(temp_coords)
         )
-      coords[coords$class == "Functional_module", ] <-
+      coords[coords$class == "Functional_module",] <-
         temp_coords
     }
 
@@ -248,7 +248,7 @@ plot_relationship_network <-
           module_position_limits[2] * max(coords$x),
           length.out = nrow(temp_coords)
         )
-      coords[coords$class == "Module", ] <-
+      coords[coords$class == "Module",] <-
         temp_coords
     }
 
@@ -263,7 +263,7 @@ plot_relationship_network <-
           pathway_position_limits[2] * max(coords$x),
           length.out = nrow(temp_coords)
         )
-      coords[coords$class == "Pathway", ] <-
+      coords[coords$class == "Pathway",] <-
         temp_coords
     }
 
@@ -278,7 +278,7 @@ plot_relationship_network <-
           molecule_position_limits[2] * max(coords$x),
           length.out = nrow(temp_coords)
         )
-      coords[coords$class == "Molecule", ] <-
+      coords[coords$class == "Molecule",] <-
         temp_coords
     }
 
@@ -723,14 +723,10 @@ create_relation_network <-
 
     node_data3_molecule <-
       variable_info %>%
-      dplyr::select(
-        node = ensembl,
-        uniprot,
-        symbol,
-        entrezid,
-        p.adjust = fdr,
-        SAM_score = score
-      ) %>%
+      dplyr::select(node = ensembl,
+                    uniprot,
+                    symbol,
+                    entrezid) %>%
       dplyr::mutate(annotation = symbol,
                     Count = 1,
                     class = "Molecule")
