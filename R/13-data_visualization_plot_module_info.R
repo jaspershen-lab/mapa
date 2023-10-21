@@ -1,19 +1,15 @@
 # setwd(r4projects::get_project_wd())
 # setwd("demo_data/")
-#
-# load("demo_data.rda")
-# load("result/modules")
-# load("result/enriched_pathways")
-# load("result/functional_module")
+# load("result/enriched_functional_module")
 #
 # object <-
-#   functional_module
+#   enriched_functional_module
 #
-# functional_module@merged_pathway_go$module_result$module[1]
+# enriched_functional_module@merged_pathway_go$module_result$module[1]
 #
 # plot <-
 #   plot_module_info(
-#     object = functional_module,
+#     object = enriched_functional_module,
 #     level = "module",
 #     database = "go",
 #     module_id = "go_Module_3"
@@ -23,11 +19,11 @@
 # plot[[2]]
 # plot[[3]]
 #
-# table(functional_module@merged_pathway_kegg$result_with_module$module)
+# table(enriched_functional_module@merged_pathway_kegg$result_with_module$module)
 #
 # plot <-
 #   plot_module_info(
-#     object = functional_module,
+#     object = enriched_functional_module,
 #     level = "module",
 #     database = "kegg",
 #     module_id = "kegg_Module_15"
@@ -37,11 +33,11 @@
 # plot[[2]]
 # plot[[3]]
 #
-# table(functional_module@merged_pathway_reactome$result_with_module$module)
+# table(enriched_functional_module@merged_pathway_reactome$result_with_module$module)
 #
 # plot <-
 #   plot_module_info(
-#     object = functional_module,
+#     object = enriched_functional_module,
 #     level = "module",
 #     database = "reactome",
 #     module_id = "reactome_Module_7"
@@ -51,10 +47,10 @@
 # plot[[2]]
 # plot[[3]]
 #
-# table(functional_module@merged_module$result_with_module$module)
+# table(enriched_functional_module@merged_module$result_with_module$module)
 #
 # plot <-
-#   plot_module_info(object = functional_module,
+#   plot_module_info(object = enriched_functional_module,
 #                    level = "functional_module",
 #                    module_id = "Functional_module_27")
 #
@@ -112,10 +108,15 @@ plot_module_info <-
     }
 
     if (level == "module") {
+      if (all(names(object@process_info) != "merge_pathways")) {
+        stop("Please use the merge_pathways() function to process first")
+      }
       ###GO
       if (database == "go") {
         if (length(object@merged_pathway_go) == 0) {
-          stop("Please use the merge_pathways() function to process first")
+          warning("No enriched GO modules")
+          return(ggplot() +
+                   geom_blank())
         } else{
           graph_data <-
             object@merged_pathway_go$graph_data
@@ -128,7 +129,9 @@ plot_module_info <-
       ###KEGG
       if (database == "kegg") {
         if (length(object@merged_pathway_kegg) == 0) {
-          stop("Please use the merge_pathways() function to process first")
+          warning("No enriched KEGG modules")
+          return(ggplot() +
+                   geom_blank())
         } else{
           graph_data <-
             object@merged_pathway_kegg$graph_data
@@ -140,7 +143,9 @@ plot_module_info <-
       ###Reactome
       if (database == "reactome") {
         if (length(object@merged_pathway_reactome) == 0) {
-          stop("Please use the merge_pathways() function to process first")
+          warning("No enriched Reactome modules")
+          return(ggplot() +
+                   geom_blank())
         } else{
           graph_data <-
             object@merged_pathway_reactome$graph_data
@@ -151,8 +156,14 @@ plot_module_info <-
     }
 
     if (level == "functional_module") {
-      if (length(object@merged_module) == 0) {
+      if (all(names(object@process_info) != "merge_modules")) {
         stop("Please use the merge_modules() function to process first")
+      }
+
+      if (length(object@merged_module) == 0) {
+        warning("No enriched functional modules")
+        return(ggplot() +
+                 geom_blank())
       } else{
         graph_data <-
           object@merged_module$graph_data
@@ -171,18 +182,24 @@ plot_module_info <-
         dplyr::filter(module %in% module_id)
     }
 
+    if (igraph::gorder(graph_data) == 0) {
+      warning(module_id, " is not in the graph data")
+      return(ggplot() +
+               geom_blank())
+    }
+
     ###network
     plot1 <-
       graph_data %>%
-      ggraph(layout = 'fr',
-             circular = FALSE) +
-      geom_edge_link(
+      ggraph::ggraph(layout = 'fr',
+                     circular = FALSE) +
+      ggraph::geom_edge_link(
         aes(width = sim),
         color = "black",
         alpha = 1,
         show.legend = TRUE
       ) +
-      geom_node_point(
+      ggraph::geom_node_point(
         aes(fill = -log(p.adjust, 10),
             size = Count),
         shape = 21,
@@ -190,7 +207,7 @@ plot_module_info <-
         show.legend = TRUE
       ) +
       guides(fill = guide_legend(ncol = 1)) +
-      scale_edge_width_continuous(range = c(0.1, 2)) +
+      ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
       scale_size_continuous(range = c(3, 10)) +
       ggraph::theme_graph() +
       theme(
@@ -203,22 +220,20 @@ plot_module_info <-
     if (level == "module") {
       plot1 <-
         plot1 +
-        geom_node_text(aes(x = x,
-                           y = y,
-                           label = Description),
-                       check_overlap = TRUE)
+        ggraph::geom_node_text(aes(x = x,
+                                   y = y,
+                                   label = Description),
+                               check_overlap = TRUE)
     }
 
     if (level == "functional_module") {
       plot1 <-
         plot1 +
-        geom_node_text(aes(x = x,
-                           y = y,
-                           label = module_annotation),
-                       check_overlap = TRUE)
+        ggraph::geom_node_text(aes(x = x,
+                                   y = y,
+                                   label = module_annotation),
+                               check_overlap = TRUE)
     }
-
-
 
     ###barplot
     if (level == "module") {
@@ -293,11 +308,13 @@ plot_module_info <-
       dplyr::filter(!word %in% remove_words)
 
     plot3 <-
-      temp_data %>%
-      ggplot(aes(label = word, size = p.adjust)) +
-      ggwordcloud::geom_text_wordcloud() +
-      scale_radius(range = c(5, 15), limits = c(0, NA)) +
-      theme_minimal()
+      suppressWarnings(
+        ggplot(data = temp_data,
+               aes(label = word, size = p.adjust)) +
+          ggwordcloud::geom_text_wordcloud() +
+          scale_radius(range = c(5, 15), limits = c(0, NA)) +
+          theme_minimal()
+      )
 
     list(network = plot1,
          barplot = plot2,
@@ -354,165 +371,185 @@ export_module_info_plot <-
     )
 
     ##GO
+    message(rep("-", 20))
     message('GO...')
     all_module_id <-
       object@merged_pathway_go$result_with_module$module
 
-    all_module_id <-
-      data.frame(all_module_id = all_module_id) %>%
-      dplyr::count(all_module_id) %>%
-      dplyr::filter(n > 1) %>%
-      pull(all_module_id)
+    if (is.null(all_module_id)) {
+      all_module_id <- character()
+    } else{
+      all_module_id <-
+        data.frame(all_module_id = all_module_id) %>%
+        dplyr::count(all_module_id) %>%
+        dplyr::filter(n > 1) %>%
+        pull(all_module_id)
+    }
 
     if (length(all_module_id) > 0) {
       message("Output module plot...")
-      purrr::walk(.x = all_module_id, function(module_id) {
-        message(module_id, " ")
-        plot <-
-          plot_module_info(
-            object = object,
-            level = "module",
-            database = "go",
-            module_id = module_id
-          )
+      purrr::walk(.x = stringr::str_sort(all_module_id, numeric = TRUE),
+                  function(module_id) {
+                    message(module_id, " ")
+                    plot <-
+                      plot_module_info(
+                        object = object,
+                        level = "module",
+                        database = "go",
+                        module_id = module_id
+                      )
 
-        plot <-
-          plot[[1]] + plot[[2]] + plot[[3]] + patchwork::plot_layout(nrow = 1)
+                    plot <-
+                      plot[[1]] + plot[[2]] + plot[[3]] + patchwork::plot_layout(nrow = 1)
 
-        suppressMessages(extrafont::loadfonts())
-        ggsave(
-          plot,
-          filename = file.path(
-            path,
-            "go/module_plot",
-            paste(module_id, "plot.pdf", sep = "_")
-          ),
-          width = 21,
-          height = 7
-        )
-      })
+                    suppressMessages(extrafont::loadfonts())
+                    ggsave(
+                      plot,
+                      filename = file.path(
+                        path,
+                        "go/module_plot",
+                        paste(module_id, "plot.pdf", sep = "_")
+                      ),
+                      width = 21,
+                      height = 7
+                    )
+                  })
     }
 
-
-
-
-
     ##KEGG
+    message(rep("-", 20))
     message('KEGG...')
     all_module_id <-
       object@merged_pathway_kegg$result_with_module$module
 
-    all_module_id <-
-      data.frame(all_module_id = all_module_id) %>%
-      dplyr::count(all_module_id) %>%
-      dplyr::filter(n > 1) %>%
-      pull(all_module_id)
+    if (is.null(all_module_id)) {
+      all_module_id <- character()
+    } else{
+      all_module_id <-
+        data.frame(all_module_id = all_module_id) %>%
+        dplyr::count(all_module_id) %>%
+        dplyr::filter(n > 1) %>%
+        pull(all_module_id)
+    }
 
     if (length(all_module_id) > 0) {
       message("Output module plot...")
-      purrr::walk(.x = all_module_id, function(module_id) {
-        message(module_id, " ")
-        plot <-
-          plot_module_info(
-            object = object,
-            level = "module",
-            database = "kegg",
-            module_id = module_id
-          )
+      purrr::walk(.x = stringr::str_sort(all_module_id, numeric = TRUE),
+                  function(module_id) {
+                    message(module_id, " ")
+                    plot <-
+                      plot_module_info(
+                        object = object,
+                        level = "module",
+                        database = "kegg",
+                        module_id = module_id
+                      )
 
-        plot <-
-          plot[[1]] + plot[[2]] + plot[[3]] + patchwork::plot_layout(nrow = 1)
+                    plot <-
+                      plot[[1]] + plot[[2]] + plot[[3]] + patchwork::plot_layout(nrow = 1)
 
-        ggsave(
-          plot,
-          filename = file.path(
-            path,
-            "kegg/module_plot",
-            paste(module_id, "plot.pdf", sep = "_")
-          ),
-          width = 21,
-          height = 7
-        )
-      })
+                    ggsave(
+                      plot,
+                      filename = file.path(
+                        path,
+                        "kegg/module_plot",
+                        paste(module_id, "plot.pdf", sep = "_")
+                      ),
+                      width = 21,
+                      height = 7
+                    )
+                  })
     }
 
 
     ##Reactome
+    message(rep("-", 20))
     message('Reactome...')
     all_module_id <-
       object@merged_pathway_reactome$result_with_module$module
 
-    all_module_id <-
-      data.frame(all_module_id = all_module_id) %>%
-      dplyr::count(all_module_id) %>%
-      dplyr::filter(n > 1) %>%
-      pull(all_module_id)
+    if (is.null(all_module_id)) {
+      all_module_id <- character()
+    } else{
+      all_module_id <-
+        data.frame(all_module_id = all_module_id) %>%
+        dplyr::count(all_module_id) %>%
+        dplyr::filter(n > 1) %>%
+        pull(all_module_id)
+    }
 
     if (length(all_module_id) > 0) {
       message("Output module plot...")
-      purrr::walk(.x = all_module_id, function(module_id) {
-        message(module_id, " ")
-        plot <-
-          plot_module_info(
-            object = object,
-            level = "module",
-            database = "reactome",
-            module_id = module_id
-          )
+      purrr::walk(.x = stringr::str_sort(all_module_id, numeric = TRUE),
+                  function(module_id) {
+                    message(module_id, " ")
+                    plot <-
+                      plot_module_info(
+                        object = object,
+                        level = "module",
+                        database = "reactome",
+                        module_id = module_id
+                      )
 
-        plot <-
-          plot[[1]] + plot[[2]] + plot[[3]] + patchwork::plot_layout(nrow = 1)
+                    plot <-
+                      plot[[1]] + plot[[2]] + plot[[3]] + patchwork::plot_layout(nrow = 1)
 
-        ggsave(
-          plot,
-          filename = file.path(
-            path,
-            "reactome/module_plot",
-            paste(module_id, "plot.pdf", sep = "_")
-          ),
-          width = 21,
-          height = 7
-        )
-      })
+                    ggsave(
+                      plot,
+                      filename = file.path(
+                        path,
+                        "reactome/module_plot",
+                        paste(module_id, "plot.pdf", sep = "_")
+                      ),
+                      width = 21,
+                      height = 7
+                    )
+                  })
     }
 
     ##Functional module
+    message(rep("-", 20))
     message('Functional module...')
     all_module_id <-
       object@merged_module$result_with_module$module
 
-    all_module_id <-
-      data.frame(all_module_id = all_module_id) %>%
-      dplyr::count(all_module_id) %>%
-      dplyr::filter(n > 1) %>%
-      pull(all_module_id)
+    if (is.null(all_module_id)) {
+      all_module_id <- character()
+    } else{
+      all_module_id <-
+        data.frame(all_module_id = all_module_id) %>%
+        dplyr::count(all_module_id) %>%
+        dplyr::filter(n > 1) %>%
+        pull(all_module_id)
+    }
 
     if (length(all_module_id) > 0) {
       message("Output module plot...")
-      purrr::walk(.x = all_module_id, function(module_id) {
-        message(module_id, " ")
-        plot <-
-          plot_module_info(
-            object = object,
-            level = "functional_module",
-            database = "reactome",
-            module_id = module_id
-          )
+      purrr::walk(.x = stringr::str_sort(all_module_id, numeric = TRUE),
+                  function(module_id) {
+                    message(module_id, " ")
+                    plot <-
+                      plot_module_info(
+                        object = object,
+                        level = "functional_module",
+                        database = "reactome",
+                        module_id = module_id
+                      )
 
-        plot <-
-          plot[[1]] + plot[[2]] + plot[[3]] + patchwork::plot_layout(nrow = 1)
+                    plot <-
+                      plot[[1]] + plot[[2]] + plot[[3]] + patchwork::plot_layout(nrow = 1)
 
-        ggsave(
-          plot,
-          filename = file.path(
-            path,
-            "functional_modules/module_plot",
-            paste(module_id, "plot.pdf", sep = "_")
-          ),
-          width = 21,
-          height = 7
-        )
-      })
+                    ggsave(
+                      plot,
+                      filename = file.path(
+                        path,
+                        "functional_modules/module_plot",
+                        paste(module_id, "plot.pdf", sep = "_")
+                      ),
+                      width = 21,
+                      height = 7
+                    )
+                  })
     }
 
     message("Done")

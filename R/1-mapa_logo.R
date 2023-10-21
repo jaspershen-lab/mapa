@@ -5,7 +5,6 @@
 #' @return None. This function is called for its side effect of printing the logo and messages.
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #' @importFrom dplyr filter mutate select everything left_join syms case_when pull
-#' @importFrom rstudioapi isAvailable hasFun getThemeInfo
 #' @importFrom utils packageDescription write.csv
 #' @importFrom cli rule symbol cli_abort
 #' @importFrom crayon green blue col_align red black white style make_style num_colors
@@ -19,12 +18,14 @@
 #' @importFrom tibble add_column
 #' @importFrom magrittr %>%
 #' @importFrom tidygraph activate tbl_graph centrality_degree as_tbl_graph
-#' @importFrom stringr str_wrap
+#' @importFrom stringr str_wrap str_split str_replace_all str_sort str_detect
 #' @importFrom ggwordcloud geom_text_wordcloud
-#' @importFrom pRoloc goIdToTerm
 #' @importFrom GOSim getGOGraph
 #' @importFrom grid arrow
 #' @importFrom extrafont loadfonts
+#' @importFrom igraph bipartite_mapping
+#' @importFrom massdataset activate_mass_dataset extract_variable_info
+#' @importFrom simplifyEnrichment term_similarity_from_KEGG term_similarity_from_Reactome GO_similarity
 #' @import ggraph
 #' @import igraph
 #' @importFrom plyr dlply .

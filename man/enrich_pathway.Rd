@@ -2,58 +2,10 @@
 % Please edit documentation in R/9-enrich_pathway.R
 \name{enrich_pathway}
 \alias{enrich_pathway}
-\alias{enrich_pathway.mass_dataset}
-\alias{enrich_pathway.data.frame}
 \title{Enrich Pathways}
 \usage{
 enrich_pathway(
-  object,
-  database = c("go", "kegg", "reactome"),
-  save_to_local = FALSE,
-  path = "result",
-  OrgDb,
-  organism = "hsa",
-  keyType = "ENTREZID",
-  use_internal_data = FALSE,
-  ont = "ALL",
-  pvalueCutoff = 0.05,
-  pAdjustMethod = "BH",
-  universe_go = NULL,
-  universe_kegg = NULL,
-  universe_reactome = NULL,
-  qvalueCutoff = 0.2,
-  minGSSize = 10,
-  maxGSSize = 500,
-  readable = FALSE,
-  pool = FALSE,
-  ...
-)
-
-\method{enrich_pathway}{mass_dataset}(
-  object,
-  database = c("go", "kegg", "reactome"),
-  save_to_local = FALSE,
-  path = "result",
-  OrgDb,
-  organism = "hsa",
-  keyType = "ENTREZID",
-  use_internal_data = FALSE,
-  ont = "ALL",
-  pvalueCutoff = 0.05,
-  pAdjustMethod = "BH",
-  universe_go = NULL,
-  universe_kegg = NULL,
-  universe_reactome = NULL,
-  qvalueCutoff = 0.2,
-  minGSSize = 10,
-  maxGSSize = 500,
-  readable = FALSE,
-  pool = FALSE,
-  ...
-)
-
-\method{enrich_pathway}{data.frame}(
-  object,
+  variable_info,
   database = c("go", "kegg", "reactome"),
   save_to_local = FALSE,
   path = "result",
@@ -76,7 +28,8 @@ enrich_pathway(
 )
 }
 \arguments{
-\item{object}{A list containing relevant gene information or an object that has a specific method for \code{enrich_pathway}.}
+\item{variable_info}{A data.frame containing relevant gene information or
+an object that has a specific method for \code{enrich_pathway}.}
 
 \item{database}{Character vector, specify which database(s) to use for enrichment ('go', 'kegg', 'reactome').}
 
@@ -124,13 +77,31 @@ This function performs enrichment analysis on various databases such as GO, KEGG
 It's a generic function that dispatches to specific methods based on the class of the 'object' parameter.
 }
 \examples{
-\dontrun{
-# Create a sample object
-sample_object <- list(ensembl = c("ENSG000001", "ENSG000002"), uniprot = c("P12345", "P67890"))
+data("demo_data")
 
-# Perform enrichment
-result <- enrich_pathway(object = sample_object, database = c("go", "kegg"), OrgDb = org.Hs.eg.db)
-}
+variable_info <-
+  demo_data \%>\%
+  massdataset::activate_mass_dataset(what = "variable_info") \%>\%
+  dplyr::filter(fdr < 0.05 & score > 0) \%>\%
+  massdataset::extract_variable_info()
+require(org.Hs.eg.db)
+enriched_pathways <-
+  enrich_pathway(
+    variable_info = variable_info,
+    save_to_local = FALSE,
+    path = "result",
+    OrgDb = org.Hs.eg.db,
+    organism = "hsa",
+    database = c("kegg", "reactome"),
+    ont = "ALL",
+    pvalueCutoff = 0.05,
+    pAdjustMethod = "BH",
+    qvalueCutoff = 0.2,
+    minGSSize = 10,
+    maxGSSize = 500,
+    readable = FALSE,
+    pool = FALSE
+  )
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}

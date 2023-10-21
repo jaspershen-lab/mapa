@@ -10,6 +10,8 @@ An S4 class to represent enriched pathways
 \section{Slots}{
 
 \describe{
+\item{\code{variable_info}}{variable information contains marker information.}
+
 \item{\code{enrichment_go_result}}{ANY Object storing GO enrichment results.}
 
 \item{\code{enrichment_kegg_result}}{ANY Object storing KEGG enrichment results.}

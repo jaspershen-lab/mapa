@@ -1,4 +1,6 @@
 # setwd(r4projects::get_project_wd())
+# source("R/6-utils.R")
+# source("R/8-functional_module_class.R")
 # setwd("demo_data/")
 # library(ggraph)
 # library(igraph)
@@ -6,12 +8,29 @@
 # library(tidyverse)
 # library(extrafont)
 # library(simplifyEnrichment)
-# library(pRoloc)
 # library(GOSim)
+# library(plyr)
 #
 # load("result/enriched_pathways")
 #
-# modules <-
+# object = enriched_pathways
+# p.adjust.cutoff.go = 0.05
+# p.adjust.cutoff.kegg = 0.05
+# p.adjust.cutoff.reactome = 0.05
+# count.cutoff.go = 5
+# count.cutoff.kegg = 5
+# count.cutoff.reactome = 5
+# sim.cutoff.go = 0.5
+# sim.cutoff.kegg = 0.5
+# sim.cutoff.reactome = 0.5
+# measure.method.go = "Wang"
+# measure.method.kegg = "jaccard"
+# measure.method.reactome = "jaccard"
+# path = "result"
+# save_to_local = FALSE
+#
+#
+# enriched_modules <-
 #   merge_pathways(
 #     object = enriched_pathways,
 #     p.adjust.cutoff.go = 0.05,
@@ -30,7 +49,7 @@
 #     save_to_local = FALSE
 #   )
 #
-# save(modules, file = "result/modules")
+# save(enriched_modules, file = "result/enriched_modules")
 
 
 #' Merge Pathways from Multiple Databases
@@ -99,6 +118,7 @@ merge_pathways <-
       dir.create(path, recursive = TRUE, showWarnings = FALSE)
     }
     ###GO database
+    message(rep("-", 20))
     message("GO database...")
     merged_pathway_go <-
       merge_pathways_internal(
@@ -112,6 +132,7 @@ merge_pathways <-
         save_to_local = save_to_local
       )
     ###KEGG database
+    message(rep("-", 20))
     message("KEGG database...")
     merged_pathway_kegg <-
       merge_pathways_internal(
@@ -126,6 +147,7 @@ merge_pathways <-
       )
 
     ###Reactome database
+    message(rep("-", 20))
     message("Reactome database...")
     merged_pathway_reactome <-
       merge_pathways_internal(
@@ -179,7 +201,7 @@ merge_pathways <-
     slot(object, "process_info") <-
       process_info
 
-    message("\nDone")
+    message("Done")
 
     object
   }
@@ -233,6 +255,10 @@ merge_pathways_internal <-
 
     if (missing(pathway_result)) {
       stop("pathway_result is required")
+    }
+
+    if(is.null(pathway_result)){
+      return(list())
     }
 
     if (!is(pathway_result, "enrichResult")) {
@@ -339,9 +365,9 @@ merge_pathways_internal <-
       dplyr::mutate(degree = tidygraph::centrality_degree())
 
     subnetwork <-
-      igraph::cluster_edge_betweenness(graph = graph_data,
-                                       weights = abs(edge_attr(graph_data,
-                                                               "sim")))
+      suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data,
+                                                        weights = abs(edge_attr(graph_data,
+                                                                                "sim"))))
 
     # save(subnetwork, file = file.path(path, "subnetwork"))
     cluster <-
@@ -352,7 +378,9 @@ merge_pathways_internal <-
 
     graph_data <-
       graph_data %>%
-      mutate(module = cluster)
+      igraph::upgrade_graph() %>%
+      tidygraph::activate(what = "nodes") %>%
+      dplyr::mutate(module = cluster)
 
     ###clustered different GO terms
     result_with_module <-
@@ -380,7 +408,7 @@ merge_pathways_internal <-
 
     graph_data <-
       graph_data %>%
-      activate(what = "nodes") %>%
+      tidygraph::activate(what = "nodes") %>%
       dplyr::left_join(module_content_number, by = "module")
 
     if (save_to_local) {
@@ -469,7 +497,7 @@ merge_pathways_internal <-
            file = file.path(path, "intermediate_data/module_result"))
     }
 
-    message("\nDone")
+    message("Done")
 
     list(
       graph_data = graph_data,

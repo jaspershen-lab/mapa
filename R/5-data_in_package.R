@@ -9,3 +9,14 @@
 #' data(demo_data)
 NA
 
+
+#' @title enriched_functional_module
+#'
+#' @description enriched_functional_module
+#' @name enriched_functional_module
+#' @format A enriched_functional_module object.
+#' @docType data
+#' @keywords data
+#' @examples
+#' data(enriched_functional_module)
+NA

@@ -1,8 +1,8 @@
 Package: mapa
 Type: Package
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.1.0
-Date: 2023-10-15
+Version: 0.1.1
+Date: 2023-10-19
 Authors@R: c(
     person(given = "Xiaotao",
            family = "Shen",
@@ -21,6 +21,7 @@ Depends: R (>= 4.1)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz  # or 'gzip', 'bzip2'
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 VignetteBuilder: knitr
@@ -46,7 +47,6 @@ Imports:
     extrafont,
     ggraph,
     igraph,
-    pRoloc,
     patchwork,
     plyr,
     simplifyEnrichment,
@@ -62,8 +62,9 @@ Suggests:
     tidyverse,
     testthat (>= 3.0.0),
     ggplotify,
-    plotly
-Note:
+    plotly,
+    pRoloc,
+    org.Hs.eg.db
 Remotes: 
     gitlab::tidymass/massdataset
 biocViews: transcriptomics, proteomics

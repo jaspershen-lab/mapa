@@ -5,7 +5,6 @@
 \title{Identify Functional Modules Across Different Databases}
 \usage{
 merge_modules(
-  variable_info,
   object,
   sim.cutoff = 0.5,
   measure_method = c("jaccard"),
@@ -14,8 +13,6 @@ merge_modules(
 )
 }
 \arguments{
-\item{variable_info}{A data frame or tibble containing variable information.}
-
 \item{object}{An S4 object, expected to be processed by \code{merge_pathways()}.}
 
 \item{sim.cutoff}{A numerical value for similarity cutoff, default is 0.5.}

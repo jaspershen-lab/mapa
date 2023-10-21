@@ -1,25 +1,21 @@
 # setwd(r4projects::get_project_wd())
+# source("R/6-utils.R")
+# source("R/8-functional_module_class.R")
 # setwd("demo_data/")
-#
-# load("demo_data.rda")
-# load("result/modules")
-# load("result/enriched_pathways")
-# load("result/functional_module")
-#
-# variable_info <-
-#   extract_variable_info(demo_data)
+# load("result/enriched_functional_module")
 #
 # object <-
-#   functional_module
-#
-# plot_similarity_network(object,
-#                         level = "module",
-#                         database = "go",
-#                         degree_cutoff = 10)
-#
+#   enriched_functional_module
 #
 # plot_similarity_network(
-#   object,
+#   object = enriched_functional_module,
+#   level = "module",
+#   database = "go",
+#   degree_cutoff = 10
+# )
+#
+# plot_similarity_network(
+#   object = enriched_functional_module,
 #   level = "module",
 #   database = "go",
 #   degree_cutoff = 10,
@@ -28,12 +24,12 @@
 # )
 #
 # plot_similarity_network(
-#   object,
+#   object = enriched_functional_module,
 #   level = "functional_module",
 #   database = "go",
 #   degree_cutoff = 1,
 #   module_id = "Functional_module_53",
-#   text_all = FALSE
+#   text_all = TRUE
 # )
 
 
@@ -83,15 +79,20 @@ plot_similarity_network <-
     database <-
       match.arg(database)
 
-    if(!is(object, "functional_module")){
+    if (!is(object, "functional_module")) {
       stop("object must be functional_module class")
     }
 
     if (level == "module") {
+      if (all(names(object@process_info) != "merge_pathways")) {
+        stop("Please use the merge_pathways() function to process first")
+      }
       ###GO
       if (database == "go") {
         if (length(object@merged_pathway_go) == 0) {
-          stop("Please use the merge_pathways() function to process first")
+          warning("No enriched GO modules")
+          return(ggplot() +
+                   geom_blank())
         } else{
           graph_data <-
             object@merged_pathway_go$graph_data
@@ -101,7 +102,9 @@ plot_similarity_network <-
       ###KEGG
       if (database == "kegg") {
         if (length(object@merged_pathway_kegg) == 0) {
-          stop("Please use the merge_pathways() function to process first")
+          warning("No enriched KEGG modules")
+          return(ggplot() +
+                   geom_blank())
         } else{
           graph_data <-
             object@merged_pathway_kegg$graph_data
@@ -111,7 +114,9 @@ plot_similarity_network <-
       ###Reactome
       if (database == "reactome") {
         if (length(object@merged_pathway_reactome) == 0) {
-          stop("Please use the merge_pathways() function to process first")
+          warning("No enriched Reactome modules")
+          return(ggplot() +
+                   geom_blank())
         } else{
           graph_data <-
             object@merged_pathway_reactome$graph_data
@@ -121,8 +126,14 @@ plot_similarity_network <-
 
 
     if (level == "functional_module") {
-      if (length(object@merged_module) == 0) {
+      if (all(names(object@process_info) != "merge_modules")) {
         stop("Please use the merge_modules() function to process first")
+      }
+
+      if (length(object@merged_module) == 0) {
+        warning("No enriched functional modules")
+        return(ggplot() +
+                 geom_blank())
       } else{
         graph_data <-
           object@merged_module$graph_data
@@ -134,11 +145,25 @@ plot_similarity_network <-
       tidygraph::activate(what = "nodes") %>%
       dplyr::filter(module_content_number > degree_cutoff)
 
+    if (igraph::gorder(graph_data) == 0) {
+      warning("No functional modules have degree > ", degree_cutoff)
+      return(ggplot() +
+               geom_blank())
+    }
+
+
     if (!missing(module_id)) {
       graph_data <-
         graph_data %>%
         tidygraph::activate(what = "nodes") %>%
         dplyr::filter(module %in% module_id)
+
+      if (igraph::gorder(graph_data) == 0) {
+        warning(module_id, " is not in the graph data")
+        return(ggplot() +
+                 geom_blank())
+      }
+
     }
 
     ###plot to show the clusters of GO terms
@@ -153,13 +178,14 @@ plot_similarity_network <-
             dplyr::pull(Description)
         },
         error = function(e) {
+
         },
         warning = function(w) {
           # Handle warning here if needed
         }
       )
 
-    if(is.null(cluster_label_module)){
+    if (is.null(cluster_label_module)) {
       cluster_label_module <- ""
     }
 
@@ -168,15 +194,15 @@ plot_similarity_network <-
 
     plot <-
       graph_data %>%
-      ggraph(layout = 'fr',
-             circular = FALSE) +
-      geom_edge_link(
+      ggraph::ggraph(layout = 'fr',
+                     circular = FALSE) +
+      ggraph::geom_edge_link(
         aes(width = sim),
         color = "black",
         alpha = 1,
         show.legend = TRUE
       ) +
-      geom_node_point(
+      ggraph::geom_node_point(
         aes(fill = module,
             size = -log(p.adjust, 10)),
         shape = 21,
@@ -184,7 +210,7 @@ plot_similarity_network <-
         show.legend = TRUE
       ) +
       guides(fill = guide_legend(ncol = 1)) +
-      scale_edge_width_continuous(range = c(0.1, 2)) +
+      ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
       scale_size_continuous(range = c(1, 7)) +
       ggraph::theme_graph() +
       theme(
@@ -198,15 +224,15 @@ plot_similarity_network <-
       if (text_all) {
         plot <-
           plot +
-          geom_node_text(aes(x = x,
-                             y = y,
-                             label = Description),
-                         size = 3,
-                         repel = TRUE)
+          ggraph::geom_node_text(aes(x = x,
+                                     y = y,
+                                     label = Description),
+                                 size = 3,
+                                 repel = TRUE)
       } else{
         plot <-
           plot +
-          geom_node_text(aes(
+          ggraph::geom_node_text(aes(
             x = x,
             y = y,
             label = ifelse(Description %in% cluster_label_module, Description, NA)
@@ -221,38 +247,6 @@ plot_similarity_network <-
 
 
 
-
-# wb = openxlsx::createWorkbook()
-# openxlsx::modifyBaseFont(wb, fontSize = 12, fontName = "Times New Roma")
-# addWorksheet(wb, sheetName = "enriched_pathway_result", gridLines = TRUE)
-# addWorksheet(wb, sheetName = "enriched_module_result", gridLines = TRUE)
-# freezePane(wb,
-#            sheet = 1,
-#            firstRow = TRUE,
-#            firstCol = TRUE)
-# freezePane(wb,
-#            sheet = 2,
-#            firstRow = TRUE,
-#            firstCol = TRUE)
-# writeDataTable(
-#   wb,
-#   sheet = 1,
-#   x = result_with_module,
-#   colNames = TRUE,
-#   rowNames = FALSE
-# )
-#
-# writeDataTable(
-#   wb,
-#   sheet = 2,
-#   x = module_result,
-#   colNames = TRUE,
-#   rowNames = FALSE
-# )
-#
-# saveWorkbook(wb,
-#              file = file.path(path, "enriched_result.xlsx"),
-#              overwrite = TRUE)
 
 ####output some results
 # dir.create(

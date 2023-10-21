@@ -1,5 +1,6 @@
 #'An S4 class to represent enriched pathways
 #' @docType class
+#' @slot variable_info variable information contains marker information.
 #' @slot enrichment_go_result ANY Object storing GO enrichment results.
 #' @slot enrichment_kegg_result ANY Object storing KEGG enrichment results.
 #' @slot enrichment_reactome_result ANY Object storing Reactome enrichment results.
@@ -14,6 +15,7 @@
 setClass(
   Class = "functional_module",
   representation(
+    variable_info = "data.frame",
     enrichment_go_result = "ANY",
     enrichment_kegg_result = "ANY",
     enrichment_reactome_result = "ANY",
@@ -60,6 +62,10 @@ setMethod(
       try(object@enrichment_reactome_result, silent = TRUE)
     parameter <-
       try(object@parameter, silent = TRUE)
+
+    message(crayon::green("-----------Variable information------------"))
+    message(crayon::green(nrow(object@variable_info)),
+            crayon::green(" markers in total"))
 
     message(crayon::green("-----------GO------------"))
     if (is.null(enrichment_go_result)) {

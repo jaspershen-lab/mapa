@@ -1,30 +1,28 @@
 # setwd(r4projects::get_project_wd())
+# source("R/6-utils.R")
+# source("R/8-functional_module_class.R")
 # setwd("demo_data/")
 #
 # load("demo_data.rda")
-# load("result/modules")
+# load("result/enriched_modules")
 #
-# variable_info <-
-#   extract_variable_info(demo_data)
-#
-# functional_module <-
+# enriched_functional_module <-
 #   merge_modules(
-#     variable_info = variable_info,
-#     object = modules,
+#     object = enriched_modules,
 #     sim.cutoff = 0.5,
 #     measure_method = c("jaccard"),
 #     path = "result",
-#     save_to_local = TRUE
+#     save_to_local = FALSE
 #   )
 #
-# save(functional_module, file = "result/functional_module")
+# save(enriched_functional_module,
+#      file = "result/enriched_functional_module")
 
 #' Identify Functional Modules Across Different Databases
 #'
 #' This function identify functional modules from various databases, such as GO, KEGG, and Reactome.
 #' It calculates the similarity matrix between all the pathways and clusters them into functional modules.
 #'
-#' @param variable_info A data frame or tibble containing variable information.
 #' @param object An S4 object, expected to be processed by `merge_pathways()`.
 #' @param sim.cutoff A numerical value for similarity cutoff, default is 0.5.
 #' @param measure_method A character vector indicating the method for measuring similarity, default is "jaccard".
@@ -43,13 +41,13 @@
 #' @export
 
 merge_modules <-
-  function(variable_info,
-           object,
+  function(object,
            sim.cutoff = 0.5,
            measure_method = c("jaccard"),
            path = "result",
            save_to_local = FALSE) {
-    if(save_to_local){
+    variable_info <- object@variable_info
+    if (save_to_local) {
       path <- file.path(path, "functional_modules")
       dir.create(path, showWarnings = FALSE, recursive = TRUE)
       dir.create(
@@ -146,6 +144,8 @@ merge_modules <-
         variable_info = variable_info
       )
 
+    ####module detection
+    message("Identifying funcitonal modules...")
     edge_data =
       jaccard_index %>%
       dplyr::filter(value > sim.cutoff) %>%
@@ -165,9 +165,9 @@ merge_modules <-
       dplyr::mutate(degree = tidygraph::centrality_degree())
 
     subnetwork <-
-      igraph::cluster_edge_betweenness(graph = graph_data,
-                                       weights = abs(edge_attr(graph_data,
-                                                               "sim")))
+      suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data,
+                                                        weights = abs(edge_attr(graph_data,
+                                                                                "sim"))))
     cluster <-
       paste("Functional_module",
             as.character(igraph::membership(subnetwork)),
@@ -175,7 +175,9 @@ merge_modules <-
 
     graph_data <-
       graph_data %>%
-      mutate(module = cluster)
+      igraph::upgrade_graph() %>%
+      tidygraph::activate(what = "nodes") %>%
+      tidygraph::mutate(module = cluster)
 
     ###clustered different GO terms
     result_with_module <-
@@ -195,17 +197,17 @@ merge_modules <-
       result_with_module %>%
       dplyr::left_join(module_content_number, by = "module")
 
-    if(save_to_local){
+    if (save_to_local) {
       save(result_with_module,
            file = file.path(path, "intermediate_data/result_with_module"))
     }
 
     graph_data <-
       graph_data %>%
-      activate(what = "nodes") %>%
+      tidygraph::activate(what = "nodes") %>%
       dplyr::left_join(module_content_number, by = "module")
 
-    if(save_to_local){
+    if (save_to_local) {
       save(graph_data, file = file.path(path, "intermediate_data/graph_data"))
     }
 
@@ -286,7 +288,7 @@ merge_modules <-
     functional_module_result$qvalue <-
       as.numeric(functional_module_result$qvalue)
 
-    if(save_to_local){
+    if (save_to_local) {
       save(
         functional_module_result,
         file = file.path(path, "intermediate_data/functional_module_result")
@@ -321,6 +323,6 @@ merge_modules <-
     slot(object, "process_info") <-
       process_info
 
-    message("\nDone")
+    message("Done")
     object
   }

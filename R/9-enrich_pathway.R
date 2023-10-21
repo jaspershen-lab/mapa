@@ -1,5 +1,8 @@
 # setwd(r4projects::get_project_wd())
+# source("R/6-utils.R")
+# source("R/8-functional_module_class.R")
 # setwd("demo_data/")
+#
 # library(clusterProfiler)
 # library(org.Hs.eg.db)
 # library(ReactomePA)
@@ -8,13 +11,13 @@
 #
 # variable_info <-
 #   demo_data %>%
-#   activate_mass_dataset(what = "variable_info") %>%
+#   massdataset::activate_mass_dataset(what = "variable_info") %>%
 #   dplyr::filter(fdr < 0.05 & score > 0) %>%
-#   extract_variable_info()
+#   massdataset::extract_variable_info()
 #
 # enriched_pathways <-
 #   enrich_pathway(
-#     object = variable_info,
+#     variable_info = variable_info,
 #     save_to_local = FALSE,
 #     path = "result",
 #     OrgDb = org.Hs.eg.db,
@@ -38,7 +41,8 @@
 #' This function performs enrichment analysis on various databases such as GO, KEGG, and Reactome.
 #' It's a generic function that dispatches to specific methods based on the class of the 'object' parameter.
 #'
-#' @param object A list containing relevant gene information or an object that has a specific method for `enrich_pathway`.
+#' @param variable_info A data.frame containing relevant gene information or
+#' an object that has a specific method for `enrich_pathway`.
 #' @param database Character vector, specify which database(s) to use for enrichment ('go', 'kegg', 'reactome').
 #' @param save_to_local Logical, if TRUE the results will be saved to local disk.
 #' @param path Character, the directory where to save the results if save_to_local is TRUE.
@@ -65,44 +69,35 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Create a sample object
-#' sample_object <- list(ensembl = c("ENSG000001", "ENSG000002"), uniprot = c("P12345", "P67890"))
+#' data("demo_data", package = "mapa")
 #'
-#' # Perform enrichment
-#' result <- enrich_pathway(object = sample_object, database = c("go", "kegg"), OrgDb = org.Hs.eg.db)
-#'}
+#' variable_info <-
+#'   demo_data %>%
+#'   massdataset::activate_mass_dataset(what = "variable_info") %>%
+#'   dplyr::filter(fdr < 0.05 & score > 0) %>%
+#'   massdataset::extract_variable_info()
+#' require(org.Hs.eg.db)
+#' enriched_pathways <-
+#'   enrich_pathway(
+#'     variable_info = variable_info,
+#'     save_to_local = FALSE,
+#'     path = "result",
+#'     OrgDb = org.Hs.eg.db,
+#'     organism = "hsa",
+#'     database = c("kegg", "reactome"),
+#'     ont = "ALL",
+#'     pvalueCutoff = 0.05,
+#'     pAdjustMethod = "BH",
+#'     qvalueCutoff = 0.2,
+#'     minGSSize = 10,
+#'     maxGSSize = 500,
+#'     readable = FALSE,
+#'     pool = FALSE
+#'   )
+
 
 enrich_pathway <-
-  function(object,
-           database = c("go", "kegg", "reactome"),
-           save_to_local = FALSE,
-           path = "result",
-           OrgDb,
-           organism = "hsa",
-           keyType = "ENTREZID",
-           use_internal_data = FALSE,
-           ont = "ALL",
-           pvalueCutoff = 0.05,
-           pAdjustMethod = "BH",
-           universe_go = NULL,
-           universe_kegg = NULL,
-           universe_reactome = NULL,
-           qvalueCutoff = 0.2,
-           minGSSize = 10,
-           maxGSSize = 500,
-           readable = FALSE,
-           pool = FALSE,
-           ...) {
-    UseMethod("enrich_pathway")
-  }
-
-#' @method enrich_pathway mass_dataset
-#' @rdname enrich_pathway
-#' @export
-
-enrich_pathway.mass_dataset <-
-  function(object,
+  function(variable_info,
            database = c("go", "kegg", "reactome"),
            save_to_local = FALSE,
            path = "result",
@@ -123,141 +118,6 @@ enrich_pathway.mass_dataset <-
            pool = FALSE,
            ...) {
     ###check the id of markers
-    variable_info <-
-      massdataset::extract_variable_info(object)
-
-    enrich_pathway_internal(
-      object = variable_info,
-      database = database,
-      save_to_local = save_to_local,
-      path = path,
-      OrgDb = OrgDb,
-      organism = organism,
-      keyType = keyType,
-      use_internal_data = use_internal_data,
-      ont = ont,
-      pvalueCutoff = pvalueCutoff,
-      pAdjustMethod = pAdjustMethod,
-      qvalueCutoff = qvalueCutoff,
-      minGSSize = minGSSize,
-      maxGSSize = maxGSSize,
-      readable = readable,
-      universe_go,
-      universe_kegg,
-      universe_reactome,
-      pool = pool,
-      ...
-    )
-
-  }
-
-
-#' @method enrich_pathway data.frame
-#' @rdname enrich_pathway
-#' @export
-
-enrich_pathway.data.frame <-
-  function(object,
-           database = c("go", "kegg", "reactome"),
-           save_to_local = FALSE,
-           path = "result",
-           OrgDb,
-           organism = "hsa",
-           keyType = "ENTREZID",
-           use_internal_data = FALSE,
-           ont = "ALL",
-           pvalueCutoff = 0.05,
-           pAdjustMethod = "BH",
-           universe_go = NULL,
-           universe_kegg = NULL,
-           universe_reactome = NULL,
-           qvalueCutoff = 0.2,
-           minGSSize = 10,
-           maxGSSize = 500,
-           readable = FALSE,
-           pool = FALSE,
-           ...) {
-    enrich_pathway_internal(
-      object = object,
-      database = database,
-      save_to_local = save_to_local,
-      path = path,
-      OrgDb = OrgDb,
-      organism = organism,
-      keyType = keyType,
-      use_internal_data = use_internal_data,
-      ont = ont,
-      pvalueCutoff = pvalueCutoff,
-      pAdjustMethod = pAdjustMethod,
-      qvalueCutoff = qvalueCutoff,
-      minGSSize = minGSSize,
-      maxGSSize = maxGSSize,
-      readable = readable,
-      universe_go,
-      universe_kegg,
-      universe_reactome,
-      pool = pool,
-      ...
-    )
-  }
-
-
-#' Internal Function for Enriching Pathways
-#'
-#' This is an internal function that performs enrichment analysis on various databases such as GO, KEGG, and Reactome.
-#' The function takes in a list of genes and additional parameters to perform the enrichment.
-#'
-#' @param object A list containing relevant gene information.
-#' @param database Character vector, specify which database(s) to use for enrichment ('go', 'kegg', 'reactome').
-#' @param save_to_local Logical, if TRUE the results will be saved to local disk.
-#' @param path Character, the directory where to save the results if save_to_local is TRUE.
-#' @param OrgDb Object, the OrgDb object required for GO enrichment.
-#' @param organism Character, the organism code.
-#' @param keyType Character, the type of key to be used.
-#' @param use_internal_data Logical, whether to use internal data for KEGG enrichment.
-#' @param ont Character, the ontology to be used for GO enrichment ('ALL', 'BP', 'CC', 'MF').
-#' @param pvalueCutoff Numeric, the p-value cutoff for enrichment.
-#' @param pAdjustMethod Character, the method for adjusting p-values.
-#' @param universe_go Numeric vector, the universe for GO enrichment.
-#' @param universe_kegg Numeric vector, the universe for KEGG enrichment.
-#' @param universe_reactome Numeric vector, the universe for Reactome enrichment.
-#' @param qvalueCutoff Numeric, the q-value cutoff for enrichment.
-#' @param minGSSize Numeric, the minimum gene set size for enrichment.
-#' @param maxGSSize Numeric, the maximum gene set size for enrichment.
-#' @param readable Logical, whether to make the results more human-readable.
-#' @param pool Logical, whether to use clusterProfiler's pooling feature.
-#' @param ... Additional arguments passed to the underlying functions.
-#'
-#' @return An object of class 'functional_module' containing the enrichment results and parameters.
-#'
-#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
-#'
-
-enrich_pathway_internal <-
-  function(object,
-           database = c("go", "kegg", "reactome"),
-           save_to_local = FALSE,
-           path = "result",
-           OrgDb,
-           organism = "hsa",
-           keyType = "ENTREZID",
-           use_internal_data = FALSE,
-           ont = "ALL",
-           pvalueCutoff = 0.05,
-           pAdjustMethod = "BH",
-           universe_go = NULL,
-           universe_kegg = NULL,
-           universe_reactome = NULL,
-           qvalueCutoff = 0.2,
-           minGSSize = 10,
-           maxGSSize = 500,
-           readable = FALSE,
-           pool = FALSE,
-           ...) {
-    ###check the id of markers
-    variable_info <-
-      object
-
     if (readable) {
       readable <- FALSE
     }
@@ -451,6 +311,7 @@ enrich_pathway_internal <-
     result <-
       new(
         "functional_module",
+        variable_info = variable_info,
         enrichment_go_result = enrichment_go_result,
         enrichment_kegg_result = enrichment_kegg_result,
         enrichment_reactome_result = enrichment_reactome_result,

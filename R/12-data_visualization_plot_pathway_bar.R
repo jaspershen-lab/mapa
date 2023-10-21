@@ -1,58 +1,30 @@
 # setwd(r4projects::get_project_wd())
 # setwd("demo_data/")
-#
-# load("demo_data.rda")
-# load("result/modules")
-# load("result/enriched_pathways")
-# load("result/functional_module")
+# load("result/enriched_functional_module")
 #
 # object <-
-#   functional_module
+#   enriched_functional_module
 #
 # plot_pathway_bar(
-#   object = enriched_pathways,
+#   object = enriched_functional_module,
 #   top_n = 10,
 #   y_lable_width = 30,
 #   level = "pathway"
 # )
 #
 # plot_pathway_bar(
-#   object = modules,
-#   top_n = 10,
-#   y_lable_width = 30,
-#   level = "pathway"
-# )
-#
-# plot_pathway_bar(
-#   object = modules,
-#   top_n = 10,
-#   y_lable_width = 30,
-#   level = "module"
-# )
-#
-#
-# plot_pathway_bar(
-#   object = functional_module,
-#   top_n = 10,
-#   y_lable_width = 30,
-#   level = "pathway"
-# )
-#
-# plot_pathway_bar(
-#   object = functional_module,
+#   object = enriched_functional_module,
 #   top_n = 10,
 #   y_lable_width = 30,
 #   level = "module"
 # )
 #
 # plot_pathway_bar(
-#   object = functional_module,
+#   object = enriched_functional_module,
 #   top_n = 10,
 #   y_lable_width = 30,
 #   level = "functional_module"
 # )
-
-
 
 #' Plot Pathway Bar Chart
 #'
@@ -103,49 +75,108 @@ plot_pathway_bar <-
 
     if (level == "pathway") {
       enrichment_go_result <-
-        object@enrichment_go_result@result %>%
-        dplyr::mutate(class = "GO")
+        tryCatch(
+          object@enrichment_go_result@result %>%
+            dplyr::mutate(class = "GO"),
+          error = function(e) {
+            NULL
+          }
+        )
       enrichment_kegg_result <-
-        object@enrichment_kegg_result@result %>%
-        dplyr::mutate(class = "KEGG")
+        tryCatch(
+          object@enrichment_kegg_result@result %>%
+            dplyr::mutate(class = "KEGG"),
+          error = function(e) {
+            NULL
+          }
+        )
       enrichment_reactome_result <-
-        object@enrichment_reactome_result@result %>%
-        dplyr::mutate(class = "Reactome")
+        tryCatch(
+          object@enrichment_reactome_result@result %>%
+            dplyr::mutate(class = "Reactome"),
+          error = function(e) {
+            NULL
+          }
+        )
+
+      if (is.null(enrichment_go_result) &
+          is.null(enrichment_kegg_result) &
+          is.null(enrichment_reactome_result)) {
+        stop("No enriched pathways for all the datasets")
+      }
 
       temp_data <-
-        enrichment_go_result %>%
-        dplyr::full_join(enrichment_kegg_result,
-                         by = intersect(colnames(.),
-                                        colnames(enrichment_kegg_result))) %>%
-        dplyr::full_join(enrichment_reactome_result,
-                         by = colnames(enrichment_reactome_result)) %>%
-        dplyr::filter(p.adjust < p.adjust.cutoff &
-                        Count > count.cutoff)
+        rbind(enrichment_reactome_result,
+              enrichment_kegg_result)
+
+      if (is.null(temp_data)) {
+        temp_data <-
+          enrichment_go_result
+      } else{
+        if (!is.null(enrichment_go_result)) {
+          temp_data <-
+            enrichment_go_result %>%
+            dplyr::full_join(temp_data,
+                             by = intersect(colnames(.),
+                                            colnames(temp_data))) %>%
+            dplyr::filter(p.adjust < p.adjust.cutoff &
+                            Count > count.cutoff)
+        }
+      }
     }
 
     if (level == "module") {
       if (length(object@merged_pathway_go) == 0 &
-          length(object@merged_pathway_go) == 0 &
-          length(object@merged_pathway_go) == 0) {
+          length(object@merged_pathway_kegg) == 0 &
+          length(object@merged_pathway_reactome) == 0) {
         stop("Please use the merge_pathways() function to process first")
       } else{
         module_result_go <-
-          object@merged_pathway_go$module_result %>%
-          dplyr::mutate(class = "GO")
+          tryCatch(
+            object@merged_pathway_go$module_result %>%
+              dplyr::mutate(class = "GO"),
+            error = function(e) {
+              NULL
+            }
+          )
         module_result_kegg <-
-          object@merged_pathway_kegg$module_result %>%
-          dplyr::mutate(class = "KEGG")
+          tryCatch(
+            object@merged_pathway_kegg$module_result %>%
+              dplyr::mutate(class = "KEGG"),
+            error = function(e) {
+              NULL
+            }
+          )
+
         module_result_reactome <-
-          object@merged_pathway_reactome$module_result %>%
-          dplyr::mutate(class = "Reactome")
+          tryCatch(
+            object@merged_pathway_reactome$module_result %>%
+              dplyr::mutate(class = "Reactome"),
+            error = function(e) {
+              NULL
+            }
+          )
+
 
         temp_data <-
-          module_result_go %>%
-          dplyr::full_join(module_result_kegg,
-                           by = intersect(colnames(.),
-                                          colnames(module_result_kegg))) %>%
-          dplyr::full_join(module_result_reactome,
-                           by = colnames(module_result_reactome)) %>%
+          rbind(module_result_kegg,
+                module_result_reactome)
+
+        if (is.null(temp_data)) {
+          temp_data <-
+            module_result_go
+        } else{
+          if (!is.null(module_result_go)) {
+            temp_data <-
+              module_result_go %>%
+              dplyr::full_join(temp_data,
+                               by = intersect(colnames(.),
+                                              colnames(module_result_go)))
+          }
+        }
+
+        temp_data <-
+          temp_data %>%
           dplyr::filter(p.adjust < p.adjust.cutoff &
                           Count > count.cutoff) %>%
           dplyr::select(-Description) %>%
@@ -154,8 +185,7 @@ plot_pathway_bar <-
       }
     }
 
-
-    if (level == "function_module") {
+    if (level == "functional_module") {
       if (length(object@merged_module) == 0) {
         stop("Please use the merge_modules() function to process first")
       } else{
@@ -174,14 +204,52 @@ plot_pathway_bar <-
     }
 
     database2 <-
-      switch (database,
-              go = "GO",
-              kegg = "KEGG",
-              reactome = "Reactome")
+      database
+
+    database2[database2 == "go"] <- "GO"
+    database2[database2 == "kegg"] <- "KEGG"
+    database2[database2 == "reactome"] <- "Reactome"
+
+
+    temp_data <-
+      temp_data %>%
+      dplyr::filter(class %in% database2)
+
+
+    if (nrow(temp_data) == 0) {
+      warning("No suitable pathways or modules are available")
+      return(
+        temp_data %>%
+          dplyr::arrange(p.adjust) %>%
+          head(top_n) %>%
+          dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
+          dplyr::arrange(log.p) %>%
+          dplyr::mutate(Description = factor(Description, levels = Description)) %>%
+          ggplot(aes(log.p, Description)) +
+          scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+          geom_segment(aes(
+            x = 0,
+            y = Description,
+            xend = log.p,
+            yend = Description,
+            color = class
+          )) +
+          geom_point(aes(size = Count,
+                         fill = class),
+                     shape = 21,
+                     alpha = 1) +
+          scale_size_continuous(range = c(3, 7)) +
+          scale_fill_manual(values = database_color) +
+          scale_color_manual(values = database_color) +
+          theme_bw() +
+          labs(y = "", x = "-log10(FDR adjusted P-values)") +
+          geom_vline(xintercept = 0) +
+          theme(panel.grid.minor = element_blank())
+      )
+    }
 
     plot <-
       temp_data %>%
-      dplyr::filter(class %in% database2) %>%
       dplyr::arrange(p.adjust) %>%
       head(top_n) %>%
       dplyr::mutate(log.p = -log(p.adjust, 10)) %>%

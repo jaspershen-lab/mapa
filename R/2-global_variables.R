@@ -39,5 +39,6 @@ globalVariables(names = c(
   "from",
   "r",
   "marker",
-  "module_content_number"
+  "module_content_number",
+  "include"
 ))

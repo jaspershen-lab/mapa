@@ -1,4 +1,4 @@
-core <- c("ggplot2", "dplyr", "magrittr")
+core <- c("ggplot2", "dplyr", "magrittr", "massdataset")
 
 mapa_core_unloaded <- function() {
   search <- paste0("package:", core)
@@ -24,12 +24,6 @@ mapa_attach <- function() {
   if (length(to_load) == 0)
     return(invisible())
 
-  # msg(cli::rule(
-  #   left = crayon::bold("Attaching packages"),
-  #   right = paste0("mapa ", mapa_package_version("mapa"))
-  # ),
-  # startup = TRUE)
-
   versions <-
     vapply(to_load, mapa_package_version, character(1))
   packages <- paste0(
@@ -45,8 +39,6 @@ mapa_attach <- function() {
   }
   col1 <- seq_len(length(packages) / 2)
   info <- paste0(packages[col1], "     ", packages[-col1])
-
-  # msg(paste(info, collapse = "\n"), startup = TRUE)
 
   suppressPackageStartupMessages(lapply(to_load, same_library))
 
