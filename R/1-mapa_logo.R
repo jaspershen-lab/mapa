@@ -23,7 +23,8 @@
 #' @importFrom GOSim getGOGraph
 #' @importFrom grid arrow
 #' @importFrom extrafont loadfonts
-#' @importFrom igraph bipartite_mapping
+#' @importFrom igraph bipartite_mapping edge_attr membership upgrade_graph vertex_attr
+#' @importFrom igraph cluster_edge_betweenness
 #' @importFrom massdataset activate_mass_dataset extract_variable_info
 #' @importFrom simplifyEnrichment term_similarity_from_KEGG term_similarity_from_Reactome GO_similarity
 #' @import ggraph

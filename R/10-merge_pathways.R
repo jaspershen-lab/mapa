@@ -161,6 +161,18 @@ merge_pathways <-
         save_to_local = save_to_local
       )
 
+    if (is.null(merged_pathway_go)) {
+      merged_pathway_go <- list()
+    }
+
+    if (is.null(merged_pathway_kegg)) {
+      merged_pathway_kegg <- list()
+    }
+
+    if (is.null(merged_pathway_reactome)) {
+      merged_pathway_reactome <- list()
+    }
+
     slot(object, "merged_pathway_go") <-
       merged_pathway_go
     slot(object, "merged_pathway_kegg") <-
@@ -257,7 +269,7 @@ merge_pathways_internal <-
       stop("pathway_result is required")
     }
 
-    if(is.null(pathway_result)){
+    if (is.null(pathway_result)) {
       return(list())
     }
 
