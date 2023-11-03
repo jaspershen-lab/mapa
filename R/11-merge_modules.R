@@ -39,7 +39,6 @@
 #'
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #' @export
-
 merge_modules <-
   function(object,
            sim.cutoff = 0.5,
@@ -146,7 +145,7 @@ merge_modules <-
 
     ####module detection
     message("Identifying funcitonal modules...")
-    edge_data =
+    edge_data <-
       jaccard_index %>%
       dplyr::filter(value > sim.cutoff) %>%
       dplyr::rename(from = name1, to = name2, sim = value)
@@ -252,6 +251,9 @@ merge_modules <-
 
         x$Count <-
           length(stringr::str_split(x$geneID[1], pattern = "/")[[1]])
+
+        x$pathway_id <-
+          paste(x$pathway_id, collapse = ";")
 
         x <-
           x %>%
