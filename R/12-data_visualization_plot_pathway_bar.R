@@ -186,21 +186,28 @@ plot_pathway_bar <-
     }
 
     if (level == "functional_module") {
-      if (length(object@merged_module) == 0) {
+      if (length(object@merged_module) == 0 &
+          all(names(object@process_info) != "merge_modules")) {
         stop("Please use the merge_modules() function to process first")
-      } else{
-        functional_module_result <-
-          object@merged_module$functional_module_result
-
-        temp_data <-
-          functional_module_result %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff &
-                          Count > count.cutoff) %>%
-          dplyr::select(-Description) %>%
-          dplyr::rename(Description = module_annotation,
-                        class = database)
-
       }
+
+      if (length(object@merged_module) == 0 &
+          any(names(object@process_info) == "merge_modules")) {
+        stop('No enriched functional modules')
+      }
+
+      functional_module_result <-
+        object@merged_module$functional_module_result
+
+      temp_data <-
+        functional_module_result %>%
+        dplyr::filter(p.adjust < p.adjust.cutoff &
+                        Count > count.cutoff) %>%
+        dplyr::select(-Description) %>%
+        dplyr::rename(Description = module_annotation,
+                      class = database)
+
+
     }
 
     database2 <-
@@ -227,17 +234,21 @@ plot_pathway_bar <-
           dplyr::mutate(Description = factor(Description, levels = Description)) %>%
           ggplot(aes(log.p, Description)) +
           scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-          geom_segment(aes(
-            x = 0,
-            y = Description,
-            xend = log.p,
-            yend = Description,
-            color = class
-          )) +
-          geom_point(aes(size = Count,
-                         fill = class),
-                     shape = 21,
-                     alpha = 1) +
+          geom_segment(
+            aes(
+              x = 0,
+              y = Description,
+              xend = log.p,
+              yend = Description,
+              color = class
+            )
+          ) +
+          geom_point(
+            aes(size = Count,
+                fill = class),
+            shape = 21,
+            alpha = 1
+          ) +
           scale_size_continuous(range = c(3, 7)) +
           scale_fill_manual(values = database_color) +
           scale_color_manual(values = database_color) +

@@ -17,3 +17,7 @@
 # mapa 0.1.5
 
 * Fix bugs.
+
+# mapa 0.1.6
+
+* Fix bugs.

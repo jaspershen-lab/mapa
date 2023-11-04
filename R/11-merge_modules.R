@@ -153,7 +153,36 @@ merge_modules <-
     node_data <-
       rbind(module_result_go,
             module_result_kegg,
-            module_result_reactome) %>%
+            module_result_reactome)
+
+    if (is.null(node_data)) {
+      parameter = new(
+        Class = "tidymass_parameter",
+        pacakge_name = "mapa",
+        function_name = "merge_modules()",
+        parameter = list(
+          sim.cutoff = sim.cutoff,
+          measure_method = measure_method,
+          path = path
+        ),
+        time = Sys.time()
+      )
+
+      process_info <-
+        slot(object, "process_info")
+
+      process_info$merge_modules <-
+        parameter
+
+      slot(object, "process_info") <-
+        process_info
+
+      message("Done")
+      return(object)
+    }
+
+    node_data <-
+      node_data %>%
       dplyr::select(module, dplyr::everything()) %>%
       dplyr::rename(node = module)
 

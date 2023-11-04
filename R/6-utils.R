@@ -270,6 +270,14 @@ get_jaccard_index_for_three_databases <-
             module_result_kegg,
             module_result_reactome)
 
+    if(is.null(met_data)){
+      return(data.frame(
+        name1 = character(),
+        name2 = character(),
+        value = numeric()
+      ))
+    }
+
     if (nrow(met_data) == 0 | nrow(met_data) == 1) {
       return(data.frame(
         name1 = character(),

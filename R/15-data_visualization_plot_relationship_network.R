@@ -109,6 +109,7 @@
 #'
 #' @export
 
+
 plot_relationship_network <-
   function(object,
            include_functional_modules = TRUE,
@@ -233,7 +234,7 @@ plot_relationship_network <-
           functional_module_position_limits[2] * max(coords$x),
           length.out = nrow(temp_coords)
         )
-      coords[coords$class == "Functional_module",] <-
+      coords[coords$class == "Functional_module", ] <-
         temp_coords
     }
 
@@ -248,7 +249,7 @@ plot_relationship_network <-
           module_position_limits[2] * max(coords$x),
           length.out = nrow(temp_coords)
         )
-      coords[coords$class == "Module",] <-
+      coords[coords$class == "Module", ] <-
         temp_coords
     }
 
@@ -263,7 +264,7 @@ plot_relationship_network <-
           pathway_position_limits[2] * max(coords$x),
           length.out = nrow(temp_coords)
         )
-      coords[coords$class == "Pathway",] <-
+      coords[coords$class == "Pathway", ] <-
         temp_coords
     }
 
@@ -278,7 +279,7 @@ plot_relationship_network <-
           molecule_position_limits[2] * max(coords$x),
           length.out = nrow(temp_coords)
         )
-      coords[coords$class == "Molecule",] <-
+      coords[coords$class == "Molecule", ] <-
         temp_coords
     }
 
@@ -487,6 +488,9 @@ create_relation_network <-
 
     ######create edge_data and node_data
     ####1functional_module vs module
+    if (length(object@merged_module) == 0) {
+      stop('No enriched functional modules')
+    }
     edge_data1 <-
       tryCatch(
         expr = {
