@@ -9,7 +9,6 @@
 #' data(demo_data)
 "demo_data"
 
-
 #' @title enriched_functional_module
 #'
 #' @description enriched_functional_module

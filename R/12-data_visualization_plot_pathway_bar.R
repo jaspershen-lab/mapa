@@ -25,6 +25,13 @@
 #   y_lable_width = 30,
 #   level = "functional_module"
 # )
+#
+# plot_pathway_bar(
+#   object = enriched_functional_module,
+#   top_n = 10,
+#   y_lable_width = 30,
+#   level = "functional_module", line_type = "meteor"
+# )
 
 #' Plot Pathway Bar Chart
 #'
@@ -34,7 +41,10 @@
 #' @param object An object containing the enrichment results and other relevant data.
 #' @param top_n An integer specifying the top N pathways to display.
 #' @param y_lable_width An integer specifying the width of the Y-axis labels.
-#' @param level A character string specifying the level of analysis. One of "pathway", "module", or "functional_module".
+#' @param level A character string specifying the level of analysis.
+#' One of "pathway", "module", or "functional_module".
+#' @param line_type A character string specifying the type of line to use for the bar chart.
+#' One of "straight" or "meteor".
 #' @param p.adjust.cutoff A numeric value for the FDR adjusted P-value cutoff.
 #' @param count.cutoff A numeric value for the count cutoff.
 #' @param database_color A named vector containing the colors for different databases.
@@ -46,13 +56,33 @@
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #'
 #' @examples
-#' \dontrun{
-#' # Assume `obj` is an object containing the relevant data
-#' plot_pathway_bar(obj, top_n = 5, level = "pathway")
-#' plot_pathway_bar(obj, top_n = 10, level = "module", p.adjust.cutoff = 0.05)
-#' }
+#' data("enriched_functional_module", package = "mapa")
+#' plot_pathway_bar(
+#'   object = enriched_functional_module,
+#'   top_n = 10,
+#'   y_lable_width = 30,
+#'   level = "pathway"
+#' )
 #'
-#' @export
+#' plot_pathway_bar(
+#'   object = enriched_functional_module,
+#'   top_n = 10,
+#'   y_lable_width = 30,
+#'   level = "pathway",
+#'   line_type = "meteor"
+#' )
+#'
+#' plot_pathway_bar(enriched_functional_module,
+#'                  top_n = 10,
+#'                  level = "module")
+#'
+#' plot_pathway_bar(
+#'   enriched_functional_module,
+#'   top_n = 10,
+#'   level = "functional_module",
+#'   p.adjust.cutoff = 0.05
+#' )
+#'@export
 
 plot_pathway_bar <-
   function(object,
@@ -61,6 +91,7 @@ plot_pathway_bar <-
            level = c("pathway",
                      "module",
                      "functional_module"),
+           line_type = c("straight", "meteor"),
            p.adjust.cutoff = 0.05,
            count.cutoff = 5,
            database_color =
@@ -72,6 +103,8 @@ plot_pathway_bar <-
            database = c("go", "kegg", "reactome")) {
     level <-
       match.arg(level)
+    line_type <-
+      match.arg(line_type)
 
     if (level == "pathway") {
       enrichment_go_result <-
@@ -157,7 +190,6 @@ plot_pathway_bar <-
             }
           )
 
-
         temp_data <-
           rbind(module_result_kegg,
                 module_result_reactome)
@@ -206,8 +238,6 @@ plot_pathway_bar <-
         dplyr::select(-Description) %>%
         dplyr::rename(Description = module_annotation,
                       class = database)
-
-
     }
 
     database2 <-
@@ -217,11 +247,9 @@ plot_pathway_bar <-
     database2[database2 == "kegg"] <- "KEGG"
     database2[database2 == "reactome"] <- "Reactome"
 
-
     temp_data <-
       temp_data %>%
       dplyr::filter(class %in% database2)
-
 
     if (nrow(temp_data) == 0) {
       warning("No suitable pathways or modules are available")
@@ -259,37 +287,116 @@ plot_pathway_bar <-
       )
     }
 
-    plot <-
-      temp_data %>%
-      dplyr::arrange(p.adjust) %>%
-      head(top_n) %>%
-      dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
-      dplyr::arrange(log.p) %>%
-      dplyr::mutate(Description = factor(Description, levels = Description)) %>%
-      ggplot(aes(log.p, Description)) +
-      scale_y_discrete(
-        labels = function(x)
-          str_wrap(x, width = y_lable_width)
-      ) +
-      scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-      geom_segment(aes(
-        x = 0,
-        y = Description,
-        xend = log.p,
-        yend = Description,
-        color = class
-      )) +
-      geom_point(aes(size = Count,
-                     fill = class),
-                 shape = 21,
-                 alpha = 1) +
-      scale_size_continuous(range = c(3, 7)) +
-      scale_fill_manual(values = database_color) +
-      scale_color_manual(values = database_color) +
-      theme_bw() +
-      labs(y = "", x = "-log10(FDR adjusted P-values)") +
-      geom_vline(xintercept = 0) +
-      theme(panel.grid.minor = element_blank())
+    if (line_type == "straight") {
+      plot <-
+        temp_data %>%
+        dplyr::arrange(p.adjust) %>%
+        head(top_n) %>%
+        dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
+        dplyr::arrange(log.p) %>%
+        dplyr::mutate(Description = factor(Description, levels = Description)) %>%
+        ggplot(aes(log.p, Description)) +
+        scale_y_discrete(
+          labels = function(x)
+            str_wrap(x, width = y_lable_width)
+        ) +
+        scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+        geom_segment(
+          aes(
+            x = 0,
+            y = Description,
+            xend = log.p,
+            yend = Description,
+            color = class
+          ),
+          show.legend = FALSE
+        ) +
+        geom_point(aes(size = Count,
+                       fill = class),
+                   shape = 21,
+                   alpha = 1) +
+        scale_size_continuous(range = c(3, 7)) +
+        scale_fill_manual(values = database_color) +
+        scale_color_manual(values = database_color) +
+        theme_bw() +
+        labs(
+          y = "",
+          x = "-log10(FDR adjusted P-values)",
+          size = "Gene number",
+          fill = "Database"
+        ) +
+        geom_vline(xintercept = 0) +
+        theme(panel.grid.minor = element_blank(),
+              axis.ticks.y = element_blank()) +
+        guides(fill = guide_legend(override.aes = list(size = 5)))
+    } else{
+      plot <-
+        temp_data %>%
+        dplyr::arrange(p.adjust) %>%
+        head(top_n) %>%
+        dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
+        dplyr::arrange(log.p) %>%
+        dplyr::mutate(Description = factor(Description, levels = Description)) %>%
+        ggplot(aes(log.p, Description)) +
+        scale_y_discrete(
+          labels = function(x)
+            str_wrap(x, width = y_lable_width)
+        ) +
+        scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+        # geom_segment(aes(
+        #   x = 0,
+        #   y = Description,
+        #   xend = log.p,
+        #   yend = Description,
+        #   color = class
+        # ),
+        # show.legend = FALSE) +
+        ggforce::geom_link(
+          aes(
+            x = 0,
+            y = Description,
+            xend = log.p,
+            yend = Description,
+            alpha = stat(index),
+            size = after_stat(index),
+            color = class
+          ),
+          show.legend = FALSE
+        ) +
+        geom_point(
+          aes(size = Count,
+              color = class),
+          shape = 21,
+          size = 6,
+          fill = "white",
+          alpha = 1
+        ) +
+        geom_text(
+          aes(
+            x = log.p,
+            y = Description,
+            label = paste("Gene number:", Count)
+          ),
+          size = 2.5,
+          color = "grey20",
+          hjust = 1.2,
+          nudge_x = 0.05
+        ) +
+        scale_size_continuous(range = c(3, 7)) +
+        scale_fill_manual(values = database_color) +
+        scale_color_manual(values = database_color) +
+        theme_bw() +
+        labs(
+          y = "",
+          x = "-log10(FDR adjusted P-values)",
+          size = "Gene number",
+          fill = "Database"
+        ) +
+        geom_vline(xintercept = 0) +
+        theme(panel.grid.minor = element_blank(),
+              axis.ticks.y = element_blank()) +
+        guides(fill = guide_legend(override.aes = list(size = 5)))
+    }
 
     plot
   }

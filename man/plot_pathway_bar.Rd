@@ -9,6 +9,7 @@ plot_pathway_bar(
   top_n = 10,
   y_lable_width = 50,
   level = c("pathway", "module", "functional_module"),
+  line_type = c("straight", "meteor"),
   p.adjust.cutoff = 0.05,
   count.cutoff = 5,
   database_color = c(GO = "#1F77B4FF", KEGG = "#FF7F0EFF", Reactome = "#2CA02CFF"),
@@ -22,7 +23,11 @@ plot_pathway_bar(
 
 \item{y_lable_width}{An integer specifying the width of the Y-axis labels.}
 
-\item{level}{A character string specifying the level of analysis. One of "pathway", "module", or "functional_module".}
+\item{level}{A character string specifying the level of analysis.
+One of "pathway", "module", or "functional_module".}
+
+\item{line_type}{A character string specifying the type of line to use for the bar chart.
+One of "straight" or "meteor".}
 
 \item{p.adjust.cutoff}{A numeric value for the FDR adjusted P-value cutoff.}
 
@@ -41,12 +46,32 @@ This function plots a bar chart representing enriched pathways, modules, or func
 The bars are colored according to the database of origin.
 }
 \examples{
-\dontrun{
-# Assume `obj` is an object containing the relevant data
-plot_pathway_bar(obj, top_n = 5, level = "pathway")
-plot_pathway_bar(obj, top_n = 10, level = "module", p.adjust.cutoff = 0.05)
-}
+data("enriched_functional_module", package = "mapa")
+plot_pathway_bar(
+  object = enriched_functional_module,
+  top_n = 10,
+  y_lable_width = 30,
+  level = "pathway"
+)
 
+plot_pathway_bar(
+  object = enriched_functional_module,
+  top_n = 10,
+  y_lable_width = 30,
+  level = "pathway",
+  line_type = "meteor"
+)
+
+plot_pathway_bar(enriched_functional_module,
+                 top_n = 10,
+                 level = "module")
+
+plot_pathway_bar(
+  enriched_functional_module,
+  top_n = 10,
+  level = "functional_module",
+  p.adjust.cutoff = 0.05
+)
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}

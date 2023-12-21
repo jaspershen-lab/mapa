@@ -21,3 +21,7 @@
 # mapa 0.1.6
 
 * Fix bugs.
+
+# mapa 0.1.7
+
+* Improve the plot_pathway_bar function.

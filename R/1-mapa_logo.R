@@ -31,6 +31,7 @@
 #' @import igraph
 #' @importFrom plyr dlply .
 #' @import patchwork
+#' @importFrom ggforce geom_link
 #' @importClassesFrom massdataset tidymass_parameter
 #' @export
 #' @examples
