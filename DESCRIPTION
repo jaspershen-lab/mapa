@@ -39,6 +39,7 @@ Imports:
     purrr,
     grid,
     ggforce,
+    httr,
     stats,
     utils,
     tidyr,
