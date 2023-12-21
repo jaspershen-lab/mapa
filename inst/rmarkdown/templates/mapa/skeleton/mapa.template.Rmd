@@ -1,0 +1,50 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = "#>")
+```
+
+<img src="mapa_logo.png" alt="" style="width:200px">
+
+<h1>**Module Annotation for Pathway Enrichment Result Analysis**</h1>
+<h3>[mapa](https://jaspershen.github.io/mapa/) by [The Shen lab](https://www.shen-lab.org/)</h3>
+<h3>`r format(Sys.Date())`</h3>
+
+---
+
+### **<font color = "lightseagreen">INTRODUCTION</font>**
+
+<h4> <p style="line-height:1.5em;">**mapa (version 0.01)**: Created in 2021 by [The Shen lab](https://www.shen-lab.org/)</p> </h4>
+
+---
+
+### **<font color = "lightseagreen">PARAMETERS</font>**
+
+#### **Table 1: Parameter setting**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+load("parameters.rda")
+kable(parameters, format = "markdown")
+```
+
+---
+
+### **<font color = "lightseagreen">SAMPLE INFORMATION</font>**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, message=FALSE}
+load("object.rda")
+object
+```
+
+### **Figure 1: Barplot of the enriched pathways/modules.**
+
+![](plot_functional_module.png)
+![](plot_module.png)
+![](plot_pathway.png)

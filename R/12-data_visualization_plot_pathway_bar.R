@@ -106,6 +106,10 @@ plot_pathway_bar <-
     line_type <-
       match.arg(line_type)
 
+    if (!is(object, "functional_module")) {
+      stop("object must be functional_module class")
+    }
+
     if (level == "pathway") {
       enrichment_go_result <-
         tryCatch(

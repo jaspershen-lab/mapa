@@ -49,6 +49,7 @@ translate_language <-
              "russian",
              "spanish"
            )) {
+    # browser()
     engine <-
       match.arg(engine)
 
@@ -57,11 +58,11 @@ translate_language <-
 
     if (engine == "chatgpt") {
       prompt <- paste0("Translate to ", to, ":\n", text)
-      request_chatgpt_response(prompt = prompt)
+      return(request_chatgpt_response(prompt = prompt))
     }
 
     if (engine == "gemini") {
       prompt <- paste0("Translate to ", to, ":\n", text)
-      request_gemini_response(prompt = prompt)
+      return(request_gemini_response(prompt = prompt))
     }
   }

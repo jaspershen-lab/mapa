@@ -49,6 +49,7 @@ request_gemini_response <-
     if (nchar(api_key) == 0) {
       stop("Please set the API key first using the function `set_gemini_api_key()`")
     }
+
     model_query <- "gemini-pro:generateContent"
 
     response <- httr::POST(
@@ -57,12 +58,12 @@ request_gemini_response <-
         model_query
       ),
       query = list(key = api_key),
-      httr::content_type_json(),
+      config = httr::content_type_json(),
       encode = "json",
       body = list(
-        contents = list(parts = list(list(text = prompt))),
-        generationConfig = list(temperature = 0.5,
-                                maxOutputTokens = 1024)
+        contents = list(parts = list(list(text = prompt)))
+        # generationConfig = list(temperature = 0.5,
+        #                         maxOutputTokens = 1024)
       )
     )
     candidates <- httr::content(response)$candidates

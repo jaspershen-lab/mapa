@@ -29,3 +29,7 @@
 # mapa 0.1.8
 
 * Support ChatGPT and Gemini.
+
+# mapa 0.1.9
+
+* Use the ChatGPT to interpretate the pathways.

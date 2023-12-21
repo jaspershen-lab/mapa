@@ -46,49 +46,49 @@ export_functional_module <-
 
     enriched_pathway_go <-
       object@enrichment_go_result@result
-    if(is.null(enriched_pathway_go)){
+    if (is.null(enriched_pathway_go)) {
       enriched_pathway_go <-
         data.frame()
     }
 
     enriched_pathway_kegg <-
       object@enrichment_kegg_result@result
-    if(is.null(enriched_pathway_kegg)){
+    if (is.null(enriched_pathway_kegg)) {
       enriched_pathway_kegg <-
         data.frame()
     }
 
     enriched_pathway_reactome <-
       object@enrichment_reactome_result@result
-    if(is.null(enriched_pathway_reactome)){
+    if (is.null(enriched_pathway_reactome)) {
       enriched_pathway_reactome <-
         data.frame()
     }
 
     enriched_module_go <-
       object@merged_pathway_go$module_result
-    if(is.null(enriched_module_go)){
+    if (is.null(enriched_module_go)) {
       enriched_module_go <-
         data.frame()
     }
 
     enriched_module_kegg <-
       object@merged_pathway_kegg$module_result
-    if(is.null(enriched_module_kegg)){
+    if (is.null(enriched_module_kegg)) {
       enriched_module_kegg <-
         data.frame()
     }
 
     enriched_module_reactome <-
       object@merged_pathway_reactome$module_result
-    if(is.null(enriched_module_reactome)){
+    if (is.null(enriched_module_reactome)) {
       enriched_module_reactome <-
         data.frame()
     }
 
     enriched_functional_module <-
       object@merged_module$functional_module_result
-    if(is.null(enriched_functional_module)){
+    if (is.null(enriched_functional_module)) {
       enriched_functional_module <-
         data.frame()
     }
