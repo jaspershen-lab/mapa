@@ -25,3 +25,7 @@
 # mapa 0.1.7
 
 * Improve the plot_pathway_bar function.
+
+# mapa 0.1.8
+
+* Support ChatGPT and Gemini.
