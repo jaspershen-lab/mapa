@@ -322,28 +322,42 @@ plot_module_info <-
 
   }
 
-#' Export Module Information Plot
+#' Export Module Information Plots
 #'
-#' This function exports plots for functional modules, saving them as PDF files in the specified directory.
-#' Plots for modules from the GO, KEGG, Reactome, and custom functional modules are supported.
+#' This function exports plots of module information for different databases (GO, KEGG, Reactome, etc.)
+#' from a given 'functional_module' object. It supports multiple image formats.
 #'
-#' @param object A functional_module object.
-#' @param path A character string specifying the directory path to save the plots.
+#' @param object An object of class 'functional_module' containing the module information.
+#' @param path The file path where the plots will be saved.
+#' Default is "result".
+#' @param image_type The format of the output image, can be 'pdf', 'png', or 'jpeg'.
+#' Default is 'pdf'.
+#' @param width Width of the output image in inches. Default is 21.
+#' @param height Height of the output image in inches. Default is 7.
 #'
-#' @return Prints messages indicating the progress and saves plots in the specified directory.
-#'
-#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @return This function does not return a value but outputs image files to the specified path.
 #'
 #' @examples
 #' \dontrun{
-#' obj <- functional_module$new(...)
-#' export_module_info_plot(obj, path = "result")
+#'   # Assuming 'my_module' is a valid functional_module object
+#'   export_module_info_plot(object = my_module, path = "my_results", image_type = "png")
 #' }
 #'
+#' @export
+#' @importFrom ggplot2 ggsave
+#' @importFrom purrr walk
+#' @importFrom dplyr count filter
+#' @importFrom stringr str_sort
+#' @importFrom patchwork plot_layout
 
 export_module_info_plot <-
   function(object,
-           path = "result") {
+           path = "result",
+           image_type = c("pdf", "png", "jpeg"),
+           width = 21,
+           height = 7) {
+    image_type <-
+      match.arg(image_type)
     if (!is(object, "functional_module")) {
       stop("object must be functional_module class")
     }
@@ -408,10 +422,10 @@ export_module_info_plot <-
                       filename = file.path(
                         path,
                         "go/module_plot",
-                        paste(module_id, "plot.pdf", sep = "_")
+                        paste(module_id, paste0("plot.", image_type), sep = "_")
                       ),
-                      width = 21,
-                      height = 7
+                      width = width,
+                      height = height
                     )
                   })
     }
@@ -453,10 +467,10 @@ export_module_info_plot <-
                       filename = file.path(
                         path,
                         "kegg/module_plot",
-                        paste(module_id, "plot.pdf", sep = "_")
+                        paste(module_id, paste0("plot.", image_type), sep = "_")
                       ),
-                      width = 21,
-                      height = 7
+                      width = width,
+                      height = height
                     )
                   })
     }
@@ -499,10 +513,10 @@ export_module_info_plot <-
                       filename = file.path(
                         path,
                         "reactome/module_plot",
-                        paste(module_id, "plot.pdf", sep = "_")
+                        paste(module_id, paste0("plot.", image_type), sep = "_")
                       ),
-                      width = 21,
-                      height = 7
+                      width = weight,
+                      height = height
                     )
                   })
     }
@@ -544,10 +558,10 @@ export_module_info_plot <-
                       filename = file.path(
                         path,
                         "functional_modules/module_plot",
-                        paste(module_id, "plot.pdf", sep = "_")
+                        paste(module_id, paste0("plot.", image_type), sep = "_")
                       ),
-                      width = 21,
-                      height = 7
+                      width = width,
+                      height = height
                     )
                   })
     }

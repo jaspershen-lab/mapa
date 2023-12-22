@@ -1,3 +1,15 @@
+# ####example
+# setwd(r4projects::get_project_wd())
+# setwd("demo_data/")
+#
+# load("enriched_functional_module.rda")
+# load("intepretation_result.rda")
+#
+# report_functional_module(object = object,
+#                          intepretation_result = interpretation_result,
+#                          path = ".",
+#                          type = "all")
+
 #' Generate a Report for a Functional Module
 #'
 #' This function generates a report for a given object of class 'functional_module'.
@@ -154,22 +166,113 @@ report_functional_module <-
       height = 6
     )
 
+    ####Whole module network
+    similarity_network_go <-
+      plot_similarity_network(object = object,
+                              level = "module",
+                              database = "go") +
+      labs(title = "GO")
+
+    similarity_network_reactome <-
+      plot_similarity_network(object = object,
+                              level = "module",
+                              database = "reactome") +
+      labs(title = "Reactome")
+
+    similarity_network_kegg <-
+      plot_similarity_network(object = object,
+                              level = "module",
+                              database = "kegg") +
+      labs(title = "KEGG")
+
+    similarity_network_function_module <-
+      plot_similarity_network(object = object,
+                              level = "functional_module",
+                              database = "kegg") +
+      labs(title = "Functional modules")
+
+    ggplot2::ggsave(
+      filename = file.path(output_path, "similarity_network_function_module.png"),
+      plot = similarity_network_function_module,
+      width = 8,
+      height = 6
+    )
+
+    ggplot2::ggsave(
+      filename = file.path(output_path, "similarity_network_go.png"),
+      plot = similarity_network_go,
+      width = 8,
+      height = 6
+    )
+
+    ggplot2::ggsave(
+      filename = file.path(output_path, "similarity_network_reactome.png"),
+      plot = similarity_network_reactome,
+      width = 8,
+      height = 6
+    )
+
+    ggplot2::ggsave(
+      filename = file.path(output_path, "similarity_network_kegg.png"),
+      plot = similarity_network_kegg,
+      width = 8,
+      height = 6
+    )
+
+    ####Module network analysis
+    ###
+    functional_module_id <-
+      enriched_functional_module@merged_module$functional_module_result %>%
+      dplyr::filter(p.adjust < 0.05 & Count >= 5) %>%
+      dplyr::arrange(p.adjust) %>%
+      head(10) %>%
+      pull(module)
+
+    if (length(functional_module_id) > 0) {
+      functional_module_length <-
+        lapply(functional_module_id, function(x) {
+          sum(enriched_functional_module@merged_module$result_with_module$module == x)
+        }) %>%
+        unlist()
+
+      functional_module_id <-
+        functional_module_id[functional_module_length > 1]
+    }
+
+    if (length(functional_module_id) > 0) {
+      plot <-
+        plot_module_info(object = enriched_functional_module,
+                         level = "functional_module",
+                         module_id = functional_module_id[1])
+    }
+
     message("Render report.")
+
+    if (missing(intepretation_result)) {
+      intepretation_result <- "> No interpretation result is provided."
+    }
+
     ##transform rmd to HTML or pdf
     if (type == "html" | type == "all") {
-      rmarkdown::render(file.path(output_path, "mapa.template.Rmd"),
-                        rmarkdown::html_document())
+      rmarkdown::render(
+        file.path(output_path, "mapa.template.Rmd"),
+        output_format = rmarkdown::html_document(),
+        params = list(text_data = interpretation_result)
+      )
+
       file.rename(
         from = file.path(output_path, "mapa.template.html"),
         to = file.path(output_path, "mapa_report.html")
       )
     }
 
-
     ########render rmarkddown to html or pdf
     if (type == "pdf" | type == "all") {
-      rmarkdown::render(file.path(output_path, "mapa.template.Rmd"),
-                        rmarkdown::pdf_document())
+      rmarkdown::render(
+        input = file.path(output_path, "mapa.template.Rmd"),
+        output_format = rmarkdown::pdf_document(),
+        params = list(text_data = interpretation_result)
+      )
       file.rename(
         from = file.path(output_path, "mapa.template.pdf"),
         to = file.path(output_path, "mapa_report.pdf")
@@ -178,8 +281,11 @@ report_functional_module <-
 
     ########render rmarkddown to word or all
     if (type == "word" | type == "all") {
-      rmarkdown::render(file.path(output_path, "mapa.template.Rmd"),
-                        rmarkdown::word_document())
+      rmarkdown::render(
+        file.path(output_path, "mapa.template.Rmd"),
+        output_format = rmarkdown::word_document(),
+        params = list(text_data = interpretation_result)
+      )
       file.rename(
         from = file.path(output_path, "mapa.template.pdf"),
         to = file.path(output_path, "mapa_report.pdf")

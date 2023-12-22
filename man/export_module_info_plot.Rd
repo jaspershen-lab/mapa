@@ -2,29 +2,40 @@
 % Please edit documentation in R/13-data_visualization_plot_module_info.R
 \name{export_module_info_plot}
 \alias{export_module_info_plot}
-\title{Export Module Information Plot}
+\title{Export Module Information Plots}
 \usage{
-export_module_info_plot(object, path = "result")
+export_module_info_plot(
+  object,
+  path = "result",
+  image_type = c("pdf", "png", "jpeg"),
+  width = 21,
+  height = 7
+)
 }
 \arguments{
-\item{object}{A functional_module object.}
+\item{object}{An object of class 'functional_module' containing the module information.}
 
-\item{path}{A character string specifying the directory path to save the plots.}
+\item{path}{The file path where the plots will be saved.
+Default is "result".}
+
+\item{image_type}{The format of the output image, can be 'pdf', 'png', or 'jpeg'.
+Default is 'pdf'.}
+
+\item{width}{Width of the output image in inches. Default is 21.}
+
+\item{height}{Height of the output image in inches. Default is 7.}
 }
 \value{
-Prints messages indicating the progress and saves plots in the specified directory.
+This function does not return a value but outputs image files to the specified path.
 }
 \description{
-This function exports plots for functional modules, saving them as PDF files in the specified directory.
-Plots for modules from the GO, KEGG, Reactome, and custom functional modules are supported.
+This function exports plots of module information for different databases (GO, KEGG, Reactome, etc.)
+from a given 'functional_module' object. It supports multiple image formats.
 }
 \examples{
 \dontrun{
-obj <- functional_module$new(...)
-export_module_info_plot(obj, path = "result")
+  # Assuming 'my_module' is a valid functional_module object
+  export_module_info_plot(object = my_module, path = "my_results", image_type = "png")
 }
 
-}
-\author{
-Xiaotao Shen \email{shenxt1990@outlook.com}
 }
