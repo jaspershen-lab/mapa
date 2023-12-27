@@ -16,21 +16,21 @@ ui <- dashboardPage(
         icon = icon("info-circle")
       ),
       menuItem("Totorial", tabName = "tutorial", icon = icon("book")),
-      menuItem("Upload data", tabName = "upload_data", icon = icon("upload")),
+      menuItem("Upload Data", tabName = "upload_data", icon = icon("upload")),
       menuItem(
-        "Enrich pathways",
+        "Enrich Pathways",
         tabName = "enrich_pathways",
         icon = icon("cogs")
       ),
-      menuItem("Merge pathways", tabName = "merge_pathways", icon = icon("cogs")),
-      menuItem("Merge modules", tabName = "merge_modules", icon = icon("cogs")),
+      menuItem("Merge Pathways", tabName = "merge_pathways", icon = icon("cogs")),
+      menuItem("Merge Modules", tabName = "merge_modules", icon = icon("cogs")),
       menuItem(
-        "Data visualization",
+        "Data Visualization",
         tabName = "data_visualization",
         icon = icon("chart-line")
       ),
       menuItem(
-        "Results and report",
+        "Results and Report",
         tabName = "results",
         icon = icon("clipboard-list")
       )
@@ -78,7 +78,7 @@ ui <- dashboardPage(
               )),
       tabItem(tabName = "upload_data",
               fluidPage(
-                titlePanel("Upload data"),
+                titlePanel("Upload Data"),
                 fluidRow(
                   column(
                     4,
@@ -105,43 +105,37 @@ ui <- dashboardPage(
                       )
                     ),
 
-                    fluidRow(column(
-                      3,
-                      actionButton("map_id",
-                                   "Map ID",
-                                   class = "btn-primary",
-                                   style = "background-color: #d83428; color: white;")
-                    ),
-                    column(
-                      3,
-                      actionButton(
-                        "go2enrich_pathways",
-                        "Next",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"
-                      ),
-                    )),
-                    br(),
-                    br(),
+                    # hr(),
+                    actionButton("map_id",
+                                 "Submit",
+                                 class = "btn-primary",
+                                 style = "background-color: #d83428; color: white;"),
+
                     actionButton(
-                      "show_code_upload_data",
-                      "Show/Hide Code",
+                      "go2enrich_pathways",
+                      "Next",
                       class = "btn-primary",
                       style = "background-color: #d83428; color: white;"
                     ),
-
+                    actionButton(
+                      "show_upload_data_code",
+                      "Show code",
+                      class = "btn-primary",
+                      style = "background-color: #d83428; color: white;"
+                    ),
                     style = "border-right: 1px solid #ddd; padding-right: 20px;"
                   ),
                   column(
                     8,
-                    shiny::dataTableOutput("contents"),
+                    shiny::dataTableOutput("variable_info"),
+                    br(),
+                    shinyjs::useShinyjs(),
                     downloadButton("download_variable_info",
-                                   "Download")
+                                   "Download",
+                                   class = "btn-primary",
+                                   style = "background-color: #d83428; color: white;")
                   )
-                ),
-                ###show code
-                br(),
-                uiOutput("data_upload_code")
+                )
               )),
       tabItem(tabName = "enrich_pathways",
               fluidPage(
@@ -196,33 +190,27 @@ ui <- dashboardPage(
                         value = c(10, 500)
                       ),
 
-                      fluidRow(column(
-                        3,
-                        actionButton(
-                          "submit_enrich_pathways",
-                          "Submit",
-                          class = "btn-primary",
-                          style = "background-color: #d83428; color: white;"
-                        )
-                      ),
-                      column(
-                        3,
-                        actionButton(
-                          "go2merge_pathways",
-                          "Next",
-                          class = "btn-primary",
-                          style = "background-color: #d83428; color: white;"
-                        )
-                      )),
-
-                      br(),
-                      br(),
                       actionButton(
-                        "show_code_enrich_pathways",
-                        "Show/Hide Code",
+                        "submit_enrich_pathways",
+                        "Submit",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"
                       ),
+
+                      actionButton(
+                        "go2merge_pathways",
+                        "Next",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+
+                      actionButton(
+                        "show_enrich_pathways_code",
+                        "Show code",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+
                       style = "border-right: 1px solid #ddd; padding-right: 20px;"
                     ),
                     column(
@@ -232,32 +220,41 @@ ui <- dashboardPage(
                         tabPanel(
                           title = "GO",
                           shiny::dataTableOutput("enriched_pathways_go"),
+                          br(),
+                          shinyjs::useShinyjs(),
                           downloadButton("download_enriched_pathways_go",
-                                         "Download")
+                                         "Download",
+                                         class = "btn-primary",
+                                         style = "background-color: #d83428; color: white;")
                         ),
                         tabPanel(
                           title = "KEGG",
                           shiny::dataTableOutput("enriched_pathways_kegg"),
+                          br(),
+                          shinyjs::useShinyjs(),
                           downloadButton("download_enriched_pathways_kegg",
-                                         "Download")
+                                         "Download",
+                                         class = "btn-primary",
+                                         style = "background-color: #d83428; color: white;")
                         ),
                         tabPanel(
                           title = "Reactome",
                           shiny::dataTableOutput("enriched_pathways_reactome"),
+                          br(),
+                          shinyjs::useShinyjs(),
                           downloadButton("download_enriched_pathways_reactome",
-                                         "Download")
+                                         "Download",
+                                         class = "btn-primary",
+                                         style = "background-color: #d83428; color: white;")
                         )
                       )
                     )
-                  ),
-                  ###show code
-                  br(),
-                  uiOutput("enrich_pathways_code")
+                  )
                 )
               )),
       tabItem(tabName = "merge_pathways",
               fluidPage(
-                titlePanel("Merge pathways"),
+                titlePanel("Merge Pathways"),
                 fluidPage(
                   fluidRow(
                     column(
@@ -388,30 +385,22 @@ ui <- dashboardPage(
                         )
                       )),
 
-                      fluidRow(column(
-                        3,
-                        actionButton(
-                          "submit_merge_pathways",
-                          "Submit",
-                          class = "btn-primary",
-                          style = "background-color: #d83428; color: white;"
-                        )
-                      ),
-                      column(
-                        3,
-                        actionButton(
-                          "go2merge_modules",
-                          "Next",
-                          class = "btn-primary",
-                          style = "background-color: #d83428; color: white;"
-                        )
-                      )),
-
-                      br(),
-                      br(),
                       actionButton(
-                        "show_code_merge_pathways",
-                        "Show/Hide Code",
+                        "submit_merge_pathways",
+                        "Submit",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+
+                      actionButton(
+                        "go2merge_modules",
+                        "Next",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+                      actionButton(
+                        "show_merge_pathways_code",
+                        "Show code",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"
                       ),
@@ -424,20 +413,32 @@ ui <- dashboardPage(
                                         tabPanel(
                                           title = "GO",
                                           shiny::dataTableOutput("merged_pathway_go"),
+                                          br(),
+                                          shinyjs::useShinyjs(),
                                           downloadButton("download_merged_pathway_go",
-                                                         "Download")
+                                                         "Download",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
                                         ),
                                         tabPanel(
                                           title = "KEGG",
                                           shiny::dataTableOutput("merged_pathway_kegg"),
+                                          br(),
+                                          shinyjs::useShinyjs(),
                                           downloadButton("download_merged_pathway_kegg",
-                                                         "Download")
+                                                         "Download",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
                                         ),
                                         tabPanel(
                                           title = "Reactome",
                                           shiny::dataTableOutput("merged_pathway_reactome"),
+                                          br(),
+                                          shinyjs::useShinyjs(),
                                           downloadButton("download_merged_pathway_reactome",
-                                                         "Download")
+                                                         "Download",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
                                         )
                                       )),
                              tabPanel(
@@ -446,10 +447,14 @@ ui <- dashboardPage(
                                  tabPanel(
                                    title = "GO",
                                    shiny::plotOutput("enirched_module_go_plot"),
+                                   br(),
                                    fluidRow(
                                      column(
                                        3,
-                                       actionButton("generate_enirched_module_plot_go", "Generate Plot")
+                                       actionButton("generate_enirched_module_plot_go",
+                                                    "Generate plot",
+                                                    class = "btn-primary",
+                                                    style = "background-color: #d83428; color: white;")
                                      ),
                                      column(
                                        3,
@@ -474,10 +479,14 @@ ui <- dashboardPage(
                                  tabPanel(
                                    title = "KEGG",
                                    shiny::plotOutput("enirched_module_kegg_plot"),
+                                   br(),
                                    fluidRow(
                                      column(
                                        3,
-                                       actionButton("generate_enirched_module_plot_kegg", "Generate Plot")
+                                       actionButton("generate_enirched_module_plot_kegg",
+                                                    "Generate plot",
+                                                    class = "btn-primary",
+                                                    style = "background-color: #d83428; color: white;")
                                      ),
                                      column(
                                        3,
@@ -502,10 +511,14 @@ ui <- dashboardPage(
                                  tabPanel(
                                    title = "Reactome",
                                    shiny::plotOutput("enirched_module_reactome_plot"),
+                                   br(),
                                    fluidRow(
                                      column(
                                        3,
-                                       actionButton("generate_enirched_module_plot_reactome", "Generate Plot")
+                                       actionButton("generate_enirched_module_plot_reactome",
+                                                    "Generate plot",
+                                                    class = "btn-primary",
+                                                    style = "background-color: #d83428; color: white;")
                                      ),
                                      column(
                                        3,
@@ -530,16 +543,13 @@ ui <- dashboardPage(
                                )
                              )
                            ))
-                  ),
-                  ###show code
-                  br(),
-                  uiOutput("merge_pathways_code")
+                  )
                 )
               )),
 
       tabItem(
         tabName = "merge_modules",
-        fluidPage(titlePanel("Merge modules"),
+        fluidPage(titlePanel("Merge Modules"),
                   fluidPage(fluidRow(
                     column(
                       4,
@@ -563,30 +573,22 @@ ui <- dashboardPage(
                         )
                       )),
 
-                      fluidRow(column(
-                        3,
-                        actionButton(
-                          "submit_merge_modules",
-                          "Submit",
-                          class = "btn-primary",
-                          style = "background-color: #d83428; color: white;"
-                        )
-                      ),
-                      column(
-                        3,
-                        actionButton(
-                          "go2data_visualization",
-                          "Next",
-                          class = "btn-primary",
-                          style = "background-color: #d83428; color: white;"
-                        )
-                      )),
-
-                      br(),
-                      br(),
                       actionButton(
-                        "show_code_merge_modules",
-                        "Show/Hide Code",
+                        "submit_merge_modules",
+                        "Submit",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+
+                      actionButton(
+                        "go2data_visualization",
+                        "Next",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+                      actionButton(
+                        "show_merge_modules_code",
+                        "Show code",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"
                       ),
@@ -597,16 +599,24 @@ ui <- dashboardPage(
                              tabPanel(
                                title = "Table",
                                shiny::dataTableOutput("enriched_functional_modules"),
+                               br(),
+                               shinyjs::useShinyjs(),
                                downloadButton("download_enriched_functional_modules",
-                                              "Download")
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
                              ),
                              tabPanel(
                                title = "Data Visualization",
                                shiny::plotOutput("enirched_functional_module_plot"),
+                               br(),
                                fluidRow(
                                  column(
                                    3,
-                                   actionButton("generate_enirched_functional_module", "Generate Plot")
+                                   actionButton("generate_enirched_functional_module",
+                                                "Generate plot",
+                                                class = "btn-primary",
+                                                style = "background-color: #d83428; color: white;")
                                  ),
                                  column(
                                    3,
@@ -629,10 +639,7 @@ ui <- dashboardPage(
                                )
                              )
                            ))
-                  ))),
-        ###show code
-        br(),
-        uiOutput("merge_modules_code")
+                  )))
       ),
       tabItem(tabName = "data_visualization",
               fluidPage(
@@ -702,7 +709,7 @@ ui <- dashboardPage(
                                ),
                                column(4,
                                       numericInput("barplot_p_adjust_cutoff",
-                                                   "P-Adjust Cutoff",
+                                                   "P-adjust cutoff",
                                                    value = 0.05,
                                                    min = 0,
                                                    max = 0.5),
@@ -761,7 +768,11 @@ ui <- dashboardPage(
                              ),
                              fluidRow(
                                column(12,
-                                      downloadButton("download_barplot", "Download"))
+                                      shinyjs::useShinyjs(),
+                                      downloadButton("download_barplot",
+                                                     "Download",
+                                                     class = "btn-primary",
+                                                     style = "background-color: #d83428; color: white;"))
                              ),
                              fluidRow(
                                column(4,
@@ -780,26 +791,92 @@ ui <- dashboardPage(
                       column(8,
                              shiny::plotOutput("barplot"),
                              br(),
-                             fluidRow(
-                               column(3,
-                                      actionButton("generate_barplot",
-                                                   "Generate Plot",
-                                                   class = "btn-primary",
-                                                   style = "background-color: #d83428; color: white;")
-                               ),
-                               column(3,
-                                      actionButton(
-                                        "show_barplot_code",
-                                        "Show/Hide Code",
-                                        class = "btn-primary",
-                                        style = "background-color: #d83428; color: white;"
-                                      ))
-                             ),
-                             br(),
-                             uiOutput("barplot_code")
+                             actionButton("generate_barplot",
+                                          "Generate plot",
+                                          class = "btn-primary",
+                                          style = "background-color: #d83428; color: white;"),
+                             actionButton(
+                               "show_barplot_code",
+                               "Show code",
+                               class = "btn-primary",
+                               style = "background-color: #d83428; color: white;"
+                             )
                              )
                     )
+                  ),
+                  tabPanel(
+                    title = "Module Similarity Network",
+                    fluidRow(
+                      column(4,
+                             br(),
+                             fluidRow(
+                               column(6,
+                                      selectInput(
+                                        "module_similarity_network_database",
+                                        "Database:",
+                                        choices = c("GO" = "go",
+                                                    "KEGG" = "kegg",
+                                                    "Reactome" = "reactome"),
+                                        selected = "go"
+                                      )),
+                               column(6,
+                                      numericInput(
+                                        "module_similarity_network_degree_cutoff",
+                                        "Degree cutoff:",
+                                        value = 0,
+                                        min = 0,
+                                        max = 1000
+                                      )
+                                      )
+                             ),
+                             fluidRow(
+                               column(6,
+                                 checkboxInput("module_similarity_network_text", "Text", FALSE)
+                               ),
+                               column(6,
+                                 checkboxInput("module_similarity_network_text_all", "Text all", FALSE)
+                               )
+                             ),
+                             fluidRow(
+                               column(12,
+                                      shinyjs::useShinyjs(),
+                                      downloadButton("download_module_similarity_network",
+                                                     "Download",
+                                                     class = "btn-primary",
+                                                     style = "background-color: #d83428; color: white;"))
+                             ),
+                             fluidRow(
+                               column(4,
+                                      selectInput("module_similarity_network_type", "Type",
+                                                  choices = c("pdf", "png", "jpeg"))
+                               ),
+                               column(4,
+                                      numericInput("module_similarity_network_width", "Width",
+                                                   value = 7, min = 4, max = 20)),
+                               column(4,
+                                      numericInput("module_similarity_network_height", "Height",
+                                                   value = 7, min = 4, max = 20))
+                             ),
+                             style = "border-right: 1px solid #ddd; padding-right: 20px;"
+                      ),
+                      column(8,
+                             shiny::plotOutput("module_similarity_network"),
+                             br(),
+                             actionButton("generate_module_similarity_network",
+                                          "Generate plot",
+                                          class = "btn-primary",
+                                          style = "background-color: #d83428; color: white;"),
+                             actionButton(
+                               "show_module_similarity_network_code",
+                               "Show code",
+                               class = "btn-primary",
+                               style = "background-color: #d83428; color: white;"
+                             )
+                      )
+                    )
                   )
+
+
                 )
               ))
     ),
