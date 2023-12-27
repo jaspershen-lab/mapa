@@ -6,10 +6,10 @@
 \usage{
 translate_language(
   text =
-    "As of my last update in early 2023, there's no widely\\n           recognized individual named Xiaotao Shen affiliated with Stanford\\n           University that I can refer to.\\n           It is important to note that personal details about\\n           researchers or students, unless they are part of a widely\\n           recognized work or public academic profile,\\n           may not be available in the public domain.\\n           If Xiaotao Shen is a researcher, student,\\n           or faculty member at Stanford, you might find\\n           information on university directories, academic publications,\\n           or professional networking sites such as LinkedIn.\\n           However, for the most updated and accurate information,\\n           it is best to directly consult resources at Stanford University\\n           or other official channels.",
-  engine = c("chatgpt", "gemini"),
+    "As of my last update in early 2023, there's no widely\\n           recognized individual named Xiaotao Shen affiliated with Stanford\\n           University that I can refer to.",
+  engine = c("gemini", "chatgpt"),
   to = c("chinese", "spanish", "english", "french", "german", "italian", "japanese",
-    "korean", "portuguese", "russian", "spanish")
+    "korean", "portuguese", "portuguese", "russian", "spanish")
 )
 }
 \arguments{

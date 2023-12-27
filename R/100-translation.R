@@ -23,19 +23,8 @@
 translate_language <-
   function(text = "As of my last update in early 2023, there's no widely
            recognized individual named Xiaotao Shen affiliated with Stanford
-           University that I can refer to.
-           It is important to note that personal details about
-           researchers or students, unless they are part of a widely
-           recognized work or public academic profile,
-           may not be available in the public domain.
-           If Xiaotao Shen is a researcher, student,
-           or faculty member at Stanford, you might find
-           information on university directories, academic publications,
-           or professional networking sites such as LinkedIn.
-           However, for the most updated and accurate information,
-           it is best to directly consult resources at Stanford University
-           or other official channels.",
-           engine = c("chatgpt", "gemini"),
+           University that I can refer to.",
+           engine = c("gemini", "chatgpt"),
            to = c(
              "chinese",
              "spanish",
@@ -45,6 +34,7 @@ translate_language <-
              "italian",
              "japanese",
              "korean",
+             "portuguese",
              "portuguese",
              "russian",
              "spanish"
@@ -56,13 +46,33 @@ translate_language <-
     to <-
       match.arg(to)
 
-    if (engine == "chatgpt") {
-      prompt <- paste0("Translate to ", to, ":\n", text)
-      return(request_chatgpt_response(prompt = prompt))
-    }
+    if (length(text) == 1) {
+      if (engine == "chatgpt") {
+        prompt <- paste0("Translate to ", to, ":\n", text)
+        return(request_chatgpt_response(prompt = prompt))
+      }
 
-    if (engine == "gemini") {
-      prompt <- paste0("Translate to ", to, ":\n", text)
-      return(request_gemini_response(prompt = prompt))
+      if (engine == "gemini") {
+        prompt <- paste0("Translate to ", to, ":\n", text)
+        return(request_gemini_response(prompt = prompt))
+      }
+    } else{
+      prompt <- paste0(
+        "Translate the following texts to ",
+        to,
+        ", separated by '{}':\n",
+        paste0(text, collapse = "{}"),
+        "\nPlease return only the translated texts, also separated by '{}',
+                         and do not include any additional text or explanation."
+      )
+      if (engine == "chatgpt") {
+        result <-
+          request_chatgpt_response(prompt = prompt)
+      }
+      if (engine == "gemini") {
+        result <-
+          request_gemini_response(prompt = prompt)
+      }
+      return(stringr::str_split(result, "\\{\\}")[[1]])
     }
   }

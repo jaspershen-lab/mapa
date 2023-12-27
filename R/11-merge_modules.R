@@ -194,7 +194,7 @@ merge_modules <-
 
     subnetwork <-
       suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data,
-                                                        weights = abs(edge_attr(graph_data,
+                                                        weights = abs(igraph::edge_attr(graph_data,
                                                                                 "sim"))))
     cluster <-
       paste("Functional_module",
@@ -294,7 +294,7 @@ merge_modules <-
       do.call(rbind, .) %>%
       as.data.frame() %>%
       dplyr::mutate(
-        module_annotation = case_when(
+        module_annotation = dplyr::case_when(
           module == "Other" ~ Description,
           module != "Other" ~ stringr::str_split(Description, ";")[[1]][1]
         )

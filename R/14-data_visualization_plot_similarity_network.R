@@ -313,7 +313,7 @@ plot_similarity_network <-
 #           igraph::igraph.from.graphNEL() %>%
 #           tidygraph::as_tbl_graph() %>%
 #           left_join(temp_id, by = "name") %>%
-#           dplyr::mutate(class = case_when(is.na(class) ~ "NO",
+#           dplyr::mutate(class = dplyr::case_when(is.na(class) ~ "NO",
 #                                           TRUE ~ class))
 #
 #         plot =

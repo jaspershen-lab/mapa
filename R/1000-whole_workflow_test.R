@@ -1,3 +1,7 @@
+# library(tidyverse)
+# library(plyr)
+# library(igraph)
+#
 # setwd(r4projects::get_project_wd())
 # source("R/6-utils.R")
 # source("R/8-functional_module_class.R")
@@ -23,52 +27,61 @@
 #   massdataset::activate_mass_dataset(what = "variable_info") %>%
 #   dplyr::filter(fdr < 0.05 & score > 0) %>%
 #   massdataset::extract_variable_info()
+# #
+# # enriched_pathways <-
+# #   enrich_pathway(
+# #     variable_info = variable_info,
+# #     save_to_local = FALSE,
+# #     path = "result",
+# #     OrgDb = org.Hs.eg.db,
+# #     organism = "hsa",
+# #     database = c("go", "reactome", "kegg"),
+# #     ont = "ALL",
+# #     pvalueCutoff = 0.05,
+# #     pAdjustMethod = "BH",
+# #     qvalueCutoff = 0.2,
+# #     minGSSize = 10,
+# #     maxGSSize = 500,
+# #     readable = FALSE,
+# #     pool = FALSE
+# #   )
+# #
+# # save(enriched_pathways, file = "enriched_pathways.rda")
+# load("enriched_pathways.rda")
 #
-# enriched_pathways <-
-#   enrich_pathway(
-#     variable_info = variable_info,
-#     save_to_local = FALSE,
-#     path = "result",
-#     OrgDb = org.Hs.eg.db,
-#     organism = "hsa",
-#     database = c("reactome", "kegg"),
-#     ont = "ALL",
-#     pvalueCutoff = 0.05,
-#     pAdjustMethod = "BH",
-#     qvalueCutoff = 0.2,
-#     minGSSize = 10,
-#     maxGSSize = 500,
-#     readable = FALSE,
-#     pool = FALSE
-#   )
+# # enriched_modules <-
+# #   merge_pathways(
+# #     object = enriched_pathways,
+# #     p.adjust.cutoff.go = 0.05,
+# #     p.adjust.cutoff.kegg = 0.05,
+# #     p.adjust.cutoff.reactome = 0.05,
+# #     count.cutoff.go = 5,
+# #     count.cutoff.kegg = 5,
+# #     count.cutoff.reactome = 5,
+# #     sim.cutoff.go = 0.5,
+# #     sim.cutoff.kegg = 0.5,
+# #     sim.cutoff.reactome = 0.5,
+# #     measure.method.go = "Wang",
+# #     measure.method.kegg = "jaccard",
+# #     measure.method.reactome = "jaccard",
+# #     path = "result",
+# #     save_to_local = FALSE
+# #   )
+# #
+# # save(enriched_modules, file = "enriched_modules.rda")
+# load("enriched_modules.rda")
 #
-# enriched_modules <-
-#   merge_pathways(
-#     object = enriched_pathways,
-#     p.adjust.cutoff.go = 0.05,
-#     p.adjust.cutoff.kegg = 0.05,
-#     p.adjust.cutoff.reactome = 0.05,
-#     count.cutoff.go = 5,
-#     count.cutoff.kegg = 5,
-#     count.cutoff.reactome = 5,
-#     sim.cutoff.go = 0.5,
-#     sim.cutoff.kegg = 0.5,
-#     sim.cutoff.reactome = 0.5,
-#     measure.method.go = "Wang",
-#     measure.method.kegg = "jaccard",
-#     measure.method.reactome = "jaccard",
-#     path = "result",
-#     save_to_local = FALSE
-#   )
-#
-# enriched_functional_module <-
-#   merge_modules(
-#     object = enriched_modules,
-#     sim.cutoff = 0.5,
-#     measure_method = c("jaccard"),
-#     path = "result",
-#     save_to_local = FALSE
-#   )
+# # enriched_functional_module <-
+# #   merge_modules(
+# #     object = enriched_modules,
+# #     sim.cutoff = 0.5,
+# #     measure_method = c("jaccard"),
+# #     path = "result",
+# #     save_to_local = FALSE
+# #   )
+# #
+# # save(enriched_functional_module, file = "enriched_functional_module.rda")
+# load("enriched_functional_module.rda")
 #
 #
 # plot_pathway_bar(

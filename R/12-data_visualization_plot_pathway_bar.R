@@ -9,7 +9,18 @@
 #   object = enriched_functional_module,
 #   top_n = 10,
 #   y_lable_width = 30,
-#   level = "pathway"
+#   level = "pathway",
+#   translation = TRUE,
+#   engine = "chatgpt"
+# )
+#
+# plot_pathway_bar(
+#   object = enriched_functional_module,
+#   top_n = 10,
+#   y_lable_width = 30,
+#   level = "pathway",
+#   translation = TRUE,
+#   engine = "gemini"
 # )
 #
 # plot_pathway_bar(
@@ -30,7 +41,8 @@
 #   object = enriched_functional_module,
 #   top_n = 10,
 #   y_lable_width = 30,
-#   level = "functional_module", line_type = "meteor"
+#   level = "functional_module",
+#   line_type = "meteor"
 # )
 
 #' Plot Pathway Bar Chart
@@ -88,6 +100,22 @@ plot_pathway_bar <-
   function(object,
            top_n = 10,
            y_lable_width = 50,
+           translation = FALSE,
+           translate_to = c(
+             "chinese",
+             "spanish",
+             "english",
+             "french",
+             "german",
+             "italian",
+             "japanese",
+             "korean",
+             "portuguese",
+             "portuguese",
+             "russian",
+             "spanish"
+           ),
+           engine = c("gemini", "chatgpt"),
            level = c("pathway",
                      "module",
                      "functional_module"),
@@ -105,6 +133,9 @@ plot_pathway_bar <-
       match.arg(level)
     line_type <-
       match.arg(line_type)
+
+    translate_to <- match.arg(translate_to)
+    engine <- match.arg(engine)
 
     if (!is(object, "functional_module")) {
       stop("object must be functional_module class")
@@ -291,11 +322,21 @@ plot_pathway_bar <-
       )
     }
 
+    temp_data <-
+      temp_data %>%
+      dplyr::arrange(p.adjust) %>%
+      head(top_n)
+
+    if (translation) {
+      temp_data$Description <-
+        translate_language(text = temp_data$Description,
+                           to = translate_to,
+                           engine = engine)
+    }
+
     if (line_type == "straight") {
       plot <-
         temp_data %>%
-        dplyr::arrange(p.adjust) %>%
-        head(top_n) %>%
         dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
         dplyr::arrange(log.p) %>%
         dplyr::mutate(Description = factor(Description, levels = Description)) %>%
@@ -336,8 +377,6 @@ plot_pathway_bar <-
     } else{
       plot <-
         temp_data %>%
-        dplyr::arrange(p.adjust) %>%
-        head(top_n) %>%
         dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
         dplyr::arrange(log.p) %>%
         dplyr::mutate(Description = factor(Description, levels = Description)) %>%

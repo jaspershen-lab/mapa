@@ -33,3 +33,7 @@
 # mapa 0.1.9
 
 * Use the ChatGPT to interpretate the pathways.
+
+# mapa 0.1.10
+
+* Add the launch_mapa_shiny function.
