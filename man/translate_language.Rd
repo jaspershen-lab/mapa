@@ -5,8 +5,7 @@
 \title{Translate Text into Different Languages}
 \usage{
 translate_language(
-  text =
-    "As of my last update in early 2023, there's no widely\\n           recognized individual named Xiaotao Shen affiliated with Stanford\\n           University that I can refer to.",
+  text = "There's no individual named Xiaotao Shen.",
   engine = c("gemini", "chatgpt"),
   to = c("chinese", "spanish", "english", "french", "german", "italian", "japanese",
     "korean", "portuguese", "portuguese", "russian", "spanish")

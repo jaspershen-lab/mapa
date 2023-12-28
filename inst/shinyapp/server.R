@@ -86,8 +86,10 @@ server <-
         ####save code
         upload_data_code <-
           sprintf(
-            'library(clusterProfiler)
+            '
+            library(clusterProfiler)
             library(org.Hs.eg.db)
+            library(mapa)
             other_id <-
             clusterProfiler::bitr(
             variable_info$ensembl,
@@ -103,8 +105,6 @@ server <-
             c("ensembl", "uniprot", "entrezid", "symbol")
             '
           )
-        # Save to a text file
-        # writeLines(upload_data_code, "files/upload_data_code.txt")
       }
       if (input$id_type == "uniprot") {
         colnames(variable_info_old) <- c("uniprot")
@@ -138,7 +138,8 @@ server <-
         ####save code
         upload_data_code <-
           sprintf(
-            'library(clusterProfiler)
+            '
+            library(clusterProfiler)
             library(org.Hs.eg.db)
             other_id <-
             clusterProfiler::bitr(
@@ -155,8 +156,6 @@ server <-
             c("uniprot", "ensembl", "entrezid", "symbol")
             '
           )
-        # Save to a text file
-        # writeLines(upload_data_code, "files/upload_data_code.txt")
       }
       if (input$id_type == "entrezid") {
         colnames(variable_info_old) <- c("entrezid")
@@ -191,8 +190,10 @@ server <-
         ####save code
         upload_data_code <-
           sprintf(
-            'library(clusterProfiler)
+            '
+            library(clusterProfiler)
             library(org.Hs.eg.db)
+            library(mapa)
             other_id <-
             clusterProfiler::bitr(
             variable_info$uniprot,
@@ -208,8 +209,6 @@ server <-
             c("entrezid", "ensembl", "entrezid", "symbol")
             '
           )
-        # Save to a text file
-        # writeLines(upload_data_code, "files/upload_data_code.txt")
       }
       upload_data_code(upload_data_code)
       variable_info_new(variable_info_old)
@@ -380,19 +379,14 @@ server <-
               maxGSSize = %s)
               ',
               pathway_database,
-              input$organism,
+              paste0('"', input$organism, '"'),
               input$p_value_cutoff,
-              input$p_adjust_method,
+              paste0('"', input$p_adjust_method, '"'),
               input$gene_set_size[1],
               input$gene_set_size[2]
             )
 
           enrich_pathways_code(enrich_pathways_code)
-
-          # # Save to a text file
-          # writeLines(enrich_pathways_code,
-          #            "files/enrich_pathways_code.txt")
-
         }
       }
     })
@@ -630,12 +624,11 @@ server <-
   input$sim.cutoff.go,
   input$sim.cutoff.kegg,
   input$sim.cutoff.reactome,
-  input$measure.method.go,
-  input$measure.method.kegg,
-  input$measure.method.reactome
+  paste0('"', input$measure.method.go, '"'),
+  paste0('"', input$measure.method.kegg, '"'),
+  paste0('"', input$measure.method.reactome, '"')
           )
-        # Save to a text file
-        # writeLines(merge_pathways_code, "files/merge_pathways_code.txt")
+
         merge_pathways_code(merge_pathways_code)
       }
     })
@@ -954,7 +947,6 @@ server <-
             save_to_local = FALSE
           )
 
-        # enriched_functional_module <-
         enriched_functional_module(result)
         shinyjs::hide("loading")
 
@@ -969,7 +961,7 @@ server <-
             measure_method = %s)
             ',
             input$sim.cutoff.module,
-            input$measure.method.module
+            paste0('"', input$measure.method.module, '"')
           )
 
         merge_modules_code(merge_modules_code)
@@ -1105,8 +1097,6 @@ server <-
     ###--------------------------------------------------------------------
     ###Step 5 Data visualization
     # Observe file upload
-    # enriched_functional_module <-
-    #   reactiveVal()
     observeEvent(input$upload_enriched_functional_module, {
       if (!is.null(input$upload_enriched_functional_module$datapath)) {
         tempEnv <- new.env()
@@ -1141,7 +1131,7 @@ server <-
         showModal(
           modalDialog(
             title = "Warning",
-            "No enriched functional module data available. Please complete the previous steps or upload the data.",
+            "No enriched functional module data available. Please complete the previous steps or upload the data",
             easyClose = TRUE,
             footer = modalButton("Close")
           )
@@ -1187,24 +1177,25 @@ server <-
 
         barplot_code <-
           sprintf(
-            "plot_pathway_bar(
-                  object = enriched_functional_module,
-                  top_n = %s,
-                  y_lable_width = %s,
-                  p.adjust.cutoff = %s,
-                  count.cutoff = %s,
-                  level = %s,
-                  database = %s,
-                  line_type = %s,
-                  database_color = %s
-                  )",
+            "
+            plot_pathway_bar(
+            object = enriched_functional_module,
+            top_n = %s,
+            y_lable_width = %s,
+            p.adjust.cutoff = %s,
+            count.cutoff = %s,
+            level = %s,
+            database = %s,
+            line_type = %s,
+            database_color = %s)
+            ",
             input$barplot_top_n,
             input$barplot_y_lable_width,
             input$barplot_p_adjust_cutoff,
             input$barplot_count_cutoff,
             input$barplot_level,
             barplot_database,
-            input$line_type,
+            paste0('"', input$line_type, '"'),
             data_color
           )
 
@@ -1213,20 +1204,10 @@ server <-
       }
     })
 
-    # output$barplot <-
-    #   shiny::renderPlot({
-    #     if (is.null(barplot()) ||
-    #         length(barplot()) == 0) {
-    #       NULL
-    #     } else{
-    #       barplot()
-    #     }
-    #   })
-
     output$barplot <-
       renderPlot({
-        req(barplot())  # Request the reactive value
-        barplot()       # Display the plot
+        req(barplot())
+        barplot()
       })
 
     output$download_barplot <-
@@ -1253,7 +1234,6 @@ server <-
       }
     })
 
-    ######code for barplot
     ####show code
     observeEvent(input$show_barplot_code, {
       if (is.null(barplot_code()) ||
@@ -1326,13 +1306,13 @@ server <-
             database = %s,
             degree_cutoff = %s,
             text = %s,
-            text_all = %s
-          )',
-          input$module_similarity_network_level,
-          input$module_similarity_network_database,
-          input$module_similarity_network_degree_cutoff,
-          input$module_similarity_network_text,
-          input$module_similarity_network_text_all
+            text_all = %s)
+            ',
+            paste0('"', input$module_similarity_network_level, '"'),
+            paste0('"', input$module_similarity_network_database, '"'),
+            input$module_similarity_network_degree_cutoff,
+            input$module_similarity_network_text,
+            input$module_similarity_network_text_all
           )
 
         module_similarity_network_code(module_similarity_network_code)
@@ -1407,9 +1387,10 @@ server <-
     })
 
 
-
     ########module information plot
     # Update the module ID
+    module_information_module_id <-
+      reactiveVal()
     observe({
       if (!is.null(enriched_functional_module()) &
           length(enriched_functional_module()) != 0) {
@@ -1420,6 +1401,7 @@ server <-
               unique(
                 enriched_functional_module()@merged_module$functional_module_result$module
               )
+            module_information_module_id(module_information_module_id)
           }
         }
 
@@ -1432,6 +1414,7 @@ server <-
                 unique(
                   enriched_functional_module()@merged_pathway_go$module_result$module
                 )
+              module_information_module_id(module_information_module_id)
             }
           }
 
@@ -1442,6 +1425,7 @@ server <-
                 unique(
                   enriched_functional_module()@merged_pathway_kegg$module_result$module
                 )
+              module_information_module_id(module_information_module_id)
             }
           }
 
@@ -1452,20 +1436,19 @@ server <-
                 unique(
                   enriched_functional_module()@merged_pathway_reactome$module_result$module
                 )
+              module_information_module_id(module_information_module_id)
             }
           }
-
         }
 
         updateSelectInput(
           session,
           "module_information_module_id",
-          choices = stringr::str_sort(module_information_module_id, numeric = TRUE),
-          selected = stringr::str_sort(module_information_module_id, numeric = TRUE)[1]
+          choices = stringr::str_sort(module_information_module_id(), numeric = TRUE),
+          selected = stringr::str_sort(module_information_module_id(), numeric = TRUE)[1]
         )
       }
     })
-
 
     #####module information plot
     # Observe generate module information button click
@@ -1474,6 +1457,7 @@ server <-
     module_information_code <-
       reactiveVal()
 
+    ####if the module_information_module_id() is null, then show warning
     observeEvent(input$generate_module_information, {
       if (is.null(enriched_functional_module())) {
         # No enriched functional module available
@@ -1486,36 +1470,49 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-        plot <-
-          plot_module_info(
-            object = enriched_functional_module(),
-            level = input$module_information_level,
-            database = input$module_information_database,
-            module_id = input$module_information_module_id
+        if (is.null(module_information_module_id())) {
+          # No enriched functional module available
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "Select a module ID first",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
           )
+        } else{
+          shinyjs::show("loading")
+          plot <-
+            plot_module_info(
+              object = enriched_functional_module(),
+              level = input$module_information_level,
+              database = input$module_information_database,
+              module_id = input$module_information_module_id
+            )
 
-        plot <-
-          plot[[1]] + plot[[2]] + plot[[3]]
+          plot <-
+            plot[[1]] + plot[[2]] + plot[[3]]
 
-        module_information(plot)
+          module_information(plot)
 
-        ###save code
-        module_information_code <-
-          sprintf(
-            '
-          plot_module_info(object = enriched_functional_module,
-                           level = %s,
-                           database = %s,
-                           module_id = %s)
-          )',
-          input$module_information_level,
-          input$module_information_database,
-          input$module_information_module_id
-          )
+          ###save code
+          module_information_code <-
+            sprintf(
+              '
+            plot_module_info(
+            object = enriched_functional_module,
+            level = %s,
+            database = %s,
+            module_id = %s)
+            ',
+            paste0('"', input$module_information_level, '"'),
+            paste0('"', input$module_information_database, '"'),
+            paste0('"', input$module_information_module_id, '"')
+            )
 
-        module_information_code(module_information_code)
-        shinyjs::hide("loading")
+          module_information_code(module_information_code)
+          shinyjs::hide("loading")
+        }
       }
     })
 
@@ -1673,7 +1670,6 @@ server <-
         shinyjs::show("loading")
 
         ####if filtered by functiobal module and modules
-        # browser()
         object <-
           enriched_functional_module()
         if (input$relationship_network_filter) {
@@ -1748,7 +1744,7 @@ server <-
               remain_id = %s
             )
             ',
-            input$relationship_network_level,
+            paste0('"', input$relationship_network_level, '"'),
             relationship_network_module_id
           )
 
@@ -1817,30 +1813,33 @@ server <-
             functional_module_position_limits = %s,
             module_position_limits = %s,
             pathway_position_limits = %s,
-            molecule_position_limits = %s
-          )
+            molecule_position_limits = %s)
             ',
-          input$relationship_network_include_functional_modules,
-          input$relationship_network_include_modules,
-          input$relationship_network_include_pathways,
-          input$relationship_network_include_molecules,
-          input$relationship_network_functional_module_text,
-          input$relationship_network_module_text,
-          input$relationship_network_pathway_text,
-          input$relationship_network_molecule_text,
-          input$relationship_network_circular_plot,
-          input$relationship_network_functional_module_color,
-          input$relationship_network_module_color,
-          input$relationship_network_pathway_color,
-          input$relationship_network_molecule_color,
-          input$relationship_network_functional_module_arrange_position,
-          input$relationship_network_module_arrange_position,
-          input$relationship_network_pathway_arrange_position,
-          input$relationship_network_molecule_arrange_position,
-          functional_module_position_limits,
-          module_position_limits,
-          pathway_position_limits,
-          molecule_position_limits
+            input$relationship_network_include_functional_modules,
+            input$relationship_network_include_modules,
+            input$relationship_network_include_pathways,
+            input$relationship_network_include_molecules,
+            input$relationship_network_functional_module_text,
+            input$relationship_network_module_text,
+            input$relationship_network_pathway_text,
+            input$relationship_network_molecule_text,
+            input$relationship_network_circular_plot,
+            paste0(
+              '"',
+              input$relationship_network_functional_module_color,
+              '"'
+            ),
+            paste0('"', input$relationship_network_module_color, '"'),
+            paste0('"', input$relationship_network_pathway_color, '"'),
+            paste0('"', input$relationship_network_molecule_color, '"'),
+            input$relationship_network_functional_module_arrange_position,
+            input$relationship_network_module_arrange_position,
+            input$relationship_network_pathway_arrange_position,
+            input$relationship_network_molecule_arrange_position,
+            functional_module_position_limits,
+            module_position_limits,
+            pathway_position_limits,
+            molecule_position_limits
           )
 
         relationship_network_code <-
@@ -2073,19 +2072,18 @@ server <-
         llm_interpretation_code <-
           sprintf(
             '
-          llm_interpretation_result <-
-          interpret_pathways(
+            llm_interpretation_result <-
+            interpret_pathways(
             object = enriched_functional_module,
             p.adjust.cutoff = %s,
             disease = %s,
             count.cutoff = %s,
-            top_n = %s
-          )
+            top_n = %s)
             ',
-          input$llm_interpretation_p_adjust_cutoff,
-          input$llm_interpretation_disease,
-          input$llm_interpretation_count_cutoff,
-          input$llm_interpretation_top_n
+            input$llm_interpretation_p_adjust_cutoff,
+            paste0('"', input$llm_interpretation_disease, '"'),
+            input$llm_interpretation_count_cutoff,
+            input$llm_interpretation_top_n
           )
 
         llm_interpretation_code(llm_interpretation_code)
@@ -2104,9 +2102,18 @@ server <-
           "llm_interpretation_result.md"
         },
         content = function(file) {
-          writeLines(markdownText(), file)
+          writeLines(llm_interpretation_result(), file)
         }
       )
+
+    observe({
+      if (is.null(llm_interpretation_result()) ||
+          length(llm_interpretation_result()) == 0) {
+        shinyjs::disable("download_llm_interpretation_result")
+      } else {
+        shinyjs::enable("download_llm_interpretation_result")
+      }
+    })
 
 
     output$llm_enriched_functional_modules1 <-
@@ -2167,17 +2174,16 @@ server <-
       }
     })
 
-
     ###Go to result tab
     ####if there is not enriched_functional_module, show a warning message
-    observeEvent(input$go2data_visualization, {
+    observeEvent(input$go2results, {
       # Check if enriched_functional_module is available
       if (is.null(enriched_functional_module()) ||
           length(enriched_functional_module()) == 0) {
         showModal(
           modalDialog(
             title = "Warning",
-            "Please merge modules first.",
+            "No enriched functional modules data available.",
             easyClose = TRUE,
             footer = modalButton("Close")
           )
@@ -2185,7 +2191,157 @@ server <-
       } else {
         updateTabItems(session = session,
                        inputId = "tabs",
-                       selected = "data_visualization")
+                       selected = "results")
+      }
+    })
+
+
+
+
+
+
+
+
+    ###--------------------------------------------------------------------
+    ###Step 7 Result and report
+    report_code <-
+      reactiveVal()
+    report_path <-
+      reactiveVal()
+
+    observeEvent(input$generate_report, {
+      # Check if enriched_functional_module and llm_interpretation_result are
+      #  available
+      # browser()
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched functional modules data available.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        if (is.null(llm_interpretation_result()) ||
+            length(llm_interpretation_result()) == 0) {
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "No LLM interpreatation result available.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else{
+          shinyjs::show("loading")
+
+          report_path <-
+            file.path("files",
+                      paste(sample(
+                        c(letters, LETTERS, 0:9),
+                        30, replace = TRUE
+                      ), collapse = ""))
+
+          report_functional_module(
+            object = enriched_functional_module(),
+            interpretation_result = interpretation_result(),
+            path = report_path,
+            type = "html"
+          )
+
+          report_path(report_path)
+
+          shinyjs::hide("loading")
+
+          ##save code
+          report_code <-
+            sprintf(
+              '
+              report_functional_module(
+              object = enriched_functional_module,
+              interpretation_result = interpretation_result,
+              path = %s,
+              type = "html")
+            ',
+            report_path()
+            )
+          report_code(report_code)
+        }
+      }
+    })
+
+    # Update UI to display HTML
+    output$mapa_report <-
+      renderUI({
+        tryCatch(
+          includeHTML(file.path(
+            report_path(), "Report/mapa_report.html"
+          )),
+          error = function(e) {
+            NULL
+          }
+        )
+      })
+
+    ###donload the zip report file
+    output$download_report <-
+      shiny::downloadHandler(
+        filename = function() {
+          "Report.zip"
+        },
+        content = function(file) {
+          zip_path <-
+            paste0(report_path(), "/Report.zip")
+          zip(zipfile = zip_path,
+              files = paste0(report_path(),
+                             "/Report"))
+          file.copy(zip_path, file)
+        }
+      )
+
+    observe({
+      if (is.null(report_path()) ||
+          length(report_path()) == 0) {
+        shinyjs::disable("download_report")
+      } else {
+        shinyjs::enable("download_report")
+      }
+    })
+
+    ###To delete the zip file and folder when the user closes the app
+    session$onSessionEnded(function() {
+      if (!is.null(report_path()) &&
+          length(report_path()) != 0) {
+        unlink(paste0(report_path(), "/Report"), recursive = TRUE)
+        unlink(paste0(report_path(), "/Report.zip"), recursive = TRUE)
+      }
+    })
+
+    ####show code
+    observeEvent(input$show_report_code, {
+      if (is.null(report_code()) ||
+          length(report_code()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No available code",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else{
+        code_content <-
+          report_code()
+        code_content <-
+          paste(code_content, collapse = "\n")
+        showModal(modalDialog(
+          title = "Code",
+          tags$pre(code_content),
+          easyClose = TRUE,
+          footer = modalButton("Close")
+        ))
       }
     })
 

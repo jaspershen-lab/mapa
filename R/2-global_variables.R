@@ -40,5 +40,8 @@ globalVariables(names = c(
   "r",
   "marker",
   "module_content_number",
-  "include"
+  "include",
+  "weight",
+  "enriched_functional_module",
+  "interpretation_result"
 ))

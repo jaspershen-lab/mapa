@@ -6,23 +6,23 @@
 \usage{
 report_functional_module(
   object,
-  intepretation_result,
+  interpretation_result,
   path = ".",
-  type = c("html", "pdf", "word", "all")
+  type = c("html", "pdf", "word", "md", "all")
 )
 }
 \arguments{
 \item{object}{An object of class 'functional_module'. The function will
 generate a report based on this object.}
 
-\item{intepretation_result}{Placeholder for future functionality or data
+\item{interpretation_result}{Placeholder for future functionality or data
 that might be included in the report.}
 
 \item{path}{A character string specifying the directory path where the report
 and associated files will be saved. Defaults to the current directory.}
 
 \item{type}{A character vector specifying the format of the report.
-Can be 'html', 'pdf', 'word', or 'all' to generate the report
+Can be 'html', 'pdf', 'md', 'word', or 'all' to generate the report
 in all three formats. Default is 'html'.}
 }
 \value{

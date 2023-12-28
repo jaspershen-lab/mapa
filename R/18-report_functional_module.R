@@ -3,12 +3,14 @@
 # setwd("demo_data/")
 #
 # load("enriched_functional_module.rda")
-# load("intepretation_result.rda")
+# load("interpretation_result.rda")
 #
-# report_functional_module(object = object,
-#                          intepretation_result = interpretation_result,
-#                          path = ".",
-#                          type = "all")
+# report_functional_module(
+#   object = enriched_functional_module,
+#   interpretation_result = interpretation_result,
+#   path = ".",
+#   type = "html"
+# )
 
 #' Generate a Report for a Functional Module
 #'
@@ -20,12 +22,12 @@
 #'
 #' @param object An object of class 'functional_module'. The function will
 #'               generate a report based on this object.
-#' @param intepretation_result Placeholder for future functionality or data
+#' @param interpretation_result Placeholder for future functionality or data
 #'                             that might be included in the report.
 #' @param path A character string specifying the directory path where the report
 #'             and associated files will be saved. Defaults to the current directory.
 #' @param type A character vector specifying the format of the report.
-#'             Can be 'html', 'pdf', 'word', or 'all' to generate the report
+#'             Can be 'html', 'pdf', 'md', 'word', or 'all' to generate the report
 #'             in all three formats. Default is 'html'.
 #'
 #' @return This function does not return a value but generates a report in the
@@ -49,9 +51,9 @@
 
 report_functional_module <-
   function(object,
-           intepretation_result,
+           interpretation_result,
            path = ".",
-           type = c("html", "pdf", "word", "all")) {
+           type = c("html", "pdf", "word", "md", "all")) {
     if (missing(object)) {
       stop("object is missing")
     }
@@ -68,9 +70,20 @@ report_functional_module <-
 
     ###path
     if (length(grep("Report", dir(path))) > 0) {
-      output_path = file.path(path, paste('Report', length(grep(
-        "Report", dir(path)
-      )) + 1, sep = "_"))
+      idx <-
+      max(
+        as.numeric(stringr::str_extract(
+          grep(pattern = "Report", dir(path), value = TRUE),
+          "[0-9]{1,10}"
+        ))
+      )
+
+      if(is.na(idx)){
+        idx <- 0
+      }
+
+      output_path <-
+        file.path(path, paste('Report', idx + 1, sep = "_"))
     } else{
       output_path <- file.path(path, "Report")
     }
@@ -248,8 +261,8 @@ report_functional_module <-
 
     message("Render report.")
 
-    if (missing(intepretation_result)) {
-      intepretation_result <- "> No interpretation result is provided."
+    if (missing(interpretation_result)) {
+      interpretation_result <- "> No interpretation result is provided."
     }
 
     ##transform rmd to HTML or pdf
@@ -289,6 +302,19 @@ report_functional_module <-
       file.rename(
         from = file.path(output_path, "mapa.template.pdf"),
         to = file.path(output_path, "mapa_report.pdf")
+      )
+    }
+
+    ########render rmarkddown to md or all
+    if (type == "md" | type == "all") {
+      rmarkdown::render(
+        file.path(output_path, "mapa.template.Rmd"),
+        output_format = rmarkdown::md_document(),
+        params = list(text_data = interpretation_result)
+      )
+      file.rename(
+        from = file.path(output_path, "mapa.template.md"),
+        to = file.path(output_path, "mapa_report.md")
       )
     }
 
