@@ -1,8 +1,11 @@
+library(tidyverse)
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
 library(shinyBS)
 library(shinyWidgets)
+library(patchwork)
+# library(mapa)
 
 ui <- dashboardPage(
   skin = "red",
@@ -28,6 +31,11 @@ ui <- dashboardPage(
         "Data Visualization",
         tabName = "data_visualization",
         icon = icon("chart-line")
+      ),
+      menuItem(
+        "LLM Interpretation",
+        tabName = "llm_interpretation",
+        icon = icon("brain")
       ),
       menuItem(
         "Results and Report",
@@ -84,7 +92,7 @@ ui <- dashboardPage(
                     4,
                     fileInput(
                       "variable_info",
-                      "Choose File",
+                      "Choose file",
                       accept = c(
                         "text/csv",
                         "text/comma-separated-values,text/plain",
@@ -171,20 +179,20 @@ ui <- dashboardPage(
                       ),
                       numericInput(
                         "p_value_cutoff",
-                        "P-value Cutoff:",
+                        "P-value cutoff:",
                         value = 0.05,
                         min = 0,
                         max = 0.5
                       ),
                       selectInput(
                         "p_adjust_method",
-                        "P-Adjust Method:",
+                        "P-adjust method:",
                         choices = c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"),
                         selected = "BH"
                       ),
                       sliderInput(
                         "gene_set_size",
-                        "Gene Set Size:",
+                        "Gene set size:",
                         min = 5,
                         max = 2000,
                         value = c(10, 500)
@@ -259,12 +267,12 @@ ui <- dashboardPage(
                   fluidRow(
                     column(
                       4,
-                      h3("GO"),
+                      h4("GO"),
                       fluidRow(column(
                         6,
                         numericInput(
                           "p.adjust.cutoff.go",
-                          "Adjust P Value Cutoff:",
+                          "P-adjust cutoff:",
                           value = 0.05,
                           min = 0,
                           max = 0.5
@@ -274,7 +282,7 @@ ui <- dashboardPage(
                         6,
                         numericInput(
                           "count.cutoff.go",
-                          "Gene Count Cutoff:",
+                          "Gene count cutoff:",
                           value = 5,
                           min = 0,
                           max = 1000
@@ -285,7 +293,7 @@ ui <- dashboardPage(
                         6,
                         selectInput(
                           "measure.method.go",
-                          "Similarity Method:",
+                          "Similarity method:",
                           choices = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
                           selected = "Wang"
                         )
@@ -294,19 +302,19 @@ ui <- dashboardPage(
                         6,
                         numericInput(
                           "sim.cutoff.go",
-                          "Similarity Cutoff:",
+                          "Similarity cutoff:",
                           value = 0.5,
                           min = 0,
                           max = 1
                         )
                       )),
 
-                      h3("KEGG"),
+                      h4("KEGG"),
                       fluidRow(column(
                         6,
                         numericInput(
                           "p.adjust.cutoff.kegg",
-                          "Adjust P Value Cutoff:",
+                          "P-adjust cutoff:",
                           value = 0.05,
                           min = 0,
                           max = 0.5
@@ -316,7 +324,7 @@ ui <- dashboardPage(
                         6,
                         numericInput(
                           "count.cutoff.kegg",
-                          "Gene Count Cutoff:",
+                          "Gene count cutoff:",
                           value = 5,
                           min = 0,
                           max = 1000
@@ -327,7 +335,7 @@ ui <- dashboardPage(
                         6,
                         selectInput(
                           "measure.method.kegg",
-                          "Similarity Method:",
+                          "Similarity method:",
                           choices = c("jaccard"),
                           selected = "jaccard"
                         )
@@ -336,19 +344,19 @@ ui <- dashboardPage(
                         6,
                         numericInput(
                           "sim.cutoff.kegg",
-                          "Similarity Cutoff:",
+                          "Similarity cutoff:",
                           value = 0.5,
                           min = 0,
                           max = 1
                         )
                       )),
 
-                      h3("Reactome"),
+                      h4("Reactome"),
                       fluidRow(column(
                         6,
                         numericInput(
                           "p.adjust.cutoff.reactome",
-                          "Adjust P Value Cutoff:",
+                          "P-adjust cutoff:",
                           value = 0.05,
                           min = 0,
                           max = 0.5
@@ -358,7 +366,7 @@ ui <- dashboardPage(
                         6,
                         numericInput(
                           "count.cutoff.reactome",
-                          "Gene Count Cutoff:",
+                          "Gene count cutoff:",
                           value = 5,
                           min = 0,
                           max = 1000
@@ -369,7 +377,7 @@ ui <- dashboardPage(
                         6,
                         selectInput(
                           "measure.method.reactome",
-                          "Similarity Method:",
+                          "Similarity method:",
                           choices = c("jaccard"),
                           selected = "jaccard"
                         )
@@ -378,7 +386,7 @@ ui <- dashboardPage(
                         6,
                         numericInput(
                           "sim.cutoff.reactome",
-                          "Similarity Cutoff:",
+                          "Similarity cutoff:",
                           value = 0.5,
                           min = 0,
                           max = 1
@@ -557,7 +565,7 @@ ui <- dashboardPage(
                         6,
                         selectInput(
                           "measure.method.module",
-                          "Similarity Method:",
+                          "Similarity method:",
                           choices = c("jaccard"),
                           selected = "jaccard"
                         )
@@ -566,7 +574,7 @@ ui <- dashboardPage(
                         6,
                         numericInput(
                           "sim.cutoff.module",
-                          "Similarity Cutoff:",
+                          "Similarity cutoff:",
                           value = 0.5,
                           min = 0,
                           max = 1
@@ -701,7 +709,7 @@ ui <- dashboardPage(
                                column(4,
                                       numericInput(
                                         "barplot_y_lable_width",
-                                        "Y Label Width",
+                                        "Y label width",
                                         value = 50,
                                         min = 20,
                                         max = 100
@@ -736,7 +744,7 @@ ui <- dashboardPage(
                                       )
                                       )
                              ),
-                             h4("Database Color"),
+                             h4("Database color"),
                              fluidRow(
                              column(4,
                                     shinyWidgets::colorPickr(
@@ -767,14 +775,6 @@ ui <- dashboardPage(
                              )
                              ),
                              fluidRow(
-                               column(12,
-                                      shinyjs::useShinyjs(),
-                                      downloadButton("download_barplot",
-                                                     "Download",
-                                                     class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;"))
-                             ),
-                             fluidRow(
                                column(4,
                                       selectInput("barplot_type", "Type",
                                                   choices = c("pdf", "png", "jpeg"))
@@ -785,6 +785,20 @@ ui <- dashboardPage(
                                column(4,
                                       numericInput("barplot_height", "Height",
                                                    value = 7, min = 4, max = 20))
+                             ),
+                                                          fluidRow(
+                               column(12,
+                                      shinyjs::useShinyjs(),
+                                      downloadButton("download_barplot",
+                                                     "Download",
+                                                     class = "btn-primary",
+                                                     style = "background-color: #d83428; color: white;"),
+                                      actionButton(
+                                        "go2llm_interpretation",
+                                        "Next",
+                                        class = "btn-primary",
+                                        style = "background-color: #d83428; color: white;"
+                                      ))
                              ),
                              style = "border-right: 1px solid #ddd; padding-right: 20px;"
                              ),
@@ -831,19 +845,20 @@ ui <- dashboardPage(
                              ),
                              fluidRow(
                                column(6,
+                                      selectInput(
+                                        "module_similarity_network_level",
+                                        "Level:",
+                                        choices = c("Module" = "module",
+                                                    "Functional module" = "functional_module"),
+                                        selected = "functional_module"
+                                      )
+                               ),
+                               column(3,
                                  checkboxInput("module_similarity_network_text", "Text", FALSE)
                                ),
-                               column(6,
+                               column(3,
                                  checkboxInput("module_similarity_network_text_all", "Text all", FALSE)
                                )
-                             ),
-                             fluidRow(
-                               column(12,
-                                      shinyjs::useShinyjs(),
-                                      downloadButton("download_module_similarity_network",
-                                                     "Download",
-                                                     class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;"))
                              ),
                              fluidRow(
                                column(4,
@@ -856,6 +871,20 @@ ui <- dashboardPage(
                                column(4,
                                       numericInput("module_similarity_network_height", "Height",
                                                    value = 7, min = 4, max = 20))
+                             ),
+                             fluidRow(
+                               column(12,
+                                      shinyjs::useShinyjs(),
+                                      downloadButton("download_module_similarity_network",
+                                                     "Download",
+                                                     class = "btn-primary",
+                                                     style = "background-color: #d83428; color: white;"),
+                                      actionButton(
+                                        "go2llm_interpretation",
+                                        "Next",
+                                        class = "btn-primary",
+                                        style = "background-color: #d83428; color: white;"
+                                      ))
                              ),
                              style = "border-right: 1px solid #ddd; padding-right: 20px;"
                       ),
@@ -874,9 +903,302 @@ ui <- dashboardPage(
                              )
                       )
                     )
+                  ),
+                  tabPanel(
+                    title = "Module Information",
+                    fluidRow(
+                      column(4,
+                             br(),
+                             fluidRow(
+                               column(6,
+                                      selectInput(
+                                        "module_information_level",
+                                        "Level:",
+                                        choices = c("Module" = "module",
+                                                    "Functional module" = "functional_module"),
+                                        selected = "module"
+                                      )),
+                               column(6,
+                                      selectInput(
+                                        "module_information_database",
+                                        "Database:",
+                                        choices = c("GO" = "go",
+                                                    "KEGG" = "kegg",
+                                                    "Reactome" = "reactome"),
+                                        selected = "go"
+                                      )
+                               )
+                             ),
+                             fluidRow(
+                               column(12,
+                                      selectInput(
+                                        "module_information_module_id",
+                                        "Module ID:",
+                                        choices = NULL
+                                      )
+                               )
+                             ),
+                             fluidRow(
+                               column(4,
+                                      selectInput("module_information_type", "Type",
+                                                  choices = c("pdf", "png", "jpeg"))
+                               ),
+                               column(4,
+                                      numericInput("module_information_width", "Width",
+                                                   value = 21, min = 4, max = 30)),
+                               column(4,
+                                      numericInput("module_information_height", "Height",
+                                                   value = 7, min = 4, max = 20))
+                             ),
+                             fluidRow(
+                               column(12,
+                                      shinyjs::useShinyjs(),
+                                      downloadButton("download_module_information",
+                                                     "Download",
+                                                     class = "btn-primary",
+                                                     style = "background-color: #d83428; color: white;"),
+                                      actionButton(
+                                        "go2llm_interpretation",
+                                        "Next",
+                                        class = "btn-primary",
+                                        style = "background-color: #d83428; color: white;"
+                                      )
+                                      )
+                             ),
+                             style = "border-right: 1px solid #ddd; padding-right: 20px;"
+                      ),
+                      column(8,
+                             shiny::plotOutput("module_information"),
+                             br(),
+                             actionButton("generate_module_information",
+                                          "Generate plot",
+                                          class = "btn-primary",
+                                          style = "background-color: #d83428; color: white;"),
+                             actionButton(
+                               "show_module_information_code",
+                               "Show code",
+                               class = "btn-primary",
+                               style = "background-color: #d83428; color: white;"
+                             )
+                      )
+                    )
+                  ),
+                  tabPanel(
+                    title = "Relationship network",
+                    fluidRow(
+                      column(4,
+                             br(),
+                             fluidRow(
+                               column(6,
+                                      checkboxInput("relationship_network_circular_plot",
+                                                    "Circular layout", FALSE)
+                               ),
+                               column(6,
+                                      checkboxInput("relationship_network_filter",
+                                                    "Filter", FALSE)
+                               )
+                             ),
+                             fluidRow(
+                               column(6,
+                                      selectInput(
+                                        "relationship_network_level",
+                                        "Filter Level:",
+                                        choices = c("Module" = "module",
+                                                    "Functional module" = "functional_module"),
+                                        selected = "module"
+                                      )),
+                               column(6,
+                                      selectInput(
+                                        "relationship_network_module_id",
+                                        "Module ID:",
+                                        choices = NULL,
+                                        multiple = TRUE
+                                      )
+                               )
+                             ),
+                             h4("Includes"),
+                             fluidRow(
+                               column(3,
+                                      checkboxInput("relationship_network_include_functional_modules",
+                                                    label = tags$span("FM",
+                                                                      shinyBS::bsButton("functional_module_info",
+                                                                                        label = "",
+                                                                                        icon = icon("info"),
+                                                                                        style = "info",
+                                                                                        size = "extra-small")),
+                                                                      TRUE)),
+                               bsPopover(
+                                 id = "functional_module_info",
+                                 title = "",
+                                 content = "FM is functional module",
+                                 placement = "right",
+                                 trigger = "hover",
+                                 options = list(container = "body")
+                               ),
+                               column(3,
+                                      checkboxInput("relationship_network_include_modules",
+                                                    "Modules", TRUE)),
+                               column(3,
+                                      checkboxInput("relationship_network_include_pathways",
+                                                    "Pathways", TRUE)),
+                               column(3,
+                                      checkboxInput("relationship_network_include_molecules",
+                                                    "Molecules", TRUE))
+                             ),
+                             h4("Colors"),
+                             fluidRow(
+                               column(3,
+                                      shinyWidgets::colorPickr(
+                                        inputId = "relationship_network_functional_module_color",
+                                        label = "FM",
+                                        selected = "#F05C3BFF",
+                                        theme = "monolith",
+                                        width = "100%"
+                                      )),
+                               column(3,
+                                      shinyWidgets::colorPickr(
+                                        inputId = "relationship_network_module_color",
+                                        label = "Module",
+                                        selected = "#46732EFF",
+                                        theme = "monolith",
+                                        width = "100%"
+                                      )),
+                               column(3,
+                                      shinyWidgets::colorPickr(
+                                        inputId = "relationship_network_pathway_color",
+                                        label = "Pathway",
+                                        selected = "#197EC0FF",
+                                        theme = "monolith",
+                                        width = "100%"
+                                      )),
+                               column(3,
+                                      shinyWidgets::colorPickr(
+                                        inputId = "relationship_network_molecule_color",
+                                        label = "Molecule",
+                                        selected = "#3B4992FF",
+                                        theme = "monolith",
+                                        width = "100%"
+                                      ))
+                             ),
+                             h4("Text"),
+                             fluidRow(
+                               column(3,
+                                      checkboxInput("relationship_network_functional_module_text",
+                                                    "FM", TRUE)),
+                               column(3,
+                                      checkboxInput("relationship_network_module_text",
+                                                    "Module", TRUE)),
+                               column(3,
+                                      checkboxInput("relationship_network_pathway_text",
+                                                    "Pathway", TRUE)),
+                               column(3,
+                                      checkboxInput("relationship_network_molecule_text",
+                                                    "Molecules", FALSE))
+                             ),
+                             h4("Text size"),
+                             fluidRow(
+                               column(3,
+                                      numericInput("relationship_network_functional_module_text_size",
+                                                   "FM",
+                                                   value = 3, min = 0.3, max = 10)),
+                               column(3,
+                                      numericInput("relationship_network_module_text_size",
+                                                   "Module",
+                                                   value = 3, min = 0.3, max = 10)),
+                               column(3,
+                                      numericInput("relationship_network_pathway_text_size",
+                                                   "Pathway",
+                                                   value = 3, min = 0.3, max = 10)),
+                               column(3,
+                                      numericInput("relationship_network_molecule_text_size",
+                                                   "Molecule",
+                                                   value = 3, min = 0.3, max = 10))
+                             ),
+                             h4("Arrange posision"),
+                             fluidRow(
+                               column(3,
+                                      checkboxInput("relationship_network_functional_module_arrange_position",
+                                                    "FM", TRUE)),
+                               column(3,
+                                      checkboxInput("relationship_network_module_arrange_position",
+                                                    "Module", TRUE)),
+                               column(3,
+                                      checkboxInput("relationship_network_pathway_arrange_position",
+                                                    "Pathway", TRUE)),
+                               column(3,
+                                      checkboxInput("relationship_network_molecule_arrange_position",
+                                                    "Molecules", FALSE))
+                             ),
+                             h4("Posision limits"),
+                             fluidRow(
+                               column(6,
+                                      sliderInput(
+                                        "relationship_network_functional_module_position_limits",
+                                        "Functional module",
+                                        min = 0, max = 1, value = c(0, 1))),
+                               column(6,
+                                      sliderInput(
+                                        "relationship_network_module_position_limits",
+                                        "Module",
+                                        min = 0, max = 1, value = c(0, 1)))
+                             ),
+                             fluidRow(
+                               column(6,
+                                      sliderInput(
+                                        "relationship_network_pathway_position_limits",
+                                        "Pathway",
+                                        min = 0, max = 1, value = c(0, 1))),
+                               column(6,
+                                      sliderInput(
+                                        "relationship_network_molecule_position_limits",
+                                        "Molecule",
+                                        min = 0, max = 1, value = c(0, 1)))
+                             ),
+                             fluidRow(
+                               column(4,
+                                      selectInput("relationship_network_type", "Type",
+                                                  choices = c("pdf", "png", "jpeg"))
+                               ),
+                               column(4,
+                                      numericInput("relationship_network_width", "Width",
+                                                   value = 21, min = 4, max = 30)),
+                               column(4,
+                                      numericInput("relationship_network_height", "Height",
+                                                   value = 7, min = 4, max = 20))
+                             ),
+                             fluidRow(
+                               column(12,
+                                      shinyjs::useShinyjs(),
+                                      downloadButton("download_relationship_network",
+                                                     "Download",
+                                                     class = "btn-primary",
+                                                     style = "background-color: #d83428; color: white;"),
+                                      actionButton(
+                                        "go2llm_interpretation",
+                                        "Next",
+                                        class = "btn-primary",
+                                        style = "background-color: #d83428; color: white;"
+                                      )
+                                      )
+                             ),
+                             style = "border-right: 1px solid #ddd; padding-right: 20px;"
+                      ),
+                      column(8,
+                             shiny::plotOutput("relationship_network"),
+                             br(),
+                             actionButton("generate_relationship_network",
+                                          "Generate plot",
+                                          class = "btn-primary",
+                                          style = "background-color: #d83428; color: white;"),
+                             actionButton(
+                               "show_relationship_network_code",
+                               "Show code",
+                               class = "btn-primary",
+                               style = "background-color: #d83428; color: white;"
+                             )
+                      )
+                    )
                   )
-
-
                 )
               ))
     ),

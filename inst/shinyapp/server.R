@@ -397,7 +397,6 @@ server <-
       }
     })
 
-
     output$enriched_pathways_go <-
       shiny::renderDataTable({
         req(tryCatch(
@@ -1285,8 +1284,6 @@ server <-
 
 
 
-
-
     #####module_similarity_network
     # Observe generate module_similarity_network button click
     module_similarity_network <-
@@ -1310,7 +1307,7 @@ server <-
         plot <-
           plot_similarity_network(
             object = enriched_functional_module(),
-            level = "module",
+            level = input$module_similarity_network_level,
             database = input$module_similarity_network_database,
             degree_cutoff = input$module_similarity_network_degree_cutoff,
             text = input$module_similarity_network_text,
@@ -1325,12 +1322,13 @@ server <-
             '
             plot_similarity_network(
             object = enriched_functional_module,
-            level = "module",
+            level = %s,
             database = %s,
             degree_cutoff = %s,
             text = %s,
             text_all = %s
           )',
+          input$module_similarity_network_level,
           input$module_similarity_network_database,
           input$module_similarity_network_degree_cutoff,
           input$module_similarity_network_text,
@@ -1351,10 +1349,16 @@ server <-
     output$download_module_similarity_network <-
       downloadHandler(
         filename = function() {
-          paste0("module_similarity_network_",
-                 input$module_similarity_network_database,
-                 ".",
-                 input$module_similarity_network_type)
+          paste0(
+            "module_similarity_network_",
+            ifelse(
+              input$module_similarity_network_level == "module",
+              input$module_similarity_network_database,
+              "functional_module"
+            ),
+            ".",
+            input$module_similarity_network_type
+          )
         },
         content = function(file) {
           ggsave(
@@ -1401,5 +1405,518 @@ server <-
         ))
       }
     })
+
+
+
+    ########module information plot
+    # Update the module ID
+    observe({
+      if (!is.null(enriched_functional_module()) &
+          length(enriched_functional_module()) != 0) {
+        ####level is functional module
+        if (input$module_information_level == "functional_module") {
+          if (length(enriched_functional_module()@merged_module) > 0) {
+            module_information_module_id <-
+              unique(
+                enriched_functional_module()@merged_module$functional_module_result$module
+              )
+          }
+        }
+
+        ####level is module
+        if (input$module_information_level == "module") {
+          ####database is go
+          if (input$module_information_database == "go") {
+            if (length(enriched_functional_module()@merged_pathway_go) > 0) {
+              module_information_module_id <-
+                unique(
+                  enriched_functional_module()@merged_pathway_go$module_result$module
+                )
+            }
+          }
+
+          ####database is kegg
+          if (input$module_information_database == "kegg") {
+            if (length(enriched_functional_module()@merged_pathway_kegg) > 0) {
+              module_information_module_id <-
+                unique(
+                  enriched_functional_module()@merged_pathway_kegg$module_result$module
+                )
+            }
+          }
+
+          ####database is reactome
+          if (input$module_information_database == "reactome") {
+            if (length(enriched_functional_module()@merged_pathway_reactome) > 0) {
+              module_information_module_id <-
+                unique(
+                  enriched_functional_module()@merged_pathway_reactome$module_result$module
+                )
+            }
+          }
+
+        }
+
+        updateSelectInput(
+          session,
+          "module_information_module_id",
+          choices = stringr::str_sort(module_information_module_id, numeric = TRUE),
+          selected = stringr::str_sort(module_information_module_id, numeric = TRUE)[1]
+        )
+      }
+    })
+
+
+    #####module information plot
+    # Observe generate module information button click
+    module_information <-
+      reactiveVal()
+    module_information_code <-
+      reactiveVal()
+
+    observeEvent(input$generate_module_information, {
+      if (is.null(enriched_functional_module())) {
+        # No enriched functional module available
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched functional module data available. Please complete the previous steps or upload the data.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        shinyjs::show("loading")
+        plot <-
+          plot_module_info(
+            object = enriched_functional_module(),
+            level = input$module_information_level,
+            database = input$module_information_database,
+            module_id = input$module_information_module_id
+          )
+
+        plot <-
+          plot[[1]] + plot[[2]] + plot[[3]]
+
+        module_information(plot)
+
+        ###save code
+        module_information_code <-
+          sprintf(
+            '
+          plot_module_info(object = enriched_functional_module,
+                           level = %s,
+                           database = %s,
+                           module_id = %s)
+          )',
+          input$module_information_level,
+          input$module_information_database,
+          input$module_information_module_id
+          )
+
+        module_information_code(module_information_code)
+        shinyjs::hide("loading")
+      }
+    })
+
+    output$module_information <-
+      renderPlot({
+        req(module_information())
+        module_information()
+      })
+
+    output$download_module_information <-
+      downloadHandler(
+        filename = function() {
+          paste0(
+            "module_information_",
+            input$module_information_module_id,
+            ".",
+            input$module_information_type
+          )
+        },
+        content = function(file) {
+          ggsave(
+            file,
+            plot = barplot(),
+            width = input$module_information_width,
+            height = input$module_information_height
+          )
+        }
+      )
+
+    observe({
+      if (is.null(module_information()) ||
+          length(module_information()) == 0) {
+        shinyjs::disable("download_module_information")
+      } else {
+        shinyjs::enable("download_module_information")
+      }
+    })
+
+    ######code for module_information
+    ####show code
+    observeEvent(input$show_module_information_code, {
+      if (is.null(module_information_code()) ||
+          length(module_information_code()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No available code",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else{
+        code_content <-
+          module_information_code()
+        code_content <-
+          paste(code_content, collapse = "\n")
+        showModal(modalDialog(
+          title = "Code",
+          tags$pre(code_content),
+          easyClose = TRUE,
+          footer = modalButton("Close")
+        ))
+      }
+    })
+
+
+
+
+
+    #####relationship network plot
+
+    # Update the module ID
+    observe({
+      if (!is.null(enriched_functional_module()) &
+          length(enriched_functional_module()) != 0) {
+        ####level is functional module
+        if (input$relationship_network_level == "functional_module") {
+          if (length(enriched_functional_module()@merged_module) > 0) {
+            relationship_network_module_id <-
+              unique(
+                enriched_functional_module()@merged_module$functional_module_result$module
+              )
+          }
+        }
+
+        ####level is module
+        if (input$relationship_network_level == "module") {
+          if (length(enriched_functional_module()@merged_pathway_go) > 0) {
+            relationship_network_module_id_go <-
+              unique(enriched_functional_module()@merged_pathway_go$module_result$module)
+          } else{
+            relationship_network_module_id_go <- NULL
+          }
+
+          if (length(enriched_functional_module()@merged_pathway_kegg) > 0) {
+            relationship_network_module_id_kegg <-
+              unique(
+                enriched_functional_module()@merged_pathway_kegg$module_result$module
+              )
+          } else{
+            relationship_network_module_id_kegg <- NULL
+          }
+
+          ####database is reactome
+          if (length(enriched_functional_module()@merged_pathway_reactome) > 0) {
+            relationship_network_module_id_reactome <-
+              unique(
+                enriched_functional_module()@merged_pathway_reactome$module_result$module
+              )
+          } else{
+            relationship_network_module_id_reactome <- NULL
+          }
+
+          relationship_network_module_id <-
+            c(
+              relationship_network_module_id_go,
+              relationship_network_module_id_kegg,
+              relationship_network_module_id_reactome
+            )
+
+        }
+
+        updateSelectInput(
+          session,
+          "relationship_network_module_id",
+          choices = stringr::str_sort(relationship_network_module_id, numeric = TRUE),
+          selected = stringr::str_sort(relationship_network_module_id, numeric = TRUE)[1]
+        )
+      }
+    })
+
+
+    # Observe generate relationship network button click
+    relationship_network <-
+      reactiveVal()
+    relationship_network_code <-
+      reactiveVal()
+
+    ####get the filtered enriched_functional_module
+    object <-
+      reactiveVal()
+
+    observeEvent(input$generate_relationship_network, {
+      if (is.null(enriched_functional_module())) {
+        # No enriched functional module available
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched functional module data available. Please complete the previous steps or upload the data.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        shinyjs::show("loading")
+
+        ####if filtered by functiobal module and modules
+        # browser()
+        object <-
+          enriched_functional_module()
+        if (input$relationship_network_filter) {
+          object <-
+            filter_functional_module(
+              object,
+              level = input$relationship_network_level,
+              remain_id = input$relationship_network_module_id
+            )
+        }
+
+        object(object)
+
+        plot <-
+          plot_relationship_network(
+            object = object(),
+            include_functional_modules = input$relationship_network_include_functional_modules,
+            include_modules = input$relationship_network_include_modules,
+            include_pathways = input$relationship_network_include_pathways,
+            include_molecules = input$relationship_network_include_molecules,
+            functional_module_text = input$relationship_network_functional_module_text,
+            module_text = input$relationship_network_module_text,
+            pathway_text = input$relationship_network_pathway_text,
+            molecule_text = input$relationship_network_molecule_text,
+            circular_plot = input$relationship_network_circular_plot,
+            functional_module_color = input$relationship_network_functional_module_color,
+            module_color = input$relationship_network_module_color,
+            pathway_color = input$relationship_network_pathway_color,
+            molecule_color = input$relationship_network_molecule_color,
+            functional_module_arrange_position = input$relationship_network_functional_module_arrange_position,
+            module_arrange_position = input$relationship_network_module_arrange_position,
+            pathway_arrange_position = input$relationship_network_pathway_arrange_position,
+            molecule_arrange_position = input$relationship_network_molecule_arrange_position,
+            functional_module_position_limits = c(
+              input$relationship_network_functional_module_position_limits[1],
+              input$relationship_network_functional_module_position_limits[2]
+            ),
+            module_position_limits = c(
+              input$relationship_network_module_position_limits[1],
+              input$relationship_network_module_position_limits[2]
+            ),
+            pathway_position_limits = c(
+              input$relationship_network_pathway_position_limits[1],
+              input$relationship_network_pathway_position_limits[2]
+            ),
+            molecule_position_limits = c(
+              input$relationship_network_molecule_position_limits[1],
+              input$relationship_network_molecule_position_limits[2]
+            )
+          )
+
+        relationship_network(plot)
+
+        ###save code
+        relationship_network_module_id <-
+          paste0("c(",
+                 paste0(
+                   paste0('"',
+                          input$relationship_network_module_id,
+                          '"'),
+                   collapse = ", "
+                 ),
+                 ")")
+
+        relationship_network_code1 <-
+          sprintf(
+            '
+            object <-
+            filter_functional_module(
+              object,
+              level = %s,
+              remain_id = %s
+            )
+            ',
+            input$relationship_network_level,
+            relationship_network_module_id
+            )
+
+        functional_module_position_limits <-
+          paste0(
+            "c(",
+            paste0(
+              input$relationship_network_functional_module_position_limits,
+              collapse = ", "
+            ),
+            ")"
+          )
+
+        module_position_limits <-
+          paste0(
+            "c(",
+            paste0(
+              input$relationship_network_module_position_limits,
+              collapse = ", "
+            ),
+            ")"
+          )
+
+        pathway_position_limits <-
+          paste0(
+            "c(",
+            paste0(
+              input$relationship_network_pathway_position_limits,
+              collapse = ", "
+            ),
+            ")"
+          )
+
+        molecule_position_limits <-
+          paste0(
+            "c(",
+            paste0(
+              input$relationship_network_molecule_position_limits,
+              collapse = ", "
+            ),
+            ")"
+          )
+
+        relationship_network_code2 <-
+          sprintf(
+            '
+            plot_relationship_network(
+            object = object,
+            include_functional_modules = %s,
+            include_modules = %s,
+            include_pathways = %s,
+            include_molecules = %s,
+            functional_module_text = %s,
+            module_text = %s,
+            pathway_text = %s,
+            molecule_text = %s,
+            circular_plot = %s,
+            functional_module_color = %s,
+            module_color = %s,
+            pathway_color = %s,
+            molecule_color = %s,
+            functional_module_arrange_position = %s,
+            module_arrange_position = %s,
+            pathway_arrange_position = %s,
+            molecule_arrange_position = %s,
+            functional_module_position_limits = %s,
+            module_position_limits = %s,
+            pathway_position_limits = %s,
+            molecule_position_limits = %s
+          )
+            ',
+          input$relationship_network_include_functional_modules,
+          input$relationship_network_include_modules,
+          input$relationship_network_include_pathways,
+          input$relationship_network_include_molecules,
+          input$relationship_network_functional_module_text,
+          input$relationship_network_module_text,
+          input$relationship_network_pathway_text,
+          input$relationship_network_molecule_text,
+          input$relationship_network_circular_plot,
+          input$relationship_network_functional_module_color,
+          input$relationship_network_module_color,
+          input$relationship_network_pathway_color,
+          input$relationship_network_molecule_color,
+          input$relationship_network_functional_module_arrange_position,
+          input$relationship_network_module_arrange_position,
+          input$relationship_network_pathway_arrange_position,
+          input$relationship_network_molecule_arrange_position,
+          functional_module_position_limits,
+          module_position_limits,
+          pathway_position_limits,
+          molecule_position_limits
+          )
+
+        relationship_network_code <-
+          paste0(relationship_network_code1,
+                 relationship_network_code2,
+                 sep = "\n")
+
+        relationship_network_code(relationship_network_code)
+        shinyjs::hide("loading")
+      }
+    })
+
+    output$relationship_network <-
+      renderPlot({
+        req(relationship_network())
+        relationship_network()
+      })
+
+    output$download_relationship_network <-
+      downloadHandler(
+        filename = function() {
+          paste0(
+            "relationship_network_",
+            input$relationship_network_level,
+            ".",
+            input$relationship_network_type
+          )
+        },
+        content = function(file) {
+          ggsave(
+            file,
+            plot = relationship_network(),
+            width = input$relationship_network_width,
+            height = input$relationship_network_height
+          )
+        }
+      )
+
+    observe({
+      if (is.null(relationship_network()) ||
+          length(relationship_network()) == 0) {
+        shinyjs::disable("download_relationship_network")
+      } else {
+        shinyjs::enable("download_relationship_network")
+      }
+    })
+
+    ######code for relationship_network
+    ####show code
+    observeEvent(input$show_relationship_network_code, {
+      if (is.null(relationship_network_code()) ||
+          length(relationship_network_code()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No available code",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else{
+        code_content <-
+          relationship_network_code()
+        code_content <-
+          paste(code_content, collapse = "\n")
+        showModal(modalDialog(
+          title = "Code",
+          tags$pre(code_content),
+          easyClose = TRUE,
+          footer = modalButton("Close")
+        ))
+      }
+    })
+
+
+
+
 
   }

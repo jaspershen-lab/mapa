@@ -37,3 +37,7 @@
 # mapa 0.1.10
 
 * Add the launch_mapa_shiny function.
+
+# mapa 0.1.11
+
+* Improve launch_mapa_shiny function and add filter_functional_module function.
