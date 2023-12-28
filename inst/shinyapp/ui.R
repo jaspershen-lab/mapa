@@ -5,6 +5,7 @@ library(shinyjs)
 library(shinyBS)
 library(shinyWidgets)
 library(patchwork)
+library(markdown)
 # library(mapa)
 
 ui <- dashboardPage(
@@ -649,6 +650,7 @@ ui <- dashboardPage(
                            ))
                   )))
       ),
+
       tabItem(tabName = "data_visualization",
               fluidPage(
                 titlePanel("Data Visualization"),
@@ -794,7 +796,7 @@ ui <- dashboardPage(
                                                      class = "btn-primary",
                                                      style = "background-color: #d83428; color: white;"),
                                       actionButton(
-                                        "go2llm_interpretation",
+                                        "go2llm_interpretation_1",
                                         "Next",
                                         class = "btn-primary",
                                         style = "background-color: #d83428; color: white;"
@@ -880,7 +882,7 @@ ui <- dashboardPage(
                                                      class = "btn-primary",
                                                      style = "background-color: #d83428; color: white;"),
                                       actionButton(
-                                        "go2llm_interpretation",
+                                        "go2llm_interpretation_2",
                                         "Next",
                                         class = "btn-primary",
                                         style = "background-color: #d83428; color: white;"
@@ -958,7 +960,7 @@ ui <- dashboardPage(
                                                      class = "btn-primary",
                                                      style = "background-color: #d83428; color: white;"),
                                       actionButton(
-                                        "go2llm_interpretation",
+                                        "go2llm_interpretation_3",
                                         "Next",
                                         class = "btn-primary",
                                         style = "background-color: #d83428; color: white;"
@@ -1174,7 +1176,7 @@ ui <- dashboardPage(
                                                      class = "btn-primary",
                                                      style = "background-color: #d83428; color: white;"),
                                       actionButton(
-                                        "go2llm_interpretation",
+                                        "go2llm_interpretation_4",
                                         "Next",
                                         class = "btn-primary",
                                         style = "background-color: #d83428; color: white;"
@@ -1200,7 +1202,106 @@ ui <- dashboardPage(
                     )
                   )
                 )
-              ))
+              )),
+
+      tabItem(
+        tabName = "llm_interpretation",
+        fluidPage(titlePanel("LLM Interpretation"),
+                  fluidPage(fluidRow(
+                    column(
+                      4,
+                      fluidRow(column(
+                        5,
+                        selectInput(
+                          "llm_model",
+                          "LLM model:",
+                          choices = c("ChatGPT" = "chatgpt"),
+                          selected = "chatgpt"
+                        )
+                      ),
+                      column(
+                        7,
+                        textInput("openai_key",
+                                  "OpenAI Key:",
+                                  value = "")
+                      )),
+                      fluidRow(column(
+                        12,
+                        textInput(
+                          "llm_interpretation_disease",
+                          "Disease or phenotype",
+                          value = "pregnancy",
+                          width = "100%"
+                        )
+                      )),
+                      fluidRow(
+                        column(4,numericInput("llm_interpretation_top_n",
+                                              "Top N:",
+                                              value = 5,
+                                              min = 1,
+                                              max = 1000)
+                        ),
+                        column(4,
+                               numericInput("llm_interpretation_p_adjust_cutoff",
+                                            "P-adjust cutoff",
+                                            value = 0.05,
+                                            min = 0,
+                                            max = 0.5),
+                        ),
+                        column(4,
+                               numericInput("llm_interpretation_count_cutoff",
+                                            "Count cutoff:",
+                                            value = 5,
+                                            min = 1,
+                                            max = 1000)
+                        )
+                      ),
+                      actionButton(
+                        "submit_llm_interpretation",
+                        "Submit",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+
+                      actionButton(
+                        "go2results",
+                        "Next",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+                      actionButton(
+                        "show_llm_interpretation_code",
+                        "Show code",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+                      style = "border-right: 1px solid #ddd; padding-right: 20px;"
+                    ),
+                    column(8,
+                           tabsetPanel(
+                             tabPanel(
+                               title = "LLM interpretation results",
+                               uiOutput("llm_interpretation_result"),
+                               br(),
+                               shinyjs::useShinyjs(),
+                               downloadButton("download_llm_interpretation_result",
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
+                             ),
+                             tabPanel(
+                               title = "Functional module table 1",
+                               shiny::dataTableOutput("llm_enriched_functional_modules1")
+                             ),
+                             tabPanel(
+                               title = "Functional module table 2",
+                               shiny::dataTableOutput("llm_enriched_functional_modules2")
+                             )
+                           )
+                           )
+                  )))
+      )
+
     ),
     tags$footer(
       div(

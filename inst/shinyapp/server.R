@@ -1750,7 +1750,7 @@ server <-
             ',
             input$relationship_network_level,
             relationship_network_module_id
-            )
+          )
 
         functional_module_position_limits <-
           paste0(
@@ -1917,6 +1917,277 @@ server <-
 
 
 
+    ###Go to llm intepretation tab
+    ####if there is not enriched_functional_module, show a warning message
+    observeEvent(input$go2llm_interpretation_1, {
+      # Check if enriched_functional_module is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched_functional_module available",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        updateTabItems(session = session,
+                       inputId = "tabs",
+                       selected = "llm_interpretation")
+      }
+    })
+
+    observeEvent(input$go2llm_interpretation_2, {
+      # Check if enriched_functional_module is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched_functional_module available",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        updateTabItems(session = session,
+                       inputId = "tabs",
+                       selected = "llm_interpretation")
+      }
+    })
+
+    observeEvent(input$go2llm_interpretation_3, {
+      # Check if enriched_functional_module is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched_functional_module available",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        updateTabItems(session = session,
+                       inputId = "tabs",
+                       selected = "llm_interpretation")
+      }
+    })
+
+    observeEvent(input$go2llm_interpretation_4, {
+      # Check if enriched_functional_module is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched_functional_module available",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        updateTabItems(session = session,
+                       inputId = "tabs",
+                       selected = "llm_interpretation")
+      }
+    })
+
+    ###--------------------------------------------------------------------
+    ###Step 6 LLM interpretation
+    # Define enriched_functional_module as a reactive value
+    llm_interpretation_result <-
+      reactiveVal("")
+
+    llm_interpretation_code <-
+      reactiveVal()
+
+    openai_key <-
+      reactiveVal()
+
+    observeEvent(input$submit_llm_interpretation, {
+      openai_key1 <-
+        Sys.getenv("chatgpt_api_key")
+
+      openai_key2 <-
+        input$openai_key
+
+      # Check if enriched_modules is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched functional modules data available.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        if (openai_key1 != "") {
+          openai_key(openai_key1)
+        } else{
+          if (openai_key2 != "") {
+            openai_key(openai_key2)
+          } else{
+            openai_key("")
+          }
+        }
+
+        if (openai_key() == "") {
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "No OpenAI Key provided. No interpretation will be generated.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else{
+          set_chatgpt_api_key(api_key = openai_key())
+        }
+
+        shinyjs::show("loading")
+        # Perform analysis with user-provided parameters
+        llm_interpretation_result <-
+          tryCatch(
+            interpret_pathways(
+              object = enriched_functional_module(),
+              p.adjust.cutoff = input$llm_interpretation_p_adjust_cutoff,
+              disease = input$llm_interpretation_disease,
+              count.cutoff = input$llm_interpretation_count_cutoff,
+              top_n = input$llm_interpretation_top_n
+            ),
+            error = function(e) {
+              "No result"
+            }
+          )
+
+        llm_interpretation_result(llm_interpretation_result)
+
+        shinyjs::hide("loading")
+
+        ##save code
+        llm_interpretation_code <-
+          sprintf(
+            '
+          llm_interpretation_result <-
+          interpret_pathways(
+            object = enriched_functional_module,
+            p.adjust.cutoff = %s,
+            disease = %s,
+            count.cutoff = %s,
+            top_n = %s
+          )
+            ',
+          input$llm_interpretation_p_adjust_cutoff,
+          input$llm_interpretation_disease,
+          input$llm_interpretation_count_cutoff,
+          input$llm_interpretation_top_n
+          )
+
+        llm_interpretation_code(llm_interpretation_code)
+      }
+    })
+
+    output$llm_interpretation_result <-
+      renderUI({
+        shiny::HTML(markdown::markdownToHTML(llm_interpretation_result(),
+                                             fragment.only = TRUE))
+      })
+
+    output$download_llm_interpretation_result <-
+      shiny::downloadHandler(
+        filename = function() {
+          "llm_interpretation_result.md"
+        },
+        content = function(file) {
+          writeLines(markdownText(), file)
+        }
+      )
+
+
+    output$llm_enriched_functional_modules1 <-
+      shiny::renderDataTable({
+        req(tryCatch(
+          enriched_functional_module()@merged_module$functional_module_result,
+          error = function(e)
+            NULL
+        ))
+      },
+      options = list(pageLength = 10))
+
+    output$llm_enriched_functional_modules2 <-
+      shiny::renderDataTable({
+        req(tryCatch(
+          enriched_functional_module()@merged_module$result_with_module,
+          error = function(e)
+            NULL
+        ))
+      },
+      options = list(pageLength = 10))
+
+    observe({
+      if (is.null(llm_interpretation_result()) ||
+          length(llm_interpretation_result()) == 0 ||
+          llm_interpretation_result() == "") {
+        shinyjs::disable("download_llm_interpretation_result")
+      } else {
+        shinyjs::enable("download_llm_interpretation_result")
+
+      }
+    })
+
+
+    ####show code
+    observeEvent(input$show_llm_interpretation_code, {
+      if (is.null(llm_interpretation_code()) ||
+          length(llm_interpretation_code()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No available code",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else{
+        code_content <-
+          llm_interpretation_code()
+        code_content <-
+          paste(code_content, collapse = "\n")
+        showModal(modalDialog(
+          title = "Code",
+          tags$pre(code_content),
+          easyClose = TRUE,
+          footer = modalButton("Close")
+        ))
+      }
+    })
+
+
+    ###Go to result tab
+    ####if there is not enriched_functional_module, show a warning message
+    observeEvent(input$go2data_visualization, {
+      # Check if enriched_functional_module is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "Please merge modules first.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        updateTabItems(session = session,
+                       inputId = "tabs",
+                       selected = "data_visualization")
+      }
+    })
 
 
   }

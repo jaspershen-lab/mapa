@@ -21,9 +21,7 @@
 #' @export
 
 translate_language <-
-  function(text = "As of my last update in early 2023, there's no widely
-           recognized individual named Xiaotao Shen affiliated with Stanford
-           University that I can refer to.",
+  function(text = "There's no individual named Xiaotao Shen.",
            engine = c("gemini", "chatgpt"),
            to = c(
              "chinese",
