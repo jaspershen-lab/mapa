@@ -26,7 +26,8 @@ server <-
         req(variable_info())
         variable_info()
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     #####define variable_info_new
     variable_info_new <-
@@ -50,6 +51,7 @@ server <-
     ####map the IDs
     upload_data_code <-
       reactiveVal()
+
     observeEvent(input$map_id, {
       req(variable_info())
       variable_info_old <-
@@ -70,7 +72,8 @@ server <-
               data.frame(
                 ENSEMBL = variable_info_old$ensembl,
                 UNIPROT = NA,
-                ENTREZID = NA
+                ENTREZID = NA,
+                SYMBOL = NA
               )
             }
           )
@@ -107,6 +110,7 @@ server <-
           )
       }
       if (input$id_type == "uniprot") {
+        # browser()
         colnames(variable_info_old) <- c("uniprot")
         library(clusterProfiler)
         library(org.Hs.eg.db)
@@ -122,7 +126,8 @@ server <-
               data.frame(
                 UNIPROT = variable_info_old$uniprot,
                 ENSEMBL = NA,
-                ENTREZID = NA
+                ENTREZID = NA,
+                SYMBOL = NA
               )
             }
           )
@@ -173,7 +178,8 @@ server <-
               data.frame(
                 ENTREZID = variable_info_old$entrezid,
                 ENSEMBL = NA,
-                UNIPROT = NA
+                UNIPROT = NA,
+                SYMBOL = NA
               )
             }
           )
@@ -219,7 +225,8 @@ server <-
         req(variable_info_new())
         variable_info_new()
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     ###download the variable_info------------------------------------------
     output$download_variable_info <-
@@ -242,7 +249,6 @@ server <-
         shinyjs::enable("download_variable_info")
       }
     })
-
 
     ####show code
     observeEvent(input$show_upload_data_code, {
@@ -391,6 +397,16 @@ server <-
       }
     })
 
+
+    observeEvent(input$refresh_enrich_pathways, {
+      showModal(modalDialog(
+        title = "Done",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        size = "s"
+      ))
+    })
+
     output$enriched_pathways_go <-
       shiny::renderDataTable({
         req(tryCatch(
@@ -399,7 +415,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     output$enriched_pathways_kegg <-
       shiny::renderDataTable({
@@ -409,7 +426,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     output$enriched_pathways_reactome <-
       shiny::renderDataTable({
@@ -419,7 +437,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     output$download_enriched_pathways_go <-
       shiny::downloadHandler(
@@ -589,7 +608,6 @@ server <-
             save_to_local = FALSE
           )
 
-        # enriched_modules <-
         enriched_modules(result)
 
         shinyjs::hide("loading")
@@ -633,6 +651,16 @@ server <-
       }
     })
 
+####refresh
+    observeEvent(input$refresh_merge_pathways, {
+      showModal(modalDialog(
+        title = "Done",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        size = "s"
+      ))
+    })
+
     output$merged_pathway_go <-
       shiny::renderDataTable({
         req(tryCatch(
@@ -641,7 +669,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     output$merged_pathway_kegg <-
       shiny::renderDataTable({
@@ -651,7 +680,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     output$merged_pathway_reactome <-
       shiny::renderDataTable({
@@ -661,7 +691,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     output$download_merged_pathway_go <-
       shiny::downloadHandler(
@@ -968,6 +999,17 @@ server <-
       }
     })
 
+
+    ####refresh
+    observeEvent(input$submit_merge_modules, {
+      showModal(modalDialog(
+        title = "Done",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        size = "s"
+      ))
+    })
+
     output$enriched_functional_modules <-
       shiny::renderDataTable({
         req(tryCatch(
@@ -976,7 +1018,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     output$download_enriched_functional_modules <-
       shiny::downloadHandler(
@@ -1204,11 +1247,24 @@ server <-
       }
     })
 
+
+    ####refresh
+    observeEvent(input$refresh_barplot, {
+      showModal(modalDialog(
+        title = "Done",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        size = "s"
+      ))
+    })
+
     output$barplot <-
       renderPlot({
         req(barplot())
         barplot()
-      })
+      },
+      width = function() { input$barplot_width_show },
+      height = function() { input$barplot_height_show })
 
     output$download_barplot <-
       downloadHandler(
@@ -2124,7 +2180,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     output$llm_enriched_functional_modules2 <-
       shiny::renderDataTable({
@@ -2134,7 +2191,8 @@ server <-
             NULL
         ))
       },
-      options = list(pageLength = 10))
+      options = list(pageLength = 10,
+                     scrollX = TRUE))
 
     observe({
       if (is.null(llm_interpretation_result()) ||
@@ -2312,11 +2370,23 @@ server <-
 
     ###To delete the zip file and folder when the user closes the app
     session$onSessionEnded(function() {
-      if (!is.null(report_path()) &&
-          length(report_path()) != 0) {
-        unlink(paste0(report_path(), "/Report"), recursive = TRUE)
-        unlink(paste0(report_path(), "/Report.zip"), recursive = TRUE)
-      }
+      all_files_folders <-
+        list.files("files", full.names = TRUE)
+
+      folders <-
+        Filter(function(x) {
+          file.info(x)$isdir
+        }, all_files_folders)
+
+      regex_pattern <- "^[A-Za-z0-9]{30}$"
+
+      report_dirs <-
+        Filter(function(folder) {
+          folder_name <- basename(folder)
+          grepl(regex_pattern, folder_name)
+        }, folders)
+
+      unlink(report_dirs, recursive = TRUE)
     })
 
     ####show code

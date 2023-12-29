@@ -54,6 +54,7 @@ report_functional_module <-
            interpretation_result,
            path = ".",
            type = c("html", "pdf", "word", "md", "all")) {
+    # browser()
     if (missing(object)) {
       stop("object is missing")
     }
@@ -75,7 +76,7 @@ report_functional_module <-
         as.numeric(stringr::str_extract(
           grep(pattern = "Report", dir(path), value = TRUE),
           "[0-9]{1,10}"
-        ))
+        )), na.rm = TRUE
       )
 
       if(is.na(idx)){
@@ -265,6 +266,7 @@ report_functional_module <-
       interpretation_result <- "> No interpretation result is provided."
     }
 
+    # browser()
     ##transform rmd to HTML or pdf
     if (type == "html" | type == "all") {
       rmarkdown::render(

@@ -98,13 +98,21 @@ ui <- dashboardPage(
       tabItem(tabName = "introduction",
               fluidPage(
                 titlePanel("Introduction of MAPA"),
-                includeHTML("files/introduction.html")
+                fluidRow(
+                  column(12,
+                         includeHTML("files/introduction.html")
+                         )
+                )
               )),
       ####tutorial tab
       tabItem(tabName = "tutorial",
               fluidPage(
                 titlePanel("Tutorials of MAPA"),
-                includeHTML("files/tutorials.html")
+                fluidRow(
+                  column(12,
+                         includeHTML("files/tutorials.html")
+                         )
+                )
               )),
       ####upload data tab
       tabItem(tabName = "upload_data",
@@ -151,7 +159,7 @@ ui <- dashboardPage(
                     ),
                     actionButton(
                       inputId = "show_upload_data_code",
-                      label = "Show code",
+                      label = "Code",
                       class = "btn-primary",
                       style = "background-color: #d83428; color: white;"
                     ),
@@ -168,6 +176,7 @@ ui <- dashboardPage(
                   )
                 )
               )),
+
       ####enrich pathways tab
       tabItem(tabName = "enrich_pathways",
               fluidPage(
@@ -224,6 +233,12 @@ ui <- dashboardPage(
                         style = "background-color: #d83428; color: white;"),
 
                       actionButton(
+                        "refresh_enrich_pathways",
+                        "Refresh",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"),
+
+                      actionButton(
                         "go2merge_pathways",
                         "Next",
                         class = "btn-primary",
@@ -231,7 +246,7 @@ ui <- dashboardPage(
 
                       actionButton(
                         "show_enrich_pathways_code",
-                        "Show code",
+                        "Code",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"),
 
@@ -400,6 +415,12 @@ ui <- dashboardPage(
                         style = "background-color: #d83428; color: white;"),
 
                       actionButton(
+                        "refresh_merge_pathways",
+                        "Refresh",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"),
+
+                      actionButton(
                         "go2merge_modules",
                         "Next",
                         class = "btn-primary",
@@ -407,7 +428,7 @@ ui <- dashboardPage(
 
                       actionButton(
                         "show_merge_pathways_code",
-                        "Show code",
+                        "Code",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"),
                       style = "border-right: 1px solid #ddd; padding-right: 20px;"
@@ -571,6 +592,12 @@ ui <- dashboardPage(
                         style = "background-color: #d83428; color: white;"),
 
                       actionButton(
+                        "refresh_merge_modules",
+                        "Refresh",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"),
+
+                      actionButton(
                         "go2data_visualization",
                         "Next",
                         class = "btn-primary",
@@ -578,7 +605,7 @@ ui <- dashboardPage(
 
                       actionButton(
                         "show_merge_modules_code",
-                        "Show code",
+                        "Code",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"),
                       style = "border-right: 1px solid #ddd; padding-right: 20px;"
@@ -626,6 +653,7 @@ ui <- dashboardPage(
                   )))
       ),
 
+      #### Data visualization tab
       tabItem(tabName = "data_visualization",
               fluidPage(
                 titlePanel("Data Visualization"),
@@ -776,15 +804,36 @@ ui <- dashboardPage(
                              style = "border-right: 1px solid #ddd; padding-right: 20px;"
                              ),
                       column(8,
-                             shiny::plotOutput("barplot"),
+                             shinyWidgets::dropdownButton(
+                               sliderInput("barplot_width_show",
+                                           "Plot Width (pixels):",
+                                           min = 300, max = 1000, value = 800),
+                               # Input: Slider for height
+                               sliderInput("barplot_height_show",
+                                           "Plot Height (pixels):",
+                                           min = 300, max = 1000, value = 600),
+                               circle = TRUE,
+                               status = "danger",
+                               icon = icon("gear"),
+                               width = "200px"
+                             ),
+                             shiny::plotOutput("barplot",
+                                               width = "auto", height = "auto"),
                              br(),
                              actionButton("generate_barplot",
                                           "Generate plot",
                                           class = "btn-primary",
                                           style = "background-color: #d83428; color: white;"),
+
+                             actionButton(
+                               "refresh_barplot",
+                               "Refresh",
+                               class = "btn-primary",
+                               style = "background-color: #d83428; color: white;"),
+
                              actionButton(
                                "show_barplot_code",
-                               "Show code",
+                               "Code",
                                class = "btn-primary",
                                style = "background-color: #d83428; color: white;")
                              )
@@ -868,7 +917,7 @@ ui <- dashboardPage(
                                           style = "background-color: #d83428; color: white;"),
                              actionButton(
                                "show_module_similarity_network_code",
-                               "Show code",
+                               "Code",
                                class = "btn-primary",
                                style = "background-color: #d83428; color: white;")
                       )
@@ -943,7 +992,7 @@ ui <- dashboardPage(
                                           style = "background-color: #d83428; color: white;"),
                              actionButton(
                                "show_module_information_code",
-                               "Show code",
+                               "Code",
                                class = "btn-primary",
                                style = "background-color: #d83428; color: white;")
                       )
@@ -1189,7 +1238,7 @@ ui <- dashboardPage(
                                           style = "background-color: #d83428; color: white;"),
                              actionButton(
                                "show_relationship_network_code",
-                               "Show code",
+                               "Code",
                                class = "btn-primary",
                                style = "background-color: #d83428; color: white;"
                              )
@@ -1268,7 +1317,7 @@ ui <- dashboardPage(
                       ),
                       actionButton(
                         "show_llm_interpretation_code",
-                        "Show code",
+                        "Code",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"
                       ),
@@ -1320,7 +1369,7 @@ ui <- dashboardPage(
                                             style = "background-color: #d83428; color: white;"),
                              actionButton(
                                inputId = "show_report_code",
-                               label = "Show code",
+                               label = "Code",
                                class = "btn-primary",
                                style = "background-color: #d83428; color: white;"
                              )
