@@ -1,0 +1,13 @@
+name: mapashiny
+title: mapashiny
+username: shenxt
+account: shenxt
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10853538
+bundleId: 8091898
+url: https://shenxt.shinyapps.io/mapashiny/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: www/loading2.gif

@@ -53,6 +53,9 @@
 #' @param object An object containing the enrichment results and other relevant data.
 #' @param top_n An integer specifying the top N pathways to display.
 #' @param y_lable_width An integer specifying the width of the Y-axis labels.
+#' @param translation translation or not.
+#' @param translate_to translate to which language.
+#' @param engine translate engine.
 #' @param level A character string specifying the level of analysis.
 #' One of "pathway", "module", or "functional_module".
 #' @param line_type A character string specifying the type of line to use for the bar chart.
