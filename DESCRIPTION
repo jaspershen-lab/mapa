@@ -70,5 +70,4 @@ Suggests:
     org.Hs.eg.db
 Remotes: 
     github::tidymass/massdataset
-biocViews: transcriptomics, proteomics
 Config/testthat/edition: 3

@@ -7,16 +7,11 @@ library(shinyWidgets)
 library(patchwork)
 library(markdown)
 
-# if(!require(massdataset)){
-#   remotes::install_github("tidymass/massdataset")
-#   library(massdataset)
-# }
-#
-# if(!require(mapa)){
-#   remotes::install_github("jaspershen/mapa")
-# }
-#
-# library(mapa)
+if(!require(mapa)){
+  remotes::install_github("jaspershen/mapa")
+}
+
+library(mapa)
 
 ui <- dashboardPage(
   skin = "red",
