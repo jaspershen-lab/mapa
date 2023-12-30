@@ -9,9 +9,6 @@ plot_pathway_bar(
   top_n = 10,
   y_lable_width = 50,
   translation = FALSE,
-  translate_to = c("chinese", "spanish", "english", "french", "german", "italian",
-    "japanese", "korean", "portuguese", "portuguese", "russian", "spanish"),
-  engine = c("gemini", "chatgpt"),
   level = c("pathway", "module", "functional_module"),
   line_type = c("straight", "meteor"),
   p.adjust.cutoff = 0.05,
@@ -28,10 +25,6 @@ plot_pathway_bar(
 \item{y_lable_width}{An integer specifying the width of the Y-axis labels.}
 
 \item{translation}{translation or not.}
-
-\item{translate_to}{translate to which language.}
-
-\item{engine}{translate engine.}
 
 \item{level}{A character string specifying the level of analysis.
 One of "pathway", "module", or "functional_module".}

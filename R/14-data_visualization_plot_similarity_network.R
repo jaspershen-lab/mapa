@@ -2,7 +2,7 @@
 # source("R/6-utils.R")
 # source("R/8-functional_module_class.R")
 # setwd("demo_data/")
-# load("result/enriched_functional_module")
+# load("enriched_functional_module.rda")
 #
 # object <-
 #   enriched_functional_module
@@ -12,6 +12,17 @@
 #   level = "module",
 #   database = "go",
 #   degree_cutoff = 10
+# )
+#
+# library(showtext)
+# showtext_auto(enable = TRUE)
+#
+# plot_similarity_network(
+#   object = enriched_functional_module,
+#   level = "module",
+#   database = "go",
+#   degree_cutoff = 10,
+#   translation = TRUE
 # )
 #
 # plot_similarity_network(
@@ -25,11 +36,31 @@
 #
 # plot_similarity_network(
 #   object = enriched_functional_module,
+#   level = "module",
+#   database = "go",
+#   degree_cutoff = 10,
+#   module_id = "go_Module_10",
+#   text_all = TRUE,
+#   translation = TRUE
+# )
+#
+# plot_similarity_network(
+#   object = enriched_functional_module,
 #   level = "functional_module",
 #   database = "go",
 #   degree_cutoff = 1,
 #   module_id = "Functional_module_53",
 #   text_all = TRUE
+# )
+#
+# plot_similarity_network(
+#   object = enriched_functional_module,
+#   level = "functional_module",
+#   database = "go",
+#   degree_cutoff = 1,
+#   module_id = "Functional_module_53",
+#   text_all = TRUE,
+#   translation = TRUE
 # )
 
 
@@ -51,7 +82,7 @@
 #' to include in the plot.
 #' @param text Logical, whether to include text annotations on the plot.
 #' @param text_all Logical, whether to include text annotations for all nodes.
-#'
+#' @param translation translation or not.
 #' @return A ggplot object representing the similarity network.
 #'
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
@@ -73,7 +104,8 @@ plot_similarity_network <-
            degree_cutoff = 0,
            module_id,
            text = TRUE,
-           text_all = FALSE) {
+           text_all = FALSE,
+           translation = FALSE) {
     level <-
       match.arg(level)
     database <-
@@ -82,6 +114,13 @@ plot_similarity_network <-
     if (!is(object, "functional_module")) {
       stop("object must be functional_module class")
     }
+
+    if(translation){
+      if(all(names(object@process_info) != "translate_language")){
+        stop("Please use the 'translate_language' function to translate first.")
+      }
+    }
+
 
     if (level == "module") {
       if (all(names(object@process_info) != "merge_pathways")) {
@@ -96,6 +135,22 @@ plot_similarity_network <-
         } else{
           graph_data <-
             object@merged_pathway_go$graph_data
+          result_with_module <-
+            object@merged_pathway_go$result_with_module
+
+          if(translation){
+            result_with_module <-
+              result_with_module %>%
+              dplyr::select(-Description) %>%
+              dplyr::rename(Description = Description_trans)
+            graph_data <-
+              graph_data %>%
+              tidygraph::activate(what = "nodes") %>%
+              dplyr::select(-Description) %>%
+              dplyr::left_join(result_with_module[,c("node", "Description")],
+                               by = "node")
+          }
+
         }
       }
 
@@ -108,6 +163,21 @@ plot_similarity_network <-
         } else{
           graph_data <-
             object@merged_pathway_kegg$graph_data
+          result_with_module <-
+            object@merged_pathway_kegg$result_with_module
+
+          if(translation){
+            result_with_module <-
+              result_with_module %>%
+              dplyr::select(-Description) %>%
+              dplyr::rename(Description = Description_trans)
+            graph_data <-
+              graph_data %>%
+              tidygraph::activate(what = "nodes") %>%
+              dplyr::select(-Description) %>%
+              dplyr::left_join(result_with_module[,c("node", "Description")],
+                               by = "node")
+          }
         }
       }
 
@@ -120,6 +190,21 @@ plot_similarity_network <-
         } else{
           graph_data <-
             object@merged_pathway_reactome$graph_data
+          result_with_module <-
+            object@merged_pathway_reactome$result_with_module
+
+          if(translation){
+            result_with_module <-
+              result_with_module %>%
+              dplyr::select(-Description) %>%
+              dplyr::rename(Description = Description_trans)
+            graph_data <-
+              graph_data %>%
+              tidygraph::activate(what = "nodes") %>%
+              dplyr::select(-Description) %>%
+              dplyr::left_join(result_with_module[,c("node", "Description")],
+                               by = "node")
+          }
         }
       }
     }
@@ -137,6 +222,29 @@ plot_similarity_network <-
       } else{
         graph_data <-
           object@merged_module$graph_data
+        result_with_module <-
+          object@merged_module$result_with_module
+
+        if(translation){
+          result_with_module <-
+            result_with_module %>%
+            dplyr::select(-module_annotation) %>%
+            dplyr::rename(module_annotation = module_annotation_trans)
+
+          graph_data <-
+            graph_data %>%
+            tidygraph::activate(what = "nodes") %>%
+            dplyr::select(-module_annotation)
+
+          module_annotation <-
+            result_with_module$module_annotation[match(igraph::vertex_attr(graph_data)$node,
+                                                       result_with_module$node)]
+
+          graph_data <-
+            graph_data %>%
+            tidygraph::activate(what = "nodes") %>%
+            dplyr::mutate(module_annotation = module_annotation)
+        }
       }
     }
 

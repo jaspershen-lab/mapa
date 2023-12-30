@@ -1,18 +1,20 @@
 # setwd(r4projects::get_project_wd())
 # setwd("demo_data/")
-# load("result/enriched_functional_module")
+# load("enriched_functional_module.rda")
 #
 # object <-
 #   enriched_functional_module
 #
 # enriched_functional_module@merged_pathway_go$module_result$module[1]
-#
+# library(showtext)
+# showtext_auto(enable = TRUE)
 # plot <-
 #   plot_module_info(
 #     object = enriched_functional_module,
 #     level = "module",
 #     database = "go",
-#     module_id = "go_Module_3"
+#     module_id = "go_Module_3",
+#     translation = TRUE
 #   )
 #
 # plot[[1]]
@@ -71,7 +73,7 @@
 #' @param level A character string specifying the level of biological organization, either "module" or "functional_module".
 #' @param database A character string specifying the source database, either "go", "kegg" or "reactome".
 #' @param module_id A single identifier specifying the module of interest.
-#'
+#' @param translation translation or not.
 #' @return A list containing three ggplot objects: network plot (`network`), bar plot (`barplot`), and word cloud (`wordcloud`).
 #'
 #' @export
@@ -89,7 +91,8 @@ plot_module_info <-
            level = c("module",
                      "functional_module"),
            database = c("go", "kegg", "reactome"),
-           module_id) {
+           module_id,
+           translation = FALSE) {
     level <-
       match.arg(level)
     database <-
@@ -104,6 +107,12 @@ plot_module_info <-
     } else{
       if (length(module_id) != 1) {
         stop("module_id' length should be one")
+      }
+    }
+
+    if(translation){
+      if(all(names(object@process_info) != "translate_language")){
+        stop("Please use the 'translate_language' function to translate first.")
       }
     }
 
@@ -123,6 +132,19 @@ plot_module_info <-
           result_with_module <-
             object@merged_pathway_go$result_with_module
 
+          if(translation){
+            result_with_module <-
+              result_with_module %>%
+              dplyr::select(-Description) %>%
+              dplyr::rename(Description = Description_trans)
+            graph_data <-
+              graph_data %>%
+              tidygraph::activate(what = "nodes") %>%
+              dplyr::select(-Description) %>%
+              dplyr::left_join(result_with_module[,c("node", "Description")],
+                               by = "node")
+          }
+
         }
       }
 
@@ -137,6 +159,20 @@ plot_module_info <-
             object@merged_pathway_kegg$graph_data
           result_with_module <-
             object@merged_pathway_kegg$result_with_module
+
+          if(translation){
+            result_with_module <-
+              result_with_module %>%
+              dplyr::select(-Description) %>%
+              dplyr::rename(Description = Description_trans)
+            graph_data <-
+              graph_data %>%
+              tidygraph::activate(what = "nodes") %>%
+              dplyr::select(-Description) %>%
+              dplyr::left_join(result_with_module[,c("node", "Description")],
+                               by = "node")
+          }
+
         }
       }
 
@@ -151,6 +187,20 @@ plot_module_info <-
             object@merged_pathway_reactome$graph_data
           result_with_module <-
             object@merged_pathway_reactome$result_with_module
+
+          if(translation){
+            result_with_module <-
+              result_with_module %>%
+              dplyr::select(-Description) %>%
+              dplyr::rename(Description = Description_trans)
+            graph_data <-
+              graph_data %>%
+              tidygraph::activate(what = "nodes") %>%
+              dplyr::select(-Description) %>%
+              dplyr::left_join(result_with_module[,c("node", "Description")],
+                               by = "node")
+          }
+
         }
       }
     }
@@ -169,6 +219,27 @@ plot_module_info <-
           object@merged_module$graph_data
         result_with_module <-
           object@merged_module$result_with_module
+
+        if(translation){
+          result_with_module <-
+            result_with_module %>%
+            dplyr::select(-module_annotation) %>%
+            dplyr::rename(module_annotation = module_annotation_trans)
+
+          graph_data <-
+            graph_data %>%
+            tidygraph::activate(what = "nodes") %>%
+            dplyr::select(-module_annotation)
+
+          module_annotation <-
+            result_with_module$module_annotation[match(igraph::vertex_attr(graph_data)$node,
+                                                       result_with_module$node)]
+
+          graph_data <-
+            graph_data %>%
+            tidygraph::activate(what = "nodes") %>%
+            dplyr::mutate(module_annotation = module_annotation)
+        }
       }
     }
 
@@ -261,7 +332,7 @@ plot_module_info <-
       ggplot(aes(log.p, Description)) +
       scale_y_discrete(
         labels = function(x)
-          str_wrap(x, width = 40)
+          stringr::str_wrap(x, width = 40)
       ) +
       scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
       geom_segment(aes(

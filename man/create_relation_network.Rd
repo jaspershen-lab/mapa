@@ -10,7 +10,8 @@ create_relation_network(
   include_functional_modules = TRUE,
   include_modules = TRUE,
   include_pathways = TRUE,
-  include_molecules = TRUE
+  include_molecules = TRUE,
+  translation = FALSE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ create_relation_network(
 \item{include_pathways}{Logical; whether to include pathways in the network. Defaults to TRUE.}
 
 \item{include_molecules}{Logical; whether to include molecules in the network. Defaults to TRUE.}
+
+\item{translation}{translation or not.}
 }
 \value{
 A list containing \code{edge_data} and \code{node_data} data frames.

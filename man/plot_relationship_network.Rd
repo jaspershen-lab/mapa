@@ -31,7 +31,8 @@ plot_relationship_network(
   functional_module_position_limits = c(0, 1),
   module_position_limits = c(0, 1),
   pathway_position_limits = c(0, 1),
-  molecule_position_limits = c(0, 1)
+  molecule_position_limits = c(0, 1),
+  translation = FALSE
 )
 }
 \arguments{
@@ -86,6 +87,8 @@ plot_relationship_network(
 \item{pathway_position_limits}{Numeric vector; limits for pathway positions.}
 
 \item{molecule_position_limits}{Numeric vector; limits for molecule positions.}
+
+\item{translation}{translation or not.}
 }
 \value{
 A ggplot object representing the relationship network.

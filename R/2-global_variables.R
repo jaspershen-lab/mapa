@@ -43,5 +43,8 @@ globalVariables(names = c(
   "include",
   "weight",
   "enriched_functional_module",
-  "interpretation_result"
+  "interpretation_result",
+  "Description_trans",
+  "module_annotation_trans",
+  "translation"
 ))

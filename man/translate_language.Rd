@@ -2,36 +2,41 @@
 % Please edit documentation in R/100-translation.R
 \name{translate_language}
 \alias{translate_language}
-\title{Translate Text into Different Languages}
+\alias{translate_language.character}
+\title{Translate Language}
 \usage{
 translate_language(
-  text = "There's no individual named Xiaotao Shen.",
+  text,
+  engine = c("gemini", "chatgpt"),
+  to = c("chinese", "spanish", "english", "french", "german", "italian", "japanese",
+    "korean", "portuguese", "portuguese", "russian", "spanish")
+)
+
+\method{translate_language}{character}(
+  text,
   engine = c("gemini", "chatgpt"),
   to = c("chinese", "spanish", "english", "french", "german", "italian", "japanese",
     "korean", "portuguese", "portuguese", "russian", "spanish")
 )
 }
 \arguments{
-\item{text}{A string representing the text to be translated.
-Default is a description of the Gemini model.}
+\item{text}{Text to be translated.}
 
-\item{engine}{A string specifying the translation engine to be used, "chatgpt" or "gemini".}
+\item{engine}{Translation engine to use, defaults to 'gemini' or 'chatgpt'.}
 
-\item{to}{A string indicating the target language for translation.
-Supported languages include 'chinese', 'spanish', 'english', 'french', 'german',
-'italian', 'japanese', 'korean', 'portuguese', 'russian', and 'spanish'.}
+\item{to}{Target language for translation, options include 'chinese', 'spanish', 'english',
+'french', 'german', 'italian', 'japanese', 'korean', 'portuguese', 'russian', and 'spanish'.}
 }
 \value{
-A character vector containing the translated text.
+An object of the same class as \code{text} with the translated content.
 }
 \description{
-This function translates a given text into a specified language using the Gemini translation engine.
-It utilizes the Gemini large language models for translation.
+This function serves as a generic method for translating text using different engines.
+It requires a specific method to be defined for each type of input (e.g., character, functional_module).
 }
 \examples{
 \dontrun{
   # Translate text to French using Gemini
   translated_text <- translate_language(text = "Hello World", engine = "gemini", to = "french")
 }
-
 }

@@ -1,17 +1,19 @@
 # setwd(r4projects::get_project_wd())
 # setwd("demo_data/")
-# load("result/enriched_functional_module")
+# load("enriched_functional_module.rda")
 #
 # object <-
 #   enriched_functional_module
+#
+# library(showtext)
+# showtext_auto(enable = TRUE)
 #
 # plot_pathway_bar(
 #   object = enriched_functional_module,
 #   top_n = 10,
 #   y_lable_width = 30,
 #   level = "pathway",
-#   translation = TRUE,
-#   engine = "chatgpt"
+#   translation = TRUE
 # )
 #
 # plot_pathway_bar(
@@ -19,8 +21,7 @@
 #   top_n = 10,
 #   y_lable_width = 30,
 #   level = "pathway",
-#   translation = TRUE,
-#   engine = "gemini"
+#   translation = TRUE
 # )
 #
 # plot_pathway_bar(
@@ -54,8 +55,6 @@
 #' @param top_n An integer specifying the top N pathways to display.
 #' @param y_lable_width An integer specifying the width of the Y-axis labels.
 #' @param translation translation or not.
-#' @param translate_to translate to which language.
-#' @param engine translate engine.
 #' @param level A character string specifying the level of analysis.
 #' One of "pathway", "module", or "functional_module".
 #' @param line_type A character string specifying the type of line to use for the bar chart.
@@ -104,21 +103,6 @@ plot_pathway_bar <-
            top_n = 10,
            y_lable_width = 50,
            translation = FALSE,
-           translate_to = c(
-             "chinese",
-             "spanish",
-             "english",
-             "french",
-             "german",
-             "italian",
-             "japanese",
-             "korean",
-             "portuguese",
-             "portuguese",
-             "russian",
-             "spanish"
-           ),
-           engine = c("gemini", "chatgpt"),
            level = c("pathway",
                      "module",
                      "functional_module"),
@@ -137,8 +121,50 @@ plot_pathway_bar <-
     line_type <-
       match.arg(line_type)
 
-    translate_to <- match.arg(translate_to)
-    engine <- match.arg(engine)
+    if (translation) {
+      if(all(names(object@process_info) != "translate_language")){
+        stop("Please use the 'translate_language' function to translate first.")
+      }else{
+        object@enrichment_go_result@result <-
+          object@enrichment_go_result@result %>%
+          dplyr::select(-Description) %>%
+          dplyr::rename(Description = Description_trans)
+
+        object@enrichment_kegg_result@result <-
+          object@enrichment_kegg_result@result %>%
+          dplyr::select(-Description) %>%
+          dplyr::rename(Description = Description_trans)
+
+        object@enrichment_reactome_result@result <-
+          object@enrichment_reactome_result@result %>%
+          dplyr::select(-Description) %>%
+          dplyr::rename(Description = Description_trans)
+
+        object@merged_pathway_go$module_result <-
+          object@merged_pathway_go$module_result %>%
+          dplyr::select(-c(Description, module_annotation)) %>%
+          dplyr::rename(Description = Description_trans,
+                        module_annotation = module_annotation_trans)
+
+        object@merged_pathway_kegg$module_result <-
+          object@merged_pathway_kegg$module_result %>%
+          dplyr::select(-c(Description, module_annotation)) %>%
+          dplyr::rename(Description = Description_trans,
+                        module_annotation = module_annotation_trans)
+
+        object@merged_pathway_reactome$module_result <-
+          object@merged_pathway_reactome$module_result %>%
+          dplyr::select(-c(Description, module_annotation)) %>%
+          dplyr::rename(Description = Description_trans,
+                        module_annotation = module_annotation_trans)
+
+        object@merged_module$functional_module_result <-
+          object@merged_module$functional_module_result %>%
+          dplyr::select(-c(Description, module_annotation)) %>%
+          dplyr::rename(Description = Description_trans,
+                        module_annotation = module_annotation_trans)
+      }
+    }
 
     if (!is(object, "functional_module")) {
       stop("object must be functional_module class")
@@ -330,13 +356,6 @@ plot_pathway_bar <-
       dplyr::arrange(p.adjust) %>%
       head(top_n)
 
-    if (translation) {
-      temp_data$Description <-
-        translate_language(text = temp_data$Description,
-                           to = translate_to,
-                           engine = engine)
-    }
-
     if (line_type == "straight") {
       plot <-
         temp_data %>%
@@ -346,7 +365,7 @@ plot_pathway_bar <-
         ggplot(aes(log.p, Description)) +
         scale_y_discrete(
           labels = function(x)
-            str_wrap(x, width = y_lable_width)
+            stringr::str_wrap(x, width = y_lable_width)
         ) +
         scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
         geom_segment(

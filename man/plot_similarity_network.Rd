@@ -11,7 +11,8 @@ plot_similarity_network(
   degree_cutoff = 0,
   module_id,
   text = TRUE,
-  text_all = FALSE
+  text_all = FALSE,
+  translation = FALSE
 )
 }
 \arguments{
@@ -33,6 +34,8 @@ to include in the plot.}
 \item{text}{Logical, whether to include text annotations on the plot.}
 
 \item{text_all}{Logical, whether to include text annotations for all nodes.}
+
+\item{translation}{translation or not.}
 }
 \value{
 A ggplot object representing the similarity network.

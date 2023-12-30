@@ -7,7 +7,7 @@
 # library(ReactomePA)
 # library(igraph)
 #
-# load("result/enriched_functional_module")
+# load("enriched_functional_module.rda")
 #
 # object <-
 #   enriched_functional_module
@@ -65,9 +65,9 @@
 #   functional_module_position_limits = functional_module_position_limits,
 #   module_position_limits = module_position_limits,
 #   pathway_position_limits = pathway_position_limits,
-#   molecule_position_limits = molecule_position_limits
+#   molecule_position_limits = molecule_position_limits,
+#   translation = TRUE
 # )
-
 
 
 #' Plot Relationship Network
@@ -101,6 +101,7 @@
 #' @param module_position_limits Numeric vector; limits for module positions.
 #' @param pathway_position_limits Numeric vector; limits for pathway positions.
 #' @param molecule_position_limits Numeric vector; limits for molecule positions.
+#' @param translation translation or not.
 #'
 #' @return A ggplot object representing the relationship network.
 #'
@@ -136,8 +137,15 @@ plot_relationship_network <-
            functional_module_position_limits = c(0, 1),
            module_position_limits = c(0, 1),
            pathway_position_limits = c(0, 1),
-           molecule_position_limits = c(0, 1)) {
+           molecule_position_limits = c(0, 1),
+           translation = FALSE) {
     ###at least two classes of nodes
+
+    if(translation){
+      if(all(names(object@process_info) != "translate_language")){
+        stop("Please use the 'translate_language' function to translate first.")
+      }
+    }
 
     if (sum(
       c(
@@ -194,7 +202,8 @@ plot_relationship_network <-
         include_functional_modules = include_functional_modules,
         include_modules = include_modules,
         include_pathways = include_pathways,
-        include_molecules = include_molecules
+        include_molecules = include_molecules,
+        translation = translation
       )
 
     g <- total_graph
@@ -438,7 +447,7 @@ plot_relationship_network <-
 #' @param include_modules Logical; whether to include modules in the network. Defaults to TRUE.
 #' @param include_pathways Logical; whether to include pathways in the network. Defaults to TRUE.
 #' @param include_molecules Logical; whether to include molecules in the network. Defaults to TRUE.
-#'
+#' @param translation translation or not.
 #' @return A list containing `edge_data` and `node_data` data frames.
 #'   - `edge_data` is a data frame containing the relationships between nodes, including their classes.
 #'   - `node_data` is a data frame containing information about each node, such as annotation and class.
@@ -452,8 +461,15 @@ create_relation_network <-
            include_functional_modules = TRUE,
            include_modules = TRUE,
            include_pathways = TRUE,
-           include_molecules = TRUE) {
+           include_molecules = TRUE,
+           translation = FALSE) {
     ###at least two classes of nodes
+
+    if(translation){
+      if(all(names(object@process_info) != "translate_language")){
+        stop("Please use the 'translate_language' function to translate first.")
+      }
+    }
 
     if (sum(
       c(
@@ -511,6 +527,13 @@ create_relation_network <-
         }
       )
 
+    if(translation){
+      object@merged_module$functional_module_result <-
+        object@merged_module$functional_module_result %>%
+        dplyr::select(-module_annotation) %>%
+        dplyr::rename(module_annotation = module_annotation_trans)
+    }
+
     node_data1 <-
       tryCatch(
         object@merged_module$functional_module_result %>%
@@ -544,6 +567,13 @@ create_relation_network <-
           NULL
         }
       )
+
+    if(translation){
+      object@merged_module$result_with_module <-
+        object@merged_module$result_with_module %>%
+        dplyr::select(-module_annotation) %>%
+        dplyr::rename(module_annotation = module_annotation_trans)
+    }
 
     node_data2 <-
       tryCatch(
@@ -590,6 +620,13 @@ create_relation_network <-
           edge_data3_go %>%
           dplyr::filter(from %in% edge_data2$to)
       }
+    }
+
+    if(translation){
+      object@enrichment_go_result@result <-
+        object@enrichment_go_result@result %>%
+        dplyr::select(-Description) %>%
+        dplyr::rename(Description = Description_trans)
     }
 
     node_data3_go <-
@@ -646,6 +683,13 @@ create_relation_network <-
       }
     }
 
+    if(translation){
+      object@enrichment_kegg_result@result <-
+        object@enrichment_kegg_result@result %>%
+        dplyr::select(-Description) %>%
+        dplyr::rename(Description = Description_trans)
+    }
+
     node_data3_kegg <-
       tryCatch(
         object@enrichment_kegg_result@result %>%
@@ -698,6 +742,13 @@ create_relation_network <-
           edge_data3_reactome %>%
           dplyr::filter(from %in% edge_data2$to)
       }
+    }
+
+    if(translation){
+      object@enrichment_reactome_result@result <-
+        object@enrichment_reactome_result@result %>%
+        dplyr::select(-Description) %>%
+        dplyr::rename(Description = Description_trans)
     }
 
     node_data3_reactome <-

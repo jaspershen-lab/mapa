@@ -41,3 +41,7 @@
 # mapa 0.1.11
 
 * Improve launch_mapa_shiny function and add filter_functional_module function.
+
+# mapa 0.1.12
+
+* Translate language functions can be used for all the enriched functional results.

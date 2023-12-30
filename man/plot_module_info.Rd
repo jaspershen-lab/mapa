@@ -8,7 +8,8 @@ plot_module_info(
   object,
   level = c("module", "functional_module"),
   database = c("go", "kegg", "reactome"),
-  module_id
+  module_id,
+  translation = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ plot_module_info(
 \item{database}{A character string specifying the source database, either "go", "kegg" or "reactome".}
 
 \item{module_id}{A single identifier specifying the module of interest.}
+
+\item{translation}{translation or not.}
 }
 \value{
 A list containing three ggplot objects: network plot (\code{network}), bar plot (\code{barplot}), and word cloud (\code{wordcloud}).
