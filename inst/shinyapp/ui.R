@@ -1,18 +1,42 @@
-library(tidyverse)
-library(shiny)
-library(shinydashboard)
-library(shinyjs)
-library(shinyBS)
-library(shinyWidgets)
-library(patchwork)
-library(markdown)
-# if(!require(massdataset)){
-#   remotes::install_github("tidymass/massdataset")
-# }
-# if(!require(mapa)){
-#   remotes::install_github("jaspershen/mapa")
-# }
-# library(mapa)
+if(!require(tidyverse)){
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+if(!require(shiny)){
+  install.packages("shiny")
+  library(shiny)
+}
+if(!require(shinydashboard)){
+  install.packages("shinydashboard")
+  library(shinydashboard)
+}
+if(!require(shinyjs)){
+  install.packages("shinyjs")
+  library(shinyjs)
+}
+if(!require(shinyBS)){
+  install.packages("shinyBS")
+  library(shinyBS)
+}
+if(!require(patchwork)){
+  install.packages("patchwork")
+  library(patchwork)
+}
+if(!require(shinyWidgets)){
+  install.packages("shinyWidgets")
+  library(shinyWidgets)
+}
+if(!require(markdown)){
+  install.packages("markdown")
+  library(markdown)
+}
+if(!require(massdataset)){
+  remotes::install_github("tidymass/massdataset")
+}
+if(!require(mapa)){
+  remotes::install_github("jaspershen/mapa")
+  library(mapa)
+}
 
 ui <- dashboardPage(
   skin = "red",
