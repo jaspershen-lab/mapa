@@ -267,12 +267,6 @@ ui <- dashboardPage(
                         style = "background-color: #d83428; color: white;"),
 
                       actionButton(
-                        "refresh_enrich_pathways",
-                        "Refresh",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
-
-                      actionButton(
                         "go2merge_pathways",
                         "Next",
                         class = "btn-primary",
@@ -461,12 +455,6 @@ ui <- dashboardPage(
                         style = "background-color: #d83428; color: white;"),
 
                       actionButton(
-                        "refresh_merge_pathways",
-                        "Refresh",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
-
-                      actionButton(
                         "go2merge_modules",
                         "Next",
                         class = "btn-primary",
@@ -644,12 +632,6 @@ ui <- dashboardPage(
                       actionButton(
                         "submit_merge_modules",
                         "Submit",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
-
-                      actionButton(
-                        "refresh_merge_modules",
-                        "Refresh",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"),
 
@@ -981,12 +963,6 @@ ui <- dashboardPage(
                                           "Generate plot",
                                           class = "btn-primary",
                                           style = "background-color: #d83428; color: white;"),
-
-                             actionButton(
-                               "refresh_barplot",
-                               "Refresh",
-                               class = "btn-primary",
-                               style = "background-color: #d83428; color: white;"),
 
                              actionButton(
                                "show_barplot_code",

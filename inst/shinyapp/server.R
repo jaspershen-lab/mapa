@@ -336,31 +336,43 @@ server <-
             )
           )
         } else{
-          shinyjs::show("loading")
-          result <-
-            enrich_pathway(
-              variable_info_new(),
-              database = input$pathway_database,
-              save_to_local = FALSE,
-              path = "result",
-              OrgDb = org.Hs.eg.db,
-              organism = input$organism,
-              keyType = "ENTREZID",
-              use_internal_data = FALSE,
-              ont = "ALL",
-              pvalueCutoff = input$p_value_cutoff,
-              pAdjustMethod = input$p_adjust_method,
-              qvalueCutoff = 0.2,
-              minGSSize = input$gene_set_size[1],
-              maxGSSize = input$gene_set_size[2],
-              readable = FALSE,
-              pool = FALSE
-            )
+          # shinyjs::show("loading")
 
-          # enriched_pathways <-
+          showModal(
+            modalDialog(
+              title = "Analysis in Progress",
+              "Please wait...",
+              easyClose = FALSE,
+              footer = NULL
+            )
+          )
+
+          withProgress(message = 'Analysis in progress...', {
+            result <-
+              enrich_pathway(
+                variable_info_new(),
+                database = input$pathway_database,
+                save_to_local = FALSE,
+                path = "result",
+                OrgDb = org.Hs.eg.db,
+                organism = input$organism,
+                keyType = "ENTREZID",
+                use_internal_data = FALSE,
+                ont = "ALL",
+                pvalueCutoff = input$p_value_cutoff,
+                pAdjustMethod = input$p_adjust_method,
+                qvalueCutoff = 0.2,
+                minGSSize = input$gene_set_size[1],
+                maxGSSize = input$gene_set_size[2],
+                readable = FALSE,
+                pool = FALSE
+              )
+
+          })
+
           enriched_pathways(result)
 
-          shinyjs::hide("loading")
+          # shinyjs::hide("loading")
 
           ###save code
           pathway_database <-
@@ -397,15 +409,6 @@ server <-
       }
     })
 
-
-    observeEvent(input$refresh_enrich_pathways, {
-      showModal(modalDialog(
-        title = "Done",
-        easyClose = TRUE,
-        footer = modalButton("Close"),
-        size = "s"
-      ))
-    })
 
     output$enriched_pathways_go <-
       shiny::renderDataTable({
@@ -624,29 +627,32 @@ server <-
         library(clusterProfiler)
         library(org.Hs.eg.db)
         library(ReactomePA)
-        shinyjs::show("loading")
-        result <-
-          merge_pathways(
-            object = enriched_pathways(),
-            p.adjust.cutoff.go = input$p.adjust.cutoff.go,
-            p.adjust.cutoff.kegg = input$p.adjust.cutoff.kegg,
-            p.adjust.cutoff.reactome = input$p.adjust.cutoff.reactome,
-            count.cutoff.go = input$count.cutoff.go,
-            count.cutoff.kegg = input$count.cutoff.kegg,
-            count.cutoff.reactome = input$count.cutoff.reactome,
-            sim.cutoff.go = input$sim.cutoff.go,
-            sim.cutoff.kegg = input$sim.cutoff.kegg,
-            sim.cutoff.reactome = input$sim.cutoff.reactome,
-            measure.method.go = input$measure.method.go,
-            measure.method.kegg = input$measure.method.kegg,
-            measure.method.reactome = input$measure.method.reactome,
-            path = "result",
-            save_to_local = FALSE
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          result <-
+            merge_pathways(
+              object = enriched_pathways(),
+              p.adjust.cutoff.go = input$p.adjust.cutoff.go,
+              p.adjust.cutoff.kegg = input$p.adjust.cutoff.kegg,
+              p.adjust.cutoff.reactome = input$p.adjust.cutoff.reactome,
+              count.cutoff.go = input$count.cutoff.go,
+              count.cutoff.kegg = input$count.cutoff.kegg,
+              count.cutoff.reactome = input$count.cutoff.reactome,
+              sim.cutoff.go = input$sim.cutoff.go,
+              sim.cutoff.kegg = input$sim.cutoff.kegg,
+              sim.cutoff.reactome = input$sim.cutoff.reactome,
+              measure.method.go = input$measure.method.go,
+              measure.method.kegg = input$measure.method.kegg,
+              measure.method.reactome = input$measure.method.reactome,
+              path = "result",
+              save_to_local = FALSE
+            )
+        })
 
         enriched_modules(result)
 
-        shinyjs::hide("loading")
+        # shinyjs::hide("loading")
 
         ###save code
         merge_pathways_code <-
@@ -686,17 +692,6 @@ server <-
         merge_pathways_code(merge_pathways_code)
       }
     })
-
-    ####refresh
-    observeEvent(input$refresh_merge_pathways, {
-      showModal(modalDialog(
-        title = "Done",
-        easyClose = TRUE,
-        footer = modalButton("Close"),
-        size = "s"
-      ))
-    })
-
 
     output$enriched_modules_object <-
       renderText({
@@ -859,19 +854,22 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-        plot <-
-          plot_similarity_network(
-            object = enriched_modules(),
-            level = "module",
-            database = "go",
-            degree_cutoff = input$enirched_module_plot_degree_cutoff_go,
-            text = input$enirched_module_plot_text_go,
-            text_all = input$enirched_module_plot_text_all_go
-          )
-        enirched_module_go_plot(plot)
+        # shinyjs::show("loading")
 
-        shinyjs::hide("loading")
+        withProgress(message = 'Analysis in progress...', {
+          plot <-
+            plot_similarity_network(
+              object = enriched_modules(),
+              level = "module",
+              database = "go",
+              degree_cutoff = input$enirched_module_plot_degree_cutoff_go,
+              text = input$enirched_module_plot_text_go,
+              text_all = input$enirched_module_plot_text_all_go
+            )
+        })
+
+        enirched_module_go_plot(plot)
+        # shinyjs::hide("loading")
       }
     })
 
@@ -900,20 +898,23 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-        plot <-
-          plot_similarity_network(
-            object = enriched_modules(),
-            level = "module",
-            database = "kegg",
-            degree_cutoff = input$enirched_module_plot_degree_cutoff_kegg,
-            text = input$enirched_module_plot_text_kegg,
-            text_all = input$enirched_module_plot_text_all_kegg
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          plot <-
+            plot_similarity_network(
+              object = enriched_modules(),
+              level = "module",
+              database = "kegg",
+              degree_cutoff = input$enirched_module_plot_degree_cutoff_kegg,
+              text = input$enirched_module_plot_text_kegg,
+              text_all = input$enirched_module_plot_text_all_kegg
+            )
+        })
 
         enirched_module_kegg_plot(plot)
 
-        shinyjs::hide("loading")
+        # shinyjs::hide("loading")
       }
     })
 
@@ -942,19 +943,22 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-        plot <-
-          plot_similarity_network(
-            object = enriched_modules(),
-            level = "module",
-            database = "reactome",
-            degree_cutoff = input$enirched_module_plot_degree_cutoff_reactome,
-            text = input$enirched_module_plot_text_reactome,
-            text_all = input$enirched_module_plot_text_all_reactome
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          plot <-
+            plot_similarity_network(
+              object = enriched_modules(),
+              level = "module",
+              database = "reactome",
+              degree_cutoff = input$enirched_module_plot_degree_cutoff_reactome,
+              text = input$enirched_module_plot_text_reactome,
+              text_all = input$enirched_module_plot_text_all_reactome
+            )
+        })
 
         enirched_module_reactome_plot(plot)
-        shinyjs::hide("loading")
+        # shinyjs::hide("loading")
       }
     })
 
@@ -1039,19 +1043,21 @@ server <-
         library(clusterProfiler)
         library(org.Hs.eg.db)
         library(ReactomePA)
-        shinyjs::show("loading")
-        # Perform analysis with user-provided parameters
-        result <-
-          merge_modules(
-            object = enriched_modules(),
-            sim.cutoff = input$sim.cutoff.module,
-            measure_method = input$measure.method.module,
-            path = "result",
-            save_to_local = FALSE
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          result <-
+            merge_modules(
+              object = enriched_modules(),
+              sim.cutoff = input$sim.cutoff.module,
+              measure_method = input$measure.method.module,
+              path = "result",
+              save_to_local = FALSE
+            )
+        })
 
         enriched_functional_module(result)
-        shinyjs::hide("loading")
+        # shinyjs::hide("loading")
 
         ##save code
         merge_modules_code <-
@@ -1072,29 +1078,21 @@ server <-
     })
 
 
-    ####refresh
-    observeEvent(input$refresh_merge_modules, {
-      showModal(modalDialog(
-        title = "Done",
-        easyClose = TRUE,
-        footer = modalButton("Close"),
-        size = "s"
-      ))
-    })
-
     output$enriched_functional_module_object <-
       renderText({
-      req(enriched_functional_module())
-      enriched_functional_module <- enriched_functional_module()
-      captured_output1 <- capture.output(enriched_functional_module,
-                                         type = "message")
-      captured_output2 <- capture.output(enriched_functional_module,
-                                         type = "output")
-      captured_output <-
-        c(captured_output1,
-          captured_output2)
-      paste(captured_output, collapse = "\n")
-    })
+        req(enriched_functional_module())
+        enriched_functional_module <- enriched_functional_module()
+        captured_output1 <-
+          capture.output(enriched_functional_module,
+                         type = "message")
+        captured_output2 <-
+          capture.output(enriched_functional_module,
+                         type = "output")
+        captured_output <-
+          c(captured_output1,
+            captured_output2)
+        paste(captured_output, collapse = "\n")
+      })
 
     output$enriched_functional_modules <-
       shiny::renderDataTable({
@@ -1151,18 +1149,21 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-        plot <-
-          plot_similarity_network(
-            object = enriched_functional_module(),
-            level = "functional_module",
-            degree_cutoff = input$enirched_functional_moduleplot__degree_cutoff,
-            text = input$enirched_functional_module_plot_text,
-            text_all = input$enirched_functional_module_plot_text_all
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          plot <-
+            plot_similarity_network(
+              object = enriched_functional_module(),
+              level = "functional_module",
+              degree_cutoff = input$enirched_functional_moduleplot__degree_cutoff,
+              text = input$enirched_functional_module_plot_text,
+              text_all = input$enirched_functional_module_plot_text_all
+            )
+        })
 
         enirched_functional_module_plot(plot)
-        shinyjs::hide("loading")
+        # shinyjs::hide("loading")
       }
     })
 
@@ -1293,7 +1294,7 @@ server <-
       gemini_key2 <-
         input$translation_model_ai_key
 
-      if(input$translation_model == "chatgpt"){
+      if (input$translation_model == "chatgpt") {
         translation_model_ai_key <-
           openai_key1
 
@@ -1320,7 +1321,7 @@ server <-
           mapa::set_chatgpt_api_key(api_key = translation_model_ai_key())
         }
 
-      }else{
+      } else{
         if (gemini_key1 != "") {
           translation_model_ai_key(gemini_key1)
         } else{
@@ -1357,22 +1358,26 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-        # Perform analysis with user-provided parameters
-        enriched_functional_module <-
-          tryCatch(
-            translate_language(text = enriched_functional_module(),
-                               engine = input$translation_model,
-                               to = input$translation_to),
-            error = function(e) {
-              return(enriched_functional_module())
-            }
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          enriched_functional_module <-
+            tryCatch(
+              translate_language(
+                text = enriched_functional_module(),
+                engine = input$translation_model,
+                to = input$translation_to
+              ),
+              error = function(e) {
+                return(enriched_functional_module())
+              }
+            )
+        })
 
         enriched_functional_module(enriched_functional_module)
         enriched_functional_module2(enriched_functional_module)
 
-        shinyjs::hide("loading")
+        # shinyjs::hide("loading")
 
         ##save code
         translation_code <-
@@ -1396,10 +1401,12 @@ server <-
       renderText({
         req(enriched_functional_module2())
         enriched_functional_module <- enriched_functional_module2()
-        captured_output1 <- capture.output(enriched_functional_module,
-                                           type = "message")
-        captured_output2 <- capture.output(enriched_functional_module,
-                                           type = "output")
+        captured_output1 <-
+          capture.output(enriched_functional_module,
+                         type = "message")
+        captured_output2 <-
+          capture.output(enriched_functional_module,
+                         type = "output")
         captured_output <-
           c(captured_output1,
             captured_output2)
@@ -1542,24 +1549,29 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-        plot <-
-          plot_pathway_bar(
-            object = enriched_functional_module(),
-            top_n = input$barplot_top_n,
-            y_lable_width = input$barplot_y_lable_width,
-            p.adjust.cutoff = input$barplot_p_adjust_cutoff,
-            count.cutoff = input$barplot_count_cutoff,
-            level = input$barplot_level,
-            database = input$barplot_database,
-            line_type = input$line_type,
-            database_color = c(
-              GO = input$barplot_go_color,
-              KEGG = input$barplot_kegg_color,
-              Reactome = input$barplot_reactome_color
-            ),
-            translation = input$barplot_translation
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          plot <-
+            plot_pathway_bar(
+              object = enriched_functional_module(),
+              top_n = input$barplot_top_n,
+              y_lable_width = input$barplot_y_lable_width,
+              p.adjust.cutoff = input$barplot_p_adjust_cutoff,
+              count.cutoff = input$barplot_count_cutoff,
+              level = input$barplot_level,
+              database = input$barplot_database,
+              line_type = input$line_type,
+              database_color = c(
+                GO = input$barplot_go_color,
+                KEGG = input$barplot_kegg_color,
+                Reactome = input$barplot_reactome_color
+              ),
+              translation = input$barplot_translation
+            )
+        })
+
+        # shinyjs::hide("loading")
 
         barplot(plot)
 
@@ -1606,20 +1618,9 @@ server <-
           )
 
         barplot_code(barplot_code)
-        shinyjs::hide("loading")
       }
     })
 
-
-    ####refresh
-    observeEvent(input$refresh_barplot, {
-      showModal(modalDialog(
-        title = "Done",
-        easyClose = TRUE,
-        footer = modalButton("Close"),
-        size = "s"
-      ))
-    })
 
     output$barplot <-
       renderPlot({
@@ -1706,17 +1707,22 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-        plot <-
-          plot_similarity_network(
-            object = enriched_functional_module(),
-            level = input$module_similarity_network_level,
-            database = input$module_similarity_network_database,
-            degree_cutoff = input$module_similarity_network_degree_cutoff,
-            text = input$module_similarity_network_text,
-            text_all = input$module_similarity_network_text_all,
-            translation = input$module_similarity_network_translation
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          plot <-
+            plot_similarity_network(
+              object = enriched_functional_module(),
+              level = input$module_similarity_network_level,
+              database = input$module_similarity_network_database,
+              degree_cutoff = input$module_similarity_network_degree_cutoff,
+              text = input$module_similarity_network_text,
+              text_all = input$module_similarity_network_text_all,
+              translation = input$module_similarity_network_translation
+            )
+        })
+
+        # shinyjs::hide("loading")
 
         module_similarity_network(plot)
 
@@ -1740,7 +1746,7 @@ server <-
           )
 
         module_similarity_network_code(module_similarity_network_code)
-        shinyjs::hide("loading")
+
       }
     })
 
@@ -1905,15 +1911,20 @@ server <-
             )
           )
         } else{
-          shinyjs::show("loading")
-          plot <-
-            plot_module_info(
-              object = enriched_functional_module(),
-              level = input$module_information_level,
-              database = input$module_information_database,
-              module_id = input$module_information_module_id,
-              translation = input$module_information_translation
-            )
+          # shinyjs::show("loading")
+
+          withProgress(message = 'Analysis in progress...', {
+            plot <-
+              plot_module_info(
+                object = enriched_functional_module(),
+                level = input$module_information_level,
+                database = input$module_information_database,
+                module_id = input$module_information_module_id,
+                translation = input$module_information_translation
+              )
+          })
+
+          # shinyjs::hide("loading")
 
           plot <-
             plot[[1]] + plot[[2]] + plot[[3]]
@@ -1936,7 +1947,7 @@ server <-
             )
 
           module_information_code(module_information_code)
-          shinyjs::hide("loading")
+
         }
       }
     })
@@ -2092,8 +2103,6 @@ server <-
           )
         )
       } else {
-        shinyjs::show("loading")
-
         ####if filtered by functiobal module and modules
         object <-
           enriched_functional_module()
@@ -2108,44 +2117,50 @@ server <-
 
         object(object)
 
-        plot <-
-          plot_relationship_network(
-            object = object(),
-            include_functional_modules = input$relationship_network_include_functional_modules,
-            include_modules = input$relationship_network_include_modules,
-            include_pathways = input$relationship_network_include_pathways,
-            include_molecules = input$relationship_network_include_molecules,
-            functional_module_text = input$relationship_network_functional_module_text,
-            module_text = input$relationship_network_module_text,
-            pathway_text = input$relationship_network_pathway_text,
-            molecule_text = input$relationship_network_molecule_text,
-            circular_plot = input$relationship_network_circular_plot,
-            functional_module_color = input$relationship_network_functional_module_color,
-            module_color = input$relationship_network_module_color,
-            pathway_color = input$relationship_network_pathway_color,
-            molecule_color = input$relationship_network_molecule_color,
-            functional_module_arrange_position = input$relationship_network_functional_module_arrange_position,
-            module_arrange_position = input$relationship_network_module_arrange_position,
-            pathway_arrange_position = input$relationship_network_pathway_arrange_position,
-            molecule_arrange_position = input$relationship_network_molecule_arrange_position,
-            functional_module_position_limits = c(
-              input$relationship_network_functional_module_position_limits[1],
-              input$relationship_network_functional_module_position_limits[2]
-            ),
-            module_position_limits = c(
-              input$relationship_network_module_position_limits[1],
-              input$relationship_network_module_position_limits[2]
-            ),
-            pathway_position_limits = c(
-              input$relationship_network_pathway_position_limits[1],
-              input$relationship_network_pathway_position_limits[2]
-            ),
-            molecule_position_limits = c(
-              input$relationship_network_molecule_position_limits[1],
-              input$relationship_network_molecule_position_limits[2]
-            ),
-            translation = input$relationship_network_translation
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          plot <-
+            plot_relationship_network(
+              object = object(),
+              include_functional_modules = input$relationship_network_include_functional_modules,
+              include_modules = input$relationship_network_include_modules,
+              include_pathways = input$relationship_network_include_pathways,
+              include_molecules = input$relationship_network_include_molecules,
+              functional_module_text = input$relationship_network_functional_module_text,
+              module_text = input$relationship_network_module_text,
+              pathway_text = input$relationship_network_pathway_text,
+              molecule_text = input$relationship_network_molecule_text,
+              circular_plot = input$relationship_network_circular_plot,
+              functional_module_color = input$relationship_network_functional_module_color,
+              module_color = input$relationship_network_module_color,
+              pathway_color = input$relationship_network_pathway_color,
+              molecule_color = input$relationship_network_molecule_color,
+              functional_module_arrange_position = input$relationship_network_functional_module_arrange_position,
+              module_arrange_position = input$relationship_network_module_arrange_position,
+              pathway_arrange_position = input$relationship_network_pathway_arrange_position,
+              molecule_arrange_position = input$relationship_network_molecule_arrange_position,
+              functional_module_position_limits = c(
+                input$relationship_network_functional_module_position_limits[1],
+                input$relationship_network_functional_module_position_limits[2]
+              ),
+              module_position_limits = c(
+                input$relationship_network_module_position_limits[1],
+                input$relationship_network_module_position_limits[2]
+              ),
+              pathway_position_limits = c(
+                input$relationship_network_pathway_position_limits[1],
+                input$relationship_network_pathway_position_limits[2]
+              ),
+              molecule_position_limits = c(
+                input$relationship_network_molecule_position_limits[1],
+                input$relationship_network_molecule_position_limits[2]
+              ),
+              translation = input$relationship_network_translation
+            )
+        })
+
+        # shinyjs::hide("loading")
 
         relationship_network(plot)
 
@@ -2274,7 +2289,7 @@ server <-
                  sep = "\n")
 
         relationship_network_code(relationship_network_code)
-        shinyjs::hide("loading")
+
       }
     })
 
@@ -2474,25 +2489,27 @@ server <-
           set_chatgpt_api_key(api_key = openai_key())
         }
 
-        shinyjs::show("loading")
-        # Perform analysis with user-provided parameters
-        llm_interpretation_result <-
-          tryCatch(
-            interpret_pathways(
-              object = enriched_functional_module(),
-              p.adjust.cutoff = input$llm_interpretation_p_adjust_cutoff,
-              disease = input$llm_interpretation_disease,
-              count.cutoff = input$llm_interpretation_count_cutoff,
-              top_n = input$llm_interpretation_top_n
-            ),
-            error = function(e) {
-              "No result"
-            }
-          )
+        # shinyjs::show("loading")
+
+        withProgress(message = 'Analysis in progress...', {
+          llm_interpretation_result <-
+            tryCatch(
+              interpret_pathways(
+                object = enriched_functional_module(),
+                p.adjust.cutoff = input$llm_interpretation_p_adjust_cutoff,
+                disease = input$llm_interpretation_disease,
+                count.cutoff = input$llm_interpretation_count_cutoff,
+                top_n = input$llm_interpretation_top_n
+              ),
+              error = function(e) {
+                "No result"
+              }
+            )
+        })
 
         llm_interpretation_result(llm_interpretation_result)
 
-        shinyjs::hide("loading")
+        # shinyjs::hide("loading")
 
         ##save code
         llm_interpretation_code <-
@@ -2663,7 +2680,7 @@ server <-
             )
           )
         } else{
-          shinyjs::show("loading")
+          # shinyjs::show("loading")
 
           report_path <-
             file.path("files",
@@ -2672,16 +2689,18 @@ server <-
                         30, replace = TRUE
                       ), collapse = ""))
 
-          report_functional_module(
-            object = enriched_functional_module(),
-            interpretation_result = interpretation_result(),
-            path = report_path,
-            type = "html"
-          )
+          withProgress(message = 'Analysis in progress...', {
+            report_functional_module(
+              object = enriched_functional_module(),
+              interpretation_result = interpretation_result(),
+              path = report_path,
+              type = "html"
+            )
+          })
 
           report_path(report_path)
 
-          shinyjs::hide("loading")
+          # shinyjs::hide("loading")
 
           ##save code
           report_code <-
@@ -2784,6 +2803,4 @@ server <-
         ))
       }
     })
-
-
   }
