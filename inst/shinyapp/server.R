@@ -338,14 +338,14 @@ server <-
         } else{
           # shinyjs::show("loading")
 
-          showModal(
-            modalDialog(
-              title = "Analysis in Progress",
-              "Please wait...",
-              easyClose = FALSE,
-              footer = NULL
-            )
-          )
+          # showModal(
+          #   modalDialog(
+          #     title = "Analysis in Progress",
+          #     "Please wait...",
+          #     easyClose = FALSE,
+          #     footer = NULL
+          #   )
+          # )
 
           withProgress(message = 'Analysis in progress...', {
             result <-
