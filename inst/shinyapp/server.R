@@ -440,6 +440,20 @@ server <-
       options = list(pageLength = 10,
                      scrollX = TRUE))
 
+
+    output$enriched_pathways_object <- renderText({
+      req(enriched_pathways())
+      enriched_pathways <- enriched_pathways()
+      captured_output1 <- capture.output(enriched_pathways,
+                                         type = "message")
+      captured_output2 <- capture.output(enriched_pathways,
+                                         type = "output")
+      captured_output <-
+        c(captured_output1,
+          captured_output2)
+      paste(captured_output, collapse = "\n")
+    })
+
     output$download_enriched_pathways_go <-
       shiny::downloadHandler(
         filename = function() {
@@ -512,6 +526,28 @@ server <-
         } else{
           shinyjs::enable("download_enriched_pathways_reactome")
         }
+      }
+    })
+
+
+    output$download_enriched_pathways_object <-
+      shiny::downloadHandler(
+        filename = function() {
+          "enriched_pathways.rda"
+        },
+        content = function(file) {
+          enriched_pathways <-
+            enriched_pathways()
+          save(enriched_pathways, file = file)
+        }
+      )
+
+    observe({
+      if (is.null(enriched_pathways()) ||
+          length(enriched_pathways()) == 0) {
+        shinyjs::disable("download_enriched_pathways_object")
+      } else {
+        shinyjs::enable("download_enriched_pathways_object")
       }
     })
 
@@ -651,7 +687,7 @@ server <-
       }
     })
 
-####refresh
+    ####refresh
     observeEvent(input$refresh_merge_pathways, {
       showModal(modalDialog(
         title = "Done",
@@ -660,6 +696,21 @@ server <-
         size = "s"
       ))
     })
+
+
+    output$enriched_modules_object <-
+      renderText({
+        req(enriched_modules())
+        enriched_modules <- enriched_modules()
+        captured_output1 <- capture.output(enriched_modules,
+                                           type = "message")
+        captured_output2 <- capture.output(enriched_modules,
+                                           type = "output")
+        captured_output <-
+          c(captured_output1,
+            captured_output2)
+        paste(captured_output, collapse = "\n")
+      })
 
     output$merged_pathway_go <-
       shiny::renderDataTable({
@@ -769,6 +820,27 @@ server <-
       }
     })
 
+
+    output$download_enriched_modules_object <-
+      shiny::downloadHandler(
+        filename = function() {
+          "enriched_modules.rda"
+        },
+        content = function(file) {
+          enriched_modules <-
+            enriched_modules()
+          save(enriched_modules, file = file)
+        }
+      )
+
+    observe({
+      if (is.null(enriched_modules()) ||
+          length(enriched_modules()) == 0) {
+        shinyjs::disable("download_enriched_modules_object")
+      } else {
+        shinyjs::enable("download_enriched_modules_object")
+      }
+    })
 
     ######data visualization
     # GO Plot generation logic
@@ -1001,13 +1073,27 @@ server <-
 
 
     ####refresh
-    observeEvent(input$submit_merge_modules, {
+    observeEvent(input$refresh_merge_modules, {
       showModal(modalDialog(
         title = "Done",
         easyClose = TRUE,
         footer = modalButton("Close"),
         size = "s"
       ))
+    })
+
+    output$enriched_functional_module_object <-
+      renderText({
+      req(enriched_functional_module())
+      enriched_functional_module <- enriched_functional_module()
+      captured_output1 <- capture.output(enriched_functional_module,
+                                         type = "message")
+      captured_output2 <- capture.output(enriched_functional_module,
+                                         type = "output")
+      captured_output <-
+        c(captured_output1,
+          captured_output2)
+      paste(captured_output, collapse = "\n")
     })
 
     output$enriched_functional_modules <-
@@ -1089,6 +1175,49 @@ server <-
         ))
       })
 
+
+    output$download_enriched_functional_module_object <-
+      shiny::downloadHandler(
+        filename = function() {
+          "enriched_functional_module.rda"
+        },
+        content = function(file) {
+          save(enriched_functional_module(), file = file)
+        }
+      )
+
+    observe({
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        shinyjs::disable("download_enriched_functional_module_object")
+      } else {
+        shinyjs::enable("download_enriched_functional_module_object")
+      }
+    })
+
+
+    output$download_enriched_functional_module_object <-
+      shiny::downloadHandler(
+        filename = function() {
+          "enriched_functional_module.rda"
+        },
+        content = function(file) {
+          enriched_functional_module <-
+            enriched_functional_module()
+          save(enriched_functional_module, file = file)
+        }
+      )
+
+    observe({
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        shinyjs::disable("download_enriched_functional_module_object")
+      } else {
+        shinyjs::enable("download_enriched_functional_module_object")
+      }
+    })
+
+
     ####show code
     observeEvent(input$show_merge_modules_code, {
       if (is.null(merge_modules_code()) ||
@@ -1116,9 +1245,9 @@ server <-
     })
 
 
-    ###Go to data visualization tab
+    ###Go to Translation tab
     ####if there is not enriched_functional_module, show a warning message
-    observeEvent(input$go2data_visualization, {
+    observeEvent(input$go2translation, {
       # Check if enriched_functional_module is available
       if (is.null(enriched_functional_module()) ||
           length(enriched_functional_module()) == 0) {
@@ -1133,12 +1262,245 @@ server <-
       } else {
         updateTabItems(session = session,
                        inputId = "tabs",
+                       selected = "translation")
+      }
+    })
+
+
+    ###--------------------------------------------------------------------
+    ###Step 5 Translation
+
+    translation_code <-
+      reactiveVal()
+
+    translation_model_ai_key <-
+      reactiveVal()
+
+    enriched_functional_module2 <-
+      reactiveVal()
+
+    #####if the user translate the object
+    observeEvent(input$submit_translation, {
+      openai_key1 <-
+        Sys.getenv("chatgpt_api_key")
+
+      openai_key2 <-
+        input$translation_model_ai_key
+
+      gemini_key1 <-
+        Sys.getenv("gemini_api_key")
+
+      gemini_key2 <-
+        input$translation_model_ai_key
+
+      if(input$translation_model == "chatgpt"){
+        translation_model_ai_key <-
+          openai_key1
+
+        if (openai_key1 != "") {
+          translation_model_ai_key(openai_key1)
+        } else{
+          if (openai_key2 != "") {
+            translation_model_ai_key(openai_key2)
+          } else{
+            translation_model_ai_key("")
+          }
+        }
+
+        if (translation_model_ai_key() == "") {
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "No OpenAI Key provided. No translation will be generated.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else{
+          mapa::set_chatgpt_api_key(api_key = translation_model_ai_key())
+        }
+
+      }else{
+        if (gemini_key1 != "") {
+          translation_model_ai_key(gemini_key1)
+        } else{
+          if (gemini_key2 != "") {
+            translation_model_ai_key(gemini_key2)
+          } else{
+            translation_model_ai_key("")
+          }
+        }
+
+        if (translation_model_ai_key() == "") {
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "No Gemini Key provided. No translation will be generated.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else{
+          mapa::set_gemini_api_key(api_key = translation_model_ai_key())
+        }
+      }
+
+      # Check if enriched_modules is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched functional modules data available.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        shinyjs::show("loading")
+        # Perform analysis with user-provided parameters
+        enriched_functional_module <-
+          tryCatch(
+            translate_language(text = enriched_functional_module(),
+                               engine = input$translation_model,
+                               to = input$translation_to),
+            error = function(e) {
+              return(enriched_functional_module())
+            }
+          )
+
+        enriched_functional_module(enriched_functional_module)
+        enriched_functional_module2(enriched_functional_module)
+
+        shinyjs::hide("loading")
+
+        ##save code
+        translation_code <-
+          sprintf(
+            '
+            enriched_functional_module <-
+            translate_language(text = enriched_functional_module,
+                               engine = %s,
+                               to = %s)
+            ',
+            paste0('"', input$translation_model, '"'),
+            paste0('"', input$translation_to, '"')
+          )
+
+        translation_code(translation_code)
+      }
+    })
+
+
+    output$enriched_functional_module_object2 <-
+      renderText({
+        req(enriched_functional_module2())
+        enriched_functional_module <- enriched_functional_module2()
+        captured_output1 <- capture.output(enriched_functional_module,
+                                           type = "message")
+        captured_output2 <- capture.output(enriched_functional_module,
+                                           type = "output")
+        captured_output <-
+          c(captured_output1,
+            captured_output2)
+        paste(captured_output, collapse = "\n")
+      })
+
+
+    ####show code
+    observeEvent(input$show_translation_code, {
+      if (is.null(translation_code()) ||
+          length(translation_code()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No available code",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else{
+        code_content <-
+          translation_code()
+        code_content <-
+          paste(code_content, collapse = "\n")
+        showModal(modalDialog(
+          title = "Code",
+          tags$pre(code_content),
+          easyClose = TRUE,
+          footer = modalButton("Close")
+        ))
+      }
+    })
+
+
+    output$download_enriched_functional_module_object2 <-
+      shiny::downloadHandler(
+        filename = function() {
+          "enriched_functional_module.rda"
+        },
+        content = function(file) {
+          enriched_functional_module <-
+            enriched_functional_module2()
+          save(enriched_functional_module,
+               file = file)
+        }
+      )
+
+    observe({
+      if (is.null(enriched_functional_module2()) ||
+          length(enriched_functional_module2()) == 0) {
+        shinyjs::disable("download_enriched_functional_module_object2")
+      } else {
+        shinyjs::enable("download_enriched_functional_module_object2")
+      }
+    })
+
+    ###Go to data visualization tab
+    ####if there is not enriched_functional_module, show a warning message
+    observeEvent(input$go2data_visualization, {
+      # Check if enriched_functional_module is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched functional modules data available.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        updateTabItems(session = session,
+                       inputId = "tabs",
                        selected = "data_visualization")
       }
     })
 
+
+    ###if users click skip translation, go to data visualization tab
+    observeEvent(input$skip_translation, {
+      # Check if enriched_functional_module is available
+      if (is.null(enriched_functional_module()) ||
+          length(enriched_functional_module()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No enriched functional modules data available.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else {
+        updateTabItems(session = session,
+                       inputId = "tabs",
+                       selected = "data_visualization")
+      }
+    })
+
+
     ###--------------------------------------------------------------------
-    ###Step 5 Data visualization
+    ###Step 6 Data visualization
     # Observe file upload
     observeEvent(input$upload_enriched_functional_module, {
       if (!is.null(input$upload_enriched_functional_module$datapath)) {
@@ -1195,7 +1557,8 @@ server <-
               GO = input$barplot_go_color,
               KEGG = input$barplot_kegg_color,
               Reactome = input$barplot_reactome_color
-            )
+            ),
+            translation = input$barplot_translation
           )
 
         barplot(plot)
@@ -1263,8 +1626,12 @@ server <-
         req(barplot())
         barplot()
       },
-      width = function() { input$barplot_width_show },
-      height = function() { input$barplot_height_show })
+      width = function() {
+        input$barplot_width_show
+      },
+      height = function() {
+        input$barplot_height_show
+      })
 
     output$download_barplot <-
       downloadHandler(
@@ -1347,7 +1714,8 @@ server <-
             database = input$module_similarity_network_database,
             degree_cutoff = input$module_similarity_network_degree_cutoff,
             text = input$module_similarity_network_text,
-            text_all = input$module_similarity_network_text_all
+            text_all = input$module_similarity_network_text_all,
+            translation = input$module_similarity_network_translation
           )
 
         module_similarity_network(plot)
@@ -1543,7 +1911,8 @@ server <-
               object = enriched_functional_module(),
               level = input$module_information_level,
               database = input$module_information_database,
-              module_id = input$module_information_module_id
+              module_id = input$module_information_module_id,
+              translation = input$module_information_translation
             )
 
           plot <-
@@ -1774,7 +2143,8 @@ server <-
             molecule_position_limits = c(
               input$relationship_network_molecule_position_limits[1],
               input$relationship_network_molecule_position_limits[2]
-            )
+            ),
+            translation = input$relationship_network_translation
           )
 
         relationship_network(plot)
@@ -2051,7 +2421,7 @@ server <-
     })
 
     ###--------------------------------------------------------------------
-    ###Step 6 LLM interpretation
+    ###Step 7 LLM interpretation
     # Define enriched_functional_module as a reactive value
     llm_interpretation_result <-
       reactiveVal("")
@@ -2261,7 +2631,7 @@ server <-
 
 
     ###--------------------------------------------------------------------
-    ###Step 7 Result and report
+    ###Step 8 Result and report
     report_code <-
       reactiveVal()
     report_path <-

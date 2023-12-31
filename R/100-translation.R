@@ -61,7 +61,7 @@ translate_language.character <-
              "russian",
              "spanish"
            )) {
-    # browser()
+
     engine <-
       match.arg(engine)
 
@@ -98,7 +98,7 @@ translate_language.functional_module <-
              "russian",
              "spanish"
            )) {
-    # browser()
+
     engine <-
       match.arg(engine)
 
@@ -203,6 +203,8 @@ translate_language.functional_module <-
 
       text@merged_pathway_go$result_with_module <-
         result_with_module_go
+    } else{
+      module_result_go <- NULL
     }
 
     ####kegg------------------------------------------------
@@ -306,6 +308,8 @@ translate_language.functional_module <-
 
       text@merged_pathway_kegg$result_with_module <-
         result_with_module_kegg
+    } else{
+      module_result_kegg <- NULL
     }
 
     ####reactome------------------------------------------------
@@ -406,6 +410,9 @@ translate_language.functional_module <-
 
       text@merged_pathway_reactome$result_with_module <-
         result_with_module_reactome
+    } else{
+      module_result_reactome <-
+        NULL
     }
 
     ####merged module
@@ -474,8 +481,6 @@ translate_language.functional_module <-
 
       text@merged_module$functional_module_result <-
         functional_module_result
-
-      # browser()
 
       result_with_module <-
         result_with_module %>%
@@ -554,7 +559,7 @@ translate_language_internal <-
              "russian",
              "spanish"
            )) {
-    # browser()
+
     engine <-
       match.arg(engine)
 

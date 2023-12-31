@@ -45,3 +45,7 @@
 # mapa 0.1.12
 
 * Translate language functions can be used for all the enriched functional results.
+
+# mapa 0.1.13
+
+* Update shiny app.

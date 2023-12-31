@@ -76,6 +76,11 @@ ui <- dashboardPage(
         icon = icon("cogs")
         ),
       menuItem(
+        "Translation",
+        tabName = "translation",
+        icon = icon("globe")
+      ),
+      menuItem(
         "Data Visualization",
         tabName = "data_visualization",
         icon = icon("chart-line")
@@ -167,7 +172,7 @@ ui <- dashboardPage(
                                   value = FALSE),
                     radioButtons(
                       "id_type",
-                      "ID type:",
+                      "ID type",
                       choices = list(
                         "ENSEMBL" = "ensembl",
                         "UniProt" = "uniprot",
@@ -213,11 +218,10 @@ ui <- dashboardPage(
                 titlePanel("Enrich Pathways"),
                 fluidPage(
                   fluidRow(
-                    column(
-                      4,
+                    column(4,
                       checkboxGroupInput(
                         "pathway_database",
-                        "Database:",
+                        "Database",
                         choices = c(
                           "GO" = "go",
                           "KEGG" = "kegg",
@@ -227,7 +231,7 @@ ui <- dashboardPage(
                       ),
                       selectInput(
                         "organism",
-                        "Organism:",
+                        "Organism",
                         choices = list(
                           "Human" = "hsa",
                           "Rat" = "rno",
@@ -240,18 +244,18 @@ ui <- dashboardPage(
                       ),
                       numericInput(
                         "p_value_cutoff",
-                        "P-value cutoff:",
+                        "P-value cutoff",
                         value = 0.05,
                         min = 0,
                         max = 0.5),
                       selectInput(
                         "p_adjust_method",
-                        "P-adjust method:",
+                        "P-adjust method",
                         choices = c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"),
                         selected = "BH"),
                       sliderInput(
                         "gene_set_size",
-                        "Gene set size:",
+                        "Gene set size",
                         min = 5,
                         max = 2000,
                         value = c(10, 500)),
@@ -314,12 +318,23 @@ ui <- dashboardPage(
                                          "Download",
                                          class = "btn-primary",
                                          style = "background-color: #d83428; color: white;")
+                        ),
+                        tabPanel(
+                          title = "R object",
+                          verbatimTextOutput("enriched_pathways_object"),
+                          br(),
+                          shinyjs::useShinyjs(),
+                          downloadButton("download_enriched_pathways_object",
+                                         "Download",
+                                         class = "btn-primary",
+                                         style = "background-color: #d83428; color: white;")
                         )
                       )
                     )
                   )
                 )
               )),
+
       ####merge pathways tab
       tabItem(tabName = "merge_pathways",
               fluidPage(
@@ -332,7 +347,7 @@ ui <- dashboardPage(
                         column(6,
                         numericInput(
                           "p.adjust.cutoff.go",
-                          "P-adjust cutoff:",
+                          "P-adjust cutoff",
                           value = 0.05,
                           min = 0,
                           max = 0.5)
@@ -340,7 +355,7 @@ ui <- dashboardPage(
                       column(6,
                         numericInput(
                           "count.cutoff.go",
-                          "Gene count cutoff:",
+                          "Gene count cutoff",
                           value = 5,
                           min = 0,
                           max = 1000
@@ -351,15 +366,16 @@ ui <- dashboardPage(
                         column(6,
                         selectInput(
                           "measure.method.go",
-                          "Similarity method:",
-                          choices = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
+                          "Similarity method",
+                          choices = c("Wang", "Resnik", "Rel", "Jiang",
+                                      "Lin", "TCSS", "jaccard"),
                           selected = "Wang"
                         )
                       ),
                       column(6,
                         numericInput(
                           "sim.cutoff.go",
-                          "Similarity cutoff:",
+                          "Similarity cutoff",
                           value = 0.5,
                           min = 0,
                           max = 1
@@ -370,7 +386,7 @@ ui <- dashboardPage(
                         column(6,
                         numericInput(
                           "p.adjust.cutoff.kegg",
-                          "P-adjust cutoff:",
+                          "P-adjust cutoff",
                           value = 0.05,
                           min = 0,
                           max = 0.5)
@@ -378,7 +394,7 @@ ui <- dashboardPage(
                       column(6,
                         numericInput(
                           "count.cutoff.kegg",
-                          "Gene count cutoff:",
+                          "Gene count cutoff",
                           value = 5,
                           min = 0,
                           max = 1000)
@@ -389,14 +405,14 @@ ui <- dashboardPage(
                         column(6,
                         selectInput(
                           "measure.method.kegg",
-                          "Similarity method:",
+                          "Similarity method",
                           choices = c("jaccard"),
                           selected = "jaccard")
                         ),
                       column(6,
                         numericInput(
                           "sim.cutoff.kegg",
-                          "Similarity cutoff:",
+                          "Similarity cutoff",
                           value = 0.5,
                           min = 0,
                           max = 1)
@@ -407,7 +423,7 @@ ui <- dashboardPage(
                         column(6,
                         numericInput(
                           "p.adjust.cutoff.reactome",
-                          "P-adjust cutoff:",
+                          "P-adjust cutoff",
                           value = 0.05,
                           min = 0,
                           max = 0.5)
@@ -415,7 +431,7 @@ ui <- dashboardPage(
                       column(6,
                         numericInput(
                           "count.cutoff.reactome",
-                          "Gene count cutoff:",
+                          "Gene count cutoff",
                           value = 5,
                           min = 0,
                           max = 1000)
@@ -425,14 +441,14 @@ ui <- dashboardPage(
                         column(6,
                         selectInput(
                           "measure.method.reactome",
-                          "Similarity method:",
+                          "Similarity method",
                           choices = c("jaccard"),
                           selected = "jaccard")
                       ),
                       column(6,
                         numericInput(
                           "sim.cutoff.reactome",
-                          "Similarity cutoff:",
+                          "Similarity cutoff",
                           value = 0.5,
                           min = 0,
                           max = 1)
@@ -500,7 +516,7 @@ ui <- dashboardPage(
                                         )
                                       )),
                              tabPanel(
-                               title = "Data Visualization",
+                               title = "Data visualization",
                                tabsetPanel(
                                  tabPanel(
                                    title = "GO",
@@ -522,7 +538,7 @@ ui <- dashboardPage(
                                      column(3,
                                        numericInput(
                                          "enirched_module_plot_degree_cutoff_go",
-                                         "Degree cutoff:",
+                                         "Degree cutoff",
                                          value = 0,
                                          min = 0,
                                          max = 1000)
@@ -549,7 +565,7 @@ ui <- dashboardPage(
                                      column(3,
                                        numericInput(
                                          "enirched_module_plot_degree_cutoff_kegg",
-                                         "Degree cutoff:",
+                                         "Degree cutoff",
                                          value = 0,
                                          min = 0,
                                          max = 1000
@@ -577,7 +593,7 @@ ui <- dashboardPage(
                                      column(3,
                                        numericInput(
                                          "enirched_module_plot_degree_cutoff_reactome",
-                                         "Degree cutoff:",
+                                         "Degree cutoff",
                                          value = 0,
                                          min = 0,
                                          max = 1000)
@@ -585,6 +601,16 @@ ui <- dashboardPage(
                                    )
                                  )
                                )
+                             ),
+                             tabPanel(
+                               title = "R object",
+                               verbatimTextOutput("enriched_modules_object"),
+                               br(),
+                               shinyjs::useShinyjs(),
+                               downloadButton("download_enriched_modules_object",
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
                              )
                            ))
                   )
@@ -602,14 +628,14 @@ ui <- dashboardPage(
                         column(6,
                         selectInput(
                           "measure.method.module",
-                          "Similarity method:",
+                          "Similarity method",
                           choices = c("jaccard"),
                           selected = "jaccard")
                       ),
                       column(6,
                         numericInput(
                           "sim.cutoff.module",
-                          "Similarity cutoff:",
+                          "Similarity cutoff",
                           value = 0.5,
                           min = 0,
                           max = 1)
@@ -628,7 +654,7 @@ ui <- dashboardPage(
                         style = "background-color: #d83428; color: white;"),
 
                       actionButton(
-                        "go2data_visualization",
+                        "go2translation",
                         "Next",
                         class = "btn-primary",
                         style = "background-color: #d83428; color: white;"),
@@ -653,7 +679,7 @@ ui <- dashboardPage(
                                               style = "background-color: #d83428; color: white;")
                              ),
                              tabPanel(
-                               title = "Data Visualization",
+                               title = "Data visualization",
                                shiny::plotOutput("enirched_functional_module_plot"),
                                br(),
                                fluidRow(
@@ -672,14 +698,112 @@ ui <- dashboardPage(
                                  column(3,
                                    numericInput(
                                      "enirched_functional_moduleplot__degree_cutoff",
-                                     "Degree cutoff:",
+                                     "Degree cutoff",
                                      value = 0,
                                      min = 0,
                                      max = 1000)
                                  )
                                )
+                             ),
+                             tabPanel(
+                               title = "R object",
+                               verbatimTextOutput("enriched_functional_module_object"),
+                               br(),
+                               shinyjs::useShinyjs(),
+                               downloadButton("download_enriched_functional_module_object",
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
                              )
                            ))
+                  )))
+      ),
+
+
+
+      #### Translation tab
+      tabItem(
+        tabName = "translation",
+        fluidPage(titlePanel("Translation"),
+                  fluidPage(fluidRow(
+                    column(
+                      4,
+                      fluidRow(column(
+                        5,
+                        selectInput(
+                          "translation_model",
+                          "Model",
+                          choices = c(
+                            "Gemini" = "gemini",
+                            "ChatGPT" = "chatgpt"),
+                          selected = "gemini"
+                        )
+                      ),
+                      column(
+                        7,
+                        textInput("translation_model_ai_key",
+                                  "AI key",
+                                  value = "")
+                      )),
+                      fluidRow(column(
+                        12,
+                        selectInput(
+                          "translation_to",
+                          "Translation to",
+                          choices = c("Chinese" = "chinese",
+                                      "Spanish" = "spanish",
+                                      "English" = "english",
+                                      "French" = "french",
+                                      "German" = "german",
+                                      "Italian" = "italian",
+                                      "Japanese" = "japanese",
+                                      "Korean" = "korean",
+                                      "Portuguese" = "portuguese",
+                                      "Russian" = "russian",
+                                      "Spanish" = "spanish"),
+                          selected = "chinese"
+                        )
+                      )),
+                      actionButton(
+                        "submit_translation",
+                        "Submit",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+
+                      actionButton(
+                        "skip_translation",
+                        "Skip",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+
+                      actionButton(
+                        "go2data_visualization",
+                        "Next",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+                      actionButton(
+                        "show_translation_code",
+                        "Code",
+                        class = "btn-primary",
+                        style = "background-color: #d83428; color: white;"
+                      ),
+                      style = "border-right: 1px solid #ddd; padding-right: 20px;"
+                    ),
+                    column(8,
+                           tabPanel(
+                             title = "R object",
+                             verbatimTextOutput("enriched_functional_module_object2"),
+                             br(),
+                             shinyjs::useShinyjs(),
+                             downloadButton("download_enriched_functional_module_object2",
+                                            "Download",
+                                            class = "btn-primary",
+                                            style = "background-color: #d83428; color: white;")
+                           )
+                    )
                   )))
       ),
 
@@ -721,13 +845,13 @@ ui <- dashboardPage(
                                         choices = c(
                                           "Pathway" = "pathway",
                                           "Module" = "module",
-                                          "Functional module" = "functional_module"),
+                                          "FM" = "functional_module"),
                                         selected = "functional_module")
                                       ),
                                column(4,
                                       numericInput(
                                         inputId = "barplot_top_n",
-                                        label = "Top N:",
+                                        label = "Top N",
                                         value = 5,
                                         min = 1,
                                         max = 1000)
@@ -759,14 +883,14 @@ ui <- dashboardPage(
                                ),
                                column(4,
                                       numericInput("barplot_count_cutoff",
-                                                   "Count cutoff:",
+                                                   "Count cutoff",
                                                    value = 5,
                                                    min = 1,
                                                    max = 1000)
                                )
                              ),
                              fluidRow(
-                               column(12,
+                               column(8,
                                       checkboxGroupInput("barplot_database",
                                                          "Database",
                                                          choices = c(
@@ -776,7 +900,10 @@ ui <- dashboardPage(
                                                          ),
                                                          selected = c("go", "kegg", "reactome"),
                                                          inline = TRUE)
-                                      )
+                                      ),
+                               column(4,
+                                      checkboxInput("barplot_translation", "Translation", FALSE)
+                               )
                              ),
                              h4("Database color"),
                              fluidRow(
@@ -836,11 +963,11 @@ ui <- dashboardPage(
                       column(8,
                              shinyWidgets::dropdownButton(
                                sliderInput("barplot_width_show",
-                                           "Plot Width (pixels):",
+                                           "Width (pixels)",
                                            min = 300, max = 1000, value = 800),
                                # Input: Slider for height
                                sliderInput("barplot_height_show",
-                                           "Plot Height (pixels):",
+                                           "Height (pixels)",
                                            min = 300, max = 1000, value = 600),
                                circle = TRUE,
                                status = "danger",
@@ -878,7 +1005,7 @@ ui <- dashboardPage(
                                column(6,
                                       selectInput(
                                         "module_similarity_network_database",
-                                        "Database:",
+                                        "Database",
                                         choices = c("GO" = "go",
                                                     "KEGG" = "kegg",
                                                     "Reactome" = "reactome"),
@@ -887,7 +1014,7 @@ ui <- dashboardPage(
                                column(6,
                                       numericInput(
                                         "module_similarity_network_degree_cutoff",
-                                        "Degree cutoff:",
+                                        "Degree cutoff",
                                         value = 0,
                                         min = 0,
                                         max = 1000)
@@ -897,16 +1024,21 @@ ui <- dashboardPage(
                                column(6,
                                       selectInput(
                                         "module_similarity_network_level",
-                                        "Level:",
+                                        "Level",
                                         choices = c("Module" = "module",
-                                                    "Functional module" = "functional_module"),
+                                                    "FM" = "functional_module"),
                                         selected = "functional_module")
+                               )
+                             ),
+                             fluidRow(
+                               column(4,
+                                      checkboxInput("module_similarity_network_translation", "Translation", FALSE)
                                ),
-                               column(3,
-                                 checkboxInput("module_similarity_network_text", "Text", FALSE)
+                               column(4,
+                                      checkboxInput("module_similarity_network_text", "Text", FALSE)
                                ),
-                               column(3,
-                                 checkboxInput("module_similarity_network_text_all", "Text all", FALSE)
+                               column(4,
+                                      checkboxInput("module_similarity_network_text_all", "Text all", FALSE)
                                )
                              ),
                              fluidRow(
@@ -954,7 +1086,7 @@ ui <- dashboardPage(
                     )
                   ),
                   tabPanel(
-                    title = "Module Information",
+                    title = "Module information",
                     fluidRow(
                       column(4,
                              br(),
@@ -962,15 +1094,15 @@ ui <- dashboardPage(
                                column(6,
                                       selectInput(
                                         "module_information_level",
-                                        "Level:",
+                                        "Level",
                                         choices = c("Module" = "module",
-                                                    "Functional module" = "functional_module"),
+                                                    "FM" = "functional_module"),
                                         selected = "functional_module")
                                       ),
                                column(6,
                                       selectInput(
                                         "module_information_database",
-                                        "Database:",
+                                        "Database",
                                         choices = c("GO" = "go",
                                                     "KEGG" = "kegg",
                                                     "Reactome" = "reactome"),
@@ -978,11 +1110,15 @@ ui <- dashboardPage(
                                       )
                              ),
                              fluidRow(
-                               column(12,
+                               column(7,
                                       selectInput(
                                         "module_information_module_id",
-                                        "Module ID:",
+                                        "Module ID",
                                         choices = NULL)
+                               ),
+                               column(5,
+                                      checkboxInput("module_information_translation",
+                                                    "Translation", FALSE)
                                )
                              ),
                              fluidRow(
@@ -1034,28 +1170,32 @@ ui <- dashboardPage(
                       column(4,
                              br(),
                              fluidRow(
-                               column(6,
+                               column(5,
                                       checkboxInput("relationship_network_circular_plot",
                                                     "Circular layout", FALSE)
                                       ),
-                               column(6,
+                               column(3,
                                       checkboxInput("relationship_network_filter",
                                                     "Filter", FALSE)
-                                      )
+                                      ),
+                               column(4,
+                                      checkboxInput("relationship_network_translation",
+                                                    "Translation", FALSE)
+                               )
                              ),
                              fluidRow(
                                column(6,
                                       selectInput(
                                         "relationship_network_level",
-                                        "Filter Level:",
+                                        "Filter Level",
                                         choices = c("Module" = "module",
-                                                    "Functional module" = "functional_module"),
+                                                    "FM" = "functional_module"),
                                         selected = "functional_module")
                                       ),
                                column(6,
                                       selectInput(
                                         "relationship_network_module_id",
-                                        "Module ID:",
+                                        "Module ID",
                                         choices = NULL,
                                         multiple = TRUE)
                                       )
@@ -1289,7 +1429,7 @@ ui <- dashboardPage(
                         5,
                         selectInput(
                           "llm_model",
-                          "LLM model:",
+                          "LLM model",
                           choices = c("ChatGPT" = "chatgpt"),
                           selected = "chatgpt"
                         )
@@ -1297,7 +1437,7 @@ ui <- dashboardPage(
                       column(
                         7,
                         textInput("openai_key",
-                                  "OpenAI Key:",
+                                  "OpenAI key",
                                   value = "")
                       )),
                       fluidRow(column(
@@ -1312,7 +1452,7 @@ ui <- dashboardPage(
                       fluidRow(
                         column(4,
                                numericInput("llm_interpretation_top_n",
-                                            "Top N:",
+                                            "Top N",
                                             value = 5,
                                             min = 1,
                                             max = 1000)
@@ -1326,7 +1466,7 @@ ui <- dashboardPage(
                         ),
                         column(4,
                                numericInput("llm_interpretation_count_cutoff",
-                                            "Count cutoff:",
+                                            "Count cutoff",
                                             value = 5,
                                             min = 1,
                                             max = 1000)
