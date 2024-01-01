@@ -228,6 +228,10 @@ plot_pathway_bar <-
                 subcategory = NA
               ) %>%
               dplyr::select(category, subcategory, dplyr::everything())
+
+            enrichment_kegg_result <-
+              enrichment_kegg_result %>%
+              dplyr::select(category, subcategory, dplyr::everything())
           }
         }
       }
@@ -283,6 +287,25 @@ plot_pathway_bar <-
               NULL
             }
           )
+
+
+        if (!is.null(module_result_reactome)) {
+          if (!is.null(module_result_kegg)) {
+            if (ncol(module_result_reactome) != ncol(module_result_kegg)) {
+              module_result_reactome <-
+                data.frame(
+                  module_result_reactome,
+                  category = NA,
+                  subcategory = NA
+                ) %>%
+                dplyr::select(category, subcategory, dplyr::everything())
+
+              module_result_kegg <-
+                module_result_kegg %>%
+                dplyr::select(category, subcategory, dplyr::everything())
+            }
+          }
+        }
 
         temp_data <-
           rbind(module_result_kegg,

@@ -54,7 +54,7 @@ report_functional_module <-
            interpretation_result,
            path = ".",
            type = c("html", "pdf", "word", "md", "all")) {
-    # browser()
+
     if (missing(object)) {
       stop("object is missing")
     }
@@ -266,7 +266,6 @@ report_functional_module <-
       interpretation_result <- "> No interpretation result is provided."
     }
 
-    # browser()
     ##transform rmd to HTML or pdf
     if (type == "html" | type == "all") {
       rmarkdown::render(

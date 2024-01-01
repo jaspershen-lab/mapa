@@ -56,11 +56,13 @@ server <-
       req(variable_info())
       variable_info_old <-
         variable_info()
+
       if (input$id_type == "ensembl") {
         tryCatch({
           colnames(variable_info_old) <- c("ensembl")
           library(clusterProfiler)
           library(org.Hs.eg.db)
+
           other_id <-
             clusterProfiler::bitr(
               variable_info_old$ensembl,
@@ -74,7 +76,8 @@ server <-
             dplyr::distinct(other_id, ENSEMBL, .keep_all = TRUE)
           variable_info_old <-
             dplyr::left_join(variable_info_old,
-                             other_id, by = c("ensembl" = "ENSEMBL"))
+                             other_id,
+                             by = c("ensembl" = "ENSEMBL"))
           colnames(variable_info_old) <-
             c("ensembl", "uniprot", "entrezid", "symbol")
 
@@ -117,32 +120,23 @@ server <-
           library(clusterProfiler)
           library(org.Hs.eg.db)
           other_id <-
-            tryCatch(
-              clusterProfiler::bitr(
-                variable_info_old$uniprot,
-                fromType = "UNIPROT",
-                toType = c("ENSEMBL", "ENTREZID", "SYMBOL"),
-                OrgDb = org.Hs.eg.db
-              ),
-              error = function(e) {
-                data.frame(
-                  UNIPROT = variable_info_old$uniprot,
-                  ENSEMBL = NA,
-                  ENTREZID = NA,
-                  SYMBOL = NA
-                )
-              }
+            clusterProfiler::bitr(
+              variable_info_old$uniprot,
+              fromType = "UNIPROT",
+              toType = c("ENSEMBL", "ENTREZID", "SYMBOL"),
+              OrgDb = org.Hs.eg.db
             )
           # remove duplicated rows
           other_id <-
             dplyr::distinct(other_id, UNIPROT, .keep_all = TRUE)
           variable_info_old <-
             dplyr::left_join(variable_info_old,
-                             other_id, by = c("uniprot" = "UNIPROT"))
+                             other_id,
+                             by = c("uniprot" = "UNIPROT"))
           colnames(variable_info_old) <-
             c("uniprot", "ensembl", "entrezid", "symbol")
         },
-        error = function(e){
+        error = function(e) {
           showModal(modalDialog(
             title = "Error",
             paste("Details:", e$message),
@@ -179,21 +173,11 @@ server <-
           library(clusterProfiler)
           library(org.Hs.eg.db)
           other_id <-
-            tryCatch(
-              clusterProfiler::bitr(
-                variable_info_old$entrezid,
-                fromType = "ENTREZID",
-                toType = c("ENSEMBL", "UNIPROT", "SYMBOL"),
-                OrgDb = org.Hs.eg.db
-              ),
-              error = function(e) {
-                data.frame(
-                  ENTREZID = variable_info_old$entrezid,
-                  ENSEMBL = NA,
-                  UNIPROT = NA,
-                  SYMBOL = NA
-                )
-              }
+            clusterProfiler::bitr(
+              variable_info_old$entrezid,
+              fromType = "ENTREZID",
+              toType = c("ENSEMBL", "UNIPROT", "SYMBOL"),
+              OrgDb = org.Hs.eg.db
             )
           # remove duplicated rows
           other_id <-
@@ -341,9 +325,6 @@ server <-
           )
         )
       } else {
-        library(clusterProfiler)
-        library(org.Hs.eg.db)
-        library(ReactomePA)
         if (length(input$pathway_database) == 0) {
           showModal(
             modalDialog(
@@ -355,28 +336,42 @@ server <-
           )
         } else{
           # shinyjs::show("loading")
-
           withProgress(message = 'Analysis in progress...', {
-            result <-
-              enrich_pathway(
-                variable_info_new(),
-                database = input$pathway_database,
-                save_to_local = FALSE,
-                path = "result",
-                OrgDb = org.Hs.eg.db,
-                organism = input$organism,
-                keyType = "ENTREZID",
-                use_internal_data = FALSE,
-                ont = "ALL",
-                pvalueCutoff = input$p_value_cutoff,
-                pAdjustMethod = input$p_adjust_method,
-                qvalueCutoff = 0.2,
-                minGSSize = input$gene_set_size[1],
-                maxGSSize = input$gene_set_size[2],
-                readable = FALSE,
-                pool = FALSE
-              )
+            tryCatch({
+              library(clusterProfiler)
+              library(org.Hs.eg.db)
+              library(ReactomePA)
 
+              result <-
+                enrich_pathway(
+                  variable_info_new(),
+                  database = input$pathway_database,
+                  save_to_local = FALSE,
+                  path = "result",
+                  OrgDb = org.Hs.eg.db,
+                  organism = input$organism,
+                  keyType = "ENTREZID",
+                  use_internal_data = FALSE,
+                  ont = "ALL",
+                  pvalueCutoff = input$p_value_cutoff,
+                  pAdjustMethod = input$p_adjust_method,
+                  qvalueCutoff = 0.2,
+                  minGSSize = input$gene_set_size[1],
+                  maxGSSize = input$gene_set_size[2],
+                  readable = FALSE,
+                  pool = FALSE
+                )
+            },
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  paste("Details:", e$message),
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            })
           })
 
           enriched_pathways(result)
@@ -633,30 +628,40 @@ server <-
           )
         )
       } else {
-        library(clusterProfiler)
-        library(org.Hs.eg.db)
-        library(ReactomePA)
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          result <-
-            merge_pathways(
-              object = enriched_pathways(),
-              p.adjust.cutoff.go = input$p.adjust.cutoff.go,
-              p.adjust.cutoff.kegg = input$p.adjust.cutoff.kegg,
-              p.adjust.cutoff.reactome = input$p.adjust.cutoff.reactome,
-              count.cutoff.go = input$count.cutoff.go,
-              count.cutoff.kegg = input$count.cutoff.kegg,
-              count.cutoff.reactome = input$count.cutoff.reactome,
-              sim.cutoff.go = input$sim.cutoff.go,
-              sim.cutoff.kegg = input$sim.cutoff.kegg,
-              sim.cutoff.reactome = input$sim.cutoff.reactome,
-              measure.method.go = input$measure.method.go,
-              measure.method.kegg = input$measure.method.kegg,
-              measure.method.reactome = input$measure.method.reactome,
-              path = "result",
-              save_to_local = FALSE
-            )
+          tryCatch({
+            library(clusterProfiler)
+            library(org.Hs.eg.db)
+            library(ReactomePA)
+            result <-
+              merge_pathways(
+                object = enriched_pathways(),
+                p.adjust.cutoff.go = input$p.adjust.cutoff.go,
+                p.adjust.cutoff.kegg = input$p.adjust.cutoff.kegg,
+                p.adjust.cutoff.reactome = input$p.adjust.cutoff.reactome,
+                count.cutoff.go = input$count.cutoff.go,
+                count.cutoff.kegg = input$count.cutoff.kegg,
+                count.cutoff.reactome = input$count.cutoff.reactome,
+                sim.cutoff.go = input$sim.cutoff.go,
+                sim.cutoff.kegg = input$sim.cutoff.kegg,
+                sim.cutoff.reactome = input$sim.cutoff.reactome,
+                measure.method.go = input$measure.method.go,
+                measure.method.kegg = input$measure.method.kegg,
+                measure.method.reactome = input$measure.method.reactome,
+                path = "result",
+                save_to_local = FALSE
+              )
+          },
+          error = function(e) {
+            showModal(modalDialog(
+              title = "Error",
+              paste("Details:", e$message),
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            ))
+          })
         })
 
         enriched_modules(result)
@@ -667,35 +672,34 @@ server <-
         merge_pathways_code <-
           sprintf(
             '
-    enriched_modules <-
-    merge_pathways(
-    object = enriched_pathways,
-    p.adjust.cutoff.go = %s,
-    p.adjust.cutoff.kegg = %s,
-    p.adjust.cutoff.reactome = %s,
-    count.cutoff.go = %s,
-    count.cutoff.kegg = %s,
-    count.cutoff.reactome = %s,
-    sim.cutoff.go = %s,
-    sim.cutoff.kegg = %s,
-    sim.cutoff.reactome = %s,
-    measure.method.go = %s,
-    measure.method.kegg = %s,
-    measure.method.reactome = %s
-  )
-    ',
-  input$p.adjust.cutoff.go,
-  input$p.adjust.cutoff.kegg,
-  input$p.adjust.cutoff.reactome,
-  input$count.cutoff.go,
-  input$count.cutoff.kegg,
-  input$count.cutoff.reactome,
-  input$sim.cutoff.go,
-  input$sim.cutoff.kegg,
-  input$sim.cutoff.reactome,
-  paste0('"', input$measure.method.go, '"'),
-  paste0('"', input$measure.method.kegg, '"'),
-  paste0('"', input$measure.method.reactome, '"')
+                  enriched_modules <-
+                  merge_pathways(
+                  object = enriched_pathways,
+                  p.adjust.cutoff.go = %s,
+                  p.adjust.cutoff.kegg = %s,
+                  p.adjust.cutoff.reactome = %s,
+                  count.cutoff.go = %s,
+                  count.cutoff.kegg = %s,
+                  count.cutoff.reactome = %s,
+                  sim.cutoff.go = %s,
+                  sim.cutoff.kegg = %s,
+                  sim.cutoff.reactome = %s,
+                  measure.method.go = %s,
+                  measure.method.kegg = %s,
+                  measure.method.reactome = %s)
+                  ',
+            input$p.adjust.cutoff.go,
+            input$p.adjust.cutoff.kegg,
+            input$p.adjust.cutoff.reactome,
+            input$count.cutoff.go,
+            input$count.cutoff.kegg,
+            input$count.cutoff.reactome,
+            input$sim.cutoff.go,
+            input$sim.cutoff.kegg,
+            input$sim.cutoff.reactome,
+            paste0('"', input$measure.method.go, '"'),
+            paste0('"', input$measure.method.kegg, '"'),
+            paste0('"', input$measure.method.reactome, '"')
           )
 
         merge_pathways_code(merge_pathways_code)
@@ -1087,20 +1091,30 @@ server <-
           )
         )
       } else {
-        library(clusterProfiler)
-        library(org.Hs.eg.db)
-        library(ReactomePA)
         # shinyjs::show("loading")
-
         withProgress(message = 'Analysis in progress...', {
-          result <-
-            merge_modules(
-              object = enriched_modules(),
-              sim.cutoff = input$sim.cutoff.module,
-              measure_method = input$measure.method.module,
-              path = "result",
-              save_to_local = FALSE
-            )
+          tryCatch({
+            library(clusterProfiler)
+            library(org.Hs.eg.db)
+            library(ReactomePA)
+
+            result <-
+              merge_modules(
+                object = enriched_modules(),
+                sim.cutoff = input$sim.cutoff.module,
+                measure_method = input$measure.method.module,
+                path = "result",
+                save_to_local = FALSE
+              )
+          },
+          error = function(e) {
+            showModal(modalDialog(
+              title = "Error",
+              paste("Details:", e$message),
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            ))
+          })
         })
 
         enriched_functional_module(result)
@@ -1197,7 +1211,6 @@ server <-
         )
       } else {
         # shinyjs::show("loading")
-
         withProgress(message = 'Analysis in progress...', {
           tryCatch(
             plot <-
@@ -1420,17 +1433,22 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          enriched_functional_module <-
-            tryCatch(
+          tryCatch({
+            enriched_functional_module <-
               translate_language(
                 text = enriched_functional_module(),
                 engine = input$translation_model,
                 to = input$translation_to
-              ),
-              error = function(e) {
-                return(enriched_functional_module())
-              }
-            )
+              )
+          },
+          error = function(e) {
+            showModal(modalDialog(
+              title = "Error",
+              paste("Details:", e$message),
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            ))
+          })
         })
 
         enriched_functional_module(enriched_functional_module)
@@ -2114,9 +2132,6 @@ server <-
     })
 
 
-
-
-
     #####relationship network plot
 
     # Update the module ID
@@ -2167,7 +2182,6 @@ server <-
               relationship_network_module_id_kegg,
               relationship_network_module_id_reactome
             )
-
         }
 
         updateSelectInput(
@@ -2178,7 +2192,6 @@ server <-
         )
       }
     })
-
 
     # Observe generate relationship network button click
     relationship_network <-
@@ -2206,12 +2219,22 @@ server <-
         object <-
           enriched_functional_module()
         if (input$relationship_network_filter) {
-          object <-
-            filter_functional_module(
-              object,
-              level = input$relationship_network_level,
-              remain_id = input$relationship_network_module_id
-            )
+          tryCatch({
+            object <-
+              filter_functional_module(
+                object,
+                level = input$relationship_network_level,
+                remain_id = input$relationship_network_module_id
+              )
+          },
+          error = function(e) {
+            showModal(modalDialog(
+              title = "Error",
+              paste("Details:", e$message),
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            ))
+          })
         }
 
         object(object)
@@ -2613,7 +2636,12 @@ server <-
                 top_n = input$llm_interpretation_top_n
               ),
               error = function(e) {
-                "No result"
+                showModal(modalDialog(
+                  title = "Error",
+                  paste("Details:", e$message),
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                ))
               }
             )
         })
@@ -2752,12 +2780,6 @@ server <-
     })
 
 
-
-
-
-
-
-
     ###--------------------------------------------------------------------
     ###Step 8 Result and report
     report_code <-
@@ -2792,20 +2814,32 @@ server <-
         } else{
           # shinyjs::show("loading")
 
-          report_path <-
-            file.path("files",
-                      paste(sample(
-                        c(letters, LETTERS, 0:9),
-                        30, replace = TRUE
-                      ), collapse = ""))
-
           withProgress(message = 'Analysis in progress...', {
-            report_functional_module(
-              object = enriched_functional_module(),
-              interpretation_result = interpretation_result(),
-              path = report_path,
-              type = "html"
-            )
+            tryCatch({
+              report_path <-
+                file.path("files",
+                          paste(sample(
+                            c(letters, LETTERS, 0:9),
+                            30, replace = TRUE
+                          ), collapse = ""))
+
+              report_functional_module(
+                object = enriched_functional_module(),
+                interpretation_result = interpretation_result(),
+                path = report_path,
+                type = "html"
+              )
+            },
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  paste("Details:", e$message),
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            })
           })
 
           report_path(report_path)
@@ -2822,7 +2856,7 @@ server <-
               path = %s,
               type = "html")
             ',
-            report_path()
+            paste0('"', report_path(), '"')
             )
           report_code(report_code)
         }
