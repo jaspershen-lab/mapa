@@ -46,5 +46,7 @@ globalVariables(names = c(
   "interpretation_result",
   "Description_trans",
   "module_annotation_trans",
-  "translation"
+  "translation",
+  "category",
+  "subcategory"
 ))

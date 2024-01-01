@@ -57,34 +57,36 @@ server <-
       variable_info_old <-
         variable_info()
       if (input$id_type == "ensembl") {
-        colnames(variable_info_old) <- c("ensembl")
-        library(clusterProfiler)
-        library(org.Hs.eg.db)
-        other_id <-
-          tryCatch(
+        tryCatch({
+          colnames(variable_info_old) <- c("ensembl")
+          library(clusterProfiler)
+          library(org.Hs.eg.db)
+          other_id <-
             clusterProfiler::bitr(
               variable_info_old$ensembl,
               fromType = "ENSEMBL",
               toType = c("UNIPROT", "ENTREZID", "SYMBOL"),
               OrgDb = org.Hs.eg.db
-            ),
-            error = function(e) {
-              data.frame(
-                ENSEMBL = variable_info_old$ensembl,
-                UNIPROT = NA,
-                ENTREZID = NA,
-                SYMBOL = NA
-              )
-            }
-          )
-        ### remove duplicated rows
-        other_id <-
-          dplyr::distinct(other_id, ENSEMBL, .keep_all = TRUE)
-        variable_info_old <-
-          dplyr::left_join(variable_info_old,
-                           other_id, by = c("ensembl" = "ENSEMBL"))
-        colnames(variable_info_old) <-
-          c("ensembl", "uniprot", "entrezid", "symbol")
+            )
+
+          ### remove duplicated rows
+          other_id <-
+            dplyr::distinct(other_id, ENSEMBL, .keep_all = TRUE)
+          variable_info_old <-
+            dplyr::left_join(variable_info_old,
+                             other_id, by = c("ensembl" = "ENSEMBL"))
+          colnames(variable_info_old) <-
+            c("ensembl", "uniprot", "entrezid", "symbol")
+
+        },
+        error = function(e) {
+          showModal(modalDialog(
+            title = "Error",
+            paste("Details:", e$message),
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          ))
+        })
 
         ####save code
         upload_data_code <-
@@ -110,35 +112,44 @@ server <-
           )
       }
       if (input$id_type == "uniprot") {
-        # browser()
-        colnames(variable_info_old) <- c("uniprot")
-        library(clusterProfiler)
-        library(org.Hs.eg.db)
-        other_id <-
-          tryCatch(
-            clusterProfiler::bitr(
-              variable_info_old$uniprot,
-              fromType = "UNIPROT",
-              toType = c("ENSEMBL", "ENTREZID", "SYMBOL"),
-              OrgDb = org.Hs.eg.db
-            ),
-            error = function(e) {
-              data.frame(
-                UNIPROT = variable_info_old$uniprot,
-                ENSEMBL = NA,
-                ENTREZID = NA,
-                SYMBOL = NA
-              )
-            }
-          )
-        # remove duplicated rows
-        other_id <-
-          dplyr::distinct(other_id, UNIPROT, .keep_all = TRUE)
-        variable_info_old <-
-          dplyr::left_join(variable_info_old,
-                           other_id, by = c("uniprot" = "UNIPROT"))
-        colnames(variable_info_old) <-
-          c("uniprot", "ensembl", "entrezid", "symbol")
+        tryCatch({
+          colnames(variable_info_old) <- c("uniprot")
+          library(clusterProfiler)
+          library(org.Hs.eg.db)
+          other_id <-
+            tryCatch(
+              clusterProfiler::bitr(
+                variable_info_old$uniprot,
+                fromType = "UNIPROT",
+                toType = c("ENSEMBL", "ENTREZID", "SYMBOL"),
+                OrgDb = org.Hs.eg.db
+              ),
+              error = function(e) {
+                data.frame(
+                  UNIPROT = variable_info_old$uniprot,
+                  ENSEMBL = NA,
+                  ENTREZID = NA,
+                  SYMBOL = NA
+                )
+              }
+            )
+          # remove duplicated rows
+          other_id <-
+            dplyr::distinct(other_id, UNIPROT, .keep_all = TRUE)
+          variable_info_old <-
+            dplyr::left_join(variable_info_old,
+                             other_id, by = c("uniprot" = "UNIPROT"))
+          colnames(variable_info_old) <-
+            c("uniprot", "ensembl", "entrezid", "symbol")
+        },
+        error = function(e){
+          showModal(modalDialog(
+            title = "Error",
+            paste("Details:", e$message),
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          ))
+        })
 
         ####save code
         upload_data_code <-
@@ -163,35 +174,45 @@ server <-
           )
       }
       if (input$id_type == "entrezid") {
-        colnames(variable_info_old) <- c("entrezid")
-        library(clusterProfiler)
-        library(org.Hs.eg.db)
-        other_id <-
-          tryCatch(
-            clusterProfiler::bitr(
-              variable_info_old$entrezid,
-              fromType = "ENTREZID",
-              toType = c("ENSEMBL", "UNIPROT", "SYMBOL"),
-              OrgDb = org.Hs.eg.db
-            ),
-            error = function(e) {
-              data.frame(
-                ENTREZID = variable_info_old$entrezid,
-                ENSEMBL = NA,
-                UNIPROT = NA,
-                SYMBOL = NA
-              )
-            }
-          )
-        # remove duplicated rows
-        other_id <-
-          dplyr::distinct(other_id, ENTREZID, .keep_all = TRUE)
-        variable_info_old <-
-          dplyr::left_join(variable_info_old,
-                           other_id,
-                           by = c("entrezid" = "ENTREZID"))
-        colnames(variable_info_old) <-
-          c("entrezid", "ensembl", "entrezid", "symbol")
+        tryCatch({
+          colnames(variable_info_old) <- c("entrezid")
+          library(clusterProfiler)
+          library(org.Hs.eg.db)
+          other_id <-
+            tryCatch(
+              clusterProfiler::bitr(
+                variable_info_old$entrezid,
+                fromType = "ENTREZID",
+                toType = c("ENSEMBL", "UNIPROT", "SYMBOL"),
+                OrgDb = org.Hs.eg.db
+              ),
+              error = function(e) {
+                data.frame(
+                  ENTREZID = variable_info_old$entrezid,
+                  ENSEMBL = NA,
+                  UNIPROT = NA,
+                  SYMBOL = NA
+                )
+              }
+            )
+          # remove duplicated rows
+          other_id <-
+            dplyr::distinct(other_id, ENTREZID, .keep_all = TRUE)
+          variable_info_old <-
+            dplyr::left_join(variable_info_old,
+                             other_id,
+                             by = c("entrezid" = "ENTREZID"))
+          colnames(variable_info_old) <-
+            c("entrezid", "ensembl", "entrezid", "symbol")
+        },
+        error = function(e) {
+          showModal(modalDialog(
+            title = "Error",
+            paste("Details:", e$message),
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          ))
+        })
 
         ####save code
         upload_data_code <-
@@ -297,9 +318,6 @@ server <-
       }
     })
 
-
-
-
     ###--------------------------------------------------------------------
     ###step 2 enrich pathways
     ###when the user click submit_enrich_pathways, begin enrich pathways
@@ -337,15 +355,6 @@ server <-
           )
         } else{
           # shinyjs::show("loading")
-
-          # showModal(
-          #   modalDialog(
-          #     title = "Analysis in Progress",
-          #     "Please wait...",
-          #     easyClose = FALSE,
-          #     footer = NULL
-          #   )
-          # )
 
           withProgress(message = 'Analysis in progress...', {
             result <-
@@ -857,15 +866,28 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          plot <-
-            plot_similarity_network(
-              object = enriched_modules(),
-              level = "module",
-              database = "go",
-              degree_cutoff = input$enirched_module_plot_degree_cutoff_go,
-              text = input$enirched_module_plot_text_go,
-              text_all = input$enirched_module_plot_text_all_go
-            )
+          tryCatch(
+            plot <-
+              plot_similarity_network(
+                object = enriched_modules(),
+                level = "module",
+                database = "go",
+                degree_cutoff = input$enirched_module_plot_degree_cutoff_go,
+                text = input$enirched_module_plot_text_go,
+                text_all = input$enirched_module_plot_text_all_go
+              ),
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  "Please check your input parameters.",
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            }
+          )
+
         })
 
         enirched_module_go_plot(plot)
@@ -901,15 +923,27 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          plot <-
-            plot_similarity_network(
-              object = enriched_modules(),
-              level = "module",
-              database = "kegg",
-              degree_cutoff = input$enirched_module_plot_degree_cutoff_kegg,
-              text = input$enirched_module_plot_text_kegg,
-              text_all = input$enirched_module_plot_text_all_kegg
-            )
+          tryCatch(
+            plot <-
+              plot_similarity_network(
+                object = enriched_modules(),
+                level = "module",
+                database = "kegg",
+                degree_cutoff = input$enirched_module_plot_degree_cutoff_kegg,
+                text = input$enirched_module_plot_text_kegg,
+                text_all = input$enirched_module_plot_text_all_kegg
+              ),
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  "Please check your input parameters.",
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            }
+          )
         })
 
         enirched_module_kegg_plot(plot)
@@ -946,15 +980,28 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          plot <-
-            plot_similarity_network(
-              object = enriched_modules(),
-              level = "module",
-              database = "reactome",
-              degree_cutoff = input$enirched_module_plot_degree_cutoff_reactome,
-              text = input$enirched_module_plot_text_reactome,
-              text_all = input$enirched_module_plot_text_all_reactome
-            )
+          tryCatch(
+            plot <-
+              plot_similarity_network(
+                object = enriched_modules(),
+                level = "module",
+                database = "reactome",
+                degree_cutoff = input$enirched_module_plot_degree_cutoff_reactome,
+                text = input$enirched_module_plot_text_reactome,
+                text_all = input$enirched_module_plot_text_all_reactome
+              ),
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  "Please check your input parameters.",
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            }
+          )
+
         })
 
         enirched_module_reactome_plot(plot)
@@ -1152,14 +1199,26 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          plot <-
-            plot_similarity_network(
-              object = enriched_functional_module(),
-              level = "functional_module",
-              degree_cutoff = input$enirched_functional_moduleplot__degree_cutoff,
-              text = input$enirched_functional_module_plot_text,
-              text_all = input$enirched_functional_module_plot_text_all
-            )
+          tryCatch(
+            plot <-
+              plot_similarity_network(
+                object = enriched_functional_module(),
+                level = "functional_module",
+                degree_cutoff = input$enirched_functional_moduleplot__degree_cutoff,
+                text = input$enirched_functional_module_plot_text,
+                text_all = input$enirched_functional_module_plot_text_all
+              ),
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  "Please check your input parameters.",
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            }
+          )
         })
 
         enirched_functional_module_plot(plot)
@@ -1509,14 +1568,18 @@ server <-
     ###--------------------------------------------------------------------
     ###Step 6 Data visualization
     # Observe file upload
+    enriched_functional_module3 <-
+      reactiveVal()
     observeEvent(input$upload_enriched_functional_module, {
       if (!is.null(input$upload_enriched_functional_module$datapath)) {
+        message("Loading data")
         tempEnv <- new.env()
         load(input$upload_enriched_functional_module$datapath,
              envir = tempEnv)
 
         names <- ls(tempEnv)
         # Handle user response
+        enriched_functional_module3(get(names[1], envir = tempEnv))
         enriched_functional_module(get(names[1], envir = tempEnv))
       } else {
         showModal(
@@ -1538,6 +1601,7 @@ server <-
       reactiveVal()
 
     observeEvent(input$generate_barplot, {
+      message("generating barplot")
       if (is.null(enriched_functional_module())) {
         # No enriched functional module available
         showModal(
@@ -1552,23 +1616,33 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          plot <-
-            plot_pathway_bar(
-              object = enriched_functional_module(),
-              top_n = input$barplot_top_n,
-              y_lable_width = input$barplot_y_lable_width,
-              p.adjust.cutoff = input$barplot_p_adjust_cutoff,
-              count.cutoff = input$barplot_count_cutoff,
-              level = input$barplot_level,
-              database = input$barplot_database,
-              line_type = input$line_type,
-              database_color = c(
-                GO = input$barplot_go_color,
-                KEGG = input$barplot_kegg_color,
-                Reactome = input$barplot_reactome_color
+          tryCatch(
+            plot <-
+              plot_pathway_bar(
+                object = enriched_functional_module(),
+                top_n = input$barplot_top_n,
+                y_lable_width = input$barplot_y_lable_width,
+                p.adjust.cutoff = input$barplot_p_adjust_cutoff,
+                count.cutoff = input$barplot_count_cutoff,
+                level = input$barplot_level,
+                database = input$barplot_database,
+                line_type = input$line_type,
+                database_color = c(
+                  GO = input$barplot_go_color,
+                  KEGG = input$barplot_kegg_color,
+                  Reactome = input$barplot_reactome_color
+                ),
+                translation = input$barplot_translation
               ),
-              translation = input$barplot_translation
-            )
+            error = function(e) {
+              showModal(modalDialog(
+                title = "Error",
+                paste("Details:", e$message),
+                easyClose = TRUE,
+                footer = modalButton("Close")
+              ))
+            }
+          )
         })
 
         # shinyjs::hide("loading")
@@ -1710,16 +1784,28 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          plot <-
-            plot_similarity_network(
-              object = enriched_functional_module(),
-              level = input$module_similarity_network_level,
-              database = input$module_similarity_network_database,
-              degree_cutoff = input$module_similarity_network_degree_cutoff,
-              text = input$module_similarity_network_text,
-              text_all = input$module_similarity_network_text_all,
-              translation = input$module_similarity_network_translation
-            )
+          tryCatch(
+            plot <-
+              plot_similarity_network(
+                object = enriched_functional_module(),
+                level = input$module_similarity_network_level,
+                database = input$module_similarity_network_database,
+                degree_cutoff = input$module_similarity_network_degree_cutoff,
+                text = input$module_similarity_network_text,
+                text_all = input$module_similarity_network_text_all,
+                translation = input$module_similarity_network_translation
+              ),
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  "Please check your input parameters.",
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            }
+          )
         })
 
         # shinyjs::hide("loading")
@@ -1914,14 +2000,27 @@ server <-
           # shinyjs::show("loading")
 
           withProgress(message = 'Analysis in progress...', {
-            plot <-
-              plot_module_info(
-                object = enriched_functional_module(),
-                level = input$module_information_level,
-                database = input$module_information_database,
-                module_id = input$module_information_module_id,
-                translation = input$module_information_translation
-              )
+            tryCatch(
+              plot <-
+                plot_module_info(
+                  object = enriched_functional_module(),
+                  level = input$module_information_level,
+                  database = input$module_information_database,
+                  module_id = input$module_information_module_id,
+                  translation = input$module_information_translation
+                ),
+              error = function(e) {
+                showModal(
+                  modalDialog(
+                    title = "Error",
+                    "Please check your input parameters.",
+                    easyClose = TRUE,
+                    footer = modalButton("Close")
+                  )
+                )
+              }
+            )
+
           })
 
           # shinyjs::hide("loading")
@@ -2120,44 +2219,56 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          plot <-
-            plot_relationship_network(
-              object = object(),
-              include_functional_modules = input$relationship_network_include_functional_modules,
-              include_modules = input$relationship_network_include_modules,
-              include_pathways = input$relationship_network_include_pathways,
-              include_molecules = input$relationship_network_include_molecules,
-              functional_module_text = input$relationship_network_functional_module_text,
-              module_text = input$relationship_network_module_text,
-              pathway_text = input$relationship_network_pathway_text,
-              molecule_text = input$relationship_network_molecule_text,
-              circular_plot = input$relationship_network_circular_plot,
-              functional_module_color = input$relationship_network_functional_module_color,
-              module_color = input$relationship_network_module_color,
-              pathway_color = input$relationship_network_pathway_color,
-              molecule_color = input$relationship_network_molecule_color,
-              functional_module_arrange_position = input$relationship_network_functional_module_arrange_position,
-              module_arrange_position = input$relationship_network_module_arrange_position,
-              pathway_arrange_position = input$relationship_network_pathway_arrange_position,
-              molecule_arrange_position = input$relationship_network_molecule_arrange_position,
-              functional_module_position_limits = c(
-                input$relationship_network_functional_module_position_limits[1],
-                input$relationship_network_functional_module_position_limits[2]
+          tryCatch(
+            plot <-
+              plot_relationship_network(
+                object = object(),
+                include_functional_modules = input$relationship_network_include_functional_modules,
+                include_modules = input$relationship_network_include_modules,
+                include_pathways = input$relationship_network_include_pathways,
+                include_molecules = input$relationship_network_include_molecules,
+                functional_module_text = input$relationship_network_functional_module_text,
+                module_text = input$relationship_network_module_text,
+                pathway_text = input$relationship_network_pathway_text,
+                molecule_text = input$relationship_network_molecule_text,
+                circular_plot = input$relationship_network_circular_plot,
+                functional_module_color = input$relationship_network_functional_module_color,
+                module_color = input$relationship_network_module_color,
+                pathway_color = input$relationship_network_pathway_color,
+                molecule_color = input$relationship_network_molecule_color,
+                functional_module_arrange_position = input$relationship_network_functional_module_arrange_position,
+                module_arrange_position = input$relationship_network_module_arrange_position,
+                pathway_arrange_position = input$relationship_network_pathway_arrange_position,
+                molecule_arrange_position = input$relationship_network_molecule_arrange_position,
+                functional_module_position_limits = c(
+                  input$relationship_network_functional_module_position_limits[1],
+                  input$relationship_network_functional_module_position_limits[2]
+                ),
+                module_position_limits = c(
+                  input$relationship_network_module_position_limits[1],
+                  input$relationship_network_module_position_limits[2]
+                ),
+                pathway_position_limits = c(
+                  input$relationship_network_pathway_position_limits[1],
+                  input$relationship_network_pathway_position_limits[2]
+                ),
+                molecule_position_limits = c(
+                  input$relationship_network_molecule_position_limits[1],
+                  input$relationship_network_molecule_position_limits[2]
+                ),
+                translation = input$relationship_network_translation
               ),
-              module_position_limits = c(
-                input$relationship_network_module_position_limits[1],
-                input$relationship_network_module_position_limits[2]
-              ),
-              pathway_position_limits = c(
-                input$relationship_network_pathway_position_limits[1],
-                input$relationship_network_pathway_position_limits[2]
-              ),
-              molecule_position_limits = c(
-                input$relationship_network_molecule_position_limits[1],
-                input$relationship_network_molecule_position_limits[2]
-              ),
-              translation = input$relationship_network_translation
-            )
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  "Please check your input parameters.",
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            }
+          )
         })
 
         # shinyjs::hide("loading")
@@ -2657,7 +2768,6 @@ server <-
     observeEvent(input$generate_report, {
       # Check if enriched_functional_module and llm_interpretation_result are
       #  available
-      # browser()
       if (is.null(enriched_functional_module()) ||
           length(enriched_functional_module()) == 0) {
         showModal(

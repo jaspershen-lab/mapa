@@ -122,10 +122,10 @@ plot_pathway_bar <-
       match.arg(line_type)
 
     if (translation) {
-      if(all(names(object@process_info) != "translate_language")){
+      if (all(names(object@process_info) != "translate_language")) {
         stop("Please use the 'translate_language' function to translate first.")
-      }else{
-        if(length(object@enrichment_go_result) >0){
+      } else{
+        if (length(object@enrichment_go_result) > 0) {
           object@enrichment_go_result@result <-
             object@enrichment_go_result@result %>%
             dplyr::select(-Description) %>%
@@ -133,14 +133,14 @@ plot_pathway_bar <-
         }
 
 
-        if(length(object@enrichment_kegg_result) > 0){
+        if (length(object@enrichment_kegg_result) > 0) {
           object@enrichment_kegg_result@result <-
             object@enrichment_kegg_result@result %>%
             dplyr::select(-Description) %>%
             dplyr::rename(Description = Description_trans)
         }
 
-        if(length(object@enrichment_reactome_result) > 0) {
+        if (length(object@enrichment_reactome_result) > 0) {
           object@enrichment_reactome_result@result <-
             object@enrichment_reactome_result@result %>%
             dplyr::select(-Description) %>%
@@ -148,7 +148,7 @@ plot_pathway_bar <-
         }
 
 
-        if(length(object@merged_pathway_go) > 0){
+        if (length(object@merged_pathway_go) > 0) {
           object@merged_pathway_go$module_result <-
             object@merged_pathway_go$module_result %>%
             dplyr::select(-c(Description, module_annotation)) %>%
@@ -156,7 +156,7 @@ plot_pathway_bar <-
                           module_annotation = module_annotation_trans)
         }
 
-        if(length( object@merged_pathway_kegg) > 0){
+        if (length(object@merged_pathway_kegg) > 0) {
           object@merged_pathway_kegg$module_result <-
             object@merged_pathway_kegg$module_result %>%
             dplyr::select(-c(Description, module_annotation)) %>%
@@ -164,7 +164,7 @@ plot_pathway_bar <-
                           module_annotation = module_annotation_trans)
         }
 
-        if(length(object@merged_pathway_reactome) > 0){
+        if (length(object@merged_pathway_reactome) > 0) {
           object@merged_pathway_reactome$module_result <-
             object@merged_pathway_reactome$module_result %>%
             dplyr::select(-c(Description, module_annotation)) %>%
@@ -172,7 +172,7 @@ plot_pathway_bar <-
                           module_annotation = module_annotation_trans)
         }
 
-        if(length( object@merged_module) >0){
+        if (length(object@merged_module) > 0) {
           object@merged_module$functional_module_result <-
             object@merged_module$functional_module_result %>%
             dplyr::select(-c(Description, module_annotation)) %>%
@@ -216,6 +216,20 @@ plot_pathway_bar <-
           is.null(enrichment_kegg_result) &
           is.null(enrichment_reactome_result)) {
         stop("No enriched pathways for all the datasets")
+      }
+
+      if (!is.null(enrichment_reactome_result)) {
+        if (!is.null(enrichment_kegg_result)) {
+          if (ncol(enrichment_reactome_result) != ncol(enrichment_kegg_result)) {
+            enrichment_reactome_result <-
+              data.frame(
+                enrichment_reactome_result,
+                category = NA,
+                subcategory = NA
+              ) %>%
+              dplyr::select(category, subcategory, dplyr::everything())
+          }
+        }
       }
 
       temp_data <-
@@ -438,7 +452,7 @@ plot_pathway_bar <-
             y = Description,
             xend = log.p,
             yend = Description,
-            alpha = stat(index),
+            alpha = after_stat(index),
             size = after_stat(index),
             color = class
           ),

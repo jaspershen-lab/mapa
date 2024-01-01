@@ -53,3 +53,7 @@
 # mapa 0.1.14
 
 * Update shiny app.
+
+# mapa 0.1.15
+
+* Fix bugs.
