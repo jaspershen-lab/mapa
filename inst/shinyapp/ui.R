@@ -1,3 +1,5 @@
+options(shiny.maxRequestSize = 300*1024^2)
+
 if(!require(tidyverse)){
   install.packages("tidyverse")
   library(tidyverse)
@@ -800,7 +802,7 @@ ui <- dashboardPage(
                       column(4,
                              br(),
                              fluidRow(
-                               column(12,
+                               column(8,
                                       fileInput(inputId = "upload_enriched_functional_module",
                                                 label = tags$span("Upload functional module",
                                                                   shinyBS::bsButton("upload_functional_module_info",
@@ -818,6 +820,13 @@ ui <- dashboardPage(
                                         options = list(container = "body")
                                       )
                                       )
+                               # column(4,
+                               #        actionButton(
+                               #          "submit_upload_functional_module_info",
+                               #          "Submit",
+                               #          class = "btn-primary",
+                               #          style = "background-color: #d83428; color: white;"
+                               #        ))
                                ),
                              fluidRow(
                                column(4,

@@ -13,6 +13,7 @@ server <-
         if (is.null(in_file)) {
           return(NULL)
         }
+        message("reading variable information.")
         # Read the uploaded file based on its type
         if (grepl("\\.csv$", in_file$name)) {
           return(read.csv(in_file$datapath))
@@ -1588,6 +1589,7 @@ server <-
     # Observe file upload
     enriched_functional_module3 <-
       reactiveVal()
+
     observeEvent(input$upload_enriched_functional_module, {
       if (!is.null(input$upload_enriched_functional_module$datapath)) {
         message("Loading data")
@@ -1596,18 +1598,23 @@ server <-
              envir = tempEnv)
 
         names <- ls(tempEnv)
-        # Handle user response
-        enriched_functional_module3(get(names[1], envir = tempEnv))
-        enriched_functional_module(get(names[1], envir = tempEnv))
-      } else {
-        showModal(
-          modalDialog(
-            title = "Error",
-            "The uploaded file should contain exactly one object.",
-            easyClose = TRUE,
-            footer = modalButton("Close")
+
+        if (length(names) == 1) {
+          enriched_functional_module3(get(names[1], envir = tempEnv))
+          # If enriched_functional_module is another reactiveVal, uncomment the next line
+          enriched_functional_module(get(names[1], envir = tempEnv))
+          enriched_functional_module3(get(names[1], envir = tempEnv))
+        } else {
+          message("The .rda file does not contain exactly one object.")
+          showModal(
+            modalDialog(
+              title = "Error",
+              "The uploaded file should contain exactly one object.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
           )
-        )
+        }
       }
     })
 
@@ -1620,12 +1627,12 @@ server <-
 
     observeEvent(input$generate_barplot, {
       message("generating barplot")
-      if (is.null(enriched_functional_module())) {
+      if (is.null(enriched_functional_module3())) {
         # No enriched functional module available
         showModal(
           modalDialog(
             title = "Warning",
-            "No enriched functional module data available. Please complete the previous steps or upload the data",
+            "No enriched functional module data3 available. Please complete the previous steps or upload the data",
             easyClose = TRUE,
             footer = modalButton("Close")
           )
@@ -1784,6 +1791,7 @@ server <-
     # Observe generate module_similarity_network button click
     module_similarity_network <-
       reactiveVal()
+
     module_similarity_network_code <-
       reactiveVal()
 
@@ -1925,6 +1933,7 @@ server <-
     # Update the module ID
     module_information_module_id <-
       reactiveVal()
+
     observe({
       if (!is.null(enriched_functional_module()) &
           length(enriched_functional_module()) != 0) {
@@ -2626,28 +2635,26 @@ server <-
         # shinyjs::show("loading")
 
         withProgress(message = 'Analysis in progress...', {
-          llm_interpretation_result <-
-            tryCatch(
+          tryCatch({
+            llm_interpretation_result <-
               interpret_pathways(
                 object = enriched_functional_module(),
                 p.adjust.cutoff = input$llm_interpretation_p_adjust_cutoff,
                 disease = input$llm_interpretation_disease,
                 count.cutoff = input$llm_interpretation_count_cutoff,
                 top_n = input$llm_interpretation_top_n
-              ),
-              error = function(e) {
-                showModal(modalDialog(
-                  title = "Error",
-                  paste("Details:", e$message),
-                  easyClose = TRUE,
-                  footer = modalButton("Close")
-                ))
-              }
-            )
+              )
+            llm_interpretation_result(llm_interpretation_result)
+          },
+          error = function(e) {
+            showModal(modalDialog(
+              title = "Error",
+              paste("Details:", e$message),
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            ))
+          })
         })
-
-        llm_interpretation_result(llm_interpretation_result)
-
         # shinyjs::hide("loading")
 
         ##save code
