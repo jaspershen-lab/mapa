@@ -1,43 +1,49 @@
-options(shiny.maxRequestSize = 300*1024^2)
+options(shiny.maxRequestSize = 300 * 1024 ^ 2)
 
-if(!require(tidyverse)){
+if (!require(tidyverse)) {
   install.packages("tidyverse")
   library(tidyverse)
 }
-if(!require(shiny)){
+if (!require(shiny)) {
   install.packages("shiny")
   library(shiny)
 }
-if(!require(shinydashboard)){
+if (!require(shinydashboard)) {
   install.packages("shinydashboard")
   library(shinydashboard)
 }
-if(!require(shinyjs)){
+if (!require(shinyjs)) {
   install.packages("shinyjs")
   library(shinyjs)
 }
-if(!require(shinyBS)){
+if (!require(shinyBS)) {
   install.packages("shinyBS")
   library(shinyBS)
 }
-if(!require(patchwork)){
+if (!require(patchwork)) {
   install.packages("patchwork")
   library(patchwork)
 }
-if(!require(shinyWidgets)){
+if (!require(shinyWidgets)) {
   install.packages("shinyWidgets")
   library(shinyWidgets)
 }
-if(!require(markdown)){
+if (!require(markdown)) {
   install.packages("markdown")
   library(markdown)
 }
-if(!require(massdataset)){
+if (!require(massdataset)) {
   remotes::install_github("tidymass/massdataset")
 }
-if(!require(mapa)){
+if (!require(mapa)) {
   remotes::install_github("jaspershen/mapa")
   library(mapa)
+}
+
+if (!require(extrafont)) {
+  install.packages("extrafont")
+  library(extrafont)
+  extrafont::loadfonts()
 }
 
 ui <- dashboardPage(
@@ -159,7 +165,7 @@ ui <- dashboardPage(
                   column(4,
                     fileInput(
                       "variable_info",
-                      "Choose file",
+                      "Choose marker information",
                       accept = c(
                         "text/csv",
                         "text/comma-separated-values,text/plain",
@@ -203,13 +209,18 @@ ui <- dashboardPage(
                     style = "border-right: 1px solid #ddd; padding-right: 20px;"
                   ),
                   column(8,
-                    shiny::dataTableOutput("variable_info"),
-                    br(),
-                    shinyjs::useShinyjs(),
-                    downloadButton("download_variable_info",
-                                   "Download",
-                                   class = "btn-primary",
-                                   style = "background-color: #d83428; color: white;")
+                         tabsetPanel(
+                           tabPanel(
+                             title = "Marker information",
+                             shiny::dataTableOutput("variable_info"),
+                             br(),
+                             shinyjs::useShinyjs(),
+                             downloadButton("download_variable_info",
+                                            "Download",
+                                            class = "btn-primary",
+                                            style = "background-color: #d83428; color: white;")
+                           )
+                         )
                   )
                 )
               )),
@@ -777,15 +788,17 @@ ui <- dashboardPage(
                       style = "border-right: 1px solid #ddd; padding-right: 20px;"
                     ),
                     column(8,
-                           tabPanel(
-                             title = "R object",
-                             verbatimTextOutput("enriched_functional_module_object2"),
-                             br(),
-                             shinyjs::useShinyjs(),
-                             downloadButton("download_enriched_functional_module_object2",
-                                            "Download",
-                                            class = "btn-primary",
-                                            style = "background-color: #d83428; color: white;")
+                           tabsetPanel(
+                             tabPanel(
+                               title = "R object",
+                               verbatimTextOutput("enriched_functional_module_object2"),
+                               br(),
+                               shinyjs::useShinyjs(),
+                               downloadButton("download_enriched_functional_module_object2",
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
+                             )
                            )
                     )
                   )))
@@ -820,13 +833,6 @@ ui <- dashboardPage(
                                         options = list(container = "body")
                                       )
                                       )
-                               # column(4,
-                               #        actionButton(
-                               #          "submit_upload_functional_module_info",
-                               #          "Submit",
-                               #          class = "btn-primary",
-                               #          style = "background-color: #d83428; color: white;"
-                               #        ))
                                ),
                              fluidRow(
                                column(4,
@@ -834,9 +840,9 @@ ui <- dashboardPage(
                                         inputId = "barplot_level",
                                         label = "Level",
                                         choices = c(
-                                          "Pathway" = "pathway",
+                                          "FM" = "functional_module",
                                           "Module" = "module",
-                                          "FM" = "functional_module"),
+                                          "Pathway" = "pathway"),
                                         selected = "functional_module")
                                       ),
                                column(4,
@@ -927,57 +933,50 @@ ui <- dashboardPage(
                                column(4,
                                       selectInput("barplot_type", "Type",
                                                   choices = c("pdf", "png", "jpeg"))
-                                      ),
+                               ),
                                column(4,
                                       numericInput("barplot_width", "Width",
-                                                   value = 7, min = 4, max = 20)),
+                                                   value = 7, min = 4, max = 20)
+
+                               ),
                                column(4,
                                       numericInput("barplot_height", "Height",
-                                                   value = 7, min = 4, max = 20))
+                                                   value = 7, min = 4, max = 20)
+
+                               )
                              ),
                              fluidRow(
                                column(12,
-                                      shinyjs::useShinyjs(),
+                                      actionButton("generate_barplot",
+                                                   "Generate plot",
+                                                   class = "btn-primary",
+                                                   style = "background-color: #d83428; color: white;"),
                                       downloadButton("download_barplot",
                                                      "Download",
                                                      class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;"),
+                                                     style = "background-color: #d83428; color: white;")
+                                      )
+                             ),
+                             br(),
+                             fluidRow(
+                               column(12,
                                       actionButton(
                                         "go2llm_interpretation_1",
                                         "Next",
                                         class = "btn-primary",
-                                        style = "background-color: #d83428; color: white;"
-                                      ))
+                                        style = "background-color: #d83428; color: white;"),
+                                      actionButton(
+                                        "show_barplot_code",
+                                        "Code",
+                                        class = "btn-primary",
+                                        style = "background-color: #d83428; color: white;")
+                               )
                              ),
                              style = "border-right: 1px solid #ddd; padding-right: 20px;"
                              ),
                       column(8,
-                             shinyWidgets::dropdownButton(
-                               sliderInput("barplot_width_show",
-                                           "Width (pixels)",
-                                           min = 300, max = 1000, value = 800),
-                               # Input: Slider for height
-                               sliderInput("barplot_height_show",
-                                           "Height (pixels)",
-                                           min = 300, max = 1000, value = 600),
-                               circle = TRUE,
-                               status = "danger",
-                               icon = icon("gear"),
-                               width = "200px"
-                             ),
-                             shiny::plotOutput("barplot",
-                                               width = "auto", height = "auto"),
                              br(),
-                             actionButton("generate_barplot",
-                                          "Generate plot",
-                                          class = "btn-primary",
-                                          style = "background-color: #d83428; color: white;"),
-
-                             actionButton(
-                               "show_barplot_code",
-                               "Code",
-                               class = "btn-primary",
-                               style = "background-color: #d83428; color: white;")
+                             shiny::plotOutput("barplot")
                              )
                     )
                   ),
@@ -1010,8 +1009,9 @@ ui <- dashboardPage(
                                       selectInput(
                                         "module_similarity_network_level",
                                         "Level",
-                                        choices = c("Module" = "module",
-                                                    "FM" = "functional_module"),
+                                        choices = c(
+                                          "FM" = "functional_module",
+                                          "Module" = "module"),
                                         selected = "functional_module")
                                )
                              ),
@@ -1041,32 +1041,38 @@ ui <- dashboardPage(
                              fluidRow(
                                column(12,
                                       shinyjs::useShinyjs(),
+                                      actionButton("generate_module_similarity_network",
+                                                   "Generate plot",
+                                                   class = "btn-primary",
+                                                   style = "background-color: #d83428; color: white;"),
+                                      shinyjs::useShinyjs(),
                                       downloadButton("download_module_similarity_network",
                                                      "Download",
                                                      class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;"),
+                                                     style = "background-color: #d83428; color: white;")
+                               )
+                             ),
+                             br(),
+                             fluidRow(
+                               column(12,
                                       actionButton(
                                         "go2llm_interpretation_2",
                                         "Next",
                                         class = "btn-primary",
                                         style = "background-color: #d83428; color: white;"
-                                      )
+                                      ),
+                                      actionButton(
+                                        "show_module_similarity_network_code",
+                                        "Code",
+                                        class = "btn-primary",
+                                        style = "background-color: #d83428; color: white;")
                                       )
                                ),
                              style = "border-right: 1px solid #ddd; padding-right: 20px;"
                       ),
                       column(8,
-                             shiny::plotOutput("module_similarity_network"),
                              br(),
-                             actionButton("generate_module_similarity_network",
-                                          "Generate plot",
-                                          class = "btn-primary",
-                                          style = "background-color: #d83428; color: white;"),
-                             actionButton(
-                               "show_module_similarity_network_code",
-                               "Code",
-                               class = "btn-primary",
-                               style = "background-color: #d83428; color: white;")
+                             shiny::plotOutput("module_similarity_network")
                       )
                     )
                   ),
@@ -1080,8 +1086,9 @@ ui <- dashboardPage(
                                       selectInput(
                                         "module_information_level",
                                         "Level",
-                                        choices = c("Module" = "module",
-                                                    "FM" = "functional_module"),
+                                        choices = c(
+                                          "FM" = "functional_module",
+                                          "Module" = "module"),
                                         selected = "functional_module")
                                       ),
                                column(6,
@@ -1113,21 +1120,36 @@ ui <- dashboardPage(
                                ),
                                column(4,
                                       numericInput("module_information_width", "Width",
-                                                   value = 21, min = 4, max = 30)),
+                                                   value = 7, min = 4, max = 30)),
                                column(4,
                                       numericInput("module_information_height", "Height",
-                                                   value = 7, min = 4, max = 20))
+                                                   value = 21, min = 4, max = 20))
                              ),
                              fluidRow(
                                column(12,
                                       shinyjs::useShinyjs(),
+                                      actionButton("generate_module_information",
+                                                   "Generate plot",
+                                                   class = "btn-primary",
+                                                   style = "background-color: #d83428; color: white;"),
                                       downloadButton("download_module_information",
                                                      "Download",
                                                      class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;"),
+                                                     style = "background-color: #d83428; color: white;")
+                               )
+                             ),
+                             br(),
+                             fluidRow(
+                               column(12,
+                                      shinyjs::useShinyjs(),
                                       actionButton(
                                         "go2llm_interpretation_3",
                                         "Next",
+                                        class = "btn-primary",
+                                        style = "background-color: #d83428; color: white;"),
+                                      actionButton(
+                                        "show_module_information_code",
+                                        "Code",
                                         class = "btn-primary",
                                         style = "background-color: #d83428; color: white;")
                                       )
@@ -1135,17 +1157,10 @@ ui <- dashboardPage(
                              style = "border-right: 1px solid #ddd; padding-right: 20px;"
                       ),
                       column(8,
-                             shiny::plotOutput("module_information"),
                              br(),
-                             actionButton("generate_module_information",
-                                          "Generate plot",
-                                          class = "btn-primary",
-                                          style = "background-color: #d83428; color: white;"),
-                             actionButton(
-                               "show_module_information_code",
-                               "Code",
-                               class = "btn-primary",
-                               style = "background-color: #d83428; color: white;")
+                             shiny::plotOutput("module_information1"),
+                             shiny::plotOutput("module_information2"),
+                             shiny::plotOutput("module_information3")
                       )
                     )
                   ),
@@ -1173,8 +1188,9 @@ ui <- dashboardPage(
                                       selectInput(
                                         "relationship_network_level",
                                         "Filter Level",
-                                        choices = c("Module" = "module",
-                                                    "FM" = "functional_module"),
+                                        choices = c(
+                                          "FM" = "functional_module",
+                                          "Module" = "module"),
                                         selected = "functional_module")
                                       ),
                                column(6,
@@ -1370,33 +1386,38 @@ ui <- dashboardPage(
                              ),
                              fluidRow(
                                column(12,
+                                      actionButton("generate_relationship_network",
+                                                   "Generate plot",
+                                                   class = "btn-primary",
+                                                   style = "background-color: #d83428; color: white;"),
                                       shinyjs::useShinyjs(),
                                       downloadButton("download_relationship_network",
                                                      "Download",
                                                      class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;"),
+                                                     style = "background-color: #d83428; color: white;")
+                               )
+                             ),
+                             br(),
+                             fluidRow(
+                               column(12,
                                       actionButton(
                                         "go2llm_interpretation_4",
                                         "Next",
                                         class = "btn-primary",
-                                        style = "background-color: #d83428; color: white;")
+                                        style = "background-color: #d83428; color: white;"),
+                                      actionButton(
+                                        "show_relationship_network_code",
+                                        "Code",
+                                        class = "btn-primary",
+                                        style = "background-color: #d83428; color: white;"
+                                      )
                                       )
                              ),
                              style = "border-right: 1px solid #ddd; padding-right: 20px;"
                       ),
                       column(8,
-                             shiny::plotOutput("relationship_network"),
                              br(),
-                             actionButton("generate_relationship_network",
-                                          "Generate plot",
-                                          class = "btn-primary",
-                                          style = "background-color: #d83428; color: white;"),
-                             actionButton(
-                               "show_relationship_network_code",
-                               "Code",
-                               class = "btn-primary",
-                               style = "background-color: #d83428; color: white;"
-                             )
+                             shiny::plotOutput("relationship_network")
                       )
                     )
                   )
@@ -1532,7 +1553,11 @@ ui <- dashboardPage(
                            style = "border-right: 1px solid #ddd; padding-right: 20px;"
                            ),
                     column(8,
-                           uiOutput("mapa_report")
+                           tabsetPanel(
+                             tabPanel(
+                               title = "Report",
+                               uiOutput("mapa_report")
+                               ))
                            )
                   )
                   )

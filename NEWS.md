@@ -57,3 +57,7 @@
 # mapa 0.1.15
 
 * Fix bugs.
+
+# mapa 0.1.16
+
+* Fix bugs.

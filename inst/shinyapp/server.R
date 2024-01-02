@@ -1587,8 +1587,8 @@ server <-
     ###--------------------------------------------------------------------
     ###Step 6 Data visualization
     # Observe file upload
-    enriched_functional_module3 <-
-      reactiveVal()
+    # enriched_functional_module3 <-
+    #   reactiveVal()
 
     observeEvent(input$upload_enriched_functional_module, {
       if (!is.null(input$upload_enriched_functional_module$datapath)) {
@@ -1600,10 +1600,8 @@ server <-
         names <- ls(tempEnv)
 
         if (length(names) == 1) {
-          enriched_functional_module3(get(names[1], envir = tempEnv))
           # If enriched_functional_module is another reactiveVal, uncomment the next line
           enriched_functional_module(get(names[1], envir = tempEnv))
-          enriched_functional_module3(get(names[1], envir = tempEnv))
         } else {
           message("The .rda file does not contain exactly one object.")
           showModal(
@@ -1627,7 +1625,7 @@ server <-
 
     observeEvent(input$generate_barplot, {
       message("generating barplot")
-      if (is.null(enriched_functional_module3())) {
+      if (is.null(enriched_functional_module())) {
         # No enriched functional module available
         showModal(
           modalDialog(
@@ -1710,7 +1708,7 @@ server <-
             input$barplot_y_lable_width,
             input$barplot_p_adjust_cutoff,
             input$barplot_count_cutoff,
-            input$barplot_level,
+            paste0('"', input$barplot_level, '"'),
             barplot_database,
             paste0('"', input$line_type, '"'),
             data_color
@@ -1725,13 +1723,19 @@ server <-
       renderPlot({
         req(barplot())
         barplot()
-      },
-      width = function() {
-        input$barplot_width_show
-      },
-      height = function() {
-        input$barplot_height_show
       })
+
+    # output$barplot <-
+    #   renderPlot({
+    #     req(barplot())
+    #     barplot()
+    #   },
+    #   width = function() {
+    #     input$barplot_width_show
+    #   },
+    #   height = function() {
+    #     input$barplot_height_show
+    #   })
 
     output$download_barplot <-
       downloadHandler(
@@ -1782,8 +1786,6 @@ server <-
         ))
       }
     })
-
-
 
 
 
@@ -1868,38 +1870,6 @@ server <-
         module_similarity_network()
       })
 
-    output$download_module_similarity_network <-
-      downloadHandler(
-        filename = function() {
-          paste0(
-            "module_similarity_network_",
-            ifelse(
-              input$module_similarity_network_level == "module",
-              input$module_similarity_network_database,
-              "functional_module"
-            ),
-            ".",
-            input$module_similarity_network_type
-          )
-        },
-        content = function(file) {
-          ggsave(
-            file,
-            plot = barplot(),
-            width = input$module_similarity_network_width,
-            height = input$module_similarity_network_height
-          )
-        }
-      )
-
-    observe({
-      if (is.null(module_similarity_network()) ||
-          length(module_similarity_network()) == 0) {
-        shinyjs::disable("download_module_similarity_network")
-      } else {
-        shinyjs::enable("download_module_similarity_network")
-      }
-    })
 
     ######code for module_similarity_network
     ####show code
@@ -1927,6 +1897,42 @@ server <-
         ))
       }
     })
+
+
+    output$download_module_similarity_network <-
+      downloadHandler(
+        filename = function() {
+          paste0(
+            "module_similarity_network_",
+            ifelse(
+              input$module_similarity_network_level == "module",
+              input$module_similarity_network_database,
+              "functional_module"
+            ),
+            ".",
+            input$module_similarity_network_type
+          )
+        },
+        content = function(file) {
+          ggsave(
+            file,
+            plot = module_similarity_network(),
+            width = input$module_similarity_network_width,
+            height = input$module_similarity_network_height
+          )
+        }
+      )
+
+    observe({
+      if (is.null(module_similarity_network()) ||
+          length(module_similarity_network()) == 0) {
+        shinyjs::disable("download_module_similarity_network")
+      } else {
+        shinyjs::enable("download_module_similarity_network")
+      }
+    })
+
+
 
 
     ########module information plot
@@ -1997,6 +2003,12 @@ server <-
     # Observe generate module information button click
     module_information <-
       reactiveVal()
+    module_information1 <-
+      reactiveVal()
+    module_information2 <-
+      reactiveVal()
+    module_information3 <-
+      reactiveVal()
     module_information_code <-
       reactiveVal()
 
@@ -2051,11 +2063,14 @@ server <-
           })
 
           # shinyjs::hide("loading")
+          plot_all <-
+            plot[[1]] + plot[[2]] + plot[[3]] +
+            patchwork::plot_layout(ncol = 1)
 
-          plot <-
-            plot[[1]] + plot[[2]] + plot[[3]]
-
-          module_information(plot)
+          module_information(plot_all)
+          module_information1(plot[[1]])
+          module_information2(plot[[2]])
+          module_information3(plot[[3]])
 
           ###save code
           module_information_code <-
@@ -2084,34 +2099,23 @@ server <-
         module_information()
       })
 
-    output$download_module_information <-
-      downloadHandler(
-        filename = function() {
-          paste0(
-            "module_information_",
-            input$module_information_module_id,
-            ".",
-            input$module_information_type
-          )
-        },
-        content = function(file) {
-          ggsave(
-            file,
-            plot = barplot(),
-            width = input$module_information_width,
-            height = input$module_information_height
-          )
-        }
-      )
+    output$module_information1 <-
+      renderPlot({
+        req(module_information1())
+        module_information1()
+      })
 
-    observe({
-      if (is.null(module_information()) ||
-          length(module_information()) == 0) {
-        shinyjs::disable("download_module_information")
-      } else {
-        shinyjs::enable("download_module_information")
-      }
-    })
+    output$module_information2 <-
+      renderPlot({
+        req(module_information2())
+        module_information2()
+      })
+
+    output$module_information3 <-
+      renderPlot({
+        req(module_information3())
+        module_information3()
+      })
 
     ######code for module_information
     ####show code
@@ -2141,8 +2145,37 @@ server <-
     })
 
 
-    #####relationship network plot
+    output$download_module_information <-
+      downloadHandler(
+        filename = function() {
+          paste0(
+            "module_information_",
+            input$module_information_module_id,
+            ".",
+            input$module_information_type
+          )
+        },
+        content = function(file) {
+          ggsave(
+            file,
+            plot = module_information(),
+            width = input$module_information_width,
+            height = input$module_information_height
+          )
+        }
+      )
 
+    observe({
+      if (is.null(module_information1()) ||
+          length(module_information1()) == 0) {
+        shinyjs::disable("download_module_information")
+      } else {
+        shinyjs::enable("download_module_information")
+      }
+    })
+
+
+    #####relationship network plot
     # Update the module ID
     observe({
       if (!is.null(enriched_functional_module()) &
@@ -2442,6 +2475,34 @@ server <-
         relationship_network()
       })
 
+    ######code for relationship_network
+    ####show code
+    observeEvent(input$show_relationship_network_code, {
+      if (is.null(relationship_network_code()) ||
+          length(relationship_network_code()) == 0) {
+        showModal(
+          modalDialog(
+            title = "Warning",
+            "No available code",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          )
+        )
+      } else{
+        code_content <-
+          relationship_network_code()
+        code_content <-
+          paste(code_content, collapse = "\n")
+        showModal(modalDialog(
+          title = "Code",
+          tags$pre(code_content),
+          easyClose = TRUE,
+          footer = modalButton("Close")
+        ))
+      }
+    })
+
+
     output$download_relationship_network <-
       downloadHandler(
         filename = function() {
@@ -2470,34 +2531,6 @@ server <-
         shinyjs::enable("download_relationship_network")
       }
     })
-
-    ######code for relationship_network
-    ####show code
-    observeEvent(input$show_relationship_network_code, {
-      if (is.null(relationship_network_code()) ||
-          length(relationship_network_code()) == 0) {
-        showModal(
-          modalDialog(
-            title = "Warning",
-            "No available code",
-            easyClose = TRUE,
-            footer = modalButton("Close")
-          )
-        )
-      } else{
-        code_content <-
-          relationship_network_code()
-        code_content <-
-          paste(code_content, collapse = "\n")
-        showModal(modalDialog(
-          title = "Code",
-          tags$pre(code_content),
-          easyClose = TRUE,
-          footer = modalButton("Close")
-        ))
-      }
-    })
-
 
 
     ###Go to llm intepretation tab
@@ -2653,6 +2686,7 @@ server <-
               easyClose = TRUE,
               footer = modalButton("Close")
             ))
+            llm_interpretation_result("No result")
           })
         })
         # shinyjs::hide("loading")
@@ -2832,7 +2866,7 @@ server <-
 
               report_functional_module(
                 object = enriched_functional_module(),
-                interpretation_result = interpretation_result(),
+                interpretation_result = llm_interpretation_result(),
                 path = report_path,
                 type = "html"
               )
