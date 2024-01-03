@@ -292,6 +292,11 @@ merge_pathways_internal <-
       dplyr::filter(Count > count.cutoff) %>%
       dplyr::arrange(p.adjust)
 
+    if (database == "go"){
+      result <-
+        dplyr::filter(result, ONTOLOGY != "CC")
+    }
+
     if (nrow(result) == 0) {
       return(NULL)
     }
@@ -300,10 +305,17 @@ merge_pathways_internal <-
     message("Calculating similartiy matrix, it may take a while...")
     if (database == "go") {
       sim_matrix <-
-        get_go_result_sim(
-          result = result,
-          sim.cutoff = sim.cutoff,
-          measure.method = measure.method
+        tryCatch(
+          get_go_result_sim(
+            result = dplyr::filter(result, ONTOLOGY != "CC"),
+            sim.cutoff = sim.cutoff,
+            measure.method = measure.method
+          ),
+          error = function(x) {
+            data.frame(name1 = character(),
+                       name2 = character(),
+                       sim = numeric())
+          }
         )
     }
 
@@ -379,7 +391,7 @@ merge_pathways_internal <-
     subnetwork <-
       suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data,
                                                         weights = abs(igraph::edge_attr(graph_data,
-                                                                                "sim"))))
+                                                                                        "sim"))))
 
     # save(subnetwork, file = file.path(path, "subnetwork"))
     cluster <-

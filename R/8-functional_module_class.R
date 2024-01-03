@@ -76,11 +76,15 @@ setMethod(
           nrow(
             enrichment_go_result@result %>%
               dplyr::filter(
-                p.adjust < object@process_info$enrich_pathway@parameter$pvalueCutoff
+                p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
+                  Count > object@process_info$merge_pathways@parameter$count.cutoff.go &
+                  ONTOLOGY != "CC"
               )
           ),
-          "GO terms p.adjust <",
-          object@process_info$enrich_pathway@parameter$pvalueCutoff
+          "GO terms (BP and MF) with p.adjust <",
+          object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
+          "and Count >",
+          object@process_info$merge_pathways@parameter$count.cutoff.go
         )
       )
     }
@@ -103,11 +107,14 @@ setMethod(
           nrow(
             enrichment_kegg_result@result %>%
               dplyr::filter(
-                p.adjust < object@process_info$enrich_pathway@parameter$pvalueCutoff
+                p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg &
+                  Count > object@process_info$merge_pathways@parameter$count.cutoff.kegg
               )
           ),
-          "KEGG pathways p.adjust <",
-          object@process_info$enrich_pathway@parameter$pvalueCutoff
+          "KEGG pathways with p.adjust <",
+          object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg,
+          "and Count >",
+          object@process_info$merge_pathways@parameter$count.cutoff.kegg
         )
       )
     }
@@ -130,11 +137,14 @@ setMethod(
           nrow(
             enrichment_reactome_result@result %>%
               dplyr::filter(
-                p.adjust < object@process_info$enrich_pathway@parameter$pvalueCutoff
+                p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome &
+                  Count > object@process_info$merge_pathways@parameter$count.cutoff.reactome
               )
           ),
-          "Reactome pathways p.adjust <",
-          object@process_info$enrich_pathway@parameter$pvalueCutoff
+          "Reactome pathways with p.adjust <",
+          object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome,
+          "and Count >",
+          object@process_info$merge_pathways@parameter$count.cutoff.reactome
         )
       )
     }

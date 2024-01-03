@@ -1,8 +1,8 @@
 Package: mapa
 Type: Package
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.1.16
-Date: 2024-01-01
+Version: 0.1.17
+Date: 2024-01-03
 Authors@R: c(
     person(given = "Xiaotao",
            family = "Shen",
@@ -18,8 +18,7 @@ Description: Moudule Annotation for Pathway Enrichment Analysis Result.
 URL: https://github.com/jaspershen/mapa
 BugReports: https://github.com/jaspershen/mapa/issues
 Depends: 
-    R (>= 4.1),
-    massdataset
+    R (>= 4.1)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -55,7 +54,8 @@ Imports:
     stringr,
     tidygraph,
     ggwordcloud,
-    rmarkdown
+    rmarkdown,
+    massdataset
 Suggests: 
     knitr,
     BiocStyle,
