@@ -76,15 +76,18 @@ setMethod(
           nrow(
             enrichment_go_result@result %>%
               dplyr::filter(
-                p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
-                  Count > object@process_info$merge_pathways@parameter$count.cutoff.go &
+                p.adjust < tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
+                                    error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}) &
+                  Count > tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.go,
+                                   error = function(e) {object@process_info$enrich_pathway@parameter$pvalueCutoff}) &
                   ONTOLOGY != "CC"
               )
           ),
           "GO terms (BP and MF) with p.adjust <",
-          object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
+          tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
+                   error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}),
           "and Count >",
-          object@process_info$merge_pathways@parameter$count.cutoff.go
+          tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.go, error = function(e) {0})
         )
       )
     }
@@ -107,14 +110,17 @@ setMethod(
           nrow(
             enrichment_kegg_result@result %>%
               dplyr::filter(
-                p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg &
-                  Count > object@process_info$merge_pathways@parameter$count.cutoff.kegg
+                p.adjust < tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg,
+                                    error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}) &
+                  Count > tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.kegg,
+                                   error = function(e) {object@process_info$enrich_pathway@parameter$pvalueCutoff})
               )
           ),
           "KEGG pathways with p.adjust <",
-          object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg,
+          tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg,
+                   error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}),
           "and Count >",
-          object@process_info$merge_pathways@parameter$count.cutoff.kegg
+          tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.kegg, error = function(e) {0})
         )
       )
     }
@@ -137,14 +143,17 @@ setMethod(
           nrow(
             enrichment_reactome_result@result %>%
               dplyr::filter(
-                p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome &
-                  Count > object@process_info$merge_pathways@parameter$count.cutoff.reactome
+                p.adjust < tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome,
+                                    error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}) &
+                  Count > tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.reactome,
+                                   error = function(e) {object@process_info$enrich_pathway@parameter$pvalueCutoff})
               )
           ),
           "Reactome pathways with p.adjust <",
-          object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome,
+          tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome,
+                   error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}),
           "and Count >",
-          object@process_info$merge_pathways@parameter$count.cutoff.reactome
+          tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.reactome, error = function(e) {0})
         )
       )
     }

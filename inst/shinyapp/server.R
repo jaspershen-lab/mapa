@@ -2037,7 +2037,7 @@ server <-
           )
         } else{
           # shinyjs::show("loading")
-
+          # browser()
           withProgress(message = 'Analysis in progress...', {
             tryCatch(
               plot <-
@@ -2063,14 +2063,26 @@ server <-
           })
 
           # shinyjs::hide("loading")
-          plot_all <-
-            plot[[1]] + plot[[2]] + plot[[3]] +
-            patchwork::plot_layout(ncol = 1)
+          if (is(plot, "ggplot")) {
+            plot_all <-
+              plot + plot + plot +
+              patchwork::plot_layout(ncol = 1)
 
-          module_information(plot_all)
-          module_information1(plot[[1]])
-          module_information2(plot[[2]])
-          module_information3(plot[[3]])
+            module_information(plot_all)
+            module_information1(plot)
+            module_information2(plot)
+            module_information3(plot)
+          } else{
+            plot_all <-
+              plot[[1]] + plot[[2]] + plot[[3]] +
+              patchwork::plot_layout(ncol = 1)
+
+            module_information(plot_all)
+            module_information1(plot[[1]])
+            module_information2(plot[[2]])
+            module_information3(plot[[3]])
+          }
+
 
           ###save code
           module_information_code <-

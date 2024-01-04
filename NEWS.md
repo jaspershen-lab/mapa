@@ -65,3 +65,7 @@
 # mapa 0.1.17
 
 * Fix bugs.
+
+# mapa 0.1.18
+
+* Fix bugs for shiny app.
