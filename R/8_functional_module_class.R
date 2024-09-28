@@ -27,25 +27,34 @@ setClass(
   )
 )
 
-# a validity method to enforce that `enrichment_go_result` is either a enrichResult or a NULL
+# a validity method to enforce that `enrichment_go_result` is either a enrichResult, gseaResult or a NULL
 setValidity("functional_module", function(object) {
   if (!(
     is(object@enrichment_go_result, "enrichResult") ||
+    is(object@enrichment_go_result, "gseaResult") ||
     is.null(object@enrichment_go_result)
   )) {
-    return("The 'enrichment_go_result' slot must be either a enrichResult or a NULL.")
+    return(
+      "The 'enrichment_go_result' slot must be either a enrichResult, gseaResult or a NULL."
+    )
   }
   if (!(
     is(object@enrichment_kegg_result, "enrichResult") ||
+    is(object@enrichment_kegg_result, "gseaResult") ||
     is.null(object@enrichment_kegg_result)
   )) {
-    return("The 'enrichment_kegg_result' slot must be either a enrichResult or a NULL.")
+    return(
+      "The 'enrichment_kegg_result' slot must be either a enrichResult, gseaResult or a NULL."
+    )
   }
   if (!(
     is(object@enrichment_reactome_result, "enrichResult") ||
+    is(object@enrichment_reactome_result, "gseaResult") ||
     is.null(object@enrichment_reactome_result)
   )) {
-    return("The 'enrichment_reactome_result' slot must be either a enrichResult or a NULL.")
+    return(
+      "The 'enrichment_reactome_result' slot must be either a enrichResult, gseaResult or a NULL."
+    )
   }
   TRUE
 })
@@ -63,33 +72,80 @@ setMethod(
     parameter <-
       try(object@parameter, silent = TRUE)
 
+    ###pathway enrichment or gsea
+    if ("enrich_pathway" %in% names(object@process_info)) {
+      analysis_type <- "enrich_pathway"
+    } else{
+      analysis_type <- "do_gse"
+    }
+
+    cat(crayon::yellow(paste(rep("-", 20), collapse = ""), "\n"))
+    cat(crayon::green("Analysis method:", analysis_type, "\n"))
+    cat(crayon::yellow(paste(rep("-", 20), collapse = ""), "\n"))
+
     message(crayon::green("-----------Variable information------------"))
     message(crayon::green(nrow(object@variable_info)),
-            crayon::green(" markers in total"))
+            crayon::green(" features/markers in total"))
+
+
+    p.adjust.cutoff <-
+      tryCatch(
+        object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
+        error = function(e) {
+          tryCatch(
+            object@process_info$enrich_pathway@parameter$pvalueCutoff,
+            error = function(e) {
+              object@process_info$do_gse@parameter$pvalueCutoff
+            }
+          )
+        }
+      )
+
+    count.cutoff <-
+      tryCatch(
+        object@process_info$merge_pathways@parameter$count.cutoff.go,
+        error = function(e) {
+          tryCatch(
+            object@process_info$enrich_pathway@parameter$pvalueCutoff,
+            error = function(e) {
+              object@process_info$do_gse@parameter$pvalueCutoff
+            }
+          )
+        }
+      )
 
     message(crayon::green("-----------GO------------"))
     if (is.null(enrichment_go_result)) {
       message(crayon::green('No GO results'))
     } else{
-      message(
-        crayon::green(
+      if (analysis_type == "enrich_pathway") {
+        message(
+          crayon::green(
+            nrow(
+              enrichment_go_result@result %>%
+                dplyr::filter(
+                  p.adjust < p.adjust.cutoff &
+                    Count > count.cutoff &
+                    ONTOLOGY != "CC"
+                )
+            ),
+            "GO terms (BP and MF) with p.adjust <",
+            p.adjust.cutoff,
+            "and Count >",
+            count.cutoff.go
+          )
+        )
+      } else{
+        message(crayon::green(
           nrow(
             enrichment_go_result@result %>%
-              dplyr::filter(
-                p.adjust < tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
-                                    error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}) &
-                  Count > tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.go,
-                                   error = function(e) {object@process_info$enrich_pathway@parameter$pvalueCutoff}) &
-                  ONTOLOGY != "CC"
-              )
+              dplyr::filter(p.adjust < p.adjust.cutoff &
+                              ONTOLOGY != "CC")
           ),
           "GO terms (BP and MF) with p.adjust <",
-          tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
-                   error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}),
-          "and Count >",
-          tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.go, error = function(e) {0})
-        )
-      )
+          p.adjust.cutoff
+        ))
+      }
     }
 
     if (length(object@merged_pathway_go) == 0) {
@@ -105,24 +161,30 @@ setMethod(
     if (is.null(enrichment_kegg_result)) {
       message(crayon::green('No KEGG results'))
     } else{
-      message(
-        crayon::green(
+      if (analysis_type == "enrich_pathway") {
+        message(
+          crayon::green(
+            nrow(
+              enrichment_kegg_result@result %>%
+                dplyr::filter(p.adjust < p.adjust.cutoff &
+                                Count > count.cutoff)
+            ),
+            "KEGG pathways with p.adjust <",
+            p.adjust.cutoff,
+            "and Count >",
+            count.cutoff
+          )
+        )
+      } else{
+        message(crayon::green(
           nrow(
             enrichment_kegg_result@result %>%
-              dplyr::filter(
-                p.adjust < tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg,
-                                    error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}) &
-                  Count > tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.kegg,
-                                   error = function(e) {object@process_info$enrich_pathway@parameter$pvalueCutoff})
-              )
+              dplyr::filter(p.adjust < p.adjust.cutoff)
           ),
           "KEGG pathways with p.adjust <",
-          tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg,
-                   error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}),
-          "and Count >",
-          tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.kegg, error = function(e) {0})
-        )
-      )
+          p.adjust.cutoff
+        ))
+      }
     }
 
     if (length(object@merged_pathway_kegg) == 0) {
@@ -138,24 +200,30 @@ setMethod(
     if (is.null(enrichment_reactome_result)) {
       message(crayon::green('No Reactome results'))
     } else{
-      message(
-        crayon::green(
+      if (analysis_type == "enrich_pathway") {
+        message(
+          crayon::green(
+            nrow(
+              enrichment_reactome_result@result %>%
+                dplyr::filter(p.adjust < p.adjust.cutoff &
+                                Count > count.cutoff)
+            ),
+            "Reactome pathways with p.adjust <",
+            p.adjust.cutoff,
+            "and Count >",
+            count.cutoff
+          )
+        )
+      } else{
+        message(crayon::green(
           nrow(
             enrichment_reactome_result@result %>%
-              dplyr::filter(
-                p.adjust < tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome,
-                                    error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}) &
-                  Count > tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.reactome,
-                                   error = function(e) {object@process_info$enrich_pathway@parameter$pvalueCutoff})
-              )
+              dplyr::filter(p.adjust < p.adjust.cutoff)
           ),
           "Reactome pathways with p.adjust <",
-          tryCatch(object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome,
-                   error = function(e){object@process_info$enrich_pathway@parameter$pvalueCutoff}),
-          "and Count >",
-          tryCatch(object@process_info$merge_pathways@parameter$count.cutoff.reactome, error = function(e) {0})
-        )
-      )
+          p.adjust.cutoff
+        ))
+      }
     }
 
     if (length(object@merged_pathway_reactome) == 0) {

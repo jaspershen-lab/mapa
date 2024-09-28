@@ -69,3 +69,7 @@
 # mapa 0.1.18
 
 * Fix bugs for shiny app.
+
+# mapa 0.1.19
+
+* Add GSEA methods.

@@ -270,7 +270,7 @@ get_jaccard_index_for_three_databases <-
             module_result_kegg,
             module_result_reactome)
 
-    if(is.null(met_data)){
+    if (is.null(met_data)) {
       return(data.frame(
         name1 = character(),
         name2 = character(),
@@ -331,8 +331,7 @@ get_jaccard_index_for_three_databases <-
 
 
 
-arrange_coords <- function(coords,
-                           ratio = 0.95) {
+arrange_coords <- function(coords, ratio = 0.95) {
   coords <-
     coords %>%
     plyr::dlply(.variables = .(class)) %>%
@@ -408,6 +407,7 @@ arrange_coords <- function(coords,
 #'   "ensembl", "symbol", "uniprot", and "entrezid". Each of these columns should have
 #'   at least one non-NA value.
 #'
+#' @param order_by A character specifying the column to order by.
 #' @return This function does not return any value. It stops execution and throws an
 #'   error if any of the required conditions are not met.
 #'
@@ -425,7 +425,24 @@ arrange_coords <- function(coords,
 #' check_variable_info(variable_info)
 
 check_variable_info <-
-  function(variable_info) {
+  function(variable_info, order_by = NULL) {
+    ###check order_by
+    if (!is.null(order_by)) {
+      if (!is.character(order_by)) {
+        stop("order_by should be character")
+      }
+
+      if (all(!order_by %in% colnames(variable_info))) {
+        stop("order_by should be in the variable_info")
+      }
+
+      ####the order by column should be numeric and should no any NA values
+      if (any(is.na(variable_info[, order_by, drop = TRUE]))) {
+        stop("order_by column should not have any NA values")
+      }
+
+    }
+
     if (all(colnames(variable_info) != "ensembl")) {
       stop("ensembl should be in the variable_info")
     } else{
@@ -483,9 +500,7 @@ check_variable_info <-
 get_go_result_sim <-
   function(result,
            sim.cutoff = 0,
-           measure.method = c("Wang", "Resnik",
-                              "Rel", "Jiang",
-                              "Lin", "TCSS")) {
+           measure.method = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS")) {
     measure.method <-
       match.arg(measure.method)
 
