@@ -252,6 +252,7 @@ remove_words <-
 #' @param module_result_go A data frame containing module results from GO database.
 #' @param module_result_kegg A data frame containing module results from KEGG database.
 #' @param module_result_reactome A data frame containing module results from Reactome database.
+#' @param analysis_type Character, type of analysis to perform: either `"enrich_pathway"` or `"do_gsea"`.
 #'
 #' @return A data frame with the Jaccard index values between all pairs of modules across the three databases.
 #'
@@ -262,8 +263,11 @@ get_jaccard_index_for_three_databases <-
   function(variable_info,
            module_result_go,
            module_result_kegg,
-           module_result_reactome) {
+           module_result_reactome,
+           analysis_type = c("enrich_pathway", "do_gsea")) {
     check_variable_info(variable_info)
+
+    analysis_type <- match.arg(analysis_type)
 
     met_data <-
       rbind(module_result_go,
@@ -286,9 +290,17 @@ get_jaccard_index_for_three_databases <-
       ))
     }
 
+    if (analysis_type == "do_gsea") {
+      met_data <-
+        met_data %>%
+        dplyr::rename(geneID = core_enrichment) %>%
+        dplyr::mutate(geneID = stringr::str_replace(geneID, ";", "/"))
+    }
+
     temp_data <-
       met_data$geneID %>%
       stringr::str_split("/") %>%
+      unique() %>%
       purrr::map(function(x) {
         if (stringr::str_detect(x[1], "ENSG")) {
           return(x)

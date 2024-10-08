@@ -76,7 +76,7 @@ setMethod(
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
     } else{
-      analysis_type <- "do_gse"
+      analysis_type <- "do_gsea"
     }
 
     cat(crayon::yellow(paste(rep("-", 20), collapse = ""), "\n"))

@@ -20,7 +20,6 @@
 #' @importFrom tidygraph activate tbl_graph centrality_degree as_tbl_graph
 #' @importFrom stringr str_wrap str_split str_replace_all str_sort str_detect
 #' @importFrom ggwordcloud geom_text_wordcloud
-#' @importFrom GOSim getGOGraph
 #' @importFrom grid arrow
 #' @importFrom extrafont loadfonts
 #' @importFrom igraph bipartite_mapping edge_attr membership upgrade_graph vertex_attr

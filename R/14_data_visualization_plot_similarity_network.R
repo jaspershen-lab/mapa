@@ -1,6 +1,6 @@
 # setwd(r4projects::get_project_wd())
-# source("R/6-utils.R")
-# source("R/8-functional_module_class.R")
+# source("R/6_utils.R")
+# source("R/8_functional_module_class.R")
 # setwd("demo_data/")
 # load("enriched_functional_module.rda")
 #
