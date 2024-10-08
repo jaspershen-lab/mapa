@@ -132,7 +132,7 @@ setMethod(
             "GO terms (BP and MF) with p.adjust <",
             p.adjust.cutoff,
             "and Count >",
-            count.cutoff.go
+            count.cutoff
           )
         )
       } else{
