@@ -72,5 +72,5 @@
 
 # mapa 0.1.19
 
-* Add GSEA methods.
+* Added GSEA methods.
 * Fixed one bug in the show function.
