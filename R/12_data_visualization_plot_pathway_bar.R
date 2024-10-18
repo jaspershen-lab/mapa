@@ -12,7 +12,7 @@
 # plot_pathway_bar(
 #   object = enriched_functional_module,
 #   top_n = 10,
-#   y_lable_width = 30,
+#   y_label_width = 30,
 #   level = "pathway",
 #   translation = TRUE
 # )
@@ -20,7 +20,7 @@
 # plot_pathway_bar(
 #   object = enriched_functional_module,
 #   top_n = 10,
-#   y_lable_width = 30,
+#   y_label_width = 30,
 #   level = "pathway",
 #   translation = TRUE
 # )
@@ -28,21 +28,21 @@
 # plot_pathway_bar(
 #   object = enriched_functional_module,
 #   top_n = 10,
-#   y_lable_width = 30,
+#   y_label_width = 30,
 #   level = "module"
 # )
 #
 # plot_pathway_bar(
 #   object = enriched_functional_module,
 #   top_n = 10,
-#   y_lable_width = 30,
+#   y_label_width = 30,
 #   level = "functional_module"
 # )
 #
 # plot_pathway_bar(
 #   object = enriched_functional_module,
 #   top_n = 10,
-#   y_lable_width = 30,
+#   y_label_width = 30,
 #   level = "functional_module",
 #   line_type = "meteor"
 # )
@@ -50,45 +50,45 @@
 #
 #
 ######GSEA analysis
-setwd(r4projects::get_project_wd())
-setwd("demo_data/covid_data/")
-load("result/enriched_functional_module")
-
-object <-
-  enriched_functional_module
-
-library(showtext)
-showtext_auto(enable = TRUE)
-
-plot_pathway_bar(
-  object = enriched_functional_module,
-  top_n = 10,
-  y_lable_width = 30,
-  level = "pathway",
-  translation = FALSE
-)
-
-plot_pathway_bar(
-  object = enriched_functional_module,
-  top_n = 10,
-  y_lable_width = 30,
-  level = "module"
-)
-
-plot_pathway_bar(
-  object = enriched_functional_module,
-  top_n = 10,
-  y_lable_width = 30,
-  level = "functional_module"
-)
-
-plot_pathway_bar(
-  object = enriched_functional_module,
-  top_n = 10,
-  y_lable_width = 30,
-  level = "functional_module",
-  line_type = "meteor"
-)
+# setwd(r4projects::get_project_wd())
+# setwd("demo_data/covid_data/")
+# load("result/enriched_functional_module")
+#
+# object <-
+#   enriched_functional_module
+#
+# library(showtext)
+# showtext_auto(enable = TRUE)
+#
+# plot_pathway_bar(
+#   object = enriched_functional_module,
+#   top_n = 10,
+#   y_label_width = 30,
+#   level = "pathway",
+#   translation = FALSE
+# )
+#
+# plot_pathway_bar(
+#   object = enriched_functional_module,
+#   top_n = 10,
+#   y_label_width = 30,
+#   level = "module"
+# )
+#
+# plot_pathway_bar(
+#   object = enriched_functional_module,
+#   top_n = 10,
+#   y_label_width = 30,
+#   level = "functional_module"
+# )
+#
+# plot_pathway_bar(
+#   object = enriched_functional_module,
+#   top_n = 10,
+#   y_label_width = 30,
+#   level = "functional_module",
+#   line_type = "meteor"
+# )
 
 
 
@@ -99,7 +99,7 @@ plot_pathway_bar(
 #'
 #' @param object An object containing the enrichment results and other relevant data.
 #' @param top_n An integer specifying the top N pathways to display.
-#' @param y_lable_width An integer specifying the width of the Y-axis labels.
+#' @param y_label_width An integer specifying the width of the Y-axis labels.
 #' @param translation translation or not.
 #' @param level A character string specifying the level of analysis.
 #' One of "pathway", "module", or "functional_module".
@@ -120,14 +120,14 @@ plot_pathway_bar(
 #' plot_pathway_bar(
 #'   object = enriched_functional_module,
 #'   top_n = 10,
-#'   y_lable_width = 30,
+#'   y_label_width = 30,
 #'   level = "pathway"
 #' )
 #'
 #' plot_pathway_bar(
 #'   object = enriched_functional_module,
 #'   top_n = 10,
-#'   y_lable_width = 30,
+#'   y_label_width = 30,
 #'   level = "pathway",
 #'   line_type = "meteor"
 #' )
@@ -147,7 +147,7 @@ plot_pathway_bar(
 plot_pathway_bar <-
   function(object,
            top_n = 10,
-           y_lable_width = 50,
+           y_label_width = 50,
            translation = FALSE,
            level = c("pathway", "module", "functional_module"),
            line_type = c("straight", "meteor"),
@@ -473,7 +473,7 @@ plot_pathway_bar <-
       plot4pathway_enrichment(
         line_type = line_type,
         analysis_type = analysis_type,
-        y_lable_width = y_lable_width,
+        y_label_width = y_label_width,
         database_color = database_color
       )
 
@@ -484,7 +484,7 @@ plot_pathway_bar <-
 plot4pathway_enrichment <-
   function(line_type = c("straight", "meteor"),
            analysis_type = c("enrich_pathway", "do_gsea"),
-           y_lable_width = 50,
+           y_label_width = 50,
            database_color =
              c(
                GO = "#1F77B4FF",
@@ -508,7 +508,7 @@ plot4pathway_enrichment <-
           ggplot(aes(log.p, Description)) +
           scale_y_discrete(
             labels = function(x)
-              stringr::str_wrap(x, width = y_lable_width)
+              stringr::str_wrap(x, width = y_label_width)
           ) +
           scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
           geom_segment(
@@ -549,7 +549,7 @@ plot4pathway_enrichment <-
           ggplot(aes(NES, Description)) +
           scale_y_discrete(
             labels = function(x)
-              stringr::str_wrap(x, width = y_lable_width)
+              stringr::str_wrap(x, width = y_label_width)
           ) +
           scale_x_continuous(expand = expansion(mult = c(0.1, 0.1))) +
           geom_segment(
@@ -594,7 +594,7 @@ plot4pathway_enrichment <-
           ggplot(aes(log.p, Description)) +
           scale_y_discrete(
             labels = function(x)
-              str_wrap(x, width = y_lable_width)
+              str_wrap(x, width = y_label_width)
           ) +
           scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
           # geom_segment(aes(
@@ -660,7 +660,7 @@ plot4pathway_enrichment <-
           ggplot(aes(NES, Description)) +
           scale_y_discrete(
             labels = function(x)
-              str_wrap(x, width = y_lable_width)
+              str_wrap(x, width = y_label_width)
           ) +
           scale_x_continuous(expand = expansion(mult = c(0.1, 0.1))) +
           ggforce::geom_link(

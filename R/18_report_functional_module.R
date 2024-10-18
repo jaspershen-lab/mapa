@@ -131,7 +131,7 @@ report_functional_module <-
         top_n = 10,
         p.adjust.cutoff = 0.05,
         count.cutoff = 5,
-        y_lable_width = 30,
+        y_label_width = 30,
         level = "functional_module"
       ) +
       labs(title = "Functional module")
@@ -142,7 +142,7 @@ report_functional_module <-
         top_n = 10,
         p.adjust.cutoff = 0.05,
         count.cutoff = 5,
-        y_lable_width = 30,
+        y_label_width = 30,
         level = "module"
       ) +
       labs(title = "Module")
@@ -153,7 +153,7 @@ report_functional_module <-
         top_n = 10,
         p.adjust.cutoff = 0.05,
         count.cutoff = 5,
-        y_lable_width = 30,
+        y_label_width = 30,
         level = "pathway"
       ) +
       labs(title = "Pathway")

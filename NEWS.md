@@ -74,3 +74,7 @@
 
 * Added GSEA methods.
 * Fixed one bug in the show function.
+
+# mapa 0.1.20
+
+* Fixed one typo.
