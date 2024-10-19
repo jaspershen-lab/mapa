@@ -18,7 +18,8 @@ Description: Moudule Annotation for Pathway Enrichment Analysis Result.
 URL: https://github.com/jaspershen/mapa
 BugReports: https://github.com/jaspershen/mapa/issues
 Depends: 
-    R (>= 4.1)
+    R (>= 4.1),
+    massdataset
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -53,8 +54,7 @@ Imports:
     stringr,
     tidygraph,
     ggwordcloud,
-    rmarkdown,
-    massdataset
+    rmarkdown
 Suggests: 
     knitr,
     BiocStyle,
@@ -63,10 +63,8 @@ Suggests:
     tidyverse,
     testthat (>= 3.0.0),
     ggplotify,
-    plotly,
-    pRoloc,
     shiny,
     org.Hs.eg.db
 Remotes: 
-    github::tidymass/massdataset
+    gitlab::tidymass/massdataset
 Config/testthat/edition: 3

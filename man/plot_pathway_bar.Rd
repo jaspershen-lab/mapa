@@ -7,7 +7,7 @@
 plot_pathway_bar(
   object,
   top_n = 10,
-  y_lable_width = 50,
+  y_label_width = 50,
   translation = FALSE,
   level = c("pathway", "module", "functional_module"),
   line_type = c("straight", "meteor"),
@@ -22,7 +22,7 @@ plot_pathway_bar(
 
 \item{top_n}{An integer specifying the top N pathways to display.}
 
-\item{y_lable_width}{An integer specifying the width of the Y-axis labels.}
+\item{y_label_width}{An integer specifying the width of the Y-axis labels.}
 
 \item{translation}{translation or not.}
 
@@ -49,18 +49,19 @@ This function plots a bar chart representing enriched pathways, modules, or func
 The bars are colored according to the database of origin.
 }
 \examples{
+\dontrun{
 data("enriched_functional_module", package = "mapa")
 plot_pathway_bar(
   object = enriched_functional_module,
   top_n = 10,
-  y_lable_width = 30,
+  y_label_width = 30,
   level = "pathway"
 )
 
 plot_pathway_bar(
   object = enriched_functional_module,
   top_n = 10,
-  y_lable_width = 30,
+  y_label_width = 30,
   level = "pathway",
   line_type = "meteor"
 )
@@ -75,6 +76,7 @@ plot_pathway_bar(
   level = "functional_module",
   p.adjust.cutoff = 0.05
 )
+}
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}

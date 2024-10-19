@@ -48,5 +48,11 @@ globalVariables(names = c(
   "module_annotation_trans",
   "translation",
   "category",
-  "subcategory"
+  "subcategory",
+  "NES",
+  "core_enrichment",
+  "enrichmentScore",
+  "leading_edge",
+  "setSize",
+  "temp_data"
 ))

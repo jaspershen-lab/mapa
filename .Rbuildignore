@@ -14,3 +14,9 @@ docs
 docs/
 
 _pkgdown.yml
+
+^.mapa.Rproj.baiduyun.uploading.cfg$
+^data/.enriched_functional_module.rda.baiduyun.uploading.cfg$
+
+^.*\.baiduyun\.uploading\.cfg$
+

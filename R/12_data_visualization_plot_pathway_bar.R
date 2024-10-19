@@ -116,6 +116,7 @@
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #'
 #' @examples
+#' \dontrun{
 #' data("enriched_functional_module", package = "mapa")
 #' plot_pathway_bar(
 #'   object = enriched_functional_module,
@@ -142,6 +143,7 @@
 #'   level = "functional_module",
 #'   p.adjust.cutoff = 0.05
 #' )
+#' }
 #'@export
 
 plot_pathway_bar <-

@@ -484,9 +484,23 @@ merge_pathways_internal <-
 #'
 #' @examples
 #' \dontrun{
-#' sim_matrix <- data.frame(name1 = c("A", "B", "C"), name2 = c("B", "C", "A"), sim = c(0.6, 0.7, 0.8))
-#' result <- data.frame(ID = c("P1", "P2", "P3"), p.adjust = c(0.01, 0.05, 0.03), Description = c("Pathway 1", "Pathway 2", "Pathway 3"))
-#' modules <- identify_modules(sim_matrix, "enrich_pathway", result, sim.cutoff = 0.5, save_to_local = FALSE)
+#' sim_matrix <- data.frame(
+#'   name1 = c("A", "B", "C"),
+#'   name2 = c("B", "C", "A"),
+#'   sim = c(0.6, 0.7, 0.8)
+#' )
+#' result <- data.frame(
+#'   ID = c("P1", "P2", "P3"),
+#'   p.adjust = c(0.01, 0.05, 0.03),
+#'   Description = c("Pathway 1", "Pathway 2", "Pathway 3")
+#' )
+#' modules <- identify_modules(
+#'   sim_matrix,
+#'   "enrich_pathway",
+#'   result,
+#'   sim.cutoff = 0.5,
+#'   save_to_local = FALSE
+#' )
 #' }
 #'
 #' @importFrom dplyr rename filter select mutate count arrange everything left_join case_when distinct

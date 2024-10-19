@@ -40,9 +40,20 @@ The function first constructs a graph using the similarity matrix and node data,
 }
 \examples{
 \dontrun{
-sim_matrix <- data.frame(name1 = c("A", "B", "C"), name2 = c("B", "C", "A"), value = c(0.6, 0.7, 0.8))
-node_data <- data.frame(module = c("M1", "M2", "M3"), p.adjust = c(0.01, 0.05, 0.03))
-result <- identify_functional_modules(sim_matrix, node_data, sim.cutoff = 0.5, save_to_local = FALSE)
+sim_matrix <-
+  data.frame(
+    name1 = c("A", "B", "C"),
+    name2 = c("B", "C", "A"),
+    value = c(0.6, 0.7, 0.8)
+  )
+node_data <-
+  data.frame(module = c("M1", "M2", "M3"),
+             p.adjust = c(0.01, 0.05, 0.03))
+result <-
+  identify_functional_modules(sim_matrix,
+                              node_data,
+                              sim.cutoff = 0.5,
+                              save_to_local = FALSE)
 }
 
 }
