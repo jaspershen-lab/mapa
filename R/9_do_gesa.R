@@ -12,8 +12,8 @@
 # variable_info <-
 #   covid_data %>%
 #   massdataset::activate_mass_dataset(what = "variable_info") %>%
-#   massdataset::extract_variable_info() %>%
-#   dplyr::arrange(desc(fc))
+#   massdataset::extract_variable_info() #%>%
+#   #dplyr::arrange(desc(fc))
 #
 # plot(log(variable_info$fc, 2))
 #
@@ -38,7 +38,7 @@
 #     readable = FALSE,
 #     pool = FALSE
 #   )
-#
+
 # gsea_pathways
 #
 # dir.create("covid_data/result", showWarnings = FALSE)
@@ -167,21 +167,30 @@ do_gsea <-
     #####check variable_info
     check_variable_info(variable_info = variable_info, order_by = order_by)
 
+    variable_info <-
+      variable_info %>%
+      dplyr::filter(!is.na(entrezid)) %>%
+      dplyr::group_by(entrezid) %>%
+      dplyr::mutate(order_by = max(.data[[order_by]])) %>%
+      dplyr::ungroup() %>%
+      dplyr::distinct(entrezid, .keep_all = TRUE)
+
+    gene_list <-
+      log(variable_info$order_by, 2)
+
+    names(gene_list) <-
+      variable_info$entrezid
+
     ###go enrichment
     if ("go" %in% database) {
       message("GO database...")
       if (missing(OrgDb)) {
         stop("OrgDb is required")
       }
-      gene_list <-
-        log(variable_info[, order_by, drop = TRUE], 2)
-
-      names(gene_list) <-
-        variable_info$entrezid
 
       gsea_go_result <-
         clusterProfiler::gseGO(
-          geneList = gene_list,
+          geneList = sort(gene_list, decreasing = TRUE),
           ont = ont,
           OrgDb = OrgDb,
           keyType = keyType,
@@ -203,17 +212,11 @@ do_gsea <-
     if ("kegg" %in% database) {
       message("kegg database...")
 
-      gene_list <-
-        log(variable_info[, order_by, drop = TRUE], 2)
-
-      names(gene_list) <-
-        variable_info$uniprot
-
       gsea_kegg_result <-
         clusterProfiler::gseKEGG(
-          geneList = gene_list,
+          geneList = sort(gene_list, decreasing = TRUE),
           organism = organism,
-          keyType = "uniprot",
+          keyType = "kegg",
           exponent = exponent,
           minGSSize = minGSSize,
           maxGSSize = maxGSSize,
@@ -246,15 +249,9 @@ do_gsea <-
         )
       message("Reactome database...")
 
-      gene_list <-
-        log(variable_info[, order_by, drop = TRUE], 2)
-
-      names(gene_list) <-
-        variable_info$entrezid
-
       gsea_reactome_result <-
         ReactomePA::gsePathway(
-          geneList = gene_list,
+          geneList = sort(gene_list, decreasing = TRUE),
           organism = organism2,
           exponent = exponent,
           minGSSize = minGSSize,

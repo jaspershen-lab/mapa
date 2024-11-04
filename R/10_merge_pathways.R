@@ -42,7 +42,7 @@
 #     sim.cutoff.go = 0.5,
 #     sim.cutoff.kegg = 0.5,
 #     sim.cutoff.reactome = 0.5,
-#     measure.method.go = "Wang",
+#     measure.method.go = "Sim_XGraSM_2013",
 #     measure.method.kegg = "jaccard",
 #     measure.method.reactome = "jaccard",
 #     path = "result",
@@ -80,13 +80,13 @@
 # sim.cutoff.go = 0.5
 # sim.cutoff.kegg = 0.5
 # sim.cutoff.reactome = 0.5
-# measure.method.go = "Wang"
+# measure.method.go = "Sim_XGraSM_2013"
 # measure.method.kegg = "jaccard"
 # measure.method.reactome = "jaccard"
 # path = "result"
 # save_to_local = FALSE
 #
-# enriched_modules <-
+# gsea_enriched_modules <-
 #   merge_pathways(
 #     object = gsea_pathways,
 #     p.adjust.cutoff.go = 0.05,
@@ -98,7 +98,7 @@
 #     sim.cutoff.go = 0.5,
 #     sim.cutoff.kegg = 0.5,
 #     sim.cutoff.reactome = 0.5,
-#     measure.method.go = "Wang",
+#     measure.method.go = "Sim_XGraSM_2013",
 #     measure.method.kegg = "jaccard",
 #     measure.method.reactome = "jaccard",
 #     path = "result",
@@ -127,9 +127,9 @@
 #' @param sim.cutoff.go Similarity cutoff for GO database. Default is 0.5.
 #' @param sim.cutoff.kegg Similarity cutoff for KEGG database. Default is 0.5.
 #' @param sim.cutoff.reactome Similarity cutoff for Reactome database. Default is 0.5.
-#' @param measure.method.go A character vector specifying the similarity measure method for GO. Choices are "Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard". Default is "Wang".
-#' @param measure.method.kegg A character vector specifying the similarity measure method for KEGG. Default is "jaccard".
-#' @param measure.method.reactome A character vector specifying the similarity measure method for Reactome. Default is "jaccard".
+#' @param measure.method.go A character vector specifying the similarity measure method for GO. Choices are "Sim_XGraSM_2013", "Sim_Resnik_1999", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_Lin_1998", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Wang_2007","Sim_GOGO_2018". Default is "Sim_XGraSM_2013".
+#' @param measure.method.kegg A character vector specifying the similarity measure method for KEGG. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
+#' @param measure.method.reactome A character vector specifying the similarity measure method for Reactome. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #' @param path Directory path to save the results. Default is "result".
 #' @param save_to_local Logical, if TRUE the results will be saved to local disk.
 #'
@@ -150,9 +150,9 @@ merge_pathways <-
            sim.cutoff.go = 0.5,
            sim.cutoff.kegg = 0.5,
            sim.cutoff.reactome = 0.5,
-           measure.method.go = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
-           measure.method.kegg = c("jaccard"),
-           measure.method.reactome = c("jaccard"),
+           measure.method.go = c("Sim_XGraSM_2013", "Sim_Resnik_1999", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_Lin_1998", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Wang_2007","Sim_GOGO_2018"),
+           measure.method.kegg = c("jaccard", "dice", "overlap", "kappa"),
+           measure.method.reactome = c("jaccard", "dice", "overlap", "kappa"),
            path = "result",
            save_to_local = FALSE) {
 
@@ -326,7 +326,7 @@ merge_pathways_internal <-
            count.cutoff = 5,
            database = c("go", "kegg", "reactome"),
            sim.cutoff = 0.5,
-           measure.method = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
+           measure.method = c("Sim_XGraSM_2013", "Sim_Resnik_1999", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_Lin_1998", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Wang_2007","Sim_GOGO_2018", "jaccard", "dice", "overlap", "kappa"),
            path = "result",
            save_to_local = FALSE) {
 
@@ -403,7 +403,8 @@ merge_pathways_internal <-
       sim_matrix <-
         tryCatch(
           sim_matrix <-
-            simplifyEnrichment::term_similarity_from_KEGG(term_id = c(result$ID), method = "jaccard") %>%
+            term_similarity_KEGG(term_id = c(result$ID),
+                                 measure.method = measure.method) %>%
             as.data.frame() %>%
             tibble::rownames_to_column(var = "name1") %>%
             tidyr::pivot_longer(
@@ -424,7 +425,8 @@ merge_pathways_internal <-
       sim_matrix <-
         tryCatch(
           sim_matrix <-
-            simplifyEnrichment::term_similarity_from_Reactome(term_id = c(result$ID), method = "jaccard") %>%
+            term_similarity_Reactome(term_id = c(result$ID),
+                                     measure.method = measure.method) %>%
             as.data.frame() %>%
             tibble::rownames_to_column(var = "name1") %>%
             tidyr::pivot_longer(
