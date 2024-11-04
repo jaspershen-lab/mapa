@@ -102,7 +102,7 @@
 #     measure.method.kegg = "jaccard",
 #     measure.method.reactome = "jaccard",
 #     path = "result",
-#     save_to_local = TRUE
+#     save_to_local = FALSE
 #   )
 #
 # save(enriched_modules, file = "result/enriched_modules")

@@ -609,18 +609,20 @@ get_go_result_sim <-
   }
 
 
-#' Similarity calculation between KEGG pathways
+#' @title Similarity calculation between KEGG pathways
+#'
+#' @note This function was adapted from term_similarity__from_KEGG() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
+#'
+#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#'
+#' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
 #'
 #' @param term_id Character, KEGG pathway IDs
 #' @param measure.method Character, method for calculating the semantic similarity
-#' for KEGG terms
-#'   (default: c("jaccard", "dice", "overlap", "kappa")).
+#' for KEGG terms, Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #'
 #' @return A symmetric matrix
 #'
-#' Add citation
-#'
-#' @examples
 term_similarity_KEGG <- function(term_id, measure.method) {
 
   measure.method <- match.arg(measure.method)
@@ -642,18 +644,20 @@ term_similarity_KEGG <- function(term_id, measure.method) {
 }
 
 
-#' Similarity calculation between Reactome terms
+#' @title Similarity calculation between Reactome terms
+#'
+#' @note This function was adapted from term_similarity__from_Reactome() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
+#'
+#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#'
+#' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
 #'
 #' @param term_id Character, Reactome term IDs
 #' @param measure.method Character, method for calculating the semantic similarity
-#' for Reactome terms
-#'   (default: c("jaccard", "dice", "overlap", "kappa")).
+#' for Reactome terms, Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #'
 #' @return A symmetric matrix
 #'
-#' Add citation
-#'
-#' @examples
 term_similarity_Reactome <- function(term_id, measure.method) {
 
   measure.method <- match.arg(measure.method)
@@ -666,10 +670,17 @@ term_similarity_Reactome <- function(term_id, measure.method) {
 }
 
 
-#' Similarity calculation between pathways.
+#' @title Similarity calculation between pathways.
 #'
+#' @description
 #' This function allows for the execution of measurement of semantic similarity
 #' among KEGG and Reactome terms based on the overlap of genes.
+#'
+#' @note This function was adapted from term_similarity() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
+#'
+#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#'
+#' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
 #'
 #' @param gl Named list, genes that are in the enriched pathways.
 #' @param measure.method Character, method for calculating the semantic similarity
@@ -678,10 +689,6 @@ term_similarity_Reactome <- function(term_id, measure.method) {
 #'
 #' @return A symmetric matrix.
 #'
-#' Add citation
-#'
-#'
-#' @examples
 term_similarity_internal <-
   function(gl,
            measure.method = c("jaccard", "dice", "overlap", "kappa"),
