@@ -27,13 +27,13 @@
 #
 # load("result/enriched_modules")
 #
-# enriched_functional_module <-
+# gsea_enriched_functional_module <-
 #   merge_modules(
-#     object = enriched_modules,
+#     object = gsea_enriched_modules,
 #     sim.cutoff = 0.5,
 #     measure_method = c("jaccard"),
 #     path = "result",
-#     save_to_local = TRUE
+#     save_to_local = FALSE
 #   )
 #
 # save(enriched_functional_module, file = "result/enriched_functional_module")

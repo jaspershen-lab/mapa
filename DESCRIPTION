@@ -54,7 +54,9 @@ Imports:
     stringr,
     tidygraph,
     ggwordcloud,
-    rmarkdown
+    rmarkdown,
+    Matrix,
+    proxyC
 Suggests: 
     knitr,
     BiocStyle,

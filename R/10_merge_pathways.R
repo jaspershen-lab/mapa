@@ -42,7 +42,7 @@
 #     sim.cutoff.go = 0.5,
 #     sim.cutoff.kegg = 0.5,
 #     sim.cutoff.reactome = 0.5,
-#     measure.method.go = "Wang",
+#     measure.method.go = "Sim_Wang_2007",
 #     measure.method.kegg = "jaccard",
 #     measure.method.reactome = "jaccard",
 #     path = "result",
@@ -80,13 +80,13 @@
 # sim.cutoff.go = 0.5
 # sim.cutoff.kegg = 0.5
 # sim.cutoff.reactome = 0.5
-# measure.method.go = "Wang"
+# measure.method.go = "Sim_Wang_2007"
 # measure.method.kegg = "jaccard"
 # measure.method.reactome = "jaccard"
 # path = "result"
 # save_to_local = FALSE
 #
-# enriched_modules <-
+# gsea_enriched_modules <-
 #   merge_pathways(
 #     object = gsea_pathways,
 #     p.adjust.cutoff.go = 0.05,
@@ -98,11 +98,11 @@
 #     sim.cutoff.go = 0.5,
 #     sim.cutoff.kegg = 0.5,
 #     sim.cutoff.reactome = 0.5,
-#     measure.method.go = "Wang",
+#     measure.method.go = "Sim_Wang_2007",
 #     measure.method.kegg = "jaccard",
 #     measure.method.reactome = "jaccard",
 #     path = "result",
-#     save_to_local = TRUE
+#     save_to_local = FALSE
 #   )
 #
 # save(enriched_modules, file = "result/enriched_modules")
@@ -127,9 +127,9 @@
 #' @param sim.cutoff.go Similarity cutoff for GO database. Default is 0.5.
 #' @param sim.cutoff.kegg Similarity cutoff for KEGG database. Default is 0.5.
 #' @param sim.cutoff.reactome Similarity cutoff for Reactome database. Default is 0.5.
-#' @param measure.method.go A character vector specifying the similarity measure method for GO. Choices are "Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard". Default is "Wang".
-#' @param measure.method.kegg A character vector specifying the similarity measure method for KEGG. Default is "jaccard".
-#' @param measure.method.reactome A character vector specifying the similarity measure method for Reactome. Default is "jaccard".
+#' @param measure.method.go A character vector specifying the similarity measure method for GO. Choices are "Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor".
+#' @param measure.method.kegg A character vector specifying the similarity measure method for KEGG. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
+#' @param measure.method.reactome A character vector specifying the similarity measure method for Reactome. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #' @param path Directory path to save the results. Default is "result".
 #' @param save_to_local Logical, if TRUE the results will be saved to local disk.
 #'
@@ -150,9 +150,9 @@ merge_pathways <-
            sim.cutoff.go = 0.5,
            sim.cutoff.kegg = 0.5,
            sim.cutoff.reactome = 0.5,
-           measure.method.go = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
-           measure.method.kegg = c("jaccard"),
-           measure.method.reactome = c("jaccard"),
+           measure.method.go = c("Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor"),
+           measure.method.kegg = c("jaccard", "dice", "overlap", "kappa"),
+           measure.method.reactome = c("jaccard", "dice", "overlap", "kappa"),
            path = "result",
            save_to_local = FALSE) {
 
@@ -326,7 +326,7 @@ merge_pathways_internal <-
            count.cutoff = 5,
            database = c("go", "kegg", "reactome"),
            sim.cutoff = 0.5,
-           measure.method = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
+           measure.method = c("Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor", "jaccard", "dice", "overlap", "kappa"),
            path = "result",
            save_to_local = FALSE) {
 
@@ -403,7 +403,8 @@ merge_pathways_internal <-
       sim_matrix <-
         tryCatch(
           sim_matrix <-
-            simplifyEnrichment::term_similarity_from_KEGG(term_id = c(result$ID), method = "jaccard") %>%
+            term_similarity_KEGG(term_id = c(result$ID),
+                                 measure.method = measure.method) %>%
             as.data.frame() %>%
             tibble::rownames_to_column(var = "name1") %>%
             tidyr::pivot_longer(
@@ -424,7 +425,8 @@ merge_pathways_internal <-
       sim_matrix <-
         tryCatch(
           sim_matrix <-
-            simplifyEnrichment::term_similarity_from_Reactome(term_id = c(result$ID), method = "jaccard") %>%
+            term_similarity_Reactome(term_id = c(result$ID),
+                                     measure.method = measure.method) %>%
             as.data.frame() %>%
             tibble::rownames_to_column(var = "name1") %>%
             tidyr::pivot_longer(

@@ -498,8 +498,9 @@ check_variable_info <-
 #'
 #' @param result A data frame containing GO term IDs and ontologies.
 #' @param sim.cutoff A numeric value for the similarity cutoff (default: 0).
-#' @param measure.method A character vector specifying the semantic similarity measure method
-#'   (default: c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS")).
+#' @param measure.method A character vector specifying the semantic similarity
+#' measure methods for GO database
+#' Choices are "Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor".
 #' @return A data frame containing pairs of GO terms and their similarity values.
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #' @examples
@@ -512,7 +513,7 @@ check_variable_info <-
 get_go_result_sim <-
   function(result,
            sim.cutoff = 0,
-           measure.method = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS")) {
+           measure.method = c("Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor")) {
     measure.method <-
       match.arg(measure.method)
 
@@ -578,31 +579,160 @@ get_go_result_sim <-
       dplyr::distinct(name, .keep_all = TRUE) %>%
       dplyr::select(-name)
 
-    cc_sim_matrix <-
-      simplifyEnrichment::GO_similarity(go_id = result$ID[result$ONTOLOGY == "CC"],
-                                        ont = "CC",
-                                        measure = measure.method) %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "name1") %>%
-      tidyr::pivot_longer(cols = -name1,
-                          names_to = "name2",
-                          values_to = "sim") %>%
-      dplyr::filter(name1 != name2) %>%
-      dplyr::filter(sim > sim.cutoff)
-
-    name <- apply(cc_sim_matrix, 1, function(x) {
-      paste(sort(x[1:2]), collapse = "_")
-    })
-
-    cc_sim_matrix <-
-      cc_sim_matrix %>%
-      dplyr::mutate(name = name) %>%
-      dplyr::arrange(name) %>%
-      dplyr::distinct(name, .keep_all = TRUE) %>%
-      dplyr::select(-name)
+    # cc_sim_matrix <-
+    #   simplifyEnrichment::GO_similarity(go_id = result$ID[result$ONTOLOGY == "CC"],
+    #                                     ont = "CC",
+    #                                     measure = measure.method) %>%
+    #   as.data.frame() %>%
+    #   tibble::rownames_to_column(var = "name1") %>%
+    #   tidyr::pivot_longer(cols = -name1,
+    #                       names_to = "name2",
+    #                       values_to = "sim") %>%
+    #   dplyr::filter(name1 != name2) %>%
+    #   dplyr::filter(sim > sim.cutoff)
+#
+#     name <- apply(cc_sim_matrix, 1, function(x) {
+#       paste(sort(x[1:2]), collapse = "_")
+#     })
+#
+#     cc_sim_matrix <-
+#       cc_sim_matrix %>%
+#       dplyr::mutate(name = name) %>%
+#       dplyr::arrange(name) %>%
+#       dplyr::distinct(name, .keep_all = TRUE) %>%
+#       dplyr::select(-name)
 
     sim_matrix <-
-      rbind(bp_sim_matrix, mf_sim_matrix, cc_sim_matrix) %>%
+      rbind(bp_sim_matrix, mf_sim_matrix) %>%
       as.data.frame()
     sim_matrix
   }
+
+
+#' @title Similarity calculation between KEGG pathways
+#'
+#' @note This function was adapted from term_similarity__from_KEGG() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
+#'
+#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#'
+#' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
+#'
+#' @param term_id Character, KEGG pathway IDs
+#' @param measure.method Character, method for calculating the semantic similarity
+#' for KEGG terms, Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
+#'
+#' @return A symmetric matrix
+#'
+term_similarity_KEGG <- function(term_id, measure.method) {
+
+  measure.method <- match.arg(measure.method)
+
+  species <- gsub("^([a-zA-Z]+)(\\d+$)", "\\1", term_id[1])
+
+  kegg_data <- tryCatch(
+    expr = {
+      getFromNamespace("prepare_KEGG", "clusterProfiler")(species, "KEGG", "kegg")
+      },
+    error = function(e) {
+      getFromNamespace("get_data_from_KEGG_db", "clusterProfiler")(species)
+      })
+
+  gl <- kegg_data$PATHID2EXTID[term_id]
+
+  term_similarity_internal(gl = gl,
+                           measure.method = measure.method)
+}
+
+
+#' @title Similarity calculation between Reactome terms
+#'
+#' @note This function was adapted from term_similarity__from_Reactome() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
+#'
+#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#'
+#' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
+#'
+#' @param term_id Character, Reactome term IDs
+#' @param measure.method Character, method for calculating the semantic similarity
+#' for Reactome terms, Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
+#'
+#' @return A symmetric matrix
+#'
+term_similarity_Reactome <- function(term_id, measure.method) {
+
+  measure.method <- match.arg(measure.method)
+
+  all <- as.list(reactome.db::reactomePATHID2EXTID)
+  gl <- all[term_id]
+
+  term_similarity_internal(gl = gl,
+                           measure.method = measure.method)
+}
+
+
+#' @title Similarity calculation between pathways.
+#'
+#' @description
+#' This function allows for the execution of measurement of semantic similarity
+#' among KEGG and Reactome terms based on the overlap of genes.
+#'
+#' @note This function was adapted from term_similarity() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
+#'
+#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#'
+#' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
+#'
+#' @param gl Named list, genes that are in the enriched pathways.
+#' @param measure.method Character, method for calculating the semantic similarity
+#' for KEGG and Reactome terms
+#' @param remove_negative Logical, if TRUE reset the negative similarity values to zero
+#'
+#' @return A symmetric matrix.
+#'
+term_similarity_internal <-
+  function(gl,
+           measure.method = c("jaccard", "dice", "overlap", "kappa"),
+           remove_negative = TRUE) {
+
+    measure.method <- match.arg(measure.method)
+
+    all <- unique(unlist(gl))
+    gl <- lapply(gl, function(x) as.numeric(factor(x, levels = all)))
+    n <- length(gl)
+
+    pathway_gene_m <- matrix(0, ncol = length(all), nrow = n)
+    for(i in seq_len(n)) {
+      pathway_gene_m[i, gl[[i]]] = 1
+      }
+    pathway_gene_m <- as(pathway_gene_m, "sparseMatrix")
+
+    if(measure.method == "kappa") {
+      mat <- kappa_dist(pathway_gene_m, remove_negative = remove_negative)
+      } else if(measure.method == "overlap") {
+        mat <- overlap_dist(pathway_gene_m)
+        } else {
+          mat <- proxyC::simil(pathway_gene_m, method = method)
+          }
+
+    sim_matrix <-  as.matrix(mat)
+    diag(sim_matrix) <- 1
+    rownames(sim_matrix) = colnames(sim_matrix) = names(gl)
+
+    return(sim_matrix)
+}
+
+kappa_dist <- function(m, remove_negative = TRUE) {
+  tab <- ncol(m)
+  po <- proxyC::simil(m, method = "simple matching")
+  m_yes <- Matrix::rowSums(m)
+  m_no <- abs(Matrix::rowSums(m - 1))
+  pe <- (outer(m_yes, m_yes, FUN = "*") + outer(m_no, m_no, FUN = "*"))/tab^2
+  k <- (po - pe)/(1 - pe)
+  if(remove_negative) k[k < 0] <- 0
+  return(k)
+}
+
+overlap_dist <- function(m) {
+  n = Matrix::rowSums(m)
+  proxyC::simil(m, method = "dice")*outer(n, n, FUN = "+")/2/outer(n, n, pmin)
+}
