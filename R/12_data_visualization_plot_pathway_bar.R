@@ -53,7 +53,7 @@
 # plot_pathway_bar(
 #   object = enriched_pathways,
 #   top_n = 10,
-#   x_axis_ora = "FoldEnrichment", #"qscore", "RichFactor", or "FoldEnrichment"
+#   x_axis_name = "FoldEnrichment", #"qscore", "RichFactor", or "FoldEnrichment"
 #   y_label_width = 30,
 #   level = "pathway",
 #   line_type = "meteor"
@@ -114,7 +114,7 @@
 #'
 #' @param object An object containing the enrichment results and other relevant data.
 #' @param top_n An integer specifying the top N pathways to display.
-#' @param x_axis_ora A character vector specifying the variable for x-axis when plotting ORA reslut. One of "qscore" (i.e. -log10(FDR adjusted P-values)), "RichFactor", or "FoldEnrichment". For GSEA result, use the default value NULL.
+#' @param x_axis_name A character vector specifying the variable for x-axis when plotting ORA reslut. One of "qscore" (i.e. -log10(FDR adjusted P-values)), "RichFactor", or "FoldEnrichment". For GSEA result, use the default value NULL (i.e. NES).
 #' @param y_label_width An integer specifying the width of the Y-axis labels.
 #' @param translation translation or not.
 #' @param level A character string specifying the level of analysis.
@@ -165,7 +165,7 @@
 plot_pathway_bar <-
   function(object,
            top_n = 10,
-           x_axis_ora = NULL,
+           x_axis_name = NULL,
            y_label_width = 50,
            translation = FALSE,
            level = c("pathway", "module", "functional_module"),
@@ -184,16 +184,16 @@ plot_pathway_bar <-
     line_type <-
       match.arg(line_type)
 
-    if (!is.null(x_axis_ora)) {
-      x_axis_ora <- match.arg(x_axis_ora, choices = c("qscore", "RichFactor", "FoldEnrichment"))
+    if (!is.null(x_axis_name)) {
+      x_axis_name <- match.arg(x_axis_name, choices = c("qscore", "RichFactor", "FoldEnrichment"))
     }
 
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
     }else{
       analysis_type <- "do_gsea"
-      if (!is.null(x_axis_ora)) {
-        warning("x_axis_ora is for ORA. For GSEA, this parameter should be NULL.")
+      if (!is.null(x_axis_name)) {
+        warning("x_axis_name is for ORA. For GSEA, this parameter should be NULL, and use NES as x axis.")
       }
     }
 
@@ -489,7 +489,7 @@ plot_pathway_bar <-
       temp_data <-
         temp_data %>%
         dplyr::mutate(qscore = -log(p.adjust, 10)) %>%
-        dplyr::arrange(.data[[x_axis_ora]]) %>%
+        dplyr::arrange(.data[[x_axis_name]]) %>%
         tail(top_n)
 
     } else{
@@ -505,7 +505,7 @@ plot_pathway_bar <-
         temp_data = temp_data,
         line_type = line_type,
         analysis_type = analysis_type,
-        x_axis_ora = x_axis_ora,
+        x_axis_name = x_axis_name,
         y_label_width = y_label_width,
         database_color = database_color
       )
@@ -518,7 +518,7 @@ plot4pathway_enrichment <-
   function(temp_data = temp_data,
            line_type = c("straight", "meteor"),
            analysis_type = c("enrich_pathway", "do_gsea"),
-           x_axis_ora = c(NULL, "qscore", "RichFactor", "FoldEnrichment"),
+           x_axis_name = c(NULL, "qscore", "RichFactor", "FoldEnrichment"),
            y_label_width = 50,
            database_color =
              c(
@@ -530,8 +530,8 @@ plot4pathway_enrichment <-
       match.arg(line_type)
     analysis_type <-
       match.arg(analysis_type)
-    x_axis_ora <-
-      match.arg(x_axis_ora)
+    x_axis_name <-
+      match.arg(x_axis_name)
 
     ###line_type is straight
 
@@ -540,21 +540,21 @@ plot4pathway_enrichment <-
 
         plot <-
           ggplot(data = temp_data,
-                 aes(x = .data[[x_axis_ora]],
-                     y = reorder(Description, .data[[x_axis_ora]], decreasing = FALSE))) +
+                 aes(x = .data[[x_axis_name]],
+                     y = reorder(Description, .data[[x_axis_name]], decreasing = FALSE))) +
           scale_y_discrete(
             labels = function(x)
               stringr::str_wrap(x, width = y_label_width)
           ) +
           #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-          coord_cartesian(xlim = c(0, max(temp_data[[x_axis_ora]])*1.1),
+          coord_cartesian(xlim = c(0, max(temp_data[[x_axis_name]])*1.1),
                           ylim = c(0.5, nrow(temp_data) + 0.5),
                           expand = FALSE) +
           geom_segment(
             aes(
               x = 0,
               y = Description,
-              xend = .data[[x_axis_ora]],
+              xend = .data[[x_axis_name]],
               yend = Description,
               color = class
             ),
@@ -569,7 +569,7 @@ plot4pathway_enrichment <-
           theme_bw() +
           labs(
             y = "",
-            x = x_axis_ora,
+            x = x_axis_name,
             size = "Gene number",
             fill = "Database"
           ) +
@@ -628,14 +628,14 @@ plot4pathway_enrichment <-
       if (analysis_type == "enrich_pathway") {
         plot <-
           ggplot(data = temp_data,
-                 aes(x = .data[[x_axis_ora]],
-                     y = reorder(Description, .data[[x_axis_ora]], decreasing = FALSE))) +
+                 aes(x = .data[[x_axis_name]],
+                     y = reorder(Description, .data[[x_axis_name]], decreasing = FALSE))) +
           scale_y_discrete(
             labels = function(x)
               stringr::str_wrap(x, width = y_label_width)
           ) +
           #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-          coord_cartesian(xlim = c(0, max(temp_data[[x_axis_ora]])*1.1),
+          coord_cartesian(xlim = c(0, max(temp_data[[x_axis_name]])*1.1),
                           ylim = c(0.5, nrow(temp_data) + 0.5),
                           expand = FALSE) +
           # geom_segment(aes(
@@ -650,7 +650,7 @@ plot4pathway_enrichment <-
             aes(
               x = 0,
               y = Description,
-              xend = .data[[x_axis_ora]],
+              xend = .data[[x_axis_name]],
               yend = Description,
               alpha = after_stat(index),
               size = after_stat(index),
@@ -667,7 +667,7 @@ plot4pathway_enrichment <-
           ) +
           geom_text(
             aes(
-              x = .data[[x_axis_ora]],
+              x = .data[[x_axis_name]],
               y = Description,
               label = paste("Gene number:", Count)
             ),
@@ -682,7 +682,7 @@ plot4pathway_enrichment <-
           theme_bw() +
           labs(
             y = "",
-            x = x_axis_ora,
+            x = x_axis_name,
             size = "Gene number",
             fill = "Database"
           ) +

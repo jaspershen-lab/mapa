@@ -500,7 +500,7 @@ check_variable_info <-
 #' @param sim.cutoff A numeric value for the similarity cutoff (default: 0).
 #' @param measure.method A character vector specifying the semantic similarity
 #' measure methods for GO database
-#'   (default: c("Sim_XGraSM_2013", "Sim_Resnik_1999", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_Lin_1998", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Wang_2007","Sim_GOGO_2018")).
+#' Choices are "Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor".
 #' @return A data frame containing pairs of GO terms and their similarity values.
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #' @examples
@@ -513,7 +513,7 @@ check_variable_info <-
 get_go_result_sim <-
   function(result,
            sim.cutoff = 0,
-           measure.method = c("Sim_XGraSM_2013", "Sim_Resnik_1999", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_Lin_1998", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Wang_2007","Sim_GOGO_2018")) {
+           measure.method = c("Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor")) {
     measure.method <-
       match.arg(measure.method)
 

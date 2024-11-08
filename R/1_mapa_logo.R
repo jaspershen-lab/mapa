@@ -14,7 +14,7 @@
 #' @importFrom methods .hasSlot new is
 #' @importFrom stats p.adjust rgamma sd median time
 #' @importFrom utils data str head tail packageVersion write.table read.delim
-#' @importFrom utils read.table
+#' @importFrom utils read.table getFromNamespace
 #' @importFrom tibble add_column
 #' @importFrom magrittr %>%
 #' @importFrom tidygraph activate tbl_graph centrality_degree as_tbl_graph

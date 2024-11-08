@@ -171,9 +171,10 @@ do_gsea <-
       variable_info %>%
       dplyr::filter(!is.na(entrezid)) %>%
       dplyr::group_by(entrezid) %>%
-      dplyr::mutate(order_by = max(.data[[order_by]])) %>%
+      dplyr::mutate(p_adjust = min(p_value_adjust)) %>%
       dplyr::ungroup() %>%
       dplyr::distinct(entrezid, .keep_all = TRUE)
+    message("Filtering variable_info to unique 'entrezid' entries with minimum adjusted p-values.")
 
     gene_list <-
       log(variable_info$order_by, 2)
