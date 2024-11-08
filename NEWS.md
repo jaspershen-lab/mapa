@@ -78,3 +78,7 @@
 # mapa 0.1.20
 
 * Fixed one typo.
+
+# mapa 0.1.21
+
+* Modify term similarity calculation and plot_pathway_bar
