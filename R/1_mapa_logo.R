@@ -32,6 +32,8 @@
 #' @importFrom plyr dlply .
 #' @import patchwork
 #' @importFrom ggforce geom_link
+#' @importFrom digest digest
+#' @importFrom simona create_ontology_DAG_from_GO_db term_IC term_sim
 #' @importClassesFrom massdataset tidymass_parameter
 #' @export
 #' @examples

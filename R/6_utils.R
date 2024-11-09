@@ -499,8 +499,9 @@ check_variable_info <-
 #' @param result A data frame containing GO term IDs and ontologies.
 #' @param sim.cutoff A numeric value for the similarity cutoff (default: 0).
 #' @param measure.method A character vector specifying the semantic similarity
-#' measure methods for GO database
-#' Choices are "Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor".
+#' measure methods for GO terms. Default is `"Sim_XGraSM_2013"`. See `simona::term_sim()` for available measures.
+#' @param control.method a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
+#'
 #' @return A data frame containing pairs of GO terms and their similarity values.
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #' @examples
@@ -513,9 +514,8 @@ check_variable_info <-
 get_go_result_sim <-
   function(result,
            sim.cutoff = 0,
-           measure.method = c("Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_XGraSM_2013", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor")) {
-    measure.method <-
-      match.arg(measure.method)
+           measure.method = "Sim_XGraSM_2013",
+           control.method = list()) {
 
     if (is.null(result)) {
       return(data.frame(
@@ -534,9 +534,10 @@ get_go_result_sim <-
     }
 
     bp_sim_matrix <-
-      simplifyEnrichment::GO_similarity(go_id = result$ID[result$ONTOLOGY == "BP"],
-                                        ont = "BP",
-                                        measure = measure.method) %>%
+      GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "BP"],
+                             ont = "BP",
+                             measure = measure.method,
+                             control.method = control.method) %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "name1") %>%
       tidyr::pivot_longer(cols = -name1,
@@ -557,9 +558,10 @@ get_go_result_sim <-
       dplyr::select(-name)
 
     mf_sim_matrix <-
-      simplifyEnrichment::GO_similarity(go_id = result$ID[result$ONTOLOGY == "MF"],
-                                        ont = "MF",
-                                        measure = measure.method) %>%
+      GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "MF"],
+                             ont = "MF",
+                             measure = measure.method,
+                             control.method = control.method) %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "name1") %>%
       tidyr::pivot_longer(cols = -name1,
@@ -609,7 +611,67 @@ get_go_result_sim <-
   }
 
 
-#' @title Similarity calculation between KEGG pathways
+#' Compute Semantic Similarity Between GO Terms
+#'
+#' This function computes the semantic similarity between Gene Ontology (GO) terms using a specified similarity measure. For more information about the methods, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
+#'
+#' @note This function was adapted from GO_similarity() in the simplifyEnrichment package (version 2.0.0) by Zuguang Gu.
+#'
+#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#'
+#' @source Source code download link: https://www.bioconductor.org/packages/release/bioc/src/contrib/simplifyEnrichment_2.0.0.tar.gz
+#'
+#' @param go_id A character vector of GO term IDs.
+#' @param ont A character string specifying the ontology.
+#' @param db A character string specifying the annotation database to use. Default is `"org.Hs.eg.db"`.
+#' @param measure A character string specifying the semantic similarity measure to use. Default is `"Sim_XGraSM_2013"`. See `simona::term_sim()` for available measures.
+#' @param control.method a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
+#'
+#' @return A numeric matrix containing the pairwise semantic similarity scores between the provided GO terms.
+#'
+#' @keywords internal
+
+env <- new.env()
+
+GO_similarity_internal = function(go_id,
+                                  ont = NULL,
+                                  db = "org.Hs.eg.db",
+                                  measure = "Sim_XGraSM_2013",
+                                  control.method = list()) {
+
+  hash <- digest::digest(list(ont = ont, db = db))
+  if(is.null(env$go[[hash]])) {
+    dag <- simona::create_ontology_DAG_from_GO_db(namespace = ont, org_db = db, relations = c("part_of", "regulates"))
+    message("The ontology DAG has been created, including 'is_a', 'part_of', 'regulates', 'negatively_regulates' and 'positively_regulates' relationships between GO terms.")
+
+    ic <- simona::term_IC(dag, method = "IC_annotation")
+    all_go_id <- names(ic[!is.na(ic)])
+
+    env$go[[hash]] <- list(dag = dag, all_go_id = all_go_id)
+  } else {
+    dag <- env$go[[hash]]$dag
+    all_go_id <- env$go[[hash]]$all_go_id
+  }
+
+  go_removed <- setdiff(go_id, all_go_id)
+  if(length(go_removed)) {
+    message(paste0(length(go_removed), "/", length(go_id), " GO term", ifelse(length(go_removed) == 1, ' is', 's are'), " removed."))
+  }
+
+  go_id <- intersect(go_id, all_go_id)
+  go_sim <- simona::term_sim(dag,
+                             go_id,
+                             method = measure,
+                             control = control.method)
+
+  attr(go_sim, "measure") <- measure
+  attr(go_sim, "ontology") <- paste0("GO:", ont)
+
+  return(go_sim)
+}
+
+
+#' Similarity calculation between KEGG pathways
 #'
 #' @note This function was adapted from term_similarity__from_KEGG() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
 #'
@@ -644,9 +706,9 @@ term_similarity_KEGG <- function(term_id, measure.method) {
 }
 
 
-#' @title Similarity calculation between Reactome terms
+#' Similarity calculation between Reactome terms
 #'
-#' @note This function was adapted from term_similarity__from_Reactome() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
+#' @note This function was adapted from term_similarity_from_Reactome() in the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
 #'
 #' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
 #'
@@ -670,7 +732,7 @@ term_similarity_Reactome <- function(term_id, measure.method) {
 }
 
 
-#' @title Similarity calculation between pathways.
+#' Similarity calculation between pathways.
 #'
 #' @description
 #' This function allows for the execution of measurement of semantic similarity
@@ -689,6 +751,8 @@ term_similarity_Reactome <- function(term_id, measure.method) {
 #'
 #' @return A symmetric matrix.
 #'
+#' @keywords internal
+
 term_similarity_internal <-
   function(gl,
            measure.method = c("jaccard", "dice", "overlap", "kappa"),

@@ -56,7 +56,9 @@ Imports:
     ggwordcloud,
     rmarkdown,
     Matrix,
-    proxyC
+    proxyC,
+    digest,
+    simona
 Suggests: 
     knitr,
     BiocStyle,
