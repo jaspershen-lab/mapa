@@ -562,11 +562,20 @@ identify_modules <-
       dplyr::rename(from = name1, to = name2) %>%
       dplyr::filter(sim > sim.cutoff)
 
-    node_data <-
-      rbind(result) %>%
-      as.data.frame() %>%
-      dplyr::select(ID, everything()) %>%
-      dplyr::rename(node = ID)
+    if (database == "go") {
+      node_data <-
+        rbind(result) %>%
+        as.data.frame() %>%
+        dplyr::filter(!(ID %in% attr(sim_matrix, "obsolete_terms"))) %>%
+        dplyr::select(ID, everything()) %>%
+        dplyr::rename(node = ID)
+    } else {
+      node_data <-
+        rbind(result) %>%
+        as.data.frame() %>%
+        dplyr::select(ID, everything()) %>%
+        dplyr::rename(node = ID)
+        }
 
     graph_data <-
       tidygraph::tbl_graph(nodes = node_data,

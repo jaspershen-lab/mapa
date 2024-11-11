@@ -81,4 +81,8 @@
 
 # mapa 0.1.21
 
-* Modify term similarity calculation and plot_pathway_bar
+* Modify term similarity calculation and plot_pathway_bar.
+
+# mapa 0.1.22
+
+* Fixed bug in term semantic similarity calculation.

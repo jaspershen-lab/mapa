@@ -15,9 +15,19 @@ merge_pathways(
   sim.cutoff.go = 0.5,
   sim.cutoff.kegg = 0.5,
   sim.cutoff.reactome = 0.5,
-  measure.method.go = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
-  measure.method.kegg = c("jaccard"),
-  measure.method.reactome = c("jaccard"),
+  measure.method.go = c("Sim_XGraSM_2013", "Sim_Wang_2007", "Sim_Lin_1998",
+    "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010",
+    "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018",
+    "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994",
+    "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001",
+    "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003",
+    "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", 
+    
+    "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice", "Sim_Overlap",
+    "Sim_Ancestor"),
+  control.method.go = list(),
+  measure.method.kegg = c("jaccard", "dice", "overlap", "kappa"),
+  measure.method.reactome = c("jaccard", "dice", "overlap", "kappa"),
   path = "result",
   save_to_local = FALSE
 )
@@ -43,11 +53,13 @@ merge_pathways(
 
 \item{sim.cutoff.reactome}{Similarity cutoff for Reactome database. Default is 0.5.}
 
-\item{measure.method.go}{A character vector specifying the similarity measure method for GO. Choices are "Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard". Default is "Wang".}
+\item{measure.method.go}{A character vector specifying the term semantic similarity measure method for GO terms. Default is \code{"Sim_XGraSM_2013"}. See \code{simona::term_sim()} for available measures.}
 
-\item{measure.method.kegg}{A character vector specifying the similarity measure method for KEGG. Default is "jaccard".}
+\item{control.method.go}{a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
 
-\item{measure.method.reactome}{A character vector specifying the similarity measure method for Reactome. Default is "jaccard".}
+\item{measure.method.kegg}{A character vector specifying the similarity measure method for KEGG. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
+
+\item{measure.method.reactome}{A character vector specifying the similarity measure method for Reactome. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
 
 \item{path}{Directory path to save the results. Default is "result".}
 

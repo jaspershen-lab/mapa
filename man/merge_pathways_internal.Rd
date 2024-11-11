@@ -11,7 +11,8 @@ merge_pathways_internal(
   count.cutoff = 5,
   database = c("go", "kegg", "reactome"),
   sim.cutoff = 0.5,
-  measure.method = c("Wang", "Resnik", "Rel", "Jiang", "Lin", "TCSS", "jaccard"),
+  measure.method,
+  control.method.go = list(),
   path = "result",
   save_to_local = FALSE
 )
@@ -29,7 +30,10 @@ merge_pathways_internal(
 
 \item{sim.cutoff}{Numeric, similarity cutoff for clustering pathways.}
 
-\item{measure.method}{Character, method for calculating term similarity.}
+\item{measure.method}{Character, method for calculating term similarity.
+Default is \code{"Sim_XGraSM_2013"}. See \code{simona::term_sim()} for available measures.}
+
+\item{control.method.go}{a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
 
 \item{path}{Character, directory to save intermediate and final results.}
 

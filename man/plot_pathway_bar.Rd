@@ -7,6 +7,7 @@
 plot_pathway_bar(
   object,
   top_n = 10,
+  x_axis_name = NULL,
   y_label_width = 50,
   translation = FALSE,
   level = c("pathway", "module", "functional_module"),
@@ -21,6 +22,8 @@ plot_pathway_bar(
 \item{object}{An object containing the enrichment results and other relevant data.}
 
 \item{top_n}{An integer specifying the top N pathways to display.}
+
+\item{x_axis_name}{A character vector specifying the variable for x-axis when plotting ORA reslut. One of "qscore" (i.e. -log10(FDR adjusted P-values)), "RichFactor", or "FoldEnrichment". For GSEA result, use the default value NULL (i.e. NES).}
 
 \item{y_label_width}{An integer specifying the width of the Y-axis labels.}
 

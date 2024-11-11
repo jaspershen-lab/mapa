@@ -90,7 +90,8 @@ enriched_modules <-
     sim.cutoff.go = 0.5,
     sim.cutoff.kegg = 0.5,
     sim.cutoff.reactome = 0.5,
-    measure.method.go = "Wang",
+    measure.method.go = "Sim_XGraSM_2013",
+    control.method.go = list(),
     measure.method.kegg = "jaccard",
     measure.method.reactome = "jaccard",
     path = "result",
@@ -122,21 +123,24 @@ plot_pathway_bar(
   object = enriched_functional_module,
   top_n = 20,
   level = "pathway",
-  database = "go"
+  database = "go",
+  x_axis_name = "RichFactor"
 )
 
 plot_pathway_bar(
   object = enriched_functional_module,
   top_n = 20,
   level = "pathway",
-  database = "kegg"
+  database = "kegg",
+  x_axis_name = "RichFactor"
 )
 
 plot_pathway_bar(
   object = enriched_functional_module,
   top_n = 20,
   level = "pathway",
-  database = "reactome"
+  database = "reactome",
+  x_axis_name = "RichFactor"
 )
 
 # plot_pathway_bar(object = enriched_functional_module,
@@ -145,7 +149,8 @@ plot_pathway_bar(
 
 plot_pathway_bar(object = enriched_functional_module,
                  top_n = 20,
-                 level = "functional_module")
+                 level = "functional_module",
+                 x_axis_name = "qscore")
 
 
 ```

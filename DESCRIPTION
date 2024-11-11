@@ -1,8 +1,8 @@
 Package: mapa
 Type: Package
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.1.21
-Date: 2024-11-08
+Version: 0.1.22
+Date: 2024-11-11
 Authors@R: c(
     person(given = "Xiaotao",
            family = "Shen",
@@ -50,7 +50,6 @@ Imports:
     igraph,
     patchwork,
     plyr,
-    simplifyEnrichment,
     stringr,
     tidygraph,
     ggwordcloud,

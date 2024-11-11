@@ -300,7 +300,7 @@ get_jaccard_index_for_three_databases <-
     temp_data <-
       met_data$geneID %>%
       stringr::str_split("/") %>%
-      unique() %>%
+      #unique() %>%
       purrr::map(function(x) {
         if (stringr::str_detect(x[1], "ENSG")) {
           return(x)
@@ -537,7 +537,10 @@ get_go_result_sim <-
       GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "BP"],
                              ont = "BP",
                              measure = measure.method,
-                             control.method = control.method) %>%
+                             control.method = control.method)
+    bp_obsolete_terms <- attr(bp_sim_matrix, "obsolete_terms")
+    bp_sim_df <-
+      bp_sim_matrix %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "name1") %>%
       tidyr::pivot_longer(cols = -name1,
@@ -546,12 +549,12 @@ get_go_result_sim <-
       dplyr::filter(name1 != name2) %>%
       dplyr::filter(sim > sim.cutoff)
 
-    name <- apply(bp_sim_matrix, 1, function(x) {
+    name <- apply(bp_sim_df, 1, function(x) {
       paste(sort(x[1:2]), collapse = "_")
     })
 
-    bp_sim_matrix <-
-      bp_sim_matrix %>%
+    bp_sim_df <-
+      bp_sim_df %>%
       dplyr::mutate(name = name) %>%
       dplyr::arrange(name) %>%
       dplyr::distinct(name, .keep_all = TRUE) %>%
@@ -561,7 +564,10 @@ get_go_result_sim <-
       GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "MF"],
                              ont = "MF",
                              measure = measure.method,
-                             control.method = control.method) %>%
+                             control.method = control.method)
+    mf_obsolete_terms <- attr(mf_sim_matrix, "obsolete_terms")
+    mf_sim_df <-
+      mf_sim_matrix %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "name1") %>%
       tidyr::pivot_longer(cols = -name1,
@@ -570,12 +576,12 @@ get_go_result_sim <-
       dplyr::filter(name1 != name2) %>%
       dplyr::filter(sim > sim.cutoff)
 
-    name <- apply(mf_sim_matrix, 1, function(x) {
+    name <- apply(mf_sim_df, 1, function(x) {
       paste(sort(x[1:2]), collapse = "_")
     })
 
-    mf_sim_matrix <-
-      mf_sim_matrix %>%
+    mf_sim_df <-
+      mf_sim_df %>%
       dplyr::mutate(name = name) %>%
       dplyr::arrange(name) %>%
       dplyr::distinct(name, .keep_all = TRUE) %>%
@@ -605,8 +611,10 @@ get_go_result_sim <-
 #       dplyr::select(-name)
 
     sim_matrix <-
-      rbind(bp_sim_matrix, mf_sim_matrix) %>%
-      as.data.frame()
+      rbind(bp_sim_df, mf_sim_df)
+
+    attr(sim_matrix, "obsolete_terms") <- c(bp_obsolete_terms, mf_obsolete_terms)
+
     sim_matrix
   }
 
@@ -642,7 +650,6 @@ GO_similarity_internal = function(go_id,
   hash <- digest::digest(list(ont = ont, db = db))
   if(is.null(env$go[[hash]])) {
     dag <- simona::create_ontology_DAG_from_GO_db(namespace = ont, org_db = db, relations = c("part_of", "regulates"))
-    message("The ontology DAG has been created, including 'is_a', 'part_of', 'regulates', 'negatively_regulates' and 'positively_regulates' relationships between GO terms.")
 
     ic <- simona::term_IC(dag, method = "IC_annotation")
     all_go_id <- names(ic[!is.na(ic)])
@@ -666,6 +673,7 @@ GO_similarity_internal = function(go_id,
 
   attr(go_sim, "measure") <- measure
   attr(go_sim, "ontology") <- paste0("GO:", ont)
+  attr(go_sim, "obsolete_terms") <- go_removed
 
   return(go_sim)
 }
@@ -681,11 +689,12 @@ GO_similarity_internal = function(go_id,
 #'
 #' @param term_id Character, KEGG pathway IDs
 #' @param measure.method Character, method for calculating the semantic similarity
-#' for KEGG terms, Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
+#' for KEGG terms, Choices are "jaccard", "dice", "overlap" and "kappa". Default is "jaccard".
 #'
 #' @return A symmetric matrix
 #'
-term_similarity_KEGG <- function(term_id, measure.method) {
+term_similarity_KEGG <- function(term_id,
+                                 measure.method = c("jaccard", "dice", "overlap", "kappa")) {
 
   measure.method <- match.arg(measure.method)
 
@@ -720,7 +729,8 @@ term_similarity_KEGG <- function(term_id, measure.method) {
 #'
 #' @return A symmetric matrix
 #'
-term_similarity_Reactome <- function(term_id, measure.method) {
+term_similarity_Reactome <- function(term_id,
+                                     measure.method = c("jaccard", "dice", "overlap", "kappa")) {
 
   measure.method <- match.arg(measure.method)
 
@@ -775,7 +785,7 @@ term_similarity_internal <-
       } else if(measure.method == "overlap") {
         mat <- overlap_dist(pathway_gene_m)
         } else {
-          mat <- proxyC::simil(pathway_gene_m, method = method)
+          mat <- proxyC::simil(pathway_gene_m, method = measure.method)
           }
 
     sim_matrix <-  as.matrix(mat)
