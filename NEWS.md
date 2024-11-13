@@ -86,3 +86,7 @@
 # mapa 0.1.22
 
 * Fixed bug in term semantic similarity calculation.
+
+# mapa 0.1.23
+
+* Fixed bug in plot_pathway_bar for "functional_module". Added title to the plot.

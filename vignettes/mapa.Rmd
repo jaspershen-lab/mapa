@@ -124,7 +124,8 @@ plot_pathway_bar(
   top_n = 20,
   level = "pathway",
   database = "go",
-  x_axis_name = "RichFactor"
+  x_axis_name = "RichFactor",
+  line_type = "straight"
 )
 
 plot_pathway_bar(
@@ -132,7 +133,8 @@ plot_pathway_bar(
   top_n = 20,
   level = "pathway",
   database = "kegg",
-  x_axis_name = "RichFactor"
+  x_axis_name = "RichFactor",
+  line_type = "meteor"
 )
 
 plot_pathway_bar(
@@ -140,7 +142,8 @@ plot_pathway_bar(
   top_n = 20,
   level = "pathway",
   database = "reactome",
-  x_axis_name = "RichFactor"
+  x_axis_name = "RichFactor",
+  line_type = "straight"
 )
 
 # plot_pathway_bar(object = enriched_functional_module,
@@ -150,7 +153,8 @@ plot_pathway_bar(
 plot_pathway_bar(object = enriched_functional_module,
                  top_n = 20,
                  level = "functional_module",
-                 x_axis_name = "qscore")
+                 x_axis_name = "qscore",
+                 line_type = "straight")
 
 
 ```

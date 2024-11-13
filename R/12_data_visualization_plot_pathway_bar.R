@@ -16,7 +16,7 @@
 #   top_n = 10,
 #   y_label_width = 30,
 #   level = "pathway",
-#   translation = TRUE
+#   translation = FALSE
 # )
 #
 # plot_pathway_bar(
@@ -51,12 +51,12 @@
 #
 #
 # plot_pathway_bar(
-#   object = enriched_pathways,
+#   object = enriched_functional_module,
 #   top_n = 10,
-#   x_axis_name = "FoldEnrichment", #"qscore", "RichFactor", or "FoldEnrichment"
+#   x_axis_name = "RichFactor", #"qscore", "RichFactor", or "FoldEnrichment"
 #   y_label_width = 30,
-#   level = "pathway",
-#   line_type = "meteor"
+#   level = "functional_module",
+#   line_type = "straight"
 # )
 #
 #
@@ -184,13 +184,14 @@ plot_pathway_bar <-
     line_type <-
       match.arg(line_type)
 
-    if (!is.null(x_axis_name)) {
-      x_axis_name <- match.arg(x_axis_name, choices = c("qscore", "RichFactor", "FoldEnrichment"))
-    }
-
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
-    }else{
+      if (is.null(x_axis_name)){
+        stop("Please provide a variable for x axis.")
+      } else {
+        x_axis_name <- match.arg(x_axis_name, choices = c("qscore", "RichFactor", "FoldEnrichment"))
+      }
+    } else {
       analysis_type <- "do_gsea"
       if (!is.null(x_axis_name)) {
         warning("x_axis_name is for ORA. For GSEA, this parameter should be NULL, and use NES as x axis.")
@@ -431,7 +432,18 @@ plot_pathway_bar <-
         dplyr::filter(p.adjust < p.adjust.cutoff &
                         Count > count.cutoff) %>%
         dplyr::select(-Description) %>%
-        dplyr::rename(Description = module_annotation, class = database)
+        dplyr::rename(Description = module_annotation) %>%
+        dplyr::mutate(
+          class = purrr::map(module_content, \(x) {
+            modules <- stringr::str_split(x, ";")[[1]]
+            dbs <- unique(dplyr::case_when(
+              stringr::str_detect(modules, "^go_Module") ~ "GO",
+              stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
+              stringr::str_detect(modules, "^reactome_Module") ~ "Reactome"
+            ))
+            paste(sort(dbs), collapse = "/")
+          })
+      )
     }
 
     database2 <-
@@ -441,9 +453,33 @@ plot_pathway_bar <-
     database2[database2 == "kegg"] <- "KEGG"
     database2[database2 == "reactome"] <- "Reactome"
 
-    temp_data <-
-      temp_data %>%
-      dplyr::filter(class %in% database2)
+    if (level == "functional_module") {
+      temp_data <-
+        temp_data %>%
+        dplyr::mutate(
+          class = purrr::map_chr(class, \(x) {
+            dbs <- stringr::str_split(x, "/")[[1]]
+            dbs <- intersect(dbs, database2)
+            if (length(dbs) == 0) return(NA_character_)
+            if (length(dbs) > 1) {
+              colors <- col2rgb(database_color[dbs])
+              mixed_color <- rgb(
+                mean(colors[1,]) / 255,
+                mean(colors[2,]) / 255,
+                mean(colors[3,]) / 255,
+                alpha = 0.6
+              )
+              database_color[x] <- mixed_color
+            }
+            paste(sort(dbs), collapse = "/")
+          })
+        ) %>%
+        dplyr::filter(!is.na(class))
+    } else {
+      temp_data <-
+        temp_data %>%
+        dplyr::filter(class %in% database2)
+    }
 
 
     if (nrow(temp_data) == 0) {
@@ -500,10 +536,13 @@ plot_pathway_bar <-
 
     }
 
+    temp_data[[x_axis_name]] <- as.numeric(temp_data[[x_axis_name]])
+
     plot <-
       plot4pathway_enrichment(
         temp_data = temp_data,
         line_type = line_type,
+        level = level,
         analysis_type = analysis_type,
         x_axis_name = x_axis_name,
         y_label_width = y_label_width,
@@ -517,6 +556,7 @@ plot_pathway_bar <-
 plot4pathway_enrichment <-
   function(temp_data = temp_data,
            line_type = c("straight", "meteor"),
+           level = level,
            analysis_type = c("enrich_pathway", "do_gsea"),
            x_axis_name = c(NULL, "qscore", "RichFactor", "FoldEnrichment"),
            y_label_width = 50,
@@ -547,7 +587,7 @@ plot4pathway_enrichment <-
               stringr::str_wrap(x, width = y_label_width)
           ) +
           #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-          coord_cartesian(xlim = c(0, max(temp_data[[x_axis_name]])*1.1),
+          coord_cartesian(xlim = c(0, max(as.numeric(temp_data[[x_axis_name]]))*1.1),
                           ylim = c(0.5, nrow(temp_data) + 0.5),
                           expand = FALSE) +
           geom_segment(
@@ -560,14 +600,16 @@ plot4pathway_enrichment <-
             ),
             show.legend = FALSE
           ) +
-          geom_point(aes(size = Count, fill = class),
-                     shape = 21,
-                     alpha = 1) +
+          geom_point(aes(size = Count,
+                        fill = class),
+                     shape = 21) +
+                     #alpha = 1) +
           scale_size_continuous(range = c(3, 7)) +
           scale_fill_manual(values = database_color) +
           scale_color_manual(values = database_color) +
           theme_bw() +
           labs(
+            title = paste0("Level: ", level),
             y = "",
             x = x_axis_name,
             size = "Gene number",
@@ -575,7 +617,8 @@ plot4pathway_enrichment <-
           ) +
           #geom_vline(xintercept = 0) +
           theme(panel.grid.minor = element_blank(),
-                axis.ticks.y = element_blank()) +
+                axis.ticks.y = element_blank(),
+                plot.title = element_text(hjust = 0.5)) +
           guides(fill = guide_legend(override.aes = list(size = 5)))
       }
 
@@ -602,14 +645,15 @@ plot4pathway_enrichment <-
             show.legend = FALSE
           ) +
           geom_point(aes(size = Count, fill = class),
-                     shape = 21,
-                     alpha = 1) +
+                     shape = 21) +
+                     #alpha = 1) +
           scale_size_continuous(range = c(3, 7),
                                 breaks = round(seq(min(temp_data$Count), max(temp_data$Count), length.out = 4))) +
           scale_fill_manual(values = database_color) +
           scale_color_manual(values = database_color) +
           theme_bw() +
           labs(
+            title = paste0("Level: ", level),
             y = "",
             x = "NES",
             size = "Gene number",
@@ -617,7 +661,8 @@ plot4pathway_enrichment <-
           ) +
           geom_vline(xintercept = 0) +
           theme(panel.grid.minor = element_blank(),
-                axis.ticks.y = element_blank()) +
+                axis.ticks.y = element_blank(),
+                plot.title = element_text(hjust = 0.5)) +
           guides(fill = guide_legend(override.aes = list(size = 5)))
       }
     }
@@ -635,7 +680,7 @@ plot4pathway_enrichment <-
               stringr::str_wrap(x, width = y_label_width)
           ) +
           #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-          coord_cartesian(xlim = c(0, max(temp_data[[x_axis_name]])*1.1),
+          coord_cartesian(xlim = c(0, max(as.numeric(temp_data[[x_axis_name]]))*1.1),
                           ylim = c(0.5, nrow(temp_data) + 0.5),
                           expand = FALSE) +
           # geom_segment(aes(
@@ -681,6 +726,7 @@ plot4pathway_enrichment <-
           scale_color_manual(values = database_color) +
           theme_bw() +
           labs(
+            title = paste0("Level: ", level),
             y = "",
             x = x_axis_name,
             size = "Gene number",
@@ -688,7 +734,8 @@ plot4pathway_enrichment <-
           ) +
           #geom_vline(xintercept = 0) +
           theme(panel.grid.minor = element_blank(),
-                axis.ticks.y = element_blank()) +
+                axis.ticks.y = element_blank(),
+                plot.title = element_text(hjust = 0.5)) +
           guides(fill = guide_legend(override.aes = list(size = 5)))
       }
 
@@ -739,6 +786,7 @@ plot4pathway_enrichment <-
           scale_color_manual(values = database_color) +
           theme_bw() +
           labs(
+            title = paste0("Level: ", level),
             y = "",
             x = "NES",
             size = "Gene number",
@@ -746,7 +794,8 @@ plot4pathway_enrichment <-
           ) +
           geom_vline(xintercept = 0) +
           theme(panel.grid.minor = element_blank(),
-                axis.ticks.y = element_blank()) +
+                axis.ticks.y = element_blank(),
+                plot.title = element_text(hjust = 0.5)) +
           guides(fill = guide_legend(override.aes = list(size = 5)))
       }
 
