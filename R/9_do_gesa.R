@@ -174,10 +174,10 @@ do_gsea <-
       dplyr::mutate(p_adjust = min(p_value_adjust)) %>%
       dplyr::ungroup() %>%
       dplyr::distinct(entrezid, .keep_all = TRUE)
-    message("Filtering variable_info to unique 'entrezid' entries with minimum adjusted p-values.")
+    message("Filter variable_info to unique 'entrezid' entries with minimum adjusted p-values.")
 
     gene_list <-
-      log(variable_info$order_by, 2)
+      log(variable_info[[order_by]], 2)
 
     names(gene_list) <-
       variable_info$entrezid

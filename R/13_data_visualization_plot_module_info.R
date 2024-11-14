@@ -13,8 +13,8 @@
 #     object = enriched_functional_module,
 #     level = "module",
 #     database = "go",
-#     module_id = "go_Module_3",
-#     translation = TRUE
+#     module_id = "go_Module_4",
+#     translation = FALSE
 #   )
 #
 # plot[[1]]
@@ -54,7 +54,7 @@
 # plot <-
 #   plot_module_info(object = enriched_functional_module,
 #                    level = "functional_module",
-#                    module_id = "Functional_module_27")
+#                    module_id = "Functional_module_47")
 #
 # plot[[1]]
 # plot[[2]]
@@ -97,6 +97,13 @@ plot_module_info <-
       match.arg(level)
     database <-
       match.arg(database)
+
+    # Determine analysis type based on process_info
+    if ("enrich_pathway" %in% names(object@process_info)) {
+      analysis_type <- "enrich_pathway"
+    } else{
+      analysis_type <- "do_gsea"
+    }
 
     if (!is(object, "functional_module")) {
       stop("object must be functional_module class")
@@ -259,6 +266,23 @@ plot_module_info <-
                geom_blank())
     }
 
+    # Set title based on level and database
+    if (level == "module") {
+      database2 <-
+        database
+      database2[database2 == "go"] <- "GO"
+      database2[database2 == "kegg"] <- "KEGG"
+      database2[database2 == "reactome"] <- "Reactome"
+      plot_title <- paste0("Terms from ", database2)
+    } else {
+      # For functional module, determine databases from module content
+      dbs <- object@merged_module$result_with_module %>%
+        dplyr::filter(module == module_id) %>%
+        dplyr::pull(database) %>%
+        unique()
+      plot_title <- paste0("Modules from ", paste(sort(dbs), collapse = " and "))
+    }
+
     ###network
     plot1 <-
       graph_data %>%
@@ -271,7 +295,7 @@ plot_module_info <-
         show.legend = TRUE
       ) +
       ggraph::geom_node_point(
-        aes(fill = -log(p.adjust, 10),
+        aes(fill = if(analysis_type == "enrich_pathway") -log(p.adjust, 10) else NES,
             size = Count),
         shape = 21,
         alpha = 1,
@@ -280,13 +304,16 @@ plot_module_info <-
       guides(fill = guide_legend(ncol = 1)) +
       ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
       scale_size_continuous(range = c(3, 10)) +
+      labs(fill = if(analysis_type == "enrich_pathway") "-log10(FDR adjusted P-values)" else "NES") +
       ggraph::theme_graph() +
       theme(
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA),
         legend.position = "left",
-        legend.background = element_rect(fill = "transparent", color = NA)
-      )
+        legend.background = element_rect(fill = "transparent", color = NA),
+        plot.title = element_text(hjust = 0.5)
+      ) +
+      ggtitle(plot_title)
 
     if (level == "module") {
       plot1 <-
@@ -311,17 +338,36 @@ plot_module_info <-
       temp_data <-
         result_with_module %>%
         dplyr::mutate(Count = as.numeric(Count)) %>%
-        dplyr::filter(module == module_id) %>%
-        dplyr::mutate(log.p = -log(as.numeric(p.adjust, 10))) %>%
-        dplyr::arrange(log.p) %>%
+        dplyr::filter(module == module_id)
+
+      if(analysis_type == "enrich_pathway") {
+        temp_data <- temp_data %>%
+          dplyr::mutate(log.p = -log(as.numeric(p.adjust, 10))) %>%
+          dplyr::arrange(log.p)
+      } else {
+        temp_data <- temp_data %>%
+          dplyr::arrange(NES)
+      }
+
+      temp_data <- temp_data %>%
         dplyr::mutate(Description = factor(Description, levels = Description))
+
     } else{
       temp_data <-
         result_with_module %>%
         dplyr::mutate(Count = as.numeric(Count)) %>%
-        dplyr::filter(module == module_id) %>%
-        dplyr::mutate(log.p = -log(as.numeric(p.adjust, 10))) %>%
-        dplyr::arrange(log.p) %>%
+        dplyr::filter(module == module_id)
+
+      if(analysis_type == "enrich_pathway") {
+        temp_data <- temp_data %>%
+          dplyr::mutate(log.p = -log(as.numeric(p.adjust, 10))) %>%
+          dplyr::arrange(log.p)
+      } else {
+        temp_data <- temp_data %>%
+          dplyr::arrange(NES)
+      }
+
+      temp_data <- temp_data %>%
         dplyr::select(-Description) %>%
         dplyr::rename(Description = module_annotation) %>%
         dplyr::mutate(Description = factor(Description, levels = Description))
@@ -329,7 +375,7 @@ plot_module_info <-
 
     plot2 <-
       temp_data %>%
-      ggplot(aes(log.p, Description)) +
+      ggplot(aes(if(analysis_type == "enrich_pathway") log.p else NES, Description)) +
       scale_y_discrete(
         labels = function(x)
           stringr::str_wrap(x, width = 40)
@@ -338,39 +384,48 @@ plot_module_info <-
       geom_segment(aes(
         x = 0,
         y = Description,
-        xend = log.p,
+        xend = if(analysis_type == "enrich_pathway") log.p else NES,
         yend = Description
       )) +
       geom_point(
-        aes(size = Count),
-        fill = "black",
+        aes(size = Count,
+            fill = if(level == "functional_module") database else "black"),
         shape = 21,
         alpha = 1
       ) +
       scale_size_continuous(range = c(3, 7)) +
+      scale_fill_manual(values = c(GO = "#1F77B4FF",
+                                   KEGG = "#FF7F0EFF",
+                                   Reactome = "#2CA02CFF")) +
       theme_bw() +
-      labs(y = "", x = "-log10(FDR adjusted P-values)") +
+      labs(y = "",
+           x = if(analysis_type == "enrich_pathway") "-log10(FDR adjusted P-values)" else "NES",
+           fill = "Database") +
       geom_vline(xintercept = 0) +
-      theme(panel.grid.minor = element_blank())
-
+      theme(panel.grid.minor = element_blank(),
+            plot.title = element_text(hjust = 0.5)) +
+      guides(fill = guide_legend(override.aes = list(size = 5))) +
+      ggtitle(plot_title)
 
     ###wordcloud
     temp_data <-
       result_with_module %>%
       dplyr::filter(module == module_id) %>%
-      dplyr::mutate(p.adjust = -log(as.numeric(p.adjust, 10))) %>%
-      dplyr::select(Description, p.adjust) %>%
+      dplyr::mutate(value = if(analysis_type == "enrich_pathway")
+                            -log(as.numeric(p.adjust, 10))
+                           else abs(NES)) %>%
+      dplyr::select(Description, value) %>%
       dplyr::mutate(Description = stringr::str_replace_all(Description, ",", "")) %>%
       plyr::dlply(.variables = .(Description)) %>%
       purrr::map(function(x) {
         data.frame(word = stringr::str_split(x$Description, " ")[[1]],
-                   p.adjust = x$p.adjust)
+                   value = x$value)
       }) %>%
       do.call(rbind, .) %>%
       as.data.frame() %>%
       plyr::dlply(.variables = .(word)) %>%
       purrr::map(function(x) {
-        x$p.adjust <- sum(x$p.adjust)
+        x$value <- sum(x$value)
         x %>%
           dplyr::distinct(word, .keep_all = TRUE)
       }) %>%
@@ -381,16 +436,17 @@ plot_module_info <-
     plot3 <-
       suppressWarnings(
         ggplot(data = temp_data,
-               aes(label = word, size = p.adjust)) +
+               aes(label = word, size = value)) +
           ggwordcloud::geom_text_wordcloud() +
           scale_radius(range = c(5, 15), limits = c(0, NA)) +
-          theme_minimal()
+          theme_minimal() +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          ggtitle(plot_title)
       )
 
     list(network = plot1,
          barplot = plot2,
          wordcloud = plot3)
-
   }
 
 #' Export Module Information Plots

@@ -68,7 +68,7 @@
 # object <-
 #   enriched_functional_module
 #
-# object <- gsea_pathways
+# object <- gsea_enriched_functional_module
 #
 #
 # library(showtext)
@@ -80,18 +80,19 @@
 #   y_label_width = 30,
 #   level = "pathway",
 #   translation = FALSE,
+#   line_type = "straight"
+# )
+#
+# plot_pathway_bar(
+#   object = object,
+#   top_n = 10,
+#   y_label_width = 30,
+#   level = "module",
 #   line_type = "meteor"
 # )
 #
 # plot_pathway_bar(
-#   object = enriched_functional_module,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "module"
-# )
-#
-# plot_pathway_bar(
-#   object = enriched_functional_module,
+#   object = object,
 #   top_n = 10,
 #   y_label_width = 30,
 #   level = "functional_module"
@@ -528,15 +529,14 @@ plot_pathway_bar <-
         dplyr::arrange(.data[[x_axis_name]]) %>%
         tail(top_n)
 
+      temp_data[[x_axis_name]] <- as.numeric(temp_data[[x_axis_name]])
     } else{
       temp_data <-
         temp_data %>%
         dplyr::arrange(dplyr::desc(abs(NES))) %>%
         head(top_n)
-
+      temp_data$NES <- as.numeric(temp_data$NES)
     }
-
-    temp_data[[x_axis_name]] <- as.numeric(temp_data[[x_axis_name]])
 
     plot <-
       plot4pathway_enrichment(
@@ -772,14 +772,12 @@ plot4pathway_enrichment <-
           ) +
           geom_text(
             aes(
-              x = NES,
+              x = NES * 0.65, # Position text halfway along the link
               y = Description,
               label = paste("Gene number:", Count)
             ),
             size = 2.5,
-            color = "white",
-            hjust = 1.2,
-            nudge_x = 0.05
+            color = "black"
           ) +
           scale_size_continuous(range = c(3, 7)) +
           scale_fill_manual(values = database_color) +

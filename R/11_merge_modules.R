@@ -403,7 +403,7 @@ identify_functional_modules <-
       dplyr::rename(node = module)
 
     graph_data <-
-      tidygraph::tbl_graph(nodes = node_data[, -c(12)],
+      tidygraph::tbl_graph(nodes = if (analysis_type == "do_gsea") node_data[, -c(12)] else node_data,
                            edges = edge_data,
                            directed = FALSE) %>%
       dplyr::mutate(degree = tidygraph::centrality_degree())
@@ -535,7 +535,6 @@ identify_functional_modules <-
         result_with_module %>%
         plyr::dlply(.variables = .(module)) %>%
         purrr::map(function(x) {
-          # cat(unique(x$module), " ")
           if (nrow(x) == 1) {
             x$module_content <-
               paste(x$node, collapse = ";")
@@ -645,7 +644,7 @@ identify_functional_modules <-
 
     list(
       graph_data = graph_data,
-      functional_module_result = functional_module_result,
+      functional_module_result = functional_module_result %>% dplyr::select(-database),
       result_with_module = result_with_module
     )
 

@@ -94,7 +94,6 @@
 # library(tidygraph)
 # library(tidyverse)
 # library(extrafont)
-# library(simplifyEnrichment)
 # # library(GOSim)
 # library(plyr)
 #

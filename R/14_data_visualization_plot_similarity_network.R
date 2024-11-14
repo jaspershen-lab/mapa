@@ -62,6 +62,14 @@
 #   text_all = TRUE,
 #   translation = TRUE
 # )
+# GSEA result
+# plot_similarity_network(
+#   object = gsea_enriched_functional_module,
+#   level = "functional_module",
+#   database = "go",
+#   degree_cutoff = 1,
+#   module_id = "Functional_module_53"
+# )
 
 
 #' Plot Similarity Network

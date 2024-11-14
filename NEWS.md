@@ -90,3 +90,7 @@
 # mapa 0.1.23
 
 * Fixed bug in plot_pathway_bar for "functional_module". Added title to the plot.
+
+# mapa 0.1.24
+
+* 1.Fixed bug in `do_gsea()` and `plot_pathway_bar` for GSEA. 2.Added database color to the barplot for `plot_module_info()` when level equals to "functional_module". 3.Added visualization for GSEA result.
