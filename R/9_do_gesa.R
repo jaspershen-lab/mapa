@@ -19,7 +19,7 @@
 #
 # sum(is.na(log(variable_info$fc, 2)))
 # sum(is.infinite(log(variable_info$fc, 2)))
-#
+
 # gsea_pathways <-
 #   do_gsea(
 #     variable_info = variable_info,
@@ -205,6 +205,10 @@ do_gsea <-
           seed = seed,
           by = by
         )
+      gsea_go_result@result$Count <- purrr::map_int(gsea_go_result@result$core_enrichment,
+                                                   function(x) {
+                                                     length(stringr::str_split(x, pattern = "/")[[1]])
+                                                   })
     } else{
       gsea_go_result <- NULL
     }
@@ -229,6 +233,10 @@ do_gsea <-
           seed = seed,
           by = by
         )
+      gsea_kegg_result@result$Count <- purrr::map_int(gsea_kegg_result@result$core_enrichment,
+                                                   function(x) {
+                                                     length(stringr::str_split(x, pattern = "/")[[1]])
+                                                   })
     } else{
       gsea_kegg_result <- NULL
     }
@@ -264,7 +272,10 @@ do_gsea <-
           seed = seed,
           by = by
         )
-
+      gsea_reactome_result@result$Count <- purrr::map_int(gsea_reactome_result@result$core_enrichment,
+                                                   function(x) {
+                                                     length(stringr::str_split(x, pattern = "/")[[1]])
+                                                     })
     } else{
       gsea_reactome_result <- NULL
     }

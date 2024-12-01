@@ -400,6 +400,11 @@ merge_pathways_internal <-
         pathway_result@result %>%
         dplyr::filter(p.adjust < p.adjust.cutoff) %>%
         dplyr::arrange(p.adjust)
+
+      # result$Count <- purrr::map_int(pathway_result@result$core_enrichment,
+      #                                function(x) {
+      #                                  length(stringr::str_split(x, pattern = "/")[[1]])
+      #                                  })
     }
 
 

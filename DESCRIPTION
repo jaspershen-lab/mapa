@@ -1,8 +1,8 @@
 Package: mapa
 Type: Package
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.1.24
-Date: 2024-11-14
+Version: 0.1.25
+Date: 2024-12-01
 Authors@R: c(
     person(given = "Xiaotao",
            family = "Shen",

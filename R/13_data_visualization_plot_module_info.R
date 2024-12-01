@@ -49,6 +49,9 @@
 # plot[[2]]
 # plot[[3]]
 #
+# library(showtext)
+# showtext_auto(enable = TRUE)
+#
 # table(enriched_functional_module@merged_module$result_with_module$module)
 #
 # plot <-
@@ -63,6 +66,30 @@
 #
 # export_module_info_plot(object = object,
 #                         path = "result")
+#
+##GSEA
+# plot <-
+#   plot_module_info(
+#     object = gsea_enriched_functional_module,
+#     level = "module",
+#     database = "go",
+#     module_id = "go_Module_1"
+#   )
+#
+# plot[[1]]
+# plot[[2]]
+# plot[[3]]
+#
+# table(enriched_functional_module@merged_module$result_with_module$module)
+#
+# plot <-
+#   plot_module_info(object = gsea_enriched_functional_module,
+#                    level = "functional_module",
+#                    module_id = "Functional_module_2")
+#
+# plot[[1]]
+# plot[[2]]
+# plot[[3]]
 
 #' Plot Module Information for Enrichment Analysis
 #'
@@ -320,8 +347,10 @@ plot_module_info <-
         plot1 +
         ggraph::geom_node_text(aes(x = x,
                                    y = y,
-                                   label = Description),
-                               check_overlap = TRUE)
+                                   label = stringr::str_wrap(Description, width = 30)),
+                               check_overlap = TRUE,
+                               size = 3,
+                               repel = TRUE)  # Use repel to avoid overlapping
     }
 
     if (level == "functional_module") {
@@ -329,8 +358,10 @@ plot_module_info <-
         plot1 +
         ggraph::geom_node_text(aes(x = x,
                                    y = y,
-                                   label = module_annotation),
-                               check_overlap = TRUE)
+                                   label = stringr::str_wrap(module_annotation, width = 30)),
+                               check_overlap = TRUE,
+                               size = 3,
+                               repel = TRUE)  # Use repel to avoid overlapping
     }
 
     ###barplot
@@ -346,6 +377,7 @@ plot_module_info <-
           dplyr::arrange(log.p)
       } else {
         temp_data <- temp_data %>%
+          dplyr::mutate(NES = as.numeric(NES)) %>%
           dplyr::arrange(NES)
       }
 
@@ -364,6 +396,7 @@ plot_module_info <-
           dplyr::arrange(log.p)
       } else {
         temp_data <- temp_data %>%
+          dplyr::mutate(NES = as.numeric(NES)) %>%
           dplyr::arrange(NES)
       }
 
@@ -380,7 +413,7 @@ plot_module_info <-
         labels = function(x)
           stringr::str_wrap(x, width = 40)
       ) +
-      scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+      scale_x_continuous(expand = expansion(mult = c(0.1, 0.1))) +
       geom_segment(aes(
         x = 0,
         y = Description,
@@ -413,7 +446,7 @@ plot_module_info <-
       dplyr::filter(module == module_id) %>%
       dplyr::mutate(value = if(analysis_type == "enrich_pathway")
                             -log(as.numeric(p.adjust, 10))
-                           else abs(NES)) %>%
+                           else abs(as.numeric(NES))) %>%
       dplyr::select(Description, value) %>%
       dplyr::mutate(Description = stringr::str_replace_all(Description, ",", "")) %>%
       plyr::dlply(.variables = .(Description)) %>%

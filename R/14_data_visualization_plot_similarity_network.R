@@ -2,6 +2,7 @@
 # source("R/6_utils.R")
 # source("R/8_functional_module_class.R")
 # setwd("demo_data/")
+# library(tidyverse)
 # load("enriched_functional_module.rda")
 #
 # object <-
@@ -62,13 +63,21 @@
 #   text_all = TRUE,
 #   translation = TRUE
 # )
+#
 # GSEA result
 # plot_similarity_network(
 #   object = gsea_enriched_functional_module,
 #   level = "functional_module",
 #   database = "go",
 #   degree_cutoff = 1,
-#   module_id = "Functional_module_53"
+#   module_id = "Functional_module_2"
+# )
+#
+# plot_similarity_network(
+#   object = gsea_enriched_functional_module,
+#   level = "module",
+#   degree_cutoff = 2,
+#   database = "go",
 # )
 
 
@@ -129,6 +138,12 @@ plot_similarity_network <-
       }
     }
 
+    # Determine analysis type
+    if ("enrich_pathway" %in% names(object@process_info)) {
+      analysis_type <- "enrich_pathway"
+    } else {
+      analysis_type <- "do_gsea"
+    }
 
     if (level == "module") {
       if (all(names(object@process_info) != "merge_pathways")) {
@@ -286,13 +301,22 @@ plot_similarity_network <-
     cluster_label_module <-
       tryCatch(
         expr = {
-          igraph::as_data_frame(graph_data, what = "vertices") %>%
-            dplyr::group_by(module) %>%
-            dplyr::filter(p.adjust == min(p.adjust) &
-                            Count == max(Count)) %>%
-            dplyr::slice_head(n = 1) %>%
-            dplyr::pull(Description)
-        },
+          df <- igraph::as_data_frame(graph_data, what = "vertices")
+
+          if (analysis_type == "enrich_pathway") {
+            df %>%
+              dplyr::group_by(module) %>%
+              dplyr::arrange(p.adjust, desc(Count), .by_group = TRUE) %>%
+              dplyr::slice_head(n = 1) %>%
+              dplyr::pull(Description)
+          } else {
+            df %>%
+              dplyr::group_by(module) %>%
+              dplyr::arrange(desc(abs(NES)), desc(Count), .by_group = TRUE) %>%
+              dplyr::slice_head(n = 1) %>%
+              dplyr::pull(Description)
+        }
+          },
         error = function(e) {
 
         },
@@ -320,7 +344,7 @@ plot_similarity_network <-
       ) +
       ggraph::geom_node_point(
         aes(fill = module,
-            size = -log(p.adjust, 10)),
+            size = if(analysis_type == "enrich_pathway") -log(p.adjust, 10) else abs(NES)),
         shape = 21,
         alpha = 1,
         show.legend = TRUE
@@ -328,6 +352,7 @@ plot_similarity_network <-
       guides(fill = guide_legend(ncol = 1)) +
       ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
       scale_size_continuous(range = c(1, 7)) +
+      labs(size = if(analysis_type == "enrich_pathway") "-log10(FDR adjusted P-values)" else "abs(NES)") +
       ggraph::theme_graph() +
       theme(
         plot.background = element_rect(fill = "transparent", color = NA),

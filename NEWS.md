@@ -94,3 +94,7 @@
 # mapa 0.1.24
 
 * 1.Fixed bug in `do_gsea()` and `plot_pathway_bar` for GSEA. 2.Added database color to the barplot for `plot_module_info()` when level equals to "functional_module". 3.Added visualization for GSEA result.
+
+# mapa 0.1.25
+
+* Modified `plot_relationship_network` for the visualization for GSEA result.
