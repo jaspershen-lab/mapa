@@ -91,7 +91,6 @@ enriched_modules <-
     sim.cutoff.kegg = 0.5,
     sim.cutoff.reactome = 0.5,
     measure.method.go = "Sim_XGraSM_2013",
-    control.method.go = list(),
     measure.method.kegg = "jaccard",
     measure.method.reactome = "jaccard",
     path = "result",
@@ -146,9 +145,11 @@ plot_pathway_bar(
   line_type = "straight"
 )
 
-# plot_pathway_bar(object = enriched_functional_module,
-#                  top_n = 20,
-#                  level = "module")
+plot_pathway_bar(object = enriched_functional_module,
+                 top_n = 20,
+                 level = "module",
+                 x_axis_name = "RichFactor",
+                 line_type = "straight")
 
 plot_pathway_bar(object = enriched_functional_module,
                  top_n = 20,
@@ -203,8 +204,8 @@ plot_similarity_network(
   object = enriched_functional_module,
   level = "module",
   database = "go",
-  degree_cutoff = 10,
-  module_id = "go_Module_10",
+  degree_cutoff = 0,
+  module_id = "go_Module_2",
   text_all = TRUE
 )
 
