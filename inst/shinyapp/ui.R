@@ -137,7 +137,7 @@ ui <- dashboardPage(
     ),
 
     tabItems(
-      ####introduction tab
+      ####introduction tab ====
       tabItem(tabName = "introduction",
               fluidPage(
                 titlePanel("Introduction of MAPA"),
@@ -147,7 +147,7 @@ ui <- dashboardPage(
                          )
                 )
               )),
-      ####tutorial tab
+      ####tutorial tab ====
       tabItem(tabName = "tutorial",
               fluidPage(
                 titlePanel("Tutorials of MAPA"),
@@ -157,7 +157,7 @@ ui <- dashboardPage(
                          )
                 )
               )),
-      ####upload data tab
+      ####upload data tab ====
       tabItem(tabName = "upload_data",
               fluidPage(
                 titlePanel("Upload Data"),
@@ -231,7 +231,7 @@ ui <- dashboardPage(
                 )
               )),
 
-      ####enrich pathways tab
+      ####enrich pathways tab ====
       tabItem(tabName = "enrich_pathways",
               fluidPage(
                 titlePanel("Enrich Pathways"),
@@ -355,7 +355,7 @@ ui <- dashboardPage(
                   )
                 )),
 
-      ####merge pathways tab
+      ####merge pathways tab ====
       tabItem(tabName = "merge_pathways",
               fluidPage(
                 titlePanel("Merge Pathways"),

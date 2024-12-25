@@ -1,6 +1,6 @@
 server <-
   function(input, output, session) {
-    ###Step 1: Upload data
+    ###Step 1: Upload data ====
     ###read the uploaded data
     variable_info <-
       reactive({
@@ -306,7 +306,7 @@ server <-
     })
 
     ###--------------------------------------------------------------------
-    ###step 2 enrich pathways
+    ###step 2 enrich pathways ====
     ###when the user click submit_enrich_pathways, begin enrich pathways
     #### Let user select the analysis type, either pathway enrichment analysis, or gene set enrichment analysis
     output$analysis_type <- renderUI(
@@ -369,18 +369,18 @@ server <-
                   readable = FALSE,
                   pool = FALSE
                 )
-              } else {
+              } else if (input$select_analysis_type == "do_gsea") {
                 do_gsea(
                   variable_info_new(),
-                  order_by = input$order_by(),
+                  order_by = input$order_by,
                   database = input$pathway_database,
                   save_to_local = FALSE,
                   path = "result",
                   OrgDb = org.Hs.eg.db,
                   organism = "hsa",
                   ont = "ALL",
-                  pvalueCutoff = 0.05,
-                  pAdjustMethod = "BH",
+                  pvalueCutoff = input$p_value_cutoff,
+                  pAdjustMethod = input$p_adjust_method,
                   qvalueCutoff = 0.2,
                   minGSSize = input$gene_set_size[1],
                   maxGSSize = input$gene_set_size[2],
@@ -656,7 +656,7 @@ server <-
 
 
     ###--------------------------------------------------------------------
-    ###step 3 merge pathways
+    ###step 3 merge pathways ====
     # Define enriched_modules as a reactive value
     enriched_modules <-
       reactiveVal()

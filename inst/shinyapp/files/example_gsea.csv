@@ -1,120 +1,601 @@
-﻿variable_id,ensembl,genename,genetype,length,fc,p_value,p_adjust
+variable_id,ensembl,genename,genetype,length,fc,p_value,p_value_adjust
 gene_1,ENSG00000160072,ATPase family AAA domain containing 3B,protein-coding,26084,0.358495203,0.005170123,0.020242433
-gene_3,ENSG00000225972,MT-ND1 pseudogene 23,pseudo,372,1.427186623,0.706372727,0.756266365
-gene_5,ENSG00000198744,MT-CO3 pseudogene 12,pseudo,547,2.922917031,0.313916326,0.395125419
-gene_6,ENSG00000290825,DEAD/H-box helicase 11 like 17 (pseudogene),pseudo,2541,0.311932933,0.231780659,0.309627056
-gene_7,ENSG00000228037,uncharacterized LOC100996583,ncRNA,2974,0.000787978,0.144910889,0.21375142
-gene_8,ENSG00000142611,PR/SET domain 16,protein-coding,369454,1.003153144,0.990039645,0.992606732
-gene_9,ENSG00000225630,MT-ND2 pseudogene 28,pseudo,1044,3.051516749,0.127979448,0.193287487
 gene_11,ENSG00000157911,peroxisomal biogenesis factor 10,protein-coding,9834,0.233627924,0.000261313,0.005137687
 gene_12,ENSG00000269896,small nuclear ribonucleoprotein polypeptide N pseudogene,pseudo,214,0.066515429,0.008836439,0.027685825
-gene_13,ENSG00000237973,MT-CO1 pseudogene 12,pseudo,1543,3.342335605,0.085349207,0.140187103
-gene_14,ENSG00000228463,ribosomal protein L23a pseudogene 21,pseudo,457,0.34286894,0.04128359,0.080042513
 gene_16,ENSG00000157933,SKI proto-oncogene,protein-coding,82826,0.231799776,0.000220478,0.004901725
-gene_22,ENSG00000142655,peroxisomal biogenesis factor 14,protein-coding,158471,0.755076035,0.279307312,0.360208262
-gene_27,ENSG00000229344,MT-CO2 pseudogene 12,pseudo,682,2.903855488,0.272520618,0.353396895
 gene_29,ENSG00000149527,phospholipase C eta 2,protein-coding,79553,0.037335789,0.007201725,0.02443531
 gene_31,ENSG00000171621,splA/ryanodine receptor domain and SOCS box containing 1,protein-coding,76639,2.678907254,0.006362338,0.022630826
 gene_34,ENSG00000230021,uncharacterized LOC101928626,ncRNA,183,0.013074392,0.014282673,0.03744905
-gene_38,ENSG00000173673,hes family bHLH transcription factor 3,protein-coding,1400,0.000787978,0.062989421,0.110129566
-gene_39,ENSG00000142583,solute carrier family 2 member 5,protein-coding,53373,0.4610922,0.083840525,0.138192508
 gene_44,ENSG00000074800,enolase 1,protein-coding,18191,0.384673671,0.001033571,0.008935564
 gene_45,ENSG00000116786,pleckstrin homology and RUN domain containing M2,protein-coding,50450,0.702403552,0.006029083,0.022035958
-gene_52,ENSG00000226457,ribosomal protein L22 pseudogene 3,pseudo,381,5.091623547,0.288220708,0.369336043
 gene_53,ENSG00000173614,nicotinamide nucleotide adenylyltransferase 1,protein-coding,42074,0.222667554,0.000456616,0.006432923
-gene_54,ENSG00000248527,MT-ATP6 pseudogene 1,pseudo,681,6.03398247,0.110595405,0.171754716
-gene_58,ENSG00000162592,coiled-coil domain containing 27,protein-coding,25186,1.28085663,0.758473101,0.801687814
 gene_59,ENSG00000116254,chromodomain helicase DNA binding protein 5,protein-coding,78535,0.347742148,0.011012164,0.031753163
 gene_61,ENSG00000204624,dispatched RND transporter family member 3,protein-coding,58397,0.038353667,0.01351051,0.036215032
-gene_62,ENSG00000142606,membrane metalloendopeptidase like 1,protein-coding,42378,0.402889307,0.088538313,0.144210916
-gene_65,ENSG00000171729,transmembrane protein 51,protein-coding,67947,0.530561776,0.348236533,0.429389385
-gene_67,ENSG00000162571,tubulin tyrosine ligase like 10,protein-coding,24057,0.459391536,0.411220832,0.491441416
-gene_69,ENSG00000037637,F-box protein 42,protein-coding,105641,0.69573589,0.074356118,0.125701042
 gene_71,ENSG00000159423,aldehyde dehydrogenase 4 family member A1,protein-coding,31295,0.096072986,0.012369663,0.034250175
 gene_72,ENSG00000142599,arginine-glutamic acid dipeptide repeats,protein-coding,496525,0.493596747,0.004521947,0.018828717
-gene_75,ENSG00000011021,chloride voltage-gated channel 6,protein-coding,41984,0.673118166,0.119690473,0.183195912
 gene_76,ENSG00000142615,chymotrypsin like elastase 2A,protein-coding,15364,0.128391185,0.006961593,0.023900176
-gene_77,ENSG00000215704,chymotrypsin like elastase 2B,protein-coding,25487,0.034367903,0.027960073,0.060017102
 gene_78,ENSG00000157916,retention in endoplasmic reticulum sorting receptor 1,protein-coding,13668,0.207805279,1.83E-06,0.002213216
 gene_79,ENSG00000157881,pantothenate kinase 4 (inactive),protein-coding,18061,0.570467871,0.006684392,0.023338563
 gene_82,ENSG00000048707,vacuolar protein sorting 13 homolog D,protein-coding,282018,0.399447927,0.001669524,0.011171701
-gene_85,ENSG00000162444,retinol binding protein 7,protein-coding,18816,7.84468316,0.130548282,0.19649001
-gene_87,ENSG00000180758,G protein-coupled receptor 157,protein-coding,28798,0.651626445,0.191402227,0.267274601
 gene_88,ENSG00000184677,zinc finger and BTB domain containing 40,protein-coding,102320,0.203963386,0.01641124,0.041079673
 gene_94,ENSG00000131697,nephrocystin 4,protein-coding,129663,0.205680433,0.000883988,0.008357302
 gene_101,ENSG00000197921,hes family bHLH transcription factor 5,protein-coding,1519,0.031462559,0.009574981,0.029040084
-gene_106,ENSG00000169504,chloride intracellular channel 4,protein-coding,98940,1.122453626,0.391439769,0.472092975
-gene_109,ENSG00000055070,SUZ RNA binding domain containing 1,protein-coding,45571,0.9301512,0.6845285,0.737443432
 gene_110,ENSG00000175087,PDLIM1 interacting kinase 1 like,protein-coding,14391,0.167765039,0.000122436,0.003993018
 gene_111,ENSG00000157191,NECAP endocytosis associated 2,protein-coding,19358,0.33242685,0.002359524,0.013258885
 gene_120,ENSG00000162511,lysosomal protein transmembrane 5,protein-coding,25306,0.101746802,0.013142498,0.035566086
-gene_121,ENSG00000158014,solute carrier family 30 member 2,protein-coding,8867,2.51010998,0.601949112,0.665345916
 gene_122,ENSG00000204138,phosphatase and actin regulator 4,protein-coding,130783,0.271347566,0.001125393,0.009265081
 gene_127,ENSG00000142675,connector enhancer of kinase suppressor of Ras 1,protein-coding,12401,0.145860961,0.003634465,0.016689437
 gene_130,ENSG00000116237,isoprenylcysteine carboxyl methyltransferase,protein-coding,14780,0.345412868,0.000594202,0.007171155
-gene_131,ENSG00000130772,mediator complex subunit 18,protein-coding,6964,0.350089231,0.022163986,0.050710501
-gene_139,ENSG00000090020,solute carrier family 9 member A1,protein-coding,68173,0.962624498,0.837307028,0.868488038
-gene_140,ENSG00000157978,low density lipoprotein receptor adaptor protein 1,protein-coding,25281,1.153987531,0.743924368,0.789016756
-gene_141,ENSG00000226944,RNF207 antisense RNA 1,ncRNA,941,0.935953404,0.938573463,0.952092011
 gene_143,ENSG00000130770,ATP synthase inhibitory factor subunit 1,protein-coding,10798,1.366034583,0.000481718,0.00661063
 gene_145,ENSG00000162512,syndecan 3,protein-coding,39293,0.459069078,0.003083585,0.015308171
 gene_146,ENSG00000158006,platelet activating factor acetylhydrolase 2,protein-coding,38351,0.102989788,5.74E-05,0.003397306
-gene_148,ENSG00000126698,DnaJ heat shock protein family (Hsp40) member C8,protein-coding,33574,0.831125321,0.024195835,0.05409723
-gene_151,ENSG00000130766,sestrin 2,protein-coding,22974,0.535317224,0.026085115,0.057016013
 gene_152,ENSG00000168528,serine incorporator 2,protein-coding,25116,2.635386182,0.019333667,0.046045702
 gene_153,ENSG00000196581,adherens junctions associated protein 1,protein-coding,137926,0.439227722,0.001165221,0.009441724
 gene_154,ENSG00000169403,platelet activating factor receptor,protein-coding,46771,0.068481835,0.000307205,0.005490663
 gene_155,ENSG00000084628,sodium/potassium transporting ATPase interacting 1,protein-coding,60143,0.115318635,0.003196443,0.015617903
 gene_156,ENSG00000060688,small nuclear ribonucleoprotein U5 subunit 40,protein-coding,37221,0.333770027,0.002280713,0.013047766
-gene_157,ENSG00000171612,solute carrier family 25 member 33,protein-coding,45709,1.596642126,0.08908712,0.144759229
-gene_159,ENSG00000188910,gap junction protein beta 3,protein-coding,5156,0.402318558,0.220863346,0.298059266
 gene_161,ENSG00000116138,DnaJ heat shock protein family (Hsp40) member C16,protein-coding,65567,0.2746516,0.000243135,0.005049011
 gene_162,ENSG00000158161,EYA transcriptional coactivator and phosphatase 3,protein-coding,118294,0.557829978,0.002213339,0.012837367
-gene_165,ENSG00000121769,fatty acid binding protein 3,protein-coding,11598,2.502382495,0.142471899,0.21073308
-gene_166,ENSG00000142627,EPH receptor A2,protein-coding,31733,0.658059479,0.041551424,0.080378656
 gene_169,ENSG00000142632,Rho guanine nucleotide exchange factor 19,protein-coding,14799,0.233406663,0.011864456,0.03333814
-gene_171,ENSG00000158292,G protein-coupled receptor 153,protein-coding,13746,0.507035763,0.033336969,0.068238014
 gene_173,ENSG00000189337,"kazrin, periplakin interacting protein",protein-coding,1225252,0.443796645,0.012242644,0.03404667
-gene_179,ENSG00000028137,TNF receptor superfamily member 1B,protein-coding,42238,0.23001185,0.038336393,0.075758461
-gene_185,ENSG00000130939,ubiquitination factor E4B,protein-coding,148408,0.701085853,0.057373835,0.102696926
-gene_186,ENSG00000175147,TMEM51 antisense RNA 1,ncRNA,41804,0.294923349,0.145328525,0.214287313
-gene_187,ENSG00000127472,phospholipase A2 group V,protein-coding,63733,6.688738674,0.485518475,0.5599406
 gene_188,ENSG00000060656,protein tyrosine phosphatase receptor type U,protein-coding,90298,0.611047505,0.008944773,0.027860025
-gene_189,ENSG00000163867,zinc finger MYM-type containing 6,protein-coding,45781,0.387946499,0.065131943,0.113003864
-gene_192,ENSG00000189280,gap junction protein beta 5,protein-coding,3466,0.288440684,0.045341189,0.085843361
 gene_193,ENSG00000134698,argonaute RISC component 4,protein-coding,49875,0.29805777,0.001568679,0.010846543
 gene_194,ENSG00000134690,cell division cycle associated 8,protein-coding,17239,0.110571206,0.000387167,0.006059304
 gene_196,ENSG00000132881,ciliogenesis and planar polarity effector complex subunit 2,protein-coding,5492,0.153774795,0.008352786,0.026757137
-gene_197,ENSG00000273274,zinc finger and BTB domain containing 8B,protein-coding,31615,0.6435687,0.050955632,0.09388443
-gene_198,ENSG00000116251,ribosomal protein L22,protein-coding,24370,1.794452788,0.038554149,0.076108386
 gene_200,ENSG00000158286,ring finger protein 207,protein-coding,15825,0.112704886,0.000259422,0.005118023
 gene_203,ENSG00000009709,paired box 7,protein-coding,118021,0.045394735,0.006275301,0.022512084
 gene_206,ENSG00000158008,exostosin like glycosyltransferase 1,protein-coding,16581,0.042891831,0.003882823,0.017307701
 gene_207,ENSG00000130940,castor zinc finger 1,protein-coding,160047,0.096276249,0.015774177,0.040055911
-gene_208,ENSG00000116771,agmatinase,protein-coding,13353,0.172869024,0.034321658,0.069675014
 gene_210,ENSG00000162585,FA core complex associated protein 20,protein-coding,28260,0.330172248,0.000660239,0.00745551
-gene_211,ENSG00000163879,dynein axonemal light intermediate chain 1,protein-coding,9939,0.586035705,0.043275617,0.082829774
-gene_213,ENSG00000116954,Ras related GTP binding C,protein-coding,21575,0.80359637,0.25607074,0.335752327
 gene_215,ENSG00000163873,glutamate ionotropic receptor kainate type subunit 3,protein-coding,238989,0.038521503,0.006949534,0.023893166
-gene_217,ENSG00000196449,yrdC N6-threonylcarbamoyltransferase domain containing,protein-coding,5264,1.318324905,0.086426058,0.141543217
 gene_223,ENSG00000179051,regulator of chromosome condensation 2,protein-coding,32918,0.204156063,0.000201583,0.004765096
-gene_224,ENSG00000215895,HSPA5 pseudogene 1,pseudo,1960,0.448207421,0.385044707,0.465947571
 gene_229,ENSG00000126067,proteasome 20S subunit beta 2,protein-coding,41986,0.494254338,0.00235199,0.013258885
 gene_231,ENSG00000132906,caspase 9,protein-coding,35703,0.380270647,0.000135369,0.004158064
 gene_232,ENSG00000197312,DNA damage inducible 1 homolog 2,protein-coding,51587,0.656959092,0.013087991,0.035481879
-gene_235,ENSG00000173660,ubiquinol-cytochrome c reductase hinge protein,protein-coding,13079,1.386964224,0.099509218,0.158111496
-gene_242,ENSG00000241014,"G protein-coupled receptor 199, pseudogene",ncRNA,926,0.020913487,0.110498204,0.171644407
 gene_243,ENSG00000054118,thyroid hormone receptor associated protein 3,protein-coding,80926,0.395251085,0.00185403,0.01178262
-gene_252,ENSG00000197982,chromosome 1 open reading frame 122,protein-coding,2476,0.655988674,0.032457571,0.066935733
-gene_254,ENSG00000183317,EPH receptor A10,protein-coding,51254,0.225455499,0.032932894,0.067699017
-gene_255,ENSG00000183386,four and a half LIM domains 3,protein-coding,8837,1.362320307,0.048947379,0.091017663
 gene_257,ENSG00000158315,rhomboid like 2,protein-coding,56024,0.127227649,0.007302357,0.024641082
 gene_258,ENSG00000204084,inositol polyphosphate-5-phosphatase B,protein-coding,86357,0.423382929,0.000178919,0.004526673
 gene_261,ENSG00000146463,zinc finger MYM-type containing 4,protein-coding,153350,0.324257255,0.000130438,0.004102457
-gene_263,ENSG00000183520,UTP11 small subunit processome component,protein-coding,15563,0.966108602,0.612530227,0.67477214
 gene_266,ENSG00000142686,chromosome 1 open reading frame 216,protein-coding,5018,0.382087153,0.006778199,0.023570107
-gene_269,ENSG00000117148,actin like 8,protein-coding,71731,0.000787978,0.225427194,0.303069557
 gene_271,ENSG00000117000,RLF zinc finger,protein-coding,79535,0.389938585,0.001859925,0.011793017
-gene_274,ENSG00000092853,claspin,protein-coding,49761,0.315466282,0.025347441,0.055861817
-gene_276,ENSG00000134697,G protein nucleolar 2,protein-coding,29122,1.308421229,0.227243018,0.304970214
-gene_277,ENSG00000187513,gap junction protein alpha 4,protein-coding,2749,0.28345912,0.136260802,0.203349706
+gene_286,ENSG00000116151,MORN repeat containing 1,protein-coding,70455,0.176327942,0.004678572,0.019157779
+gene_288,ENSG00000182873,PRKCZ antisense RNA 1,ncRNA,2596,0.196535107,0.000262366,0.005150689
+gene_293,ENSG00000173436,mitochondrial contact site and cristae organizing system subunit 10,protein-coding,145419,0.437665874,0.003536559,0.01648722
+gene_294,ENSG00000116544,DLG associated protein 3,protein-coding,64215,0.046249795,0.014538892,0.037864098
+gene_298,ENSG00000117016,regulating synaptic membrane exocytosis 3,protein-coding,45003,0.258904173,0.005691419,0.021341468
+gene_299,ENSG00000121310,enoyl-CoA hydratase domain containing 2,protein-coding,31303,0.316805906,0.015033244,0.038803084
+gene_317,ENSG00000117419,ERI1 exoribonuclease family member 3,protein-coding,134191,0.478630179,0.012518064,0.034501219
+gene_318,ENSG00000162384,CXXC motif containing zinc binding protein,protein-coding,6536,0.209909873,0.000824626,0.00813488
+gene_325,ENSG00000162396,"prolyl-tRNA synthetase 2, mitochondrial",protein-coding,7626,0.212556571,0.000846306,0.008212062
+gene_340,ENSG00000183431,splicing factor 3a subunit 3,protein-coding,33101,0.345976092,1.81E-05,0.002752325
+gene_351,ENSG00000162407,phospholipid phosphatase 3,protein-coding,150541,0.244592778,0.003285738,0.01584548
+gene_353,ENSG00000169218,R-spondin 1,protein-coding,23543,0.033862136,0.002068815,0.012398062
+gene_359,ENSG00000157184,carnitine palmitoyltransferase 2,protein-coding,17406,0.219549002,0.002495642,0.013625521
+gene_361,ENSG00000198815,forkhead box J3,protein-coding,159339,0.787498413,0.020286558,0.047613773
+gene_362,ENSG00000134744,terminal uridylyl transferase 4,protein-coding,145206,0.541463406,0.005608574,0.021196524
+gene_376,ENSG00000162385,"mago homolog, exon junction complex subunit",protein-coding,11619,0.279631451,0.001436116,0.0103775
+gene_386,ENSG00000123080,cyclin dependent kinase inhibitor 2C,protein-coding,13890,0.075133277,7.52E-05,0.003656019
+gene_388,ENSG00000077549,capping actin protein of muscle Z-line subunit beta,protein-coding,146765,0.593731218,0.001531469,0.010723721
+gene_394,ENSG00000162415,zinc finger SWIM-type containing 5,protein-coding,289811,0.027225893,0.015701077,0.039944336
+gene_395,ENSG00000162600,OMA1 zinc metallopeptidase,protein-coding,131419,0.344462448,0.012506211,0.03447337
+gene_396,ENSG00000116704,solute carrier family 35 member D1,protein-coding,54799,0.293672791,0.000515054,0.006771244
+gene_399,ENSG00000116205,transcription elongation factor A N-terminal and central domain containing 2,protein-coding,58936,0.158735979,0.001126726,0.009265655
+gene_433,ENSG00000162433,adenylate kinase 4,protein-coding,84597,0.657708925,0.007979558,0.026000807
+gene_440,ENSG00000203965,EF-hand calcium binding domain 7,protein-coding,49322,0.189441098,0.012060455,0.03371115
+gene_445,ENSG00000125703,autophagy related 4C cysteine peptidase,protein-coding,81385,0.569396557,0.001172679,0.009461295
+gene_456,ENSG00000162618,adhesion G protein-coupled receptor L4,protein-coding,392361,4.845868391,0.008259774,0.026572662
+gene_470,ENSG00000188786,metal regulatory transcription factor 1,protein-coding,50019,0.304335756,0.003099427,0.015341539
+gene_477,ENSG00000066135,lysine demethylase 4A,protein-coding,55370,0.173638681,0.000271611,0.005199717
+gene_488,ENSG00000184313,maestro heat like repeat family member 7,protein-coding,68513,0.070997418,0.001784786,0.011506291
+gene_496,ENSG00000143013,LIM domain only 4,protein-coding,20044,2.00696148,0.008548558,0.027128672
+gene_497,ENSG00000226084,ribosomal protein L17 pseudogene 6,pseudo,555,3.006969881,0.000301849,0.005421191
+gene_500,ENSG00000219102,heterogeneous nuclear ribonucleoprotein A3 pseudogene 12,pseudo,1063,0.14682152,0.017845848,0.043372137
+gene_501,ENSG00000184005,"ST6 N-acetylgalactosaminide alpha-2,6-sialyltransferase 3",protein-coding,559858,0.102609744,0.000863591,0.008271015
+gene_514,ENSG00000162402,ubiquitin specific peptidase 24,protein-coding,149020,0.288949443,0.002348802,0.013252754
+gene_518,ENSG00000116641,dedicator of cytokinesis 7,protein-coding,234089,0.348136895,0.00265595,0.01416315
+gene_527,ENSG00000117480,fatty acid amide hydrolase,protein-coding,19532,0.147385479,0.004310646,0.018383636
+gene_536,ENSG00000067334,deoxynucleotidyltransferase terminal interacting protein 2,protein-coding,13635,0.445122656,0.008277206,0.026598594
+gene_542,ENSG00000142949,protein tyrosine phosphatase receptor type F,protein-coding,98480,0.2654182,0.010496965,0.030739553
+gene_548,ENSG00000143036,solute carrier family 44 member 3,protein-coding,74905,0.519203617,0.001597183,0.010966732
+gene_552,ENSG00000065243,protein kinase N2,protein-coding,152034,0.350209358,0.002852937,0.01468544
+gene_564,ENSG00000117528,ATP binding cassette subfamily D member 3,protein-coding,100278,0.449698791,0.007009094,0.024000578
+gene_566,ENSG00000172339,ALG14 UDP-N-acetylglucosaminyltransferase subunit,protein-coding,98547,0.31796795,0.009184942,0.0282828
+gene_567,ENSG00000036549,zinc finger ZZ-type containing 3,protein-coding,121004,0.534093077,0.01021876,0.030272498
+gene_587,ENSG00000127124,HIVEP zinc finger 3,protein-coding,529561,0.423804228,0.000402089,0.006146157
+gene_600,ENSG00000143032,BarH like homeobox 2,protein-coding,5764,0.071997548,0.000853199,0.008243548
+gene_602,ENSG00000178028,DNA methyltransferase 1 associated protein 1,protein-coding,7227,0.218557207,0.001521301,0.010701451
+gene_613,ENSG00000236268,long intergenic non-protein coding RNA 1361,ncRNA,15389,0.000787978,0.014442867,0.037718625
+gene_621,ENSG00000152078,TLC domain containing 4,protein-coding,80253,4.279837451,0.00644441,0.022807567
+gene_626,ENSG00000171492,leucine rich repeat containing 8 VRAC subunit D,protein-coding,115598,0.365077981,0.002391226,0.013324381
+gene_632,ENSG00000116299,endosome-lysosome associated apoptosis and autophagy regulator 1,protein-coding,93103,0.208515297,0.001501405,0.010637048
+gene_641,ENSG00000117154,immunoglobin superfamily member 21,protein-coding,270686,0.15978981,0.006671037,0.023319
+gene_642,ENSG00000162377,cytochrome c oxidase assembly factor 7,protein-coding,13899,0.313157245,0.000607618,0.007224756
+gene_652,ENSG00000023909,glutamate-cysteine ligase modifier subunit,protein-coding,24258,0.522897049,0.015390517,0.039425955
+gene_668,ENSG00000198198,SZT2 subunit of KICSTOR complex,protein-coding,64366,0.235598331,0.004091392,0.017877744
+gene_671,ENSG00000116793,putative homeodomain transcription factor 1,protein-coding,62659,0.133925276,0.005485011,0.020877133
+gene_699,ENSG00000181656,G protein-coupled receptor 88,protein-coding,3883,0.000787978,0.014418859,0.037675292
+gene_700,ENSG00000122481,RWD domain containing 3,protein-coding,13016,0.333503269,0.000754658,0.007806992
+gene_701,ENSG00000198162,mannosidase alpha class 1A member 2,protein-coding,161424,0.478182312,0.006768085,0.023543242
+gene_710,ENSG00000232450,ribosomal protein S2 pseudogene 14,pseudo,748,0.156299193,0.007403426,0.024799653
+gene_716,ENSG00000143093,striatin interacting protein 1,protein-coding,43065,0.443663859,0.01307085,0.035450028
+gene_718,ENSG00000085491,solute carrier family 25 member 24,protein-coding,66807,0.265197899,0.000170471,0.004442829
+gene_723,ENSG00000134198,tetraspanin 2,protein-coding,41493,2.567837705,0.015969509,0.040343949
+gene_727,ENSG00000198799,leucine rich repeats and immunoglobulin like domains 2,protein-coding,59063,0.572821884,0.00049357,0.006689483
+gene_729,ENSG00000117620,solute carrier family 35 member A3,protein-coding,66284,0.43640322,0.000695602,0.007553142
+gene_732,ENSG00000162688,"amylo-alpha-1, 6-glucosidase, 4-alpha-glucanotransferase",protein-coding,73663,0.141030969,0.001081615,0.009127638
+gene_733,ENSG00000197106,solute carrier family 6 member 17,protein-coding,51709,0.042138375,0.000131846,0.004127002
+gene_744,ENSG00000185946,"RNA binding region (RNP1, RRM) containing 3",protein-coding,29549,0.439543692,0.006324712,0.022545792
+gene_747,ENSG00000162695,solute carrier family 30 member 7,protein-coding,85682,0.462702871,0.006988209,0.023949859
+gene_749,ENSG00000265808,"SEC22 homolog B, vesicle trafficking protein",protein-coding,25623,0.549956839,0.021514666,0.049587332
+gene_766,ENSG00000173218,VANGL planar cell polarity protein 1,protein-coding,56255,0.369957194,0.012090326,0.033775497
+gene_798,ENSG00000065183,WD repeat domain 3,protein-coding,36824,0.142964296,0.002153088,0.012670517
+gene_808,ENSG00000177551,nescient helix-loop-helix 2,protein-coding,7541,0.072024082,0.000174743,0.004481064
+gene_809,ENSG00000197323,tripartite motif containing 33,protein-coding,118414,0.427847369,0.019505091,0.046319893
+gene_826,ENSG00000155761,sperm associated antigen 17,protein-coding,231639,0.184299694,0.017965075,0.043607986
+gene_828,ENSG00000116830,transcription termination factor 2,protein-coding,47128,0.129396156,0.006755598,0.023503952
+gene_833,ENSG00000169418,natriuretic peptide receptor 1,protein-coding,15305,0.165617421,0.020607701,0.048066166
+gene_835,ENSG00000081026,"membrane associated guanylate kinase, WW and PDZ domain containing 3",protein-coding,295409,0.309811707,0.013900231,0.036841955
+gene_842,ENSG00000143554,solute carrier family 27 member 3,protein-coding,5804,0.240482243,0.000496325,0.006700418
+gene_843,ENSG00000143458,GA binding protein transcription factor subunit beta 2,protein-coding,54965,0.207155693,0.000846489,0.008212062
+gene_863,ENSG00000291232,PDE4DIP pseudogene 6,pseudo,30030,0.06307814,0.019110343,0.04566395
+gene_881,ENSG00000024526,DEP domain containing 1,protein-coding,23070,0.217655859,0.007048399,0.024080831
+gene_895,ENSG00000117262,G protein-coupled receptor 89A,protein-coding,62663,0.543137291,0.01973921,0.046735169
+gene_897,ENSG00000143624,integrator complex subunit 3,protein-coding,46759,0.188285862,0.001977143,0.012119757
+gene_904,ENSG00000117586,TNF superfamily member 4,protein-coding,314939,0.000787978,0.018980305,0.045440284
+gene_907,ENSG00000162728,potassium inwardly rectifying channel subfamily J member 9,protein-coding,9026,0.012431089,0.001214419,0.009610086
+gene_910,ENSG00000184371,colony stimulating factor 1,protein-coding,20751,0.440855873,0.011532558,0.032746155
+gene_917,ENSG00000143248,regulator of G protein signaling 5,protein-coding,210671,0.178894988,0.002453331,0.01349127
+gene_933,ENSG00000188859,family with sequence similarity 78 member B,protein-coding,109576,0.078777422,0.000128582,0.004075604
+gene_937,ENSG00000158473,CD1d molecule,protein-coding,8398,0.067552415,0.000528189,0.00681088
+gene_942,ENSG00000143318,calsequestrin 1,protein-coding,11312,0.254932145,0.013788569,0.036656741
+gene_950,ENSG00000143156,NME/NM23 family member 7,protein-coding,235418,0.547246622,0.02034024,0.047666017
+gene_954,ENSG00000116147,tenascin R,protein-coding,428402,0.041337194,0.015727384,0.039986313
+gene_957,ENSG00000143179,uridine-cytidine kinase 2,protein-coding,84005,0.503288502,0.016819531,0.041678959
+gene_960,ENSG00000143315,phosphatidylinositol glycan anchor biosynthesis class M,protein-coding,7038,0.142442971,0.001283586,0.00989149
+gene_961,ENSG00000116199,FAM20B glycosaminoglycan xylosylkinase,protein-coding,50764,0.500077092,0.00104196,0.008957039
+gene_973,ENSG00000075945,kinesin associated protein 3,protein-coding,163883,0.531713236,0.007475877,0.024959682
+gene_980,ENSG00000092607,T-box transcription factor 15,protein-coding,106511,0.010479392,0.001110781,0.009229244
+gene_987,ENSG00000227741,uncharacterized LOC729867,ncRNA,6671,0.01939707,0.007583837,0.025189411
+gene_994,ENSG00000143171,retinoid X receptor gamma,protein-coding,44434,0.187176474,0.006876509,0.023755335
+gene_1009,ENSG00000162694,exostosin like glycosyltransferase 2,protein-coding,22808,0.209351505,0.001339187,0.010049
+gene_1013,ENSG00000215835,EWS RNA binding protein 1 pseudogene,pseudo,1969,0.212925705,0.001404776,0.010256266
+gene_1021,ENSG00000121454,LIM homeobox 4,protein-coding,48721,0.027832208,0.00794452,0.025924459
+gene_1042,ENSG00000177807,potassium inwardly rectifying channel subfamily J member 10,protein-coding,71833,0.104740446,3.05E-05,0.002966909
+gene_1047,ENSG00000143228,NUF2 component of NDC80 kinetochore complex,protein-coding,89189,0.257066742,0.006203233,0.022363393
+gene_1055,ENSG00000227740,long intergenic non-protein coding RNA 2803,ncRNA,16296,0.15803171,0.021275327,0.049219785
+gene_1057,ENSG00000000457,SCY1 like pseudokinase 3,protein-coding,44637,0.090345726,0.002885461,0.014764215
+gene_1084,ENSG00000143653,saccharopine dehydrogenase (putative),protein-coding,43729,0.643431355,0.015066193,0.038865946
+gene_1090,ENSG00000234975,ferritin heavy chain 1 pseudogene 2,pseudo,412,1.889150276,0.014607886,0.037993605
+gene_1091,ENSG00000162851,"transcription factor B2, mitochondrial",protein-coding,25701,1.298774172,0.008019974,0.026080785
+gene_1094,ENSG00000143353,lysophospholipase like 1,protein-coding,38997,0.665896634,0.003156388,0.015475873
+gene_1096,ENSG00000143493,integrator complex subunit 7,protein-coding,95159,0.204067726,0.005051229,0.020014111
+gene_1098,ENSG00000179397,catsper channel auxiliary subunit epsilon,protein-coding,186801,0.146612147,0.017248513,0.042406267
+gene_1100,ENSG00000117592,peroxiredoxin 6,protein-coding,11486,1.575566879,0.001058536,0.00902322
+gene_1110,ENSG00000162761,LIM homeobox transcription factor 1 alpha,protein-coding,154849,0.019132647,0.01018264,0.030204821
+gene_1115,ENSG00000143499,SET and MYND domain containing 2,protein-coding,56030,0.46555465,0.009024279,0.028025005
+gene_1137,ENSG00000162814,spermatogenesis associated 17,protein-coding,240373,0.2221984,0.002445157,0.013463737
+gene_1160,ENSG00000121486,tRNA methyltransferase 1 like,protein-coding,38972,0.329522134,0.001262709,0.009806935
+gene_1162,ENSG00000291217,long intergenic non-protein coding RNA 1347,ncRNA,45438,0.251178723,0.009386769,0.028694324
+gene_1171,ENSG00000123685,basic leucine zipper ATF-like transcription factor 3,protein-coding,13424,0.115147773,0.004641489,0.019080451
+gene_1184,ENSG00000159388,BTG anti-proliferation factor 2,protein-coding,4112,0.274774438,0.000349336,0.005803628
+gene_1186,ENSG00000181450,zinc finger protein 678,protein-coding,113901,0.366803494,0.005240808,0.020376328
+gene_1188,ENSG00000120333,mitochondrial ribosomal protein S14,protein-coding,12637,0.425745649,0.005472285,0.020848813
+gene_1195,ENSG00000143355,LIM homeobox 9,protein-coding,23577,0.403028116,0.007669197,0.025328515
+gene_1203,ENSG00000143195,immunoglobulin like domain containing receptor 2,protein-coding,79830,0.317045118,0.000835297,0.008178778
+gene_1204,ENSG00000162849,kinesin family member 26B,protein-coding,554448,0.168284706,0.02005131,0.047202082
+gene_1210,ENSG00000067533,ribosomal RNA processing 15 homolog,protein-coding,52691,0.113359352,6.17E-05,0.003399315
+gene_1231,ENSG00000077157,protein phosphatase 1 regulatory subunit 12B,protein-coding,244008,0.242563498,0.011572914,0.032822936
+gene_1252,ENSG00000152382,transcriptional adaptor 1,protein-coding,19755,0.735471371,0.002921835,0.014857808
+gene_1262,ENSG00000135829,DExH-box helicase 9,protein-coding,48636,0.291787346,0.00022263,0.004938428
+gene_1264,ENSG00000134717,basic transcription factor 3 like 4,protein-coding,34518,0.840361423,0.020910139,0.048652691
+gene_1267,ENSG00000116668,SWT1 RNA endoribonuclease homolog,protein-coding,134702,0.42619179,0.010300428,0.030430629
+gene_1268,ENSG00000143756,F-box protein 28,protein-coding,47937,0.42341891,0.00323193,0.015708536
+gene_1274,ENSG00000143207,COP1 E3 ubiquitin ligase,protein-coding,262456,0.263297077,6.99E-05,0.003553742
+gene_1287,ENSG00000116906,glyceronephosphate O-acyltransferase,protein-coding,36767,0.331241832,0.001330103,0.010023753
+gene_1298,ENSG00000117697,NSL1 component of MIS12 kinetochore complex,protein-coding,65630,0.296930879,0.000421893,0.006232001
+gene_1301,ENSG00000162669,helicase for meiosis 1,protein-coding,144091,0.104127703,0.007319953,0.024664934
+gene_1308,ENSG00000143641,polypeptide N-acetylgalactosaminyltransferase 2,protein-coding,224133,0.439964016,0.006072592,0.022109922
+gene_1315,ENSG00000010072,SprT-like N-terminal domain,protein-coding,17920,0.251170613,0.00019821,0.004737808
+gene_1316,ENSG00000135766,egl-9 family hypoxia inducible factor 1,protein-coding,58537,0.106108385,0.001179746,0.009483744
+gene_1336,ENSG00000170382,leucine rich repeat neuronal 2,protein-coding,68569,0.079071879,3.36E-05,0.00307225
+gene_1351,ENSG00000094975,SUN domain containing ossification factor,protein-coding,79485,0.54512039,0.002382409,0.013305326
+gene_1354,ENSG00000162772,activating transcription factor 3,protein-coding,55444,3.535102174,0.012115153,0.033811325
+gene_1359,ENSG00000076356,plexin A2,protein-coding,222143,0.065302624,0.007985853,0.026003564
+gene_1375,ENSG00000069812,hes family bHLH transcription factor 2,protein-coding,12253,0.244775879,0.021151453,0.049031541
+gene_1385,ENSG00000123684,lysophosphatidylglycerol acyltransferase 1,protein-coding,87307,0.531289743,0.000531474,0.006819644
+gene_1386,ENSG00000117707,prospero homeobox 1,protein-coding,58330,0.410561491,0.000731848,0.007692982
+gene_1392,ENSG00000225171,deoxyuridine triphosphatase pseudogene 6,pseudo,462,0.145421214,0.011229878,0.032197324
+gene_1395,ENSG00000123836,"6-phosphofructo-2-kinase/fructose-2,6-biphosphatase 2",protein-coding,46659,1.650022768,0.001784726,0.011506291
+gene_1405,ENSG00000203705,TatD DNase domain containing 3,protein-coding,25003,0.630086249,0.013256863,0.035755316
+gene_1412,ENSG00000171161,zinc finger protein 672,protein-coding,11308,0.434378764,0.000702834,0.00756913
+gene_1424,ENSG00000198929,nitric oxide synthase 1 adaptor protein,protein-coding,300785,0.381271748,0.012411346,0.034317406
+gene_1427,ENSG00000174606,angel homolog 2,protein-coding,23686,0.330627277,0.001498105,0.010623027
+gene_1437,ENSG00000198797,BMP/retinoic acid inducible neural specific 2,protein-coding,111465,0.214081387,0.006986528,0.023949859
+gene_1440,ENSG00000177614,piggyBac transposable element derived 5,protein-coding,111843,0.107281704,0.00024543,0.005066844
+gene_1443,ENSG00000143858,synaptotagmin 2,protein-coding,119859,0.035729045,0.002208356,0.012825384
+gene_1448,ENSG00000136643,ribosomal protein S6 kinase C1,protein-coding,223542,0.314118374,0.004475256,0.0187498
+gene_1450,ENSG00000133069,transmembrane and coiled-coil domain family 2,protein-coding,57687,0.541838631,0.013217826,0.035682196
+gene_1456,ENSG00000069248,nucleoporin 133,protein-coding,68083,0.35969893,0.000812589,0.00810124
+gene_1468,ENSG00000185220,piggyBac transposable element derived 2,protein-coding,13751,0.126902426,0.001351692,0.010102904
+gene_1471,ENSG00000162769,FLVCR choline and heme transporter 1,protein-coding,41089,0.304941586,0.000187371,0.004647559
+gene_1484,ENSG00000163431,leiomodin 1,protein-coding,50093,0.071773935,0.004146036,0.018000138
+gene_1485,ENSG00000230124,acyl-CoA binding domain containing 6,protein-coding,233302,0.301290602,0.001626753,0.011046686
+gene_1493,ENSG00000118193,kinesin family member 14,protein-coding,69255,0.217594463,0.015328409,0.039312813
+gene_1499,ENSG00000135749,pecanex 2,protein-coding,312291,0.478884622,0.00335563,0.016038057
+gene_1511,ENSG00000175137,SH3 binding domain protein 5 like,protein-coding,15470,0.137375202,1.62E-05,0.002731707
+gene_1520,ENSG00000097046,cell division cycle 7,protein-coding,24914,0.280483677,0.006979137,0.023943733
+gene_1531,ENSG00000076321,kelch like family member 20,protein-coding,71752,0.26239009,0.000350303,0.005809901
+gene_1539,ENSG00000136636,potassium channel tetramerization domain containing 3,protein-coding,54504,0.517021885,0.000783373,0.007938396
+gene_1556,ENSG00000229739,PDC antisense RNA 1,ncRNA,97667,0.065934236,0.000498411,0.006716646
+gene_1557,ENSG00000116703,phosducin,protein-coding,17549,0.315557881,0.014668696,0.038106531
+gene_1611,ENSG00000263675,microRNA 5581,ncRNA,60,0.000787978,0.015720356,0.039974909
+gene_1797,ENSG00000183114,family with sequence similarity 43 member B,protein-coding,2448,0.338534925,0.000148039,0.004269195
+gene_1801,ENSG00000117242,PINK1 antisense RNA,ncRNA,9537,0.097425086,0.014807017,0.038369826
+gene_1806,ENSG00000162630,"beta-1,3-galactosyltransferase 2",protein-coding,7884,0.002576025,0.01770931,0.043162477
+gene_1814,ENSG00000066557,leucine rich repeat containing 40,protein-coding,60775,0.425416295,0.013488059,0.036183448
+gene_1822,ENSG00000007968,E2F transcription factor 2,protein-coding,24796,0.069565861,0.002772486,0.014471527
+gene_1823,ENSG00000117318,inhibitor of DNA binding 3,protein-coding,1576,0.596654676,0.001934985,0.012005472
+gene_1825,ENSG00000142676,ribosomal protein L11,protein-coding,5094,2.074438619,0.012044507,0.033685674
+gene_1826,ENSG00000057757,PITH domain containing 1,protein-coding,9815,0.608717174,0.009428357,0.028785755
+gene_1827,ENSG00000011009,lysophospholipase 2,protein-coding,4430,0.43316898,0.004487502,0.018760556
+gene_1828,ENSG00000117308,UDP-galactose-4-epimerase,protein-coding,5183,0.487648532,0.002916269,0.014853686
+gene_1840,ENSG00000158716,dual specificity phosphatase 23,protein-coding,1612,0.240829776,0.0100858,0.030010021
+gene_1859,ENSG00000169242,ephrin A1,protein-coding,7024,2.505386011,7.09E-06,0.002240944
+gene_1867,ENSG00000116521,secretory carrier membrane protein 3,protein-coding,6455,0.393767892,0.00260094,0.014021469
+gene_1868,ENSG00000176444,CDC like kinase 2,protein-coding,15624,0.140299912,0.001932156,0.011997787
+gene_1869,ENSG00000143630,hyperpolarization activated cyclic nucleotide gated potassium channel 3,protein-coding,12386,0.112845909,0.000684168,0.00752889
+gene_1886,ENSG00000142657,phosphogluconate dehydrogenase,protein-coding,21920,0.63042323,0.021130835,0.049005516
+gene_1902,ENSG00000281912,long intergenic non-protein coding RNA 1144,ncRNA,1710,0.177635922,0.006989469,0.023950013
+gene_1903,ENSG00000132773,"target of EGR1, exonuclease",protein-coding,3922,0.154301249,1.25E-06,0.002057763
+gene_1904,ENSG00000070759,testis associated actin remodelling kinase 2,protein-coding,147281,2.969545874,0.013735505,0.036578549
+gene_1929,ENSG00000133019,cholinergic receptor muscarinic 3,protein-coding,528888,0.242577236,0.00344004,0.016253329
+gene_1931,ENSG00000162639,HEN methyltransferase 1,protein-coding,13237,0.111765941,0.000225445,0.00495291
+gene_1932,ENSG00000134186,pre-mRNA processing factor 38B,protein-coding,10619,0.81511864,0.013183333,0.03563114
+gene_1942,ENSG00000132718,synaptotagmin 11,protein-coding,25633,0.577335685,0.007459757,0.024937292
+gene_1953,ENSG00000160803,ubiquilin 4,protein-coding,18500,0.473056424,0.001008683,0.008813131
+gene_1956,ENSG00000242252,bone gamma-carboxyglutamate protein,protein-coding,1134,0.06206763,0.012976387,0.035315257
+gene_1957,ENSG00000198952,SMG5 nonsense mediated mRNA decay factor,protein-coding,33602,0.497535389,0.005416068,0.020771075
+gene_1958,ENSG00000163472,transmembrane protein 79,protein-coding,10251,0.358421799,0.007479297,0.024964748
+gene_1959,ENSG00000163468,chaperonin containing TCP1 subunit 3,protein-coding,58906,0.573113701,0.00151523,0.010686985
+gene_1962,ENSG00000254726,mex-3 RNA binding family member A,protein-coding,10453,0.090929326,0.001177015,0.009477637
+gene_1963,ENSG00000186377,cytochrome P450 family 4 subfamily X member 1,protein-coding,27083,0.156860625,0.017240871,0.042392766
+gene_1980,ENSG00000241563,cortistatin,protein-coding,1968,0.183711672,0.008531703,0.027092327
+gene_1982,ENSG00000156869,ferric chelate reductase 1,protein-coding,62666,0.166505965,0.005039324,0.019987021
+gene_1983,ENSG00000033122,leucine rich repeat containing 7,protein-coding,584024,0.382121137,0.000793199,0.007988703
+gene_1986,ENSG00000159352,"proteasome 26S subunit ubiquitin receptor, non-ATPase 4",protein-coding,12771,0.365971285,3.07E-05,0.002966909
+gene_1989,ENSG00000049239,hexose-6-phosphate dehydrogenase/glucose 1-dehydrogenase,protein-coding,36564,0.313711081,0.009668542,0.029247376
+gene_1995,ENSG00000162383,solute carrier family 1 member 7,protein-coding,55460,0.057122355,0.009709716,0.029309709
+gene_1998,ENSG00000162946,DISC1 scaffold protein,protein-coding,414483,0.047855245,0.013616775,0.036409871
+gene_2001,ENSG00000157870,peroxiredoxin like 2B,protein-coding,4979,0.475671289,0.001872597,0.011850967
+gene_2010,ENSG00000083444,"procollagen-lysine,2-oxoglutarate 5-dioxygenase 1",protein-coding,41334,1.233770084,0.004859209,0.019559828
+gene_2011,ENSG00000116691,migration and invasion inhibitory protein,protein-coding,12580,0.343514214,3.18E-05,0.003010884
+gene_2021,ENSG00000162521,"RB binding protein 4, chromatin remodeling factor",protein-coding,35070,0.588737965,0.003978534,0.017571488
+gene_2024,ENSG00000116497,S100P binding protein,protein-coding,42109,0.341047087,0.000426487,0.006253033
+gene_2025,ENSG00000160097,fibronectin type III domain containing 5,protein-coding,10215,0.108147797,0.000546144,0.006903817
+gene_2031,ENSG00000158859,ADAM metallopeptidase with thrombospondin type 1 motif 4,protein-coding,14753,0.219552395,0.012379813,0.034263846
+gene_2036,ENSG00000143257,nuclear receptor subfamily 1 group I member 3,protein-coding,8579,0.103458837,0.004178532,0.018085844
+gene_2037,ENSG00000248485,Purkinje cell protein 4 like 1,protein-coding,26706,0.250747596,0.00705909,0.024106998
+gene_2038,ENSG00000188931,cilia and flagella associated protein 126,protein-coding,3144,0.131034964,0.002218643,0.012852795
+gene_2058,ENSG00000116688,mitofusin 2,protein-coding,35031,0.347543437,0.000672288,0.007499901
+gene_2060,ENSG00000084073,zinc metallopeptidase STE24,protein-coding,36140,0.306760555,0.000685089,0.00752889
+gene_2064,ENSG00000117640,mitochondrial fission regulator 1 like,protein-coding,14303,0.356011425,8.33E-05,0.003752707
+gene_2072,ENSG00000187147,ring finger protein 220,protein-coding,246530,0.247989852,7.40E-05,0.003649141
+gene_2078,ENSG00000142945,kinesin family member 2C,protein-coding,27950,0.233015068,0.005560953,0.021079001
+gene_2079,ENSG00000142937,ribosomal protein S8,protein-coding,3529,2.324831991,0.011633799,0.032941338
+gene_2088,ENSG00000117425,patched 2,protein-coding,23410,0.091384778,3.23E-05,0.003025394
+gene_2095,ENSG00000126107,HECT domain E3 ubiquitin protein ligase 3,protein-coding,8785,0.357338065,9.56E-05,0.003877702
+gene_2098,ENSG00000162408,nucleolar protein 9,protein-coding,33167,0.222796795,4.90E-05,0.003312493
+gene_2099,ENSG00000173662,taste 1 receptor member 1,protein-coding,24449,0.329731415,0.020337101,0.047664325
+gene_2103,ENSG00000070886,EPH receptor A8,protein-coding,40107,0.039351456,0.009694031,0.029279568
+gene_2107,ENSG00000119285,HEAT repeat containing 1,protein-coding,55512,0.25098339,0.000500444,0.006716646
+gene_2115,ENSG00000117758,syntaxin 12,protein-coding,51225,0.625654776,0.000898647,0.008399313
+gene_2117,ENSG00000117751,protein phosphatase 1 regulatory subunit 8,protein-coding,20895,0.458078967,0.00043718,0.006311273
+gene_2120,ENSG00000117748,replication protein A2,protein-coding,23223,0.369134582,0.000240281,0.005029323
+gene_2126,ENSG00000159363,ATPase cation transporting 13A2,protein-coding,25971,0.182031269,8.70E-05,0.003801404
+gene_2127,ENSG00000117118,succinate dehydrogenase complex iron sulfur subunit B,protein-coding,35488,0.890339866,0.014394208,0.037631417
+gene_2139,ENSG00000143498,"TATA-box binding protein associated factor, RNA polymerase I subunit A",protein-coding,32032,0.29101138,0.000341852,0.005760383
+gene_2142,ENSG00000186063,"axin interactor, dorsalization associated",protein-coding,45198,1.602083518,0.002401644,0.013359778
+gene_2143,ENSG00000162819,BRO1 domain and CAAX motif containing,protein-coding,22644,0.573955335,0.001799597,0.011570933
+gene_2146,ENSG00000164010,erythroblast membrane associated protein (Scianna blood group),protein-coding,27870,0.213214587,0.000143324,0.004250146
+gene_2147,ENSG00000164011,zinc finger protein 691,protein-coding,5905,0.111583294,0.001174506,0.009461295
+gene_2153,ENSG00000154309,dispatched RND transporter family member 1,protein-coding,190974,0.35319895,0.002505215,0.013666068
+gene_2163,ENSG00000260941,long intergenic non-protein coding RNA 622,ncRNA,1570,0.081226894,0.002709111,0.014305139
+gene_2172,ENSG00000092621,phosphoglycerate dehydrogenase,protein-coding,95808,0.346800778,0.003011086,0.01507897
+gene_2179,ENSG00000130764,leucine rich repeat containing 47,protein-coding,17940,0.306985721,0.000317405,0.005572489
+gene_2180,ENSG00000266075,"RNA, 7SL, cytoplasmic 574, pseudogene",pseudo,297,0.107338474,0.000580091,0.007078682
+gene_2181,ENSG00000284770,tubulin folding cofactor E,protein-coding,85084,0.245310812,0.015242502,0.039138298
+gene_2190,ENSG00000198837,DENN domain containing 4B,protein-coding,17218,0.348612068,0.013236617,0.035722626
+gene_2191,ENSG00000160741,CREB regulated transcription coactivator 2,protein-coding,10947,0.638906415,0.013903471,0.036841955
+gene_2195,ENSG00000143545,"RAB13, member RAS oncogene family",protein-coding,4742,2.406403865,0.017128651,0.042191372
+gene_2196,ENSG00000177954,ribosomal protein S27,protein-coding,1394,2.344214941,0.000613034,0.007230885
+gene_2203,ENSG00000116198,centrosomal protein 104,protein-coding,45311,0.346231196,0.000146677,0.004254966
+gene_2204,ENSG00000169598,DNA fragmentation factor subunit beta,protein-coding,28163,0.182386811,0.001928717,0.011997787
+gene_2215,ENSG00000125945,zinc finger protein 436,protein-coding,10389,0.094893285,0.002353675,0.013258885
+gene_2232,ENSG00000177301,potassium voltage-gated channel subfamily A member 2,protein-coding,111638,0.013981998,0.005138022,0.020183624
+gene_2235,ENSG00000225855,RUSC1 antisense RNA 1,ncRNA,7314,0.348680186,0.003606859,0.016636979
+gene_2242,ENSG00000160752,farnesyl diphosphate synthase,protein-coding,11919,0.640132808,0.010335448,0.030497538
+gene_2243,ENSG00000121957,G protein signaling modulator 2,protein-coding,59196,0.324761342,0.002694711,0.014281043
+gene_2259,ENSG00000082482,potassium two pore domain channel subfamily K member 2,protein-coding,231316,0.084572843,0.000546894,0.006908868
+gene_2262,ENSG00000134207,synaptotagmin 6,protein-coding,64590,0.129022919,0.009483313,0.028893397
+gene_2265,ENSG00000117395,EBNA1 binding protein 2,protein-coding,106762,0.284380055,0.000691758,0.00752889
+gene_2268,ENSG00000009780,family with sequence similarity 76 member A,protein-coding,37156,0.56784811,0.014047191,0.037063232
+gene_2270,ENSG00000077254,ubiquitin specific peptidase 33,protein-coding,63866,0.437104866,0.002626516,0.014069923
+gene_2272,ENSG00000215788,TNF receptor superfamily member 25,protein-coding,5390,0.080191714,0.00214127,0.012639201
+gene_2278,ENSG00000143157,pogo transposable element derived with KRAB domain,protein-coding,16913,0.201384507,7.40E-05,0.003649141
+gene_2280,ENSG00000160781,progestin and adipoQ receptor family member 6,protein-coding,4798,0.195002293,0.001356535,0.010106111
+gene_2285,ENSG00000117569,polypyrimidine tract binding protein 2,protein-coding,102074,0.340752512,0.00170016,0.011231878
+gene_2289,ENSG00000058668,ATPase plasma membrane Ca2+ transporting 4,protein-coding,117250,0.610669365,0.00620746,0.022366363
+gene_2291,ENSG00000282872,chromosome 1 open reading frame 230,protein-coding,4863,0.000787978,0.000965792,0.008687388
+gene_2293,ENSG00000171680,pleckstrin homology and RhoGEF domain containing G5,protein-coding,52953,0.19693633,0.004168652,0.018059276
+gene_2295,ENSG00000116977,galectin 8,protein-coding,34982,0.396081548,0.004563101,0.01891222
+gene_2299,ENSG00000242485,mitochondrial ribosomal protein L20,protein-coding,5385,0.251191923,0.000684532,0.00752889
+gene_2304,ENSG00000179403,von Willebrand factor A domain containing 1,protein-coding,8022,0.265471001,0.020198342,0.047468873
+gene_2305,ENSG00000215915,ATPase family AAA domain containing 3C,protein-coding,20475,0.080963099,0.012613425,0.034687699
+gene_2309,ENSG00000135776,ATP binding cassette subfamily B member 10,protein-coding,42126,0.309369931,0.002707396,0.014302131
+gene_2313,ENSG00000135763,URB2 ribosome biogenesis homolog,protein-coding,33954,0.11197154,0.000303077,0.005438287
+gene_2317,ENSG00000169914,OTU deubiquitinase 3,protein-coding,30551,0.291020286,0.001366869,0.010157877
+gene_2322,ENSG00000269956,MKNK1 antisense RNA 1,ncRNA,31645,0.026582959,0.019578369,0.046443575
+gene_2324,ENSG00000079277,MAPK interacting serine/threonine kinase 1,protein-coding,59437,0.285120427,0.000192458,0.004668222
+gene_2325,ENSG00000117407,artemin,protein-coding,3921,0.027370925,0.003112022,0.015379537
+gene_2327,ENSG00000117408,importin 13,protein-coding,21073,0.123680194,4.41E-06,0.002240944
+gene_2329,ENSG00000159214,coiled-coil domain containing 24,protein-coding,5170,0.118869143,0.016826493,0.041690227
+gene_2330,ENSG00000196517,solute carrier family 6 member 9,protein-coding,39968,0.073283005,0.008389156,0.026803978
+gene_2356,ENSG00000189339,solute carrier family 35 member E2B,protein-coding,33267,0.366371339,0.006866897,0.023755335
+gene_2359,ENSG00000008130,NAD kinase,protein-coding,29226,0.395534855,0.001825593,0.011660296
+gene_2360,ENSG00000078369,G protein subunit beta 1,protein-coding,107008,0.599834607,0.000954398,0.008638368
+gene_2383,ENSG00000198890,protein arginine methyltransferase 6,protein-coding,10963,0.051449,0.000580438,0.007078682
+gene_2389,ENSG00000162517,penta-EF-hand domain containing 1,protein-coding,15031,0.552825317,0.000209977,0.004821338
+gene_2396,ENSG00000085840,origin recognition complex subunit 1,protein-coding,31595,0.212972823,0.018042272,0.043741001
+gene_2399,ENSG00000163041,H3.3 histone A,protein-coding,10169,1.294626783,0.019718696,0.04669713
+gene_2406,ENSG00000143748,nuclear VCP like,protein-coding,102856,0.274376719,0.002222736,0.012865035
+gene_2409,ENSG00000143771,cornichon family AMPA receptor auxiliary protein 4,protein-coding,22602,0.560702849,0.001809448,0.011622901
+gene_2414,ENSG00000183682,bone morphogenetic protein 8a,protein-coding,38234,0.130437914,0.000442053,0.006338746
+gene_2418,ENSG00000163909,hes related family bHLH transcription factor with YRPW motif like,protein-coding,16209,0.056268367,0.021362394,0.049345955
+gene_2421,ENSG00000090621,poly(A) binding protein cytoplasmic 4,protein-coding,16082,0.346107425,0.003846982,0.017223891
+gene_2427,ENSG00000143369,extracellular matrix protein 1,protein-coding,5728,0.525006026,0.002766735,0.014460645
+gene_2433,ENSG00000143420,endosulfine alpha,protein-coding,28762,0.816171586,0.004480496,0.0187498
+gene_2444,ENSG00000143793,chromosome 1 open reading frame 35,protein-coding,4686,0.225090763,0.000235038,0.005029323
+gene_2447,ENSG00000198835,gap junction protein gamma 2,protein-coding,9897,0.087146312,0.005570508,0.021093183
+gene_2449,ENSG00000181873,iron-sulfur cluster assembly factor IBA57,protein-coding,16454,0.433254988,0.013562602,0.036304398
+gene_2450,ENSG00000162913,OBSCN antisense RNA 1,ncRNA,10162,0.205171559,0.008910538,0.027811934
+gene_2451,ENSG00000154370,tripartite motif containing 11,protein-coding,13163,0.678300018,0.019453887,0.046237274
+gene_2454,ENSG00000230841,ribosomal protein L23a pseudogene 15,pseudo,459,0.286799618,0.021112787,0.048975904
+gene_2459,ENSG00000171960,peptidylprolyl isomerase H,protein-coding,18424,0.289507273,0.000667416,0.007482211
+gene_2462,ENSG00000117385,prolyl 3-hydroxylase 1,protein-coding,20750,0.809831786,0.008261511,0.026572662
+gene_2465,ENSG00000001461,NIPA like domain containing 3,protein-coding,57175,0.560688589,0.007404931,0.024800482
+gene_2471,ENSG00000177606,"Jun proto-oncogene, AP-1 transcription factor subunit",protein-coding,7204,0.457522438,0.001722395,0.011299275
+gene_2472,ENSG00000116539,ASH1 like histone lysine methyltransferase,protein-coding,227895,0.388132595,0.005727596,0.021403863
+gene_2473,ENSG00000162923,WD repeat domain 26,protein-coding,51888,0.69184736,0.005629268,0.02123172
+gene_2474,ENSG00000084652,taxilin alpha,protein-coding,18611,0.309504804,0.001620952,0.011038094
+gene_2475,ENSG00000160051,IQ motif containing C,protein-coding,3012,0.183782029,0.000783882,0.00793947
+gene_2479,ENSG00000116478,histone deacetylase 1,protein-coding,41553,0.360715655,0.006969298,0.02391574
+gene_2480,ENSG00000175130,MARCKS like 1,protein-coding,2395,0.469274689,0.009990954,0.029817591
+gene_2485,ENSG00000134248,"late endosomal/lysosomal adaptor, MAPK and MTOR activator 5",protein-coding,6694,2.027671314,0.007652144,0.025328515
+gene_2491,ENSG00000116353,mitochondrial trans-2-enoyl-CoA reductase,protein-coding,38286,0.277024598,0.020515854,0.047940827
+gene_2499,ENSG00000116141,microtubule affinity regulating kinase 1,protein-coding,136326,0.220608859,0.002069068,0.012398062
+gene_2503,ENSG00000117593,"aspartyl-tRNA synthetase 2, mitochondrial",protein-coding,34156,0.186920755,0.000817388,0.008101263
+gene_2510,ENSG00000197852,inka box actin regulator 2,protein-coding,75195,0.040717618,0.00035928,0.00587512
+gene_2515,ENSG00000171385,potassium voltage-gated channel subfamily D member 3,protein-coding,219007,0.07979286,0.006896605,0.023784725
+gene_2522,ENSG00000158773,upstream transcription factor 1,protein-coding,6727,0.382591114,0.001754384,0.011391653
+gene_2523,ENSG00000186517,Rho GTPase activating protein 30,protein-coding,23025,0.000787978,0.01798419,0.043638271
+gene_2528,ENSG00000158793,nitrilase 1,protein-coding,7360,0.421710556,0.005903058,0.021774051
+gene_2538,ENSG00000121931,ligand dependent nuclear receptor interacting factor 1,protein-coding,16776,0.10372719,0.000631198,0.007287604
+gene_2545,ENSG00000156171,DNA damage regulated autophagy modulator 2,protein-coding,23041,1.851698323,0.015599726,0.039796455
+gene_2552,ENSG00000162543,UBX domain protein 10,protein-coding,9955,0.000787978,0.008669863,0.027370099
+gene_2554,ENSG00000143252,succinate dehydrogenase complex subunit C,protein-coding,48826,0.455861535,0.001513823,0.010686985
+gene_2559,ENSG00000143799,poly(ADP-ribose) polymerase 1,protein-coding,47945,0.235604723,0.000957309,0.008641714
+gene_2560,ENSG00000158864,NADH:ubiquinone oxidoreductase core subunit S2,protein-coding,17620,0.508548755,0.01615676,0.040649568
+gene_2568,ENSG00000132780,nuclear autoantigenic sperm protein,protein-coding,35059,0.2310677,0.000730672,0.007688164
+gene_2578,ENSG00000162426,solute carrier family 45 member 1,protein-coding,26054,0.088642365,3.37E-05,0.00307225
+gene_2580,ENSG00000188295,zinc finger protein 669,protein-coding,4411,0.324553109,0.00348768,0.016356017
+gene_2584,ENSG00000116514,ring finger protein 19B,protein-coding,28365,0.296247162,0.000181041,0.004536374
+gene_2585,ENSG00000162419,glucocorticoid modulatory element binding protein 1,protein-coding,50576,0.355234817,0.013895571,0.036835685
+gene_2586,ENSG00000154222,coiled-coil and C2 domain containing 1B,protein-coding,20483,0.442486397,0.004933819,0.01975974
+gene_2589,ENSG00000189195,BTB domain containing 8,protein-coding,104421,0.373840854,0.018683439,0.044907485
+gene_2591,ENSG00000131236,cyclase associated actin cytoskeleton regulatory protein 1,protein-coding,32417,0.670307467,0.000777453,0.007913864
+gene_2592,ENSG00000097021,acyl-CoA thioesterase 7,protein-coding,129499,0.379099844,0.000209711,0.004821338
+gene_2593,ENSG00000143337,torsin 1A interacting protein 1,protein-coding,38036,0.567578079,0.012094956,0.033783646
+gene_2595,ENSG00000133216,EPH receptor B2,protein-coding,210662,0.186865243,0.000862573,0.008271015
+gene_2596,ENSG00000143183,transmembrane and coiled-coil domains 1,protein-coding,103463,0.739377901,0.000400517,0.006141674
+gene_2597,ENSG00000248333,cyclin dependent kinase 11B,protein-coding,23788,0.527220786,0.002526289,0.013731198
+gene_2600,ENSG00000162687,potassium sodium-activated channel subfamily T member 2,protein-coding,383447,0.300923255,0.003263939,0.015787315
+gene_2602,ENSG00000159023,erythrocyte membrane protein band 4.1,protein-coding,232956,0.181080652,0.002407465,0.013369741
+gene_2607,ENSG00000142920,antizyme inhibitor 2,protein-coding,42389,0.402760186,0.009153364,0.028234683
+gene_2608,ENSG00000116525,tripartite motif containing 62,protein-coding,36661,0.250167412,0.010597845,0.030901893
+gene_2612,ENSG00000163131,cathepsin S,protein-coding,35879,0.133533522,0.003407292,0.016166819
+gene_2613,ENSG00000183814,lin-9 DREAM MuvB core complex component,protein-coding,78721,0.332622234,4.78E-05,0.003272174
+gene_2621,ENSG00000213516,RBMX like 1,protein-coding,13505,0.428215622,0.011659981,0.032970294
+gene_2634,ENSG00000137959,interferon induced protein 44 like,protein-coding,26244,18.83481366,0.005997323,0.021978667
+gene_2635,ENSG00000174151,cytochrome b561 family member D1,protein-coding,8881,0.25810217,0.000266699,0.005171591
+gene_2636,ENSG00000181754,adhesion molecule with Ig like domain 1,protein-coding,5561,0.282839738,0.003771782,0.017072303
+gene_2641,ENSG00000134183,G protein subunit alpha transducin 2,protein-coding,16839,0.081435217,0.002951879,0.014945886
+gene_2644,ENSG00000155380,solute carrier family 16 member 1,protein-coding,45747,0.613339572,0.003450964,0.016285333
+gene_2647,ENSG00000223764,long intergenic non-protein coding RNA 2593,ncRNA,4152,0.152409742,0.009102886,0.028146112
+gene_2648,ENSG00000188976,NOC2 like nucleolar associated transcriptional repressor,protein-coding,15107,0.363932307,6.91E-05,0.003553742
+gene_2649,ENSG00000187583,pleckstrin homology domain containing N1,protein-coding,9384,0.043276988,0.010615158,0.030935956
+gene_2650,ENSG00000188290,hes family bHLH transcription factor 4,protein-coding,1211,0.326512784,0.005101797,0.02011344
+gene_2652,ENSG00000188157,agrin,protein-coding,35999,0.311595465,0.000938943,0.008580142
+gene_2654,ENSG00000198711,SSBP3 antisense RNA 1,ncRNA,2624,0.141744111,0.009414925,0.028749197
+gene_2657,ENSG00000157216,single stranded DNA binding protein 3,protein-coding,188048,0.311314234,0.000607243,0.007224756
+gene_2660,ENSG00000135775,component of oligomeric golgi complex 2,protein-coding,51502,0.22082987,0.000154817,0.004294251
+gene_2667,ENSG00000160714,ubiquitin conjugating enzyme E2 Q1,protein-coding,10452,0.407383939,0.000502956,0.006727842
+gene_2669,ENSG00000160710,adenosine deaminase RNA specific,protein-coding,46319,0.397837657,0.000290458,0.005333183
+gene_2682,ENSG00000170385,solute carrier family 30 member 1,protein-coding,7594,0.557503734,0.00526796,0.020457696
+gene_2686,ENSG00000118217,activating transcription factor 6,protein-coding,211277,0.362471695,0.00012951,0.00408077
+gene_2693,ENSG00000213047,DENN domain containing 1B,protein-coding,270949,0.360263583,0.018015496,0.043687356
+gene_2698,ENSG00000117400,"MPL proto-oncogene, thrombopoietin receptor",protein-coding,16649,0.000787978,0.011755143,0.033128442
+gene_2699,ENSG00000117399,cell division cycle 20,protein-coding,4223,0.148511053,0.000685894,0.00752889
+gene_2704,ENSG00000116337,adenosine monophosphate deaminase 2,protein-coding,15948,0.305830275,0.000277079,0.005221851
+gene_2710,ENSG00000117020,AKT serine/threonine kinase 3,protein-coding,362847,0.70809551,0.014250716,0.037395093
+gene_2711,ENSG00000198912,chromosome 1 open reading frame 174,protein-coding,11169,0.673496355,0.01231368,0.034143834
+gene_2712,ENSG00000183856,IQ motif containing GTPase activating protein 3,protein-coding,47200,0.129654198,0.006057098,0.022083152
+gene_2714,ENSG00000132702,hyaluronan and proteoglycan link protein 2,protein-coding,6395,0.107790709,0.003838041,0.017209223
+gene_2718,ENSG00000132688,nestin,protein-coding,8645,0.041887789,0.000674047,0.00750541
+gene_2720,ENSG00000143319,interferon stimulated exonuclease gene 20 like 2,protein-coding,6876,0.397794686,0.019203805,0.045814063
+gene_2721,ENSG00000143303,methyltransferase like 25B,protein-coding,8519,0.303785555,0.00017703,0.004511404
+gene_2722,ENSG00000143314,mitochondrial ribosomal protein L24,protein-coding,4288,0.246550382,0.002372618,0.013283085
+gene_2724,ENSG00000143294,proline rich mitotic checkpoint control factor,protein-coding,50206,0.368922253,0.002780607,0.014483154
+gene_2738,ENSG00000177757,family with sequence similarity 87 member B,ncRNA,2467,0.057785762,0.020976487,0.048757229
+gene_2739,ENSG00000230368,family with sequence similarity 41 member C,ncRNA,8833,0.000787978,0.004425445,0.018649417
+gene_2742,ENSG00000131591,chromosome 1 open reading frame 159,protein-coding,34544,0.271658703,0.003980928,0.017573676
+gene_2745,ENSG00000085831,tetratricopeptide repeat domain 39A,protein-coding,57859,0.38252267,0.002659044,0.014171986
+gene_2747,ENSG00000187634,sterile alpha motif domain containing 11,protein-coding,20653,0.072786124,0.002154743,0.012670643
+gene_2749,ENSG00000156876,SAS-6 centriolar assembly protein,protein-coding,49393,0.285700199,0.007460955,0.024937292
+gene_2751,ENSG00000137992,dihydrolipoamide branched chain transacylase E2,protein-coding,62916,0.27070469,0.00247145,0.013538052
+gene_2757,ENSG00000121774,"KH RNA binding domain containing, signal transduction associated 1",protein-coding,46983,0.402172899,6.79E-06,0.002240944
+gene_2758,ENSG00000121775,transmembrane protein 39B,protein-coding,30836,0.334296539,0.006254992,0.022455571
+gene_2761,ENSG00000025800,karyopherin subunit alpha 6,protein-coding,68508,0.748779235,0.006329151,0.02255346
+gene_2764,ENSG00000064703,DEAD-box helicase 20,protein-coding,20771,0.289733339,0.000253171,0.005099623
+gene_2765,ENSG00000122406,ribosomal protein L5,protein-coding,9912,2.64495965,0.003495824,0.016377929
+gene_2782,ENSG00000143502,sushi domain containing 4,protein-coding,143415,0.081019599,9.01E-05,0.003801404
+gene_2815,ENSG00000154358,"obscurin, cytoskeletal calmodulin and titin-interacting RhoGEF",protein-coding,170833,0.292767654,0.01379429,0.036656741
+gene_2826,ENSG00000159164,synaptic vesicle glycoprotein 2A,protein-coding,14527,0.604180493,0.002988238,0.01502117
+gene_2827,ENSG00000143368,splicing factor 3b subunit 4,protein-coding,4487,0.48743487,0.000369629,0.005940582
+gene_2834,ENSG00000116852,kinesin family member 21B,protein-coding,54325,0.250747268,0.021182844,0.049092218
+gene_2843,ENSG00000116984,5-methyltetrahydrofolate-homocysteine methyltransferase,protein-coding,126019,0.494905165,0.00576054,0.021461902
+gene_2847,ENSG00000196187,transmembrane protein 63A,protein-coding,36845,0.373492081,0.017533423,0.042887955
+gene_2848,ENSG00000243709,left-right determination factor 1,protein-coding,25101,0.182971911,0.020423361,0.047775644
+gene_2853,ENSG00000120948,TAR DNA binding protein,protein-coding,18185,0.624585966,0.010536873,0.030783477
+gene_2855,ENSG00000171824,exosome component 10,protein-coding,33252,0.199013026,0.000615371,0.007244273
+gene_2858,ENSG00000117614,SYF2 pre-mRNA splicing factor,protein-coding,10227,1.877533134,0.018064416,0.043762935
+gene_2863,ENSG00000204178,macoilin 1,protein-coding,69352,0.454014697,0.001564368,0.010843355
+gene_2866,ENSG00000160838,leucine rich repeat containing 71,protein-coding,12463,0.006199719,0.020575734,0.048023845
+gene_2869,ENSG00000198400,neurotrophic receptor tyrosine kinase 1,protein-coding,66215,0.237143067,0.01509989,0.038925468
+gene_2872,ENSG00000180875,"gremlin 2, DAN family BMP antagonist",protein-coding,122583,0.009352565,0.005386752,0.02071872
+gene_2875,ENSG00000143382,ADAMTS like 4,protein-coding,11569,0.501309106,0.011444469,0.032594589
+gene_2877,ENSG00000137942,formin binding protein 1 like,protein-coding,106544,0.420703158,0.003383148,0.016106723
+gene_2878,ENSG00000157077,zinc finger FYVE-type containing 9,protein-coding,206583,0.38091706,0.003731595,0.016960219
+gene_2882,ENSG00000121753,adhesion G protein-coupled receptor B2,protein-coding,37777,0.550519371,0.014138622,0.037199951
+gene_2885,ENSG00000235098,ankyrin repeat domain 65,protein-coding,3350,0.189797932,0.004763245,0.019351298
+gene_2886,ENSG00000143740,synaptosome associated protein 47,protein-coding,53627,0.607709704,0.001420528,0.010325403
+gene_2887,ENSG00000117411,"beta-1,4-galactosyltransferase 2",protein-coding,12228,0.464454279,0.004648055,0.019083041
+gene_2888,ENSG00000162745,olfactomedin like 2B,protein-coding,40678,0.226530861,0.006099897,0.022177352
+gene_2895,ENSG00000185090,mannosidase endo-alpha like,protein-coding,7291,0.072613031,0.005393036,0.02071872
+gene_2900,ENSG00000168264,interferon regulatory factor 2 binding protein 2,protein-coding,5910,0.402024536,0.000106005,0.0039403
+gene_2902,ENSG00000081692,jumonji domain containing 4,protein-coding,4987,0.260033825,0.000122498,0.003993018
+gene_2904,ENSG00000173171,metaxin 1,protein-coding,5130,0.207358535,0.003956564,0.017505821
+gene_2907,ENSG00000143376,sorting nexin 27,protein-coding,87086,0.809700844,0.017665319,0.043113873
+gene_2908,ENSG00000159409,CUGBP Elav-like family member 3,protein-coding,16746,0.049825786,0.003431356,0.016226942
+gene_2910,ENSG00000143436,mitochondrial ribosomal protein L9,protein-coding,3850,0.624889261,0.012032137,0.033668775
+gene_2911,ENSG00000143450,ornithine decarboxylase antizyme 3,protein-coding,8436,0.068205724,0.00060721,0.007224756
+gene_2915,ENSG00000159445,thioesterase superfamily member 4,protein-coding,38772,0.097600715,0.000674742,0.00750541
+gene_2919,ENSG00000123473,STIL centriolar assembly protein,protein-coding,64754,0.158215089,0.001529991,0.010719575
+gene_2926,ENSG00000020129,neurochondrin,protein-coding,9802,0.506395049,0.002799805,0.014506611
+gene_2927,ENSG00000116819,transcription factor AP-2 epsilon,protein-coding,22015,0.145146522,0.000536514,0.006841743
+gene_2936,ENSG00000163531,neurofascin,protein-coding,194172,0.11458838,0.010097723,0.030029723
+gene_2937,ENSG00000184144,contactin 2,protein-coding,35353,0.013259841,0.013814884,0.036687094
+gene_2943,ENSG00000187815,ZFP69 zinc finger protein,protein-coding,19054,0.053511587,5.76E-05,0.003397306
+gene_2947,ENSG00000242125,small nucleolar RNA host gene 3,ncRNA,4913,7.014179273,0.01922111,0.045844253
+gene_2957,ENSG00000188060,"RAB42, member RAS oncogene family",protein-coding,3250,0.142076986,0.001408331,0.010264822
+gene_2960,ENSG00000240038,amylase alpha 2B,protein-coding,25720,0.227896025,0.006667032,0.023314716
+gene_2962,ENSG00000117266,cyclin dependent kinase 18,protein-coding,28198,3.794389629,0.008928629,0.027837558
+gene_2964,ENSG00000143850,pleckstrin homology domain containing A6,protein-coding,159362,0.129161474,0.004990387,0.019874803
+gene_2976,ENSG00000174842,"glomulin, FKBP associated protein",protein-coding,52586,0.437969233,0.011347887,0.032431931
+gene_2977,ENSG00000122484,RNA polymerase II associated protein 2,protein-coding,102998,0.252508337,0.004742485,0.019303635
+gene_3005,ENSG00000121903,zinc finger and SCAN domain containing 20,protein-coding,28999,0.051391041,0.003967704,0.017535436
+gene_3015,ENSG00000116809,zinc finger and BTB domain containing 17,protein-coding,34264,0.221932829,0.003851402,0.017229958
+gene_3026,ENSG00000142634,EF-hand domain family member D2,protein-coding,20452,0.527436748,0.00866002,0.027367862
+gene_3027,ENSG00000162438,chymotrypsin C,protein-coding,10801,0.18373759,0.021433108,0.049456256
+gene_3035,ENSG00000160062,zinc finger and BTB domain containing 8A,protein-coding,66515,0.300335489,0.001506974,0.010659084
+gene_3036,ENSG00000176261,zinc finger and BTB domain containing 8 opposite strand,protein-coding,50732,0.295329785,0.000880477,0.008355631
+gene_3040,ENSG00000052723,suppressor of IKBKE 1,protein-coding,11207,0.413136482,0.00333976,0.016006372
+gene_3051,ENSG00000233750,capicua transcriptional repressor pseudogene 27,pseudo,3812,0.1996479,0.014928511,0.038618777
+gene_3066,ENSG00000132485,zinc finger RANBP2-type containing 2,protein-coding,17999,0.542910669,0.008038973,0.026129643
+gene_3074,ENSG00000143443,chromosome 1 open reading frame 56,protein-coding,4236,0.312159208,0.009491363,0.028902051
+gene_3077,ENSG00000162783,immediate early response 5,protein-coding,4201,0.418890312,0.000501557,0.006719223
+gene_3083,ENSG00000197785,ATPase family AAA domain containing 3A,protein-coding,22524,0.279738876,0.000250246,0.005098099
+gene_3084,ENSG00000205090,transmembrane protein 240,protein-coding,5847,0.113082883,0.001927985,0.011997787
+gene_3085,ENSG00000160075,"SSU72 homolog, RNA polymerase II CTD phosphatase",protein-coding,33191,0.69795532,0.019991754,0.047112499
+gene_3086,ENSG00000197530,MIB E3 ubiquitin protein ligase 2,protein-coding,15152,0.204483771,0.000310726,0.005508492
+gene_3087,ENSG00000116128,BCL9 transcription coactivator,protein-coding,84716,0.473840501,0.020294234,0.047620453
+gene_3098,ENSG00000152763,dynein axonemal intermediate chain 4,protein-coding,111972,0.35089521,0.013854672,0.036756913
+gene_3102,ENSG00000143815,lamin B receptor,protein-coding,27424,0.339286119,0.000231029,0.005017829
+gene_3104,ENSG00000222046,doublecortin domain containing 2B,protein-coding,7104,0.352313466,0.000811944,0.00809904
+gene_3106,ENSG00000120337,TNF superfamily member 18,protein-coding,11740,0.000787978,0.009501971,0.02892542
+gene_3107,ENSG00000212916,microtubule associated protein 10,protein-coding,4514,0.090090736,0.000983628,0.008765091
+gene_3108,ENSG00000117600,phospholipid phosphatase related 4,protein-coding,45299,0.091950398,0.002437423,0.013445032
+gene_3109,ENSG00000119283,tripartite motif containing 67,protein-coding,59508,0.124660189,0.019112902,0.04566395
+gene_3110,ENSG00000254685,fucose-1-phosphate guanylyltransferase,protein-coding,35849,0.299761434,0.021245319,0.049173437
+gene_3112,ENSG00000163125,regulation of nuclear pre-mRNA domain containing 2,protein-coding,113476,0.393982924,0.001841775,0.011731138
+gene_3118,ENSG00000196418,zinc finger protein 124,protein-coding,50046,0.122050122,0.000866557,0.008291367
+gene_3121,ENSG00000263513,family with sequence similarity 72 member C,protein-coding,16700,0.187196357,0.015152565,0.039003862
+gene_3126,ENSG00000226029,long intergenic non-protein coding RNA 1772,ncRNA,7534,0.012629394,0.000234548,0.005029323
+gene_3127,ENSG00000290842,CROCC pseudogene 3,pseudo,40505,0.195963606,0.001163551,0.009441724
+gene_3145,ENSG00000218510,long intergenic non-protein coding RNA 339,ncRNA,6666,0.019748802,0.008798242,0.027610015
+gene_3155,ENSG00000196550,family with sequence similarity 72 member A,protein-coding,18236,0.150216894,0.003555545,0.016532171
+gene_3156,ENSG00000266028,SLIT-ROBO Rho GTPase activating protein 2,protein-coding,261091,0.566892353,0.015135308,0.038979794
+gene_3157,ENSG00000263528,inhibitor of nuclear factor kappa B kinase subunit epsilon,protein-coding,26414,0.078527257,0.012450757,0.03438299
+gene_3165,ENSG00000058453,"ciliary rootlet coiled-coil, rootletin",protein-coding,232692,0.086293615,0.010172499,0.030191415
+gene_3168,ENSG00000186715,macrophage stimulating 1 like (pseudogene),pseudo,7249,0.152935108,0.005161348,0.020218869
+gene_3169,ENSG00000143494,vasohibin 2,protein-coding,41518,0.224025287,0.005921525,0.021818475
+gene_3170,ENSG00000215883,cytochrome b5 reductase like,protein-coding,30386,0.117056378,0.00011858,0.003972846
+gene_3171,ENSG00000162650,ataxin 7 like 2,protein-coding,9326,0.313382835,0.012466439,0.034416326
+gene_3172,ENSG00000120334,centromere protein L,protein-coding,25334,0.447880991,6.87E-05,0.003553742
+gene_3173,ENSG00000162714,zinc finger protein 496,protein-coding,34456,0.495917453,0.005181242,0.020260577
+gene_3177,ENSG00000143147,G protein-coupled receptor 161,protein-coding,58126,0.132967234,0.013494698,0.03619141
+gene_3182,ENSG00000180198,regulator of chromosome condensation 1,protein-coding,33358,0.560368314,6.00E-06,0.002240944
+gene_3191,ENSG00000092850,tektin 2,protein-coding,4182,0.200402363,0.003792463,0.017107673
+gene_3192,ENSG00000116863,ADP-ribosylserine hydrolase,protein-coding,5041,0.204187139,1.16E-05,0.00244618
+gene_3193,ENSG00000171812,collagen type VIII alpha 2 chain,protein-coding,29984,6.263745868,0.009361812,0.028653568
+gene_3194,ENSG00000054116,trafficking protein particle complex subunit 3,protein-coding,19484,0.587014747,0.000612985,0.007230885
+gene_3195,ENSG00000116871,MAP7 domain containing 1,protein-coding,25271,0.430922931,0.001984453,0.012146275
+gene_3198,ENSG00000160094,zinc finger protein 362,protein-coding,44228,0.203962028,0.000293651,0.005361823
+gene_3199,ENSG00000184389,"alpha 1,3-galactosyltransferase 2",protein-coding,14333,0.000787978,0.011784847,0.033175901
+gene_3201,ENSG00000222112,RN7SK pseudogene 16,pseudo,299,0.047612022,0.016402978,0.041069926
+gene_3213,ENSG00000160679,chromatin target of PRMT1,protein-coding,12325,0.422537393,0.012259648,0.034064363
+gene_3214,ENSG00000143553,SNAP associated protein,protein-coding,3150,0.343262615,0.000416644,0.006217485
+gene_3216,ENSG00000196182,serine/threonine kinase 40,protein-coding,46301,0.375821199,0.007877453,0.025787412
+gene_3219,ENSG00000116885,organic solute carrier partner 1,protein-coding,34625,0.252788469,0.001914555,0.011974317
+gene_3223,ENSG00000134686,polyhomeotic homolog 2,protein-coding,107473,0.366544404,0.003709322,0.016916704
+gene_3224,ENSG00000232237,achaete-scute family bHLH transcription factor 5,protein-coding,13242,0.026736044,0.013414229,0.036049142
+gene_3226,ENSG00000135835,KIAA1614,protein-coding,38718,0.01584717,0.012172795,0.033919389
+gene_3228,ENSG00000135823,syntaxin 6,protein-coding,50410,0.677186531,0.016964004,0.041910568
+gene_3237,ENSG00000120370,"golgin, RAB6 interacting",protein-coding,22016,0.36845129,0.000362323,0.005895877
+gene_3241,ENSG00000004487,lysine demethylase 1A,protein-coding,64247,0.290019846,0.00044386,0.006347298
+gene_3258,ENSG00000162706,cell adhesion molecule 3,protein-coding,31705,0.190276011,0.005290254,0.02051219
+gene_3261,ENSG00000213088,atypical chemokine receptor 1 (Duffy blood group),protein-coding,1626,0.028547642,0.006725238,0.023430893
+gene_3276,ENSG00000133067,leucine rich repeat containing G protein-coupled receptor 6,protein-coding,125983,0.018251114,0.003827843,0.017189513
+gene_3278,ENSG00000116991,signal induced proliferation associated 1 like 2,protein-coding,232607,0.296643021,0.000821337,0.008122748
+gene_3286,ENSG00000187800,platelet endothelial aggregation receptor 1,protein-coding,22732,0.30319173,0.009247306,0.028413351
+gene_3287,ENSG00000132694,Rho guanine nucleotide exchange factor 11,protein-coding,112064,0.217347004,0.005460567,0.020825784
+gene_3300,ENSG00000163344,phosphomevalonate kinase,protein-coding,11980,0.486781301,0.01789866,0.043473527
+gene_3303,ENSG00000163348,pygopus family PHD finger 2,protein-coding,6828,0.33141953,0.001307662,0.009952561
+gene_3307,ENSG00000160688,flavin adenine dinucleotide synthetase 1,protein-coding,9774,0.208527623,0.000702011,0.00756913
+gene_3310,ENSG00000163357,DC-STAMP domain containing 1,protein-coding,17107,0.302878537,0.020088419,0.047272508
+gene_3320,ENSG00000198483,ankyrin repeat domain 35,protein-coding,19307,0.118083616,0.000468759,0.006505227
+gene_3321,ENSG00000143127,integrin subunit alpha 10,protein-coding,18904,0.042798072,0.000330039,0.005704093
+gene_3322,ENSG00000131779,peroxisomal biogenesis factor 11 beta,protein-coding,7368,0.376274836,0.009983439,0.029806147
+gene_3325,ENSG00000272031,ankyrin repeat domain 34A,protein-coding,5135,0.119643367,1.22E-05,0.00244618
+gene_3356,ENSG00000142609,cilia and flagella associated protein 74,protein-coding,81887,0.25912893,0.005919154,0.021813812
+gene_3360,ENSG00000116191,Ral GEF with PH domain and SH3 binding motif 2,protein-coding,196678,0.359758166,0.003331931,0.015986782
+gene_3363,ENSG00000116194,angiopoietin like 1,protein-coding,21543,0.18637832,0.001604923,0.010989262
+gene_3365,ENSG00000075151,eukaryotic translation initiation factor 4 gamma 3,protein-coding,370994,0.432024316,0.002696887,0.014281043
+gene_3374,ENSG00000169641,leucine zipper protein 1,protein-coding,94123,0.372724374,0.001397357,0.010253926
+gene_3375,ENSG00000266338,NBPF member 15,protein-coding,40287,0.363073789,0.000256023,0.005108977
+gene_3381,ENSG00000204160,zinc finger DHHC-type palmitoyltransferase 18,protein-coding,30917,0.412584341,0.000232316,0.005017829
+gene_3383,ENSG00000142751,GPN-loop GTPase 2,protein-coding,14152,0.289149841,0.00049983,0.006716646
+gene_3384,ENSG00000198746,G-patch domain containing 3,protein-coding,9980,0.33367277,0.002585958,0.01395327
+gene_3385,ENSG00000090273,"nuclear distribution C, dynein complex regulator",protein-coding,46634,0.490787427,0.004428541,0.018649417
+gene_3390,ENSG00000253368,TMF1 regulated nuclear protein 1,protein-coding,7195,0.222046567,0.012368678,0.034250175
+gene_3393,ENSG00000130695,centrosomal protein 85,protein-coding,44609,0.331639353,0.000896581,0.008395329
+gene_3396,ENSG00000198830,high mobility group nucleosomal binding domain 2,protein-coding,4203,0.437649162,0.000200707,0.004751441
+gene_3397,ENSG00000158062,UBX domain protein 11,protein-coding,37036,0.519440472,0.015187681,0.039058739
+gene_3403,ENSG00000058804,NDC1 transmembrane nucleoporin,protein-coding,72986,0.386421609,0.000538395,0.006845361
+gene_3409,ENSG00000189266,proline rich nuclear receptor coactivator 2,protein-coding,6624,1.37268711,0.015790295,0.040075239
+gene_3410,ENSG00000188529,serine and arginine rich splicing factor 10,protein-coding,16581,0.343563313,0.001449326,0.010427109
+gene_3412,ENSG00000158055,grainyhead like transcription factor 3,protein-coding,164925,0.000787978,0.008120055,0.026311107
+gene_3413,ENSG00000010165,"methyltransferase 13, eEF1A N-terminus and K55",protein-coding,32364,0.345106866,0.021077198,0.048916364
+gene_3414,ENSG00000197959,dynamin 3,protein-coding,600580,0.30899916,0.015114682,0.038943799
+gene_3421,ENSG00000135845,phosphatidylinositol glycan anchor biosynthesis class C,protein-coding,73898,0.249723224,0.000895219,0.008391448
+gene_3430,ENSG00000203666,EF-hand calcium binding domain 2,protein-coding,157483,0.253518273,0.003368198,0.01606857
+gene_3434,ENSG00000198625,MDM4 regulator of p53,protein-coding,41742,0.419667792,0.001676327,0.011185746
+gene_3435,ENSG00000117713,AT-rich interaction domain 1A,protein-coding,88869,0.27651372,0.000559584,0.006960756
+gene_3438,ENSG00000143811,pyrroline-5-carboxylate reductase 2,protein-coding,4464,0.173839298,0.00130139,0.009923981
+gene_3440,ENSG00000078618,nardilysin convertase,protein-coding,89615,0.484232203,0.004066677,0.017801301
+gene_3444,ENSG00000187017,espin,protein-coding,36592,0.25060565,9.88E-05,0.003897235
+gene_3445,ENSG00000160767,endosomal transmembrane epsin interactor 3,protein-coding,8279,0.523934668,0.000676431,0.00750541
+gene_3449,ENSG00000085552,immunoglobulin superfamily member 9,protein-coding,18575,0.079782853,0.006137065,0.022223333
+gene_3450,ENSG00000133226,serine and arginine repetitive matrix 1,protein-coding,41566,0.805932025,0.017358764,0.042597663
+gene_3451,ENSG00000143374,"threonyl-tRNA synthetase 2, mitochondrial",protein-coding,20189,0.252398395,0.000114319,0.003969278
+gene_3452,ENSG00000182134,tudor and KH domain containing,protein-coding,21310,0.260409208,0.01672086,0.041549316
+gene_3454,ENSG00000263956,NBPF member 11,protein-coding,50276,0.249765522,0.000633249,0.007302726
