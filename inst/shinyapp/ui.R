@@ -175,9 +175,15 @@ ui <- dashboardPage(
                         "application/vnd.ms-excel"
                       )
                     ),
-                    checkboxInput(inputId = "use_example",
-                                  label = "Use example",
-                                  value = FALSE),
+                    radioButtons(
+                      "use_example",
+                      "Use example",
+                      choices = list(
+                        "For pathway enrichment analysis" = "example_enrich_pathway",
+                        "For Gene set enrichment analysis" = "example_gsea"
+                      ),
+                      selected = NULL
+                    ),
                     radioButtons(
                       "id_type",
                       "ID type",
@@ -232,115 +238,122 @@ ui <- dashboardPage(
                 fluidPage(
                   fluidRow(
                     column(4,
-                      checkboxGroupInput(
-                        "pathway_database",
-                        "Database",
-                        choices = c(
-                          "GO" = "go",
-                          "KEGG" = "kegg",
-                          "Reactome" = "reactome"
-                        ),
-                        selected = c("go", "kegg", "reactome")
-                      ),
-                      selectInput(
-                        "organism",
-                        "Organism",
-                        choices = list(
-                          "Human" = "hsa",
-                          "Rat" = "rno",
-                          "Mouse" = "mmu",
-                          "C. elegans" = "cel",
-                          "Yeast" = "sce",
-                          "Zebrafish" = "dre",
-                          "Fruit fly" = "dme"),
-                        selected = "hsa"
-                      ),
-                      numericInput(
-                        "p_value_cutoff",
-                        "P-value cutoff",
-                        value = 0.05,
-                        min = 0,
-                        max = 0.5),
-                      selectInput(
-                        "p_adjust_method",
-                        "P-adjust method",
-                        choices = c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"),
-                        selected = "BH"),
-                      sliderInput(
-                        "gene_set_size",
-                        "Gene set size",
-                        min = 5,
-                        max = 2000,
-                        value = c(10, 500)),
+                           radioButtons(
+                             "select_analysis_type",
+                             "Analysis type",
+                             choices = list(
+                               "Pathway enrichment analysis" = "enrich_pathway",
+                               "Gene set enrichment analysis" = "do_gsea"
+                             )
+                           ),
+                           uiOutput("analysis_type"),
+                           checkboxGroupInput(
+                             "pathway_database",
+                             "Database",
+                             choices = c(
+                               "GO" = "go",
+                               "KEGG" = "kegg",
+                               "Reactome" = "reactome"
+                               ),
+                             selected = c("go", "kegg", "reactome")
+                             ),
+                           selectInput(
+                             "organism",
+                             "Organism",
+                             choices = list(
+                               "Human" = "hsa",
+                               "Rat" = "rno",
+                               "Mouse" = "mmu",
+                               "C. elegans" = "cel",
+                               "Yeast" = "sce",
+                               "Zebrafish" = "dre",
+                               "Fruit fly" = "dme"),
+                             selected = "hsa"
+                             ),
+                           numericInput(
+                             "p_value_cutoff",
+                             "P-value cutoff",
+                             value = 0.05,
+                             min = 0,
+                             max = 0.5),
+                           selectInput(
+                             "p_adjust_method",
+                             "P-adjust method",
+                             choices = c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"),
+                             selected = "BH"),
+                           sliderInput(
+                             "gene_set_size",
+                             "Gene set size",
+                             min = 5,
+                             max = 2000,
+                             value = c(10, 500)),
 
-                      actionButton(
-                        "submit_enrich_pathways",
-                        "Submit",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
+                           actionButton(
+                             "submit_enrich_pathways",
+                             "Submit",
+                             class = "btn-primary",
+                             style = "background-color: #d83428; color: white;"),
+                           actionButton(
+                             "go2merge_pathways",
+                             "Next",
+                             class = "btn-primary",
+                             style = "background-color: #d83428; color: white;"),
+                           actionButton(
+                             "show_enrich_pathways_code",
+                             "Code",
+                             class = "btn-primary",
+                             style = "background-color: #d83428; color: white;"),
 
-                      actionButton(
-                        "go2merge_pathways",
-                        "Next",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
-
-                      actionButton(
-                        "show_enrich_pathways_code",
-                        "Code",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
-
-                      style = "border-right: 1px solid #ddd; padding-right: 20px;"
-                    ),
+                           style = "border-right: 1px solid #ddd; padding-right: 20px;"
+                           ),
                     column(8,
-                      tabsetPanel(
-                        id = "enriched_pathways_result",
-                        tabPanel(
-                          title = "GO",
-                          shiny::dataTableOutput("enriched_pathways_go"),
-                          br(),
-                          shinyjs::useShinyjs(),
-                          downloadButton("download_enriched_pathways_go",
-                                         "Download",
-                                         class = "btn-primary",
-                                         style = "background-color: #d83428; color: white;")
-                          ),
-                        tabPanel(
-                          title = "KEGG",
-                          shiny::dataTableOutput("enriched_pathways_kegg"),
-                          br(),
-                          shinyjs::useShinyjs(),
-                          downloadButton("download_enriched_pathways_kegg",
-                                         "Download",
-                                         class = "btn-primary",
-                                         style = "background-color: #d83428; color: white;")
-                        ),
-                        tabPanel(
-                          title = "Reactome",
-                          shiny::dataTableOutput("enriched_pathways_reactome"),
-                          br(),
-                          shinyjs::useShinyjs(),
-                          downloadButton("download_enriched_pathways_reactome",
-                                         "Download",
-                                         class = "btn-primary",
-                                         style = "background-color: #d83428; color: white;")
-                        ),
-                        tabPanel(
-                          title = "R object",
-                          verbatimTextOutput("enriched_pathways_object"),
-                          br(),
-                          shinyjs::useShinyjs(),
-                          downloadButton("download_enriched_pathways_object",
-                                         "Download",
-                                         class = "btn-primary",
-                                         style = "background-color: #d83428; color: white;")
-                        )
-                      )
+                           tabsetPanel(
+                             id = "enriched_pathways_result",
+                             tabPanel(
+                               title = "GO",
+                               shiny::dataTableOutput("enriched_pathways_go"),
+                               br(),
+                               shinyjs::useShinyjs(),
+                               downloadButton("download_enriched_pathways_go",
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
+                               ),
+                             tabPanel(
+                               title = "KEGG",
+                               shiny::dataTableOutput("enriched_pathways_kegg"),
+                               br(),
+                               shinyjs::useShinyjs(),
+                               downloadButton("download_enriched_pathways_kegg",
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
+                               ),
+                             tabPanel(
+                               title = "Reactome",
+                               shiny::dataTableOutput("enriched_pathways_reactome"),
+                               br(),
+                               shinyjs::useShinyjs(),
+                               downloadButton("download_enriched_pathways_reactome",
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
+                               ),
+                             tabPanel(
+                               title = "R object",
+                               verbatimTextOutput("enriched_pathways_object"),
+                               br(),
+                               shinyjs::useShinyjs(),
+                               downloadButton("download_enriched_pathways_object",
+                                              "Download",
+                                              class = "btn-primary",
+                                              style = "background-color: #d83428; color: white;")
+                               )
+                             )
+                           )
                     )
                   )
-                )
-              )),
+                )),
 
       ####merge pathways tab
       tabItem(tabName = "merge_pathways",

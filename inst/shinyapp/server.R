@@ -5,8 +5,10 @@ server <-
     variable_info <-
       reactive({
         # When 'Use example' is checked
-        if (input$use_example) {
-          return(read.csv("files/example.csv")) # replace with the path to your built-in example CSV file
+        if (input$use_example == "example_enrich_pathway") {
+          return(read.csv("files/example_enrich_pathway.csv")) # replace with the path to your built-in example CSV file
+        } else if (input$use_example == "example_gsea") {
+          return(read.csv("files/example_gsea.csv"))
         }
         # When a file is uploaded
         in_file <- input$variable_info
@@ -22,13 +24,13 @@ server <-
         }
       })
 
-    output$variable_info <-
-      shiny::renderDataTable({
-        req(variable_info())
-        variable_info()
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+    # output$variable_info <-
+    #   shiny::renderDataTable({
+    #     req(variable_info())
+    #     variable_info()
+    #   },
+    #   options = list(pageLength = 10,
+    #                  scrollX = TRUE));
 
     #####define variable_info_new
     variable_info_new <-
@@ -37,12 +39,12 @@ server <-
     ###if the user don't upload data and don't use example data,
     ####show a warning message
     observeEvent(input$map_id, {
-      if (is.null(input$variable_info) && !input$use_example) {
+      if (is.null(variable_info())) {
         showModal(
           modalDialog(
             title = "Warning",
             "No data is uploaded",
-            easyClose = TRUE,
+            easyClose = FALSE,
             footer = modalButton("Close")
           )
         )
@@ -60,7 +62,6 @@ server <-
 
       if (input$id_type == "ensembl") {
         tryCatch({
-          colnames(variable_info_old) <- c("ensembl")
           library(clusterProfiler)
           library(org.Hs.eg.db)
 
@@ -79,8 +80,8 @@ server <-
             dplyr::left_join(variable_info_old,
                              other_id,
                              by = c("ensembl" = "ENSEMBL"))
-          colnames(variable_info_old) <-
-            c("ensembl", "uniprot", "entrezid", "symbol")
+          # colnames(variable_info_old) <-
+          #   c("ensembl", "uniprot", "entrezid", "symbol")
 
         },
         error = function(e) {
@@ -297,15 +298,26 @@ server <-
         )
       } else {
         # Navigate to the enrich_pathways tab
-        updateTabItems(session = session,
-                       inputId = "tabs",
-                       selected = "enrich_pathways")
+        updateTabItems(
+          session = session,
+          inputId = "tabs",
+          selected = "enrich_pathways")
       }
     })
 
     ###--------------------------------------------------------------------
     ###step 2 enrich pathways
     ###when the user click submit_enrich_pathways, begin enrich pathways
+    #### Let user select the analysis type, either pathway enrichment analysis, or gene set enrichment analysis
+    output$analysis_type <- renderUI(
+      if (input$select_analysis_type == "do_gsea") {
+        selectInput("order_by",
+                    "order by",
+                    choices = names(variable_info_new()),
+                    selected = NULL)
+      }
+    )
+
     # Define enriched_pathways as a reactive value
     enriched_pathways <-
       reactiveVal()
@@ -315,35 +327,30 @@ server <-
 
     observeEvent(input$submit_enrich_pathways, {
       # Check if variable_info_new is available
-      if (is.null(variable_info_new()) ||
-          length(variable_info_new()) == 0) {
-        showModal(
-          modalDialog(
-            title = "Warning",
-            "No data available. Please 'Upload data' first.",
-            easyClose = TRUE,
-            footer = modalButton("Close")
-          )
-        )
+      if (is.null(variable_info_new()) || length(variable_info_new()) == 0) {
+        showModal(modalDialog(
+          title = "Warning",
+          "No data available. Please 'Upload data' first.",
+          easyClose = TRUE,
+          footer = modalButton("Close")
+        ))
       } else {
         if (length(input$pathway_database) == 0) {
-          showModal(
-            modalDialog(
-              title = "Warning",
-              "Please select at least one pathway database.",
-              easyClose = TRUE,
-              footer = modalButton("Close")
-            )
-          )
-        } else{
-          # shinyjs::show("loading")
+          showModal(modalDialog(
+            title = "Warning",
+            "Please select at least one pathway database.",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          ))
+        } else {
           withProgress(message = 'Analysis in progress...', {
-            tryCatch({
+            # Define result within tryCatch
+            result <- tryCatch({
               library(clusterProfiler)
               library(org.Hs.eg.db)
               library(ReactomePA)
 
-              result <-
+              if (input$select_analysis_type == "enrich_pathway") {
                 enrich_pathway(
                   variable_info_new(),
                   database = input$pathway_database,
@@ -362,18 +369,34 @@ server <-
                   readable = FALSE,
                   pool = FALSE
                 )
-            },
-            error = function(e) {
-              showModal(
-                modalDialog(
-                  title = "Error",
-                  paste("Details:", e$message),
-                  easyClose = TRUE,
-                  footer = modalButton("Close")
+              } else {
+                do_gsea(
+                  variable_info_new(),
+                  order_by = input$order_by(),
+                  database = input$pathway_database,
+                  save_to_local = FALSE,
+                  path = "result",
+                  OrgDb = org.Hs.eg.db,
+                  organism = "hsa",
+                  ont = "ALL",
+                  pvalueCutoff = 0.05,
+                  pAdjustMethod = "BH",
+                  qvalueCutoff = 0.2,
+                  minGSSize = input$gene_set_size[1],
+                  maxGSSize = input$gene_set_size[2],
+                  readable = FALSE,
+                  pool = FALSE
                 )
-              )
+              }
+            }, error = function(e) {
+              showModal(modalDialog(
+                title = "Error",
+                paste("Details:", e$message),
+                easyClose = TRUE,
+                footer = modalButton("Close")
+              ))
+              return(NULL)
             })
-          })
 
           enriched_pathways(result)
 
@@ -386,9 +409,9 @@ server <-
                 paste0('"', x, '"'))
             ),
             collapse = ", "), ")")
-
           enrich_pathways_code <-
-            sprintf(
+            if (input$select_analysis_type == "enrich_pathway") {
+              sprintf(
               '
               enriched_pathways <-
               enrich_pathway(
@@ -407,12 +430,37 @@ server <-
               paste0('"', input$p_adjust_method, '"'),
               input$gene_set_size[1],
               input$gene_set_size[2]
-            )
+              )
+          } else {
+              sprintf(
+              '
+              enriched_pathways <-
+              do_gsea(
+              variable_info,
+              order_by = %s,
+              database = %s,
+              OrgDb = org.Hs.eg.db,
+              organism = %s,
+              pvalueCutoff = %s,
+              pAdjustMethod = %s,
+              minGSSize = %s,
+              maxGSSize = %s)
+              ',
+              input$order_by,
+              pathway_database,
+              paste0('"', input$organism, '"'),
+              input$p_value_cutoff,
+              paste0('"', input$p_adjust_method, '"'),
+              input$gene_set_size[1],
+              input$gene_set_size[2]
+              )
+          }
 
           enrich_pathways_code(enrich_pathways_code)
+          })
+          }
         }
-      }
-    })
+      })
 
 
     output$enriched_pathways_go <-
