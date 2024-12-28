@@ -24,14 +24,6 @@ server <-
         }
       })
 
-    # output$variable_info <-
-    #   shiny::renderDataTable({
-    #     req(variable_info())
-    #     variable_info()
-    #   },
-    #   options = list(pageLength = 10,
-    #                  scrollX = TRUE));
-
     #####define variable_info_new
     variable_info_new <-
       reactiveVal()
@@ -79,10 +71,8 @@ server <-
           variable_info_old <-
             dplyr::left_join(variable_info_old,
                              other_id,
-                             by = c("ensembl" = "ENSEMBL"))
-          # colnames(variable_info_old) <-
-          #   c("ensembl", "uniprot", "entrezid", "symbol")
-
+                             by = c("ensembl" = "ENSEMBL")) %>%
+            dplyr::rename_with(tolower)
         },
         error = function(e) {
           showModal(modalDialog(
@@ -110,9 +100,8 @@ server <-
             dplyr::distinct(other_id, ENSEMBL, .keep_all = TRUE)
             variable_info <-
             dplyr::left_join(variable_info,
-            other_id, by = c("ensembl" = "ENSEMBL"))
-            colnames(variable_info) <-
-            c("ensembl", "uniprot", "entrezid", "symbol")
+            other_id, by = c("ensembl" = "ENSEMBL")) %%>%%
+            dplyr::rename_with(tolower)
             '
           )
       }
@@ -134,9 +123,8 @@ server <-
           variable_info_old <-
             dplyr::left_join(variable_info_old,
                              other_id,
-                             by = c("uniprot" = "UNIPROT"))
-          colnames(variable_info_old) <-
-            c("uniprot", "ensembl", "entrezid", "symbol")
+                             by = c("uniprot" = "UNIPROT")) %>%
+            dplyr::rename_with(tolower)
         },
         error = function(e) {
           showModal(modalDialog(
@@ -163,9 +151,8 @@ server <-
             dplyr::distinct(other_id, UNIPROT, .keep_all = TRUE)
             variable_info <-
             dplyr::left_join(variable_info,
-            other_id, by = c("uniprot" = "UNIPROT"))
-            colnames(variable_info) <-
-            c("uniprot", "ensembl", "entrezid", "symbol")
+            other_id, by = c("uniprot" = "UNIPROT")) %%>%%
+            dplyr::rename_with(tolower)
             '
           )
       }
@@ -187,9 +174,8 @@ server <-
           variable_info_old <-
             dplyr::left_join(variable_info_old,
                              other_id,
-                             by = c("entrezid" = "ENTREZID"))
-          colnames(variable_info_old) <-
-            c("entrezid", "ensembl", "entrezid", "symbol")
+                             by = c("entrezid" = "ENTREZID")) %>%
+            dplyr::rename_with(tolower)
         },
         error = function(e) {
           showModal(modalDialog(
@@ -217,9 +203,8 @@ server <-
             dplyr::distinct(other_id, ENTREZID, .keep_all = TRUE)
             variable_info <-
             dplyr::left_join(variable_info,
-            other_id, by = c("entrezid" = "ENTREZID"))
-            colnames(variable_info) <-
-            c("entrezid", "ensembl", "entrezid", "symbol")
+            other_id, by = c("entrezid" = "ENTREZID")) %%>%%
+            dplyr::rename_with(tolower)
             '
           )
       }
@@ -305,18 +290,20 @@ server <-
       }
     })
 
-    ###--------------------------------------------------------------------
     ###step 2 enrich pathways ====
     ###when the user click submit_enrich_pathways, begin enrich pathways
     #### Let user select the analysis type, either pathway enrichment analysis, or gene set enrichment analysis
-    output$analysis_type <- renderUI(
+    output$analysis_type <- renderUI({
+      req(input$select_analysis_type)
+      req(variable_info_new())
+
       if (input$select_analysis_type == "do_gsea") {
         selectInput("order_by",
                     "order by",
                     choices = names(variable_info_new()),
                     selected = NULL)
       }
-    )
+    })
 
     # Define enriched_pathways as a reactive value
     enriched_pathways <-
@@ -655,7 +642,6 @@ server <-
     })
 
 
-    ###--------------------------------------------------------------------
     ###step 3 merge pathways ====
     # Define enriched_modules as a reactive value
     enriched_modules <-
@@ -717,7 +703,7 @@ server <-
 
         # shinyjs::hide("loading")
 
-        ###save code
+        ###save code ====
         merge_pathways_code <-
           sprintf(
             '
@@ -802,6 +788,7 @@ server <-
       options = list(pageLength = 10,
                      scrollX = TRUE))
 
+    ###download results
     output$download_merged_pathway_go <-
       shiny::downloadHandler(
         filename = function() {
@@ -814,17 +801,24 @@ server <-
         }
       )
 
+    # observe({
+    #   if (is.null(enriched_modules()) ||
+    #       length(enriched_modules()) == 0) {
+    #     shinyjs::disable("download_merged_pathway_go")
+    #   } else {
+    #     if (length(enriched_modules()@merged_pathway_go) == 0) {
+    #       shinyjs::disable("download_merged_pathway_go")
+    #     } else{
+    #       shinyjs::enable("download_merged_pathway_go")
+    #     }
+    #   }
+    # })
+
     observe({
-      if (is.null(enriched_modules()) ||
-          length(enriched_modules()) == 0) {
-        shinyjs::disable("download_merged_pathway_go")
-      } else {
-        if (length(enriched_modules()@merged_pathway_go) == 0) {
-          shinyjs::disable("download_merged_pathway_go")
-        } else{
-          shinyjs::enable("download_merged_pathway_go")
-        }
-      }
+      shinyjs::toggleState(
+        id = "download_merged_pathway_go",
+        condition = !(is.null(enriched_modules()) || length(enriched_modules()) == 0 || length(enriched_modules()@merged_pathway_go) == 0)
+      )
     })
 
     output$download_merged_pathway_kegg <-
@@ -1118,8 +1112,7 @@ server <-
       }
     })
 
-    ###--------------------------------------------------------------------
-    ###Step 4 merge modules
+    ###Step 4 merge modules ====
     # Define enriched_functional_module as a reactive value
     enriched_functional_module <-
       reactiveVal()
@@ -1389,8 +1382,7 @@ server <-
     })
 
 
-    ###--------------------------------------------------------------------
-    ###Step 5 Translation
+    ###Step 5 Translation ====
 
     translation_code <-
       reactiveVal()
@@ -1607,6 +1599,16 @@ server <-
         updateTabItems(session = session,
                        inputId = "tabs",
                        selected = "data_visualization")
+        if ("enrich_pathway" %in% names(enriched_functional_module()@process_info)) {
+          all_choices <- c("qscore", "RichFactor", "FoldEnrichment")
+        } else {
+          all_choices <- c("NES")
+        }
+        updateSelectInput(
+          session,
+          "x_axis_name",
+          choices = all_choices
+        )
       }
     })
 
@@ -1628,15 +1630,37 @@ server <-
         updateTabItems(session = session,
                        inputId = "tabs",
                        selected = "data_visualization")
+
+        if ("enrich_pathway" %in% names(enriched_functional_module()@process_info)) {
+          all_choices <- c("qscore", "RichFactor", "FoldEnrichment")
+        } else {
+          all_choices <- c("NES")
+        }
+        updateSelectInput(
+          session,
+          "x_axis_name",
+          choices = all_choices
+        )
       }
     })
 
-
-    ###--------------------------------------------------------------------
-    ###Step 6 Data visualization
+    ###Step 6 Data visualization ====
     # Observe file upload
     # enriched_functional_module3 <-
     #   reactiveVal()
+    observe({
+      req(enriched_functional_module())
+      if ("enrich_pathway" %in% names(enriched_functional_module()@process_info)) {
+        all_choices <- c("qscore", "RichFactor", "FoldEnrichment")
+      } else {
+        all_choices <- c("NES")
+      }
+      updateSelectInput(
+        session,
+        "x_axis_name",
+        choices = all_choices
+      )
+    })
 
     observeEvent(input$upload_enriched_functional_module, {
       if (!is.null(input$upload_enriched_functional_module$datapath)) {
@@ -1662,9 +1686,20 @@ server <-
           )
         }
       }
+
+      if ("enrich_pathway" %in% names(enriched_functional_module()@process_info)) {
+        all_choices <- c("qscore", "RichFactor", "FoldEnrichment")
+      } else {
+        all_choices <- c("NES")
+      }
+      updateSelectInput(
+        session,
+        "x_axis_name",
+        choices = all_choices
+      )
     })
 
-    #####barplot
+    #####barplot =====
     # Observe generate barplot button click
     barplot <-
       reactiveVal()
@@ -1678,21 +1713,21 @@ server <-
         showModal(
           modalDialog(
             title = "Warning",
-            "No enriched functional module data3 available. Please complete the previous steps or upload the data",
+            "No enriched functional module data available. Please complete the previous steps or upload the data",
             easyClose = TRUE,
             footer = modalButton("Close")
           )
         )
       } else {
         # shinyjs::show("loading")
-
         withProgress(message = 'Analysis in progress...', {
           tryCatch(
             plot <-
               plot_pathway_bar(
                 object = enriched_functional_module(),
                 top_n = input$barplot_top_n,
-                y_lable_width = input$barplot_y_lable_width,
+                x_axis_name = input$x_axis_name,
+                y_label_width = input$barplot_y_lable_width,
                 p.adjust.cutoff = input$barplot_p_adjust_cutoff,
                 count.cutoff = input$barplot_count_cutoff,
                 level = input$barplot_level,
@@ -1771,7 +1806,8 @@ server <-
       renderPlot({
         req(barplot())
         barplot()
-      })
+      },
+      res = 96)
 
     # output$barplot <-
     #   renderPlot({
@@ -1916,7 +1952,8 @@ server <-
       renderPlot({
         req(module_similarity_network())
         module_similarity_network()
-      })
+      },
+      res = 96)
 
 
     ######code for module_similarity_network
@@ -2047,7 +2084,7 @@ server <-
       }
     })
 
-    #####module information plot
+    #####module information plot =====
     # Observe generate module information button click
     module_information <-
       reactiveVal()
@@ -2157,25 +2194,25 @@ server <-
       renderPlot({
         req(module_information())
         module_information()
-      })
+      }, res = 96)
 
     output$module_information1 <-
       renderPlot({
         req(module_information1())
         module_information1()
-      })
+      }, res = 96)
 
     output$module_information2 <-
       renderPlot({
         req(module_information2())
         module_information2()
-      })
+      }, res = 96)
 
     output$module_information3 <-
       renderPlot({
         req(module_information3())
         module_information3()
-      })
+      }, res = 96)
 
     ######code for module_information
     ####show code
@@ -2235,7 +2272,7 @@ server <-
     })
 
 
-    #####relationship network plot
+    #####relationship network plot====
     # Update the module ID
     observe({
       if (!is.null(enriched_functional_module()) &
@@ -2533,7 +2570,8 @@ server <-
       renderPlot({
         req(relationship_network())
         relationship_network()
-      })
+      },
+      res = 96)
 
     ######code for relationship_network
     ####show code
@@ -2671,8 +2709,7 @@ server <-
       }
     })
 
-    ###--------------------------------------------------------------------
-    ###Step 7 LLM interpretation
+    ###Step 7 LLM interpretation ====
     # Define enriched_functional_module as a reactive value
     llm_interpretation_result <-
       reactiveVal("")
@@ -2880,9 +2917,7 @@ server <-
       }
     })
 
-
-    ###--------------------------------------------------------------------
-    ###Step 8 Result and report
+    ###Step 8 Result and report ====
     report_code <-
       reactiveVal()
     report_path <-

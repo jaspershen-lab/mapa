@@ -362,137 +362,150 @@ ui <- dashboardPage(
                 fluidPage(
                   fluidRow(
                     column(4,
-                      h4("GO"),
-                      fluidRow(
-                        column(6,
-                        numericInput(
-                          "p.adjust.cutoff.go",
-                          "P-adjust cutoff",
-                          value = 0.05,
-                          min = 0,
-                          max = 0.5)
-                      ),
-                      column(6,
-                        numericInput(
-                          "count.cutoff.go",
-                          "Gene count cutoff",
-                          value = 5,
-                          min = 0,
-                          max = 1000
-                        )
-                      )),
-                      h4("Network"),
-                      fluidRow(
-                        column(6,
-                        selectInput(
-                          "measure.method.go",
-                          "Similarity method",
-                          choices = c("Wang", "Resnik", "Rel", "Jiang",
-                                      "Lin", "TCSS", "jaccard"),
-                          selected = "Wang"
-                        )
-                      ),
-                      column(6,
-                        numericInput(
-                          "sim.cutoff.go",
-                          "Similarity cutoff",
-                          value = 0.5,
-                          min = 0,
-                          max = 1
-                        )
-                      )),
-                      h4("KEGG"),
-                      fluidRow(
-                        column(6,
-                        numericInput(
-                          "p.adjust.cutoff.kegg",
-                          "P-adjust cutoff",
-                          value = 0.05,
-                          min = 0,
-                          max = 0.5)
-                      ),
-                      column(6,
-                        numericInput(
-                          "count.cutoff.kegg",
-                          "Gene count cutoff",
-                          value = 5,
-                          min = 0,
-                          max = 1000)
-                      )
-                      ),
-                      h4("Network"),
-                      fluidRow(
-                        column(6,
-                        selectInput(
-                          "measure.method.kegg",
-                          "Similarity method",
-                          choices = c("jaccard"),
-                          selected = "jaccard")
-                        ),
-                      column(6,
-                        numericInput(
-                          "sim.cutoff.kegg",
-                          "Similarity cutoff",
-                          value = 0.5,
-                          min = 0,
-                          max = 1)
-                      )),
+                           h4("GO Network"),
+                           fluidRow(
+                             column(6,
+                                    numericInput(
+                                      "p.adjust.cutoff.go",
+                                      "P-adjust cutoff",
+                                      value = 0.05,
+                                      min = 0,
+                                      max = 0.5)
+                                    ),
+                             column(6,
+                                    numericInput(
+                                      "count.cutoff.go",
+                                      "Gene count cutoff",
+                                      value = 5,
+                                      min = 0,
+                                      max = 1000
+                                      )
+                                    )
+                             ),
+                           fluidRow(
+                             column(6,
+                                    selectInput(
+                                      "measure.method.go",
+                                      "Similarity method",
+                                      choices = c("Sim_XGraSM_2013", "Sim_Wang_2007", "Sim_Lin_1998",
+                                                  "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006",
+                                                  "Sim_SimIC_2010", "Sim_EISI_2015", "Sim_AIC_2014",
+                                                  "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018",
+                                                  "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998",
+                                                  "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012",
+                                                  "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012",
+                                                  "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003",
+                                                  "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010",
+                                                  "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard",
+                                                  "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor"),
+                                      selected = "Sim_XGraSM_2013"
+                                      )
+                                    ),
+                             column(6,
+                                    numericInput(
+                                      "sim.cutoff.go",
+                                      "Similarity cutoff",
+                                      value = 0.5,
+                                      min = 0,
+                                      max = 1
+                                      )
+                                    )
+                             ),
 
-                      h4("Reactome"),
-                      fluidRow(
-                        column(6,
-                        numericInput(
-                          "p.adjust.cutoff.reactome",
-                          "P-adjust cutoff",
-                          value = 0.05,
-                          min = 0,
-                          max = 0.5)
-                      ),
-                      column(6,
-                        numericInput(
-                          "count.cutoff.reactome",
-                          "Gene count cutoff",
-                          value = 5,
-                          min = 0,
-                          max = 1000)
-                      )),
-                      h4("Network"),
-                      fluidRow(
-                        column(6,
-                        selectInput(
-                          "measure.method.reactome",
-                          "Similarity method",
-                          choices = c("jaccard"),
-                          selected = "jaccard")
-                      ),
-                      column(6,
-                        numericInput(
-                          "sim.cutoff.reactome",
-                          "Similarity cutoff",
-                          value = 0.5,
-                          min = 0,
-                          max = 1)
-                      )),
+                           h4("KEGG Network"),
+                           fluidRow(
+                             column(6,
+                                    numericInput(
+                                      "p.adjust.cutoff.kegg",
+                                      "P-adjust cutoff",
+                                      value = 0.05,
+                                      min = 0,
+                                      max = 0.5)
+                                    ),
+                             column(6,
+                                    numericInput(
+                                      "count.cutoff.kegg",
+                                      "Gene count cutoff",
+                                      value = 5,
+                                      min = 0,
+                                      max = 1000)
+                                    )
+                             ),
+                           fluidRow(
+                             column(6,
+                                    selectInput(
+                                      "measure.method.kegg",
+                                      "Similarity method",
+                                      choices = c("jaccard", "dice", "overlap", "kappa"),
+                                      selected = "jaccard")
+                                    ),
+                             column(6,
+                                    numericInput(
+                                      "sim.cutoff.kegg",
+                                      "Similarity cutoff",
+                                      value = 0.5,
+                                      min = 0,
+                                      max = 1)
+                                    )
+                             ),
 
-                      actionButton(
-                        "submit_merge_pathways",
-                        "Submit",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
+                           h4("Reactome Network"),
+                           fluidRow(
+                             column(6,
+                                    numericInput(
+                                      "p.adjust.cutoff.reactome",
+                                      "P-adjust cutoff",
+                                      value = 0.05,
+                                      min = 0,
+                                      max = 0.5)
+                                    ),
+                             column(6,
+                                    numericInput(
+                                      "count.cutoff.reactome",
+                                      "Gene count cutoff",
+                                      value = 5,
+                                      min = 0,
+                                      max = 1000)
+                                    )
+                             ),
+                           fluidRow(
+                             column(6,
+                                    selectInput(
+                                      "measure.method.reactome",
+                                      "Similarity method",
+                                      choices = c("jaccard", "dice", "overlap", "kappa"),
+                                      selected = "jaccard")
+                                    ),
+                             column(6,
+                                    numericInput(
+                                      "sim.cutoff.reactome",
+                                      "Similarity cutoff",
+                                      value = 0.5,
+                                      min = 0,
+                                      max = 1)
+                                    )
+                             ),
 
-                      actionButton(
-                        "go2merge_modules",
-                        "Next",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
+                           actionButton(
+                             "submit_merge_pathways",
+                             "Submit",
+                             class = "btn-primary",
+                             style = "background-color: #d83428; color: white;"),
 
-                      actionButton(
-                        "show_merge_pathways_code",
-                        "Code",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
-                      style = "border-right: 1px solid #ddd; padding-right: 20px;"
-                      ),
+                           actionButton(
+                             "go2merge_modules",
+                             "Next",
+                             class = "btn-primary",
+                             style = "background-color: #d83428; color: white;"),
+
+                           actionButton(
+                             "show_merge_pathways_code",
+                             "Code",
+                             class = "btn-primary",
+                             style = "background-color: #d83428; color: white;"),
+
+                           style = "border-right: 1px solid #ddd; padding-right: 20px;"
+                           ),
 
                     column(8,
                            tabsetPanel(
@@ -538,198 +551,212 @@ ui <- dashboardPage(
                                    br(),
                                    fluidRow(
                                      column(3,
-                                       actionButton("generate_enirched_module_plot_go",
-                                                    "Generate plot",
-                                                    class = "btn-primary",
-                                                    style = "background-color: #d83428; color: white;")
+                                            actionButton("generate_enirched_module_plot_go",
+                                                         "Generate plot",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
                                      ),
                                      column(3,
-                                       checkboxInput("enirched_module_plot_text_go", "Text", FALSE)
+                                            checkboxInput("enirched_module_plot_text_go", "Text", FALSE)
                                      ),
                                      column(3,
-                                       checkboxInput("enirched_module_plot_text_all_go", "Text all", FALSE)
+                                            checkboxInput("enirched_module_plot_text_all_go", "Text all", FALSE)
                                      ),
                                      column(3,
-                                       numericInput(
-                                         "enirched_module_plot_degree_cutoff_go",
-                                         "Degree cutoff",
-                                         value = 0,
-                                         min = 0,
-                                         max = 1000)
+                                            numericInput(
+                                              "enirched_module_plot_degree_cutoff_go",
+                                              "Degree cutoff",
+                                              value = 0,
+                                              min = 0,
+                                              max = 1000)
                                      )
-                                   )
-                                 ),
+                                     )
+                                   ),
                                  tabPanel(
                                    title = "KEGG",
                                    shiny::plotOutput("enirched_module_kegg_plot"),
                                    br(),
                                    fluidRow(
                                      column(3,
-                                       actionButton("generate_enirched_module_plot_kegg",
-                                                    "Generate plot",
-                                                    class = "btn-primary",
-                                                    style = "background-color: #d83428; color: white;")
-                                     ),
+                                            actionButton("generate_enirched_module_plot_kegg",
+                                                         "Generate plot",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                            ),
                                      column(3,
-                                       checkboxInput("enirched_module_plot_text_kegg", "Text", FALSE)
-                                     ),
+                                            checkboxInput("enirched_module_plot_text_kegg", "Text", FALSE)
+                                            ),
                                      column(3,
-                                       checkboxInput("enirched_module_plot_text_all_kegg", "Text all", FALSE)
-                                     ),
+                                            checkboxInput("enirched_module_plot_text_all_kegg", "Text all", FALSE)
+                                            ),
                                      column(3,
-                                       numericInput(
-                                         "enirched_module_plot_degree_cutoff_kegg",
-                                         "Degree cutoff",
-                                         value = 0,
-                                         min = 0,
-                                         max = 1000
-                                       )
+                                            numericInput(
+                                              "enirched_module_plot_degree_cutoff_kegg",
+                                              "Degree cutoff",
+                                              value = 0,
+                                              min = 0,
+                                              max = 1000
+                                              )
+                                            )
                                      )
-                                   )
-                                 ),
+                                   ),
                                  tabPanel(
                                    title = "Reactome",
                                    shiny::plotOutput("enirched_module_reactome_plot"),
                                    br(),
                                    fluidRow(
                                      column(3,
-                                       actionButton("generate_enirched_module_plot_reactome",
-                                                    "Generate plot",
-                                                    class = "btn-primary",
-                                                    style = "background-color: #d83428; color: white;")
-                                     ),
+                                            actionButton("generate_enirched_module_plot_reactome",
+                                                         "Generate plot",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                            ),
                                      column(3,
-                                       checkboxInput("enirched_module_plot_text_reactome", "Text", FALSE)
-                                     ),
+                                            checkboxInput("enirched_module_plot_text_reactome", "Text", FALSE)
+                                            ),
                                      column(3,
-                                       checkboxInput("enirched_module_plot_text_all_reactome", "Text all", FALSE)
-                                     ),
+                                            checkboxInput("enirched_module_plot_text_all_reactome", "Text all", FALSE)
+                                            ),
                                      column(3,
-                                       numericInput(
-                                         "enirched_module_plot_degree_cutoff_reactome",
-                                         "Degree cutoff",
-                                         value = 0,
-                                         min = 0,
-                                         max = 1000)
+                                            numericInput(
+                                              "enirched_module_plot_degree_cutoff_reactome",
+                                              "Degree cutoff",
+                                              value = 0,
+                                              min = 0,
+                                              max = 1000)
+                                            )
                                      )
                                    )
                                  )
-                               )
-                             ),
+                               ),
                              tabPanel(
                                title = "R object",
                                verbatimTextOutput("enriched_modules_object"),
                                br(),
                                shinyjs::useShinyjs(),
                                downloadButton("download_enriched_modules_object",
-                                              "Download",
+                                              label = tags$span("Download",
+                                                                shinyBS::bsButton("download_enriched_modules_object_info",
+                                                                                  label = "",
+                                                                                  icon = icon("info"),
+                                                                                  style = "info",
+                                                                                  size = "extra_small")),
                                               class = "btn-primary",
-                                              style = "background-color: #d83428; color: white;")
+                                              style = "background-color: #d83428; color: white;"),
+                               shinyBS::bsPopover(
+                                 id = "download_enriched_modules_object_info",
+                                 title = "",
+                                 content = "You can download the functional module file for data visualization.",
+                                 placement = "right",
+                                 trigger = "hover",
+                                 options = list(container = "body")
+                                 )
+                               )
                              )
-                           ))
+                           )
+                    )
                   )
-                )
-              )),
+                )),
 
-      #### Merge modules tab
+      #### Merge modules tab ====
       tabItem(
         tabName = "merge_modules",
         fluidPage(titlePanel("Merge Modules"),
                   fluidPage(
                     fluidRow(
-                    column(4,
-                      fluidRow(
-                        column(6,
-                        selectInput(
-                          "measure.method.module",
-                          "Similarity method",
-                          choices = c("jaccard"),
-                          selected = "jaccard")
-                      ),
-                      column(6,
-                        numericInput(
-                          "sim.cutoff.module",
-                          "Similarity cutoff",
-                          value = 0.5,
-                          min = 0,
-                          max = 1)
-                      )),
+                      column(4,
+                             fluidRow(
+                               column(6,
+                                      selectInput(
+                                        "measure.method.module",
+                                        "Similarity method",
+                                        choices = c("jaccard"),
+                                        selected = "jaccard")
+                                      ),
+                               column(6,
+                                      numericInput(
+                                        "sim.cutoff.module",
+                                        "Similarity cutoff",
+                                        value = 0.5,
+                                        min = 0,
+                                        max = 1)
+                                      )),
 
-                      actionButton(
-                        "submit_merge_modules",
-                        "Submit",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
+                             actionButton(
+                               "submit_merge_modules",
+                               "Submit",
+                               class = "btn-primary",
+                               style = "background-color: #d83428; color: white;"),
 
-                      actionButton(
-                        "go2translation",
-                        "Next",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
+                             actionButton(
+                               "go2translation",
+                               "Next",
+                               class = "btn-primary",
+                               style = "background-color: #d83428; color: white;"),
 
-                      actionButton(
-                        "show_merge_modules_code",
-                        "Code",
-                        class = "btn-primary",
-                        style = "background-color: #d83428; color: white;"),
-                      style = "border-right: 1px solid #ddd; padding-right: 20px;"
-                    ),
-                    column(8,
-                           tabsetPanel(
-                             tabPanel(
-                               title = "Table",
-                               shiny::dataTableOutput("enriched_functional_modules"),
-                               br(),
-                               shinyjs::useShinyjs(),
-                               downloadButton("download_enriched_functional_modules",
-                                              "Download",
-                                              class = "btn-primary",
-                                              style = "background-color: #d83428; color: white;")
+                             actionButton(
+                               "show_merge_modules_code",
+                               "Code",
+                               class = "btn-primary",
+                               style = "background-color: #d83428; color: white;"),
+                             style = "border-right: 1px solid #ddd; padding-right: 20px;"
                              ),
-                             tabPanel(
-                               title = "Data visualization",
-                               shiny::plotOutput("enirched_functional_module_plot"),
-                               br(),
-                               fluidRow(
-                                 column(3,
-                                   actionButton("generate_enirched_functional_module",
-                                                "Generate plot",
+                      column(8,
+                             tabsetPanel(
+                               tabPanel(
+                                 title = "Table",
+                                 shiny::dataTableOutput("enriched_functional_modules"),
+                                 br(),
+                                 shinyjs::useShinyjs(),
+                                 downloadButton("download_enriched_functional_modules",
+                                                "Download",
                                                 class = "btn-primary",
                                                 style = "background-color: #d83428; color: white;")
                                  ),
+                               tabPanel(
+                                 title = "Data visualization",
+                                 shiny::plotOutput("enirched_functional_module_plot"),
+                                 br(),
+                                 fluidRow(
+                                   column(3,
+                                          actionButton("generate_enirched_functional_module",
+                                                       "Generate plot",
+                                                       class = "btn-primary",
+                                                       style = "background-color: #d83428; color: white;")
+                                          ),
+                                   column(3,
+                                          checkboxInput("enirched_functional_module_plot_text", "Text", FALSE)
+                                          ),
+                                   column(3,
+                                          checkboxInput("enirched_functional_module_plot_text_all", "Text all", FALSE)
+                                          ),
                                  column(3,
-                                   checkboxInput("enirched_functional_module_plot_text", "Text", FALSE)
-                                 ),
-                                 column(3,
-                                   checkboxInput("enirched_functional_module_plot_text_all", "Text all", FALSE)
-                                 ),
-                                 column(3,
-                                   numericInput(
-                                     "enirched_functional_moduleplot__degree_cutoff",
-                                     "Degree cutoff",
-                                     value = 0,
-                                     min = 0,
-                                     max = 1000)
+                                        numericInput(
+                                          "enirched_functional_moduleplot__degree_cutoff",
+                                          "Degree cutoff",
+                                          value = 0,
+                                          min = 0,
+                                          max = 1000)
+                                        )
                                  )
-                               )
-                             ),
-                             tabPanel(
-                               title = "R object",
-                               verbatimTextOutput("enriched_functional_module_object"),
-                               br(),
-                               shinyjs::useShinyjs(),
-                               downloadButton("download_enriched_functional_module_object",
-                                              "Download",
-                                              class = "btn-primary",
-                                              style = "background-color: #d83428; color: white;")
-                             )
+                                 ),
+                               tabPanel(
+                                 title = "R object",
+                                 verbatimTextOutput("enriched_functional_module_object"),
+                                 br(),
+                                 shinyjs::useShinyjs(),
+                                 downloadButton("download_enriched_functional_module_object",
+                                                "Download",
+                                                class = "btn-primary",
+                                                style = "background-color: #d83428; color: white;")
+                                 )
                            ))
                   )))
       ),
 
 
 
-      #### Translation tab
+      #### Translation tab====
       tabItem(
         tabName = "translation",
         fluidPage(titlePanel("Translation"),
@@ -817,7 +844,7 @@ ui <- dashboardPage(
                   )))
       ),
 
-      #### Data visualization tab
+      #### Data visualization tab ====
       tabItem(tabName = "data_visualization",
               fluidPage(
                 titlePanel("Data Visualization"),
@@ -876,7 +903,7 @@ ui <- dashboardPage(
                                )
                              ),
                              fluidRow(
-                               column(4,
+                               column(6,
                                       numericInput(
                                         "barplot_y_lable_width",
                                         "Y label width",
@@ -884,20 +911,27 @@ ui <- dashboardPage(
                                         min = 20,
                                         max = 100)
                                ),
-                               column(4,
-                                      numericInput("barplot_p_adjust_cutoff",
-                                                   "P-adjust cutoff",
-                                                   value = 0.05,
-                                                   min = 0,
-                                                   max = 0.5),
-                               ),
-                               column(4,
+                               column(6,
                                       numericInput("barplot_count_cutoff",
                                                    "Count cutoff",
                                                    value = 5,
                                                    min = 1,
                                                    max = 1000)
                                )
+                             ),
+                             fluidRow(
+                               column(6,
+                                      numericInput("barplot_p_adjust_cutoff",
+                                                   "P-adjust cutoff",
+                                                   value = 0.05,
+                                                   min = 0,
+                                                   max = 0.5)),
+                               column(6,
+                                      selectInput(
+                                        "x_axis_name",
+                                        "X axis name",
+                                        choices = NULL
+                                      ))
                              ),
                              fluidRow(
                                column(8,
@@ -993,6 +1027,8 @@ ui <- dashboardPage(
                              )
                     )
                   ),
+
+                  ##### Module Similarity Network =====
                   tabPanel(
                     title = "Module Similarity Network",
                     fluidRow(
