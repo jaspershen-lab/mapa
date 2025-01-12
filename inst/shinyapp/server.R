@@ -293,15 +293,26 @@ server <-
     ###step 2 enrich pathways ====
     ###when the user click submit_enrich_pathways, begin enrich pathways
     #### Let user select the analysis type, either pathway enrichment analysis, or gene set enrichment analysis
-    output$analysis_type <- renderUI({
-      req(input$select_analysis_type)
-      req(variable_info_new())
-
-      if (input$select_analysis_type == "do_gsea") {
-        selectInput("order_by",
-                    "order by",
-                    choices = names(variable_info_new()),
-                    selected = NULL)
+    # output$analysis_type <- renderUI({
+    #   req(input$select_analysis_type)
+    #   req(variable_info_new())
+    #
+    #   if (input$select_analysis_type == "do_gsea") {
+    #     selectInput("order_by",
+    #                 "order by",
+    #                 choices = names(variable_info_new()),
+    #                 selected = NULL)
+    #   }
+    # })
+    observe({
+      variable_info <- variable_info_new()
+      analysis_type <- input$select_analysis_type
+      if (!is.null(variable_info) & analysis_type == "do_gsea") {
+        updateSelectInput(session,
+                          "order_by",
+                          choices = c("fc", "p_value_adjust"))
+      } else {
+        updateSelectInput(session, "order_by", choices = "Only valid for GSEA")
       }
     })
 

@@ -491,15 +491,14 @@ check_variable_info <-
 
 
 
-#' Pathway Enrichment Analysis and GO Similarity Measurement
+#' GO Similarity Measurement
 #'
-#' This function allows for the execution of pathway enrichment analysis and
-#' measurement of semantic similarity among Gene Ontology (GO) terms.
+#' This function allows for the computation of semantic similarity among Gene Ontology (GO) terms.
 #'
 #' @param result A data frame containing GO term IDs and ontologies.
 #' @param sim.cutoff A numeric value for the similarity cutoff (default: 0).
 #' @param measure.method A character vector specifying the semantic similarity
-#' measure methods for GO terms. Default is `"Sim_XGraSM_2013"`. See `simona::term_sim()` for available measures.
+#' measure methods for GO terms. Default is `"Sim_XGraSM_2013"`. See `simona::all_term_sim_methods()` for available measures.
 #' @param control.method a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
 #'
 #' @return A data frame containing pairs of GO terms and their similarity values.
@@ -632,7 +631,7 @@ get_go_result_sim <-
 #' @param go_id A character vector of GO term IDs.
 #' @param ont A character string specifying the ontology.
 #' @param db A character string specifying the annotation database to use. Default is `"org.Hs.eg.db"`.
-#' @param measure A character string specifying the semantic similarity measure to use. Default is `"Sim_XGraSM_2013"`. See `simona::term_sim()` for available measures.
+#' @param measure A character string specifying the semantic similarity measure to use. Default is `"Sim_XGraSM_2013"`. See `simona::all_term_sim_methods()` for available measures.
 #' @param control.method a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
 #'
 #' @return A numeric matrix containing the pairwise semantic similarity scores between the provided GO terms.

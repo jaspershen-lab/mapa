@@ -195,7 +195,7 @@ plot_pathway_bar <-
     } else {
       analysis_type <- "do_gsea"
       if (!is.null(x_axis_name)) {
-        warning("x_axis_name is for ORA. For GSEA, this parameter should be NULL, and use NES as x axis.")
+        message("For GSEA, use NES as x axis.")
       }
     }
 

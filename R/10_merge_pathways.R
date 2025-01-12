@@ -138,11 +138,9 @@
 # #
 
 
-#' Merge Pathways from Multiple Databases
+#' Merge Pathways from Various Databases
 #'
-#' This function merges pathway enrichment results from multiple databases (GO, KEGG, and Reactome)
-#' into a single object. The function takes an object of class "functional_module" and various
-#' parameters to filter and compute similarity measures.
+#' This function merges enrichment analysis results from different databases (GO, KEGG, and Reactome) into a single object respectively. The function takes an object of class "functional_module" and set up various parameters to compute and filter term similarity scores.
 #'
 #' @param object An object of class "functional_module", typically a result from enrich_pathway function.
 #' @param p.adjust.cutoff.go Adjusted p-value cutoff for GO database. Default is 0.05.
@@ -333,7 +331,7 @@ merge_pathways <-
 #' @param database Character vector, the database from which the enrichment results were obtained ('go', 'kegg', 'reactome').
 #' @param sim.cutoff Numeric, similarity cutoff for clustering pathways.
 #' @param measure.method Character, method for calculating term similarity.
-#' Default is `"Sim_XGraSM_2013"`. See `simona::term_sim()` for available measures.
+#' Default is `"Sim_XGraSM_2013"`. See `simona::all_term_sim_methods()` for available measures.
 #' @param control.method.go a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
 #' @param path Character, directory to save intermediate and final results.
 #' @param save_to_local Logical, if TRUE the results will be saved to local disk.

@@ -246,7 +246,11 @@ ui <- dashboardPage(
                                "Gene set enrichment analysis" = "do_gsea"
                              )
                            ),
-                           uiOutput("analysis_type"),
+                           #uiOutput("analysis_type"),
+                           selectInput("order_by",
+                                       "Order by",
+                                       choices = "Only valid for GSEA",
+                                       selected = "Only valid for GSEA"),
                            checkboxGroupInput(
                              "pathway_database",
                              "Database",
@@ -402,8 +406,8 @@ ui <- dashboardPage(
                                       )
                                     ),
                              column(6,
-                                    numericInput(
-                                      "sim.cutoff.go",
+                                    selectInput(
+                                      "step1: Information content method",
                                       "Similarity cutoff",
                                       value = 0.5,
                                       min = 0,
