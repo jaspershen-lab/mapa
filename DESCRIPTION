@@ -9,11 +9,11 @@ Authors@R: c(
            role = c("aut", "cre"),
            email = "shenxt1990@outlook.com",
            comment = c(ORCID = "0000-0002-9608-9964")),
-        person(given = "Chuchu",
-           family = "Wang",
+        person(given = "Yifei",
+           family = "Ge",
            role = c("aut", "ctb"))
            )
-Description: Moudule Annotation for Pathway Enrichment Analysis Result.
+Description: Moudule Annotation for Pathway Analysis Result.
     This is used for transcriptomics and proteomics data.
 URL: https://github.com/jaspershen/mapa
 BugReports: https://github.com/jaspershen/mapa/issues
