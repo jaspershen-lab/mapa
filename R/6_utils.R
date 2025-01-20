@@ -701,6 +701,7 @@ term_similarity_KEGG <- function(term_id,
 
   kegg_data <- tryCatch(
     expr = {
+      #A function that downloads KEGG data for a given species, KEGG type, and key type
       getFromNamespace("prepare_KEGG", "clusterProfiler")(species, "KEGG", "kegg")
       },
     error = function(e) {
