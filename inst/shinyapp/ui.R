@@ -406,13 +406,12 @@ ui <- dashboardPage(
                                       )
                                     ),
                              column(6,
-                                    selectInput(
-                                      "step1: Information content method",
+                                    numericInput(
+                                      "sim.cutoff.go",
                                       "Similarity cutoff",
                                       value = 0.5,
                                       min = 0,
-                                      max = 1
-                                      )
+                                      max = 1)
                                     )
                              ),
 
