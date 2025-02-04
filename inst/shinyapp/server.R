@@ -213,12 +213,16 @@ server <-
     })
 
     output$variable_info <-
-      shiny::renderDataTable({
+      DT::renderDT({
         req(variable_info_new())
-        variable_info_new()
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+        DT::datatable(
+          variable_info_new(),
+          options = list(
+            pageLength = 10,
+            scrollX = TRUE
+          )
+        )
+      })
 
     ###download the variable_info------------------------------------------
     output$download_variable_info <-
@@ -462,37 +466,43 @@ server <-
 
 
     output$enriched_pathways_go <-
-      shiny::renderDataTable({
-        req(tryCatch(
+      DT::renderDT({
+        data <- tryCatch(
           enriched_pathways()@enrichment_go_result@result,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+          error = function(e) NULL)
+        req(data)
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
     output$enriched_pathways_kegg <-
-      shiny::renderDataTable({
-        req(tryCatch(
-          enriched_pathways()@enrichment_kegg_result@result,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+      DT::renderDT({
+        data <- tryCatch(
+          enriched_pathways()@enriched_pathways_kegg@result,
+          error = function(e) NULL)
+        req(data)
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
     output$enriched_pathways_reactome <-
-      shiny::renderDataTable({
-        req(tryCatch(
-          enriched_pathways()@enrichment_reactome_result@result,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+      DT::renderDT({
+        data <- tryCatch(
+          enriched_pathways()@enriched_pathways_reactome@result,
+          error = function(e) NULL)
+        req(data)
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
 
     output$enriched_pathways_object <- renderText({
@@ -767,37 +777,49 @@ server <-
       })
 
     output$merged_pathway_go <-
-      shiny::renderDataTable({
-        req(tryCatch(
+      DT::renderDT({
+        data <- tryCatch(
           enriched_modules()@merged_pathway_go$module_result,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+          error = function(e) NULL)
+
+        req(data)
+
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
     output$merged_pathway_kegg <-
-      shiny::renderDataTable({
-        req(tryCatch(
+      DT::renderDT({
+        data <- tryCatch(
           enriched_modules()@merged_pathway_kegg$module_result,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+          error = function(e) NULL)
+
+        req(data)
+
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
     output$merged_pathway_reactome <-
-      shiny::renderDataTable({
-        req(tryCatch(
+      DT::renderDT({
+        data <- tryCatch(
           enriched_modules()@merged_pathway_reactome$module_result,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+          error = function(e) NULL)
+
+        req(data)
+
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
     ###download results
     output$download_merged_pathway_go <-
@@ -1209,15 +1231,19 @@ server <-
       })
 
     output$enriched_functional_modules <-
-      shiny::renderDataTable({
-        req(tryCatch(
-          enriched_functional_module()@merged_module$functional_module_result,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+      DT::renderDT({
+        data <- tryCatch(
+          enriched_functional_modul()@merged_module$functional_module_result,
+          error = function(e) NULL)
+
+        req(data)
+
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
     output$download_enriched_functional_modules <-
       shiny::downloadHandler(
@@ -2848,26 +2874,35 @@ server <-
 
 
     output$llm_enriched_functional_modules1 <-
-      shiny::renderDataTable({
-        req(tryCatch(
+      DT::renderDT({
+        data <- tryCatch(
           enriched_functional_module()@merged_module$functional_module_result,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+          error = function(e) NULL)
+
+        req(data)
+
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
     output$llm_enriched_functional_modules2 <-
-      shiny::renderDataTable({
-        req(tryCatch(
+      DT::renderDT({
+        data <- tryCatch(
           enriched_functional_module()@merged_module$result_with_module,
-          error = function(e)
-            NULL
-        ))
-      },
-      options = list(pageLength = 10,
-                     scrollX = TRUE))
+          error = function(e) NULL
+        )
+
+        req(data)
+
+        DT::datatable(
+          data,
+          options = list(pageLength = 10,
+                         scrollX = TRUE)
+        )
+      })
 
     observe({
       if (is.null(llm_interpretation_result()) ||

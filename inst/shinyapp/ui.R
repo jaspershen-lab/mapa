@@ -4,10 +4,17 @@ if (!require(tidyverse)) {
   install.packages("tidyverse")
   library(tidyverse)
 }
+
+if (!require(DT)) {
+  install.packages("DT")
+  library(DT)
+}
+
 if (!require(shiny)) {
   install.packages("shiny")
   library(shiny)
 }
+
 if (!require(shinydashboard)) {
   install.packages("shinydashboard")
   library(shinydashboard)
@@ -218,7 +225,7 @@ ui <- dashboardPage(
                          tabsetPanel(
                            tabPanel(
                              title = "Marker information",
-                             shiny::dataTableOutput("variable_info"),
+                             DT::DTOutput("variable_info"),
                              br(),
                              shinyjs::useShinyjs(),
                              downloadButton("download_variable_info",
@@ -315,7 +322,7 @@ ui <- dashboardPage(
                              id = "enriched_pathways_result",
                              tabPanel(
                                title = "GO",
-                               shiny::dataTableOutput("enriched_pathways_go"),
+                               DT::DTOutput("enriched_pathways_go"),
                                br(),
                                shinyjs::useShinyjs(),
                                downloadButton("download_enriched_pathways_go",
@@ -325,7 +332,7 @@ ui <- dashboardPage(
                                ),
                              tabPanel(
                                title = "KEGG",
-                               shiny::dataTableOutput("enriched_pathways_kegg"),
+                               DT::DTOutput("enriched_pathways_kegg"),
                                br(),
                                shinyjs::useShinyjs(),
                                downloadButton("download_enriched_pathways_kegg",
@@ -335,7 +342,7 @@ ui <- dashboardPage(
                                ),
                              tabPanel(
                                title = "Reactome",
-                               shiny::dataTableOutput("enriched_pathways_reactome"),
+                               DT::DTOutput("enriched_pathways_reactome"),
                                br(),
                                shinyjs::useShinyjs(),
                                downloadButton("download_enriched_pathways_reactome",
@@ -516,7 +523,7 @@ ui <- dashboardPage(
                                       tabsetPanel(
                                         tabPanel(
                                           title = "GO",
-                                          shiny::dataTableOutput("merged_pathway_go"),
+                                          DT::DTOutput("merged_pathway_go"),
                                           br(),
                                           shinyjs::useShinyjs(),
                                           downloadButton("download_merged_pathway_go",
@@ -526,7 +533,7 @@ ui <- dashboardPage(
                                         ),
                                         tabPanel(
                                           title = "KEGG",
-                                          shiny::dataTableOutput("merged_pathway_kegg"),
+                                          DT::DTOutput("merged_pathway_kegg"),
                                           br(),
                                           shinyjs::useShinyjs(),
                                           downloadButton("download_merged_pathway_kegg",
@@ -536,7 +543,7 @@ ui <- dashboardPage(
                                         ),
                                         tabPanel(
                                           title = "Reactome",
-                                          shiny::dataTableOutput("merged_pathway_reactome"),
+                                          DT::DTOutput("merged_pathway_reactome"),
                                           br(),
                                           shinyjs::useShinyjs(),
                                           downloadButton("download_merged_pathway_reactome",
@@ -708,7 +715,7 @@ ui <- dashboardPage(
                              tabsetPanel(
                                tabPanel(
                                  title = "Table",
-                                 shiny::dataTableOutput("enriched_functional_modules"),
+                                 DT::DTOutput("enriched_functional_modules"),
                                  br(),
                                  shinyjs::useShinyjs(),
                                  downloadButton("download_enriched_functional_modules",
@@ -1565,11 +1572,11 @@ ui <- dashboardPage(
                              ),
                              tabPanel(
                                title = "Functional module table 1",
-                               shiny::dataTableOutput("llm_enriched_functional_modules1")
+                               DT::DTOutput("llm_enriched_functional_modules1")
                              ),
                              tabPanel(
                                title = "Functional module table 2",
-                               shiny::dataTableOutput("llm_enriched_functional_modules2")
+                               DT::DTOutput("llm_enriched_functional_modules2")
                              )
                            )
                            )

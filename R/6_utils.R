@@ -418,8 +418,8 @@ arrange_coords <- function(coords, ratio = 0.95) {
 #' @param variable_info A data frame. The data frame should have at least the columns
 #'   "ensembl", "symbol", "uniprot", and "entrezid". Each of these columns should have
 #'   at least one non-NA value.
-#'
-#' @param order_by A character specifying the column to order by.
+#' @param query_type Character, the category of biological entity to query ("gene", "metabolite") for pathway enrichment.
+#' @param order_by A character specifying the column to order by during GSEA.
 #' @return This function does not return any value. It stops execution and throws an
 #'   error if any of the required conditions are not met.
 #'
@@ -437,53 +437,72 @@ arrange_coords <- function(coords, ratio = 0.95) {
 #' check_variable_info(variable_info)
 
 check_variable_info <-
-  function(variable_info, order_by = NULL) {
-    ###check order_by
-    if (!is.null(order_by)) {
-      if (!is.character(order_by)) {
-        stop("order_by should be character")
+  function(variable_info, query_type, order_by = NULL) {
+    if (query_type == "gene") {
+      ###check order_by
+      if (!is.null(order_by)) {
+        if (!is.character(order_by)) {
+          stop("order_by should be character")
+        }
+
+        if (all(!order_by %in% colnames(variable_info))) {
+          stop("order_by should be in the variable_info")
+        }
+
+        ####the order by column should be numeric and should no any NA values
+        if (any(is.na(variable_info[, order_by, drop = TRUE]))) {
+          stop("order_by column should not have any NA values")
+        }
+
       }
 
-      if (all(!order_by %in% colnames(variable_info))) {
-        stop("order_by should be in the variable_info")
+      if (all(colnames(variable_info) != "ensembl")) {
+        stop("ensembl should be in the variable_info")
+      } else{
+        if (all(is.na(variable_info$ensembl))) {
+          stop("All ensembl column are NA")
+        }
       }
 
-      ####the order by column should be numeric and should no any NA values
-      if (any(is.na(variable_info[, order_by, drop = TRUE]))) {
-        stop("order_by column should not have any NA values")
+      if (all(colnames(variable_info) != "symbol")) {
+        stop("symbol should be in the variable_info")
+      } else{
+        if (all(is.na(variable_info$symbol))) {
+          stop("All symbol column are NA")
+        }
       }
 
-    }
-
-    if (all(colnames(variable_info) != "ensembl")) {
-      stop("ensembl should be in the variable_info")
-    } else{
-      if (all(is.na(variable_info$ensembl))) {
-        stop("All ensembl column are NA")
+      if (all(colnames(variable_info) != "uniprot")) {
+        stop("uniprot should be in the variable_info")
+      } else{
+        if (all(is.na(variable_info$uniprot))) {
+          stop("All uniprot column are NA")
+        }
       }
-    }
 
-    if (all(colnames(variable_info) != "symbol")) {
-      stop("symbol should be in the variable_info")
-    } else{
-      if (all(is.na(variable_info$symbol))) {
-        stop("All symbol column are NA")
+      if (all(colnames(variable_info) != "entrezid")) {
+        stop("entrezid should be in the variable_info")
+      } else{
+        if (all(is.na(variable_info$entrezid))) {
+          stop("All entrezid column are NA")
+        }
       }
-    }
 
-    if (all(colnames(variable_info) != "uniprot")) {
-      stop("uniprot should be in the variable_info")
-    } else{
-      if (all(is.na(variable_info$uniprot))) {
-        stop("All uniprot column are NA")
+    } else if (query_type == "metabolite") {
+      if (all(colnames(variable_info) != "hmdbid")) {
+        stop("HMDB ID should be in the variable_info")
+      } else {
+        if (all(is.na(variable_info$hmdbid))) {
+          stop("All hmdbid column are NA")
+        }
       }
-    }
 
-    if (all(colnames(variable_info) != "entrezid")) {
-      stop("entrezid should be in the variable_info")
-    } else{
-      if (all(is.na(variable_info$entrezid))) {
-        stop("All entrezid column are NA")
+      if (all(colnames(variable_info) != "keggid")) {
+        stop("KEGG ID should be in the variable_info")
+      } else {
+        if (all(is.na(variable_info$keggid))) {
+          stop("All keggid column are NA")
+        }
       }
     }
   }
@@ -810,3 +829,83 @@ overlap_dist <- function(m) {
   n = Matrix::rowSums(m)
   proxyC::simil(m, method = "dice")*outer(n, n, FUN = "+")/2/outer(n, n, pmin)
 }
+
+
+#' Retrieve Metabolic Pathway Databases
+#'
+#' This function retrieves metabolic pathway data from the HMDB and KEGG databases.
+#' For HMDB, it obtains all pathways via \code{metpath::get_hmdb_pathway} and then filters to retain only primary metabolic pathways.
+#' For KEGG, it downloads pathways using \code{metpath::get_kegg_pathway} (with the \code{use_internal_data} flag controlling local data usage)
+#' and removes pathways related to diseases.
+#'
+#' @param use_internal_data Logical. Indicates whether to use internal (local) data for the KEGG pathway retrieval.
+#'   Note that the HMDB pathway retrieval currently does not support online access, so the \code{use_internal_data} parameter
+#'   is not applied for HMDB.
+#'
+#' @return A named list with two elements:
+#' \describe{
+#'   \item{hmdb_pathway}{A list of HMDB pathways filtered to include only those classified as "Metabolic;primary_pathway".}
+#'   \item{kegg_pathway}{A list of KEGG pathways with disease-related pathways removed.}
+#' }
+#'
+#' @details
+#' The function uses 3 threads for both HMDB and KEGG pathway retrievals.
+#' \itemize{
+#'   \item For HMDB: After retrieving the pathways, the function extracts only those with the classification
+#'         "Metabolic;primary_pathway".
+#'   \item For KEGG: The function retrieves pathways for the human organism (specified by \code{"hsa"})
+#'         and filters out any pathway that contains the word "Disease".
+#' }
+#'
+#' @examples
+#' \dontrun{
+#'   # Retrieve pathway databases using internal data for KEGG
+#'   pathways <- get_met_pathway_db(use_internal_data = TRUE)
+#'
+#'   # Access HMDB pathways
+#'   hmdb <- pathways$hmdb_pathway
+#'
+#'   # Access KEGG pathways
+#'   kegg <- pathways$kegg_pathway
+#' }
+#'
+#' @export
+get_met_pathway_db <- function(use_internal_data) {
+  # Get hmdb pathway
+  message("Get HMDB pathway ...")
+  hmdb_pathway <-
+    metpath::get_hmdb_pathway(
+      #local = use_internal_data,  # Currently this function unable to get online database
+      threads = 3
+    )
+  # Get primary hmdb pathway
+  remain_idx <-
+    metpath::pathway_class(hmdb_pathway) %>%
+    unlist() %>%
+    stringr::str_equal(., "Metabolic;primary_pathway") %>%
+    which()
+  hmdb_pathway <- hmdb_pathway[remain_idx]
+
+  # Get KEGG pathway
+  message("Get KEGG pathway ...")
+  kegg_pathway <-
+    metpath::get_kegg_pathway(
+      local = use_internal_data,
+      organism = "hsa",
+      threads = 3
+    )
+  # Remove disease related pathway in KEGG
+  remain_idx <-
+    metpath::pathway_class(kegg_pathway) %>%
+    unlist() %>%
+    stringr::str_detect("Disease") %>%
+    `!`() %>%
+    which()
+  kegg_pathway <- kegg_pathway[remain_idx]
+
+  return(list(
+    "hmdb_pathway" = hmdb_pathway,
+    "kegg_pathway" = kegg_pathway
+  ))
+}
+

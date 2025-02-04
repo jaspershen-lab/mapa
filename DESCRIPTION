@@ -45,6 +45,7 @@ Imports:
     tidyr,
     ReactomePA,
     clusterProfiler,
+    metpath
     extrafont,
     ggraph,
     igraph,

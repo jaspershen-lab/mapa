@@ -4,6 +4,8 @@
 #' @slot enrichment_go_result ANY Object storing GO enrichment results.
 #' @slot enrichment_kegg_result ANY Object storing KEGG enrichment results.
 #' @slot enrichment_reactome_result ANY Object storing Reactome enrichment results.
+#' @slot enrichment_hmdb_result ANY Object storing HMDB enrichment results.
+#' @slot enrichment_metkegg_result ANY Object storing KEGG metabolite enrichment results.
 #' @slot merged_pathway_go list List containing merged GO pathway information.
 #' @slot merged_pathway_kegg list List containing merged KEGG pathway information.
 #' @slot merged_pathway_reactome list List containing merged Reactome pathway information.
@@ -19,6 +21,8 @@ setClass(
     enrichment_go_result = "ANY",
     enrichment_kegg_result = "ANY",
     enrichment_reactome_result = "ANY",
+    enrichment_hmdb_result = "ANY",
+    enrichment_metkegg_result = "ANY",
     merged_pathway_go = "list",
     merged_pathway_kegg = "list",
     merged_pathway_reactome = "list",
@@ -69,6 +73,10 @@ setMethod(
       try(object@enrichment_kegg_result, silent = TRUE)
     enrichment_reactome_result <-
       try(object@enrichment_reactome_result, silent = TRUE)
+    enrichment_hmdb_result <-
+      try(object@enrichment_hmdb_result, silent = TRUE)
+    enrichment_metkegg_result <-
+      try(object@enrichment_metkegg_result, silent = TRUE)
     parameter <-
       try(object@parameter, silent = TRUE)
 
@@ -114,6 +122,8 @@ setMethod(
         }
       )
 
+    ## message for enrichment results and modules of genes ====
+    message(crayon::green("-----------Enrichment results and modules of genes------------"))
     message(crayon::green("-----------GO------------"))
     if (is.null(enrichment_go_result)) {
       message(crayon::green('No GO results'))
@@ -233,6 +243,22 @@ setMethod(
         length(object@merged_pathway_reactome$module_result$module),
         "Reactome modules"
       ))
+    }
+
+    ## message for enrichment results and modules of metabolites ====
+    message(crayon::green("-----------Enrichment results and modules of metabolites------------"))
+    message(crayon::green("-----------HMDB------------"))
+    if (is.null(enrichment_hmdb_result)) {
+      message(crayon::green('No HMDB enrichment results'))
+    } else {
+      enrichment_hmdb_result
+    }
+
+    message(crayon::green("-----------KEGG Metabolite------------"))
+    if (is.null(enrichment_metkegg_result)) {
+      message(crayon::green('No KEGG metabolite enrichment results'))
+    } else {
+      enrichment_metkegg_result
     }
 
     message(crayon::green("-----------Functional modules------------"))
