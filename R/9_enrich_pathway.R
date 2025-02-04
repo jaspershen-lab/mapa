@@ -56,8 +56,10 @@
 
 #' Enrich Pathways
 #'
-#' This function performs enrichment analysis on various databases such as GO, KEGG, and Reactome.
-#' It's a generic function that dispatches to specific methods based on the class of the 'object' parameter.
+#' Performs pathway enrichment analysis using multiple databases (GO, KEGG, Reactome, HMDB). This
+#' function acts as a generic interface that dispatches to specific methods based on the type of query: gene-based or metabolite-based.
+#' For gene queries, GO, KEGG, and Reactome enrichment are performed;
+#' for metabolite queries, HMDB and KEGG enrichment are performed.
 #'
 #' @param variable_info A data.frame containing relevant gene information or
 #' an object that has a specific method for `enrich_pathway`.

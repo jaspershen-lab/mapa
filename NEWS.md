@@ -98,3 +98,7 @@
 # mapa 0.1.25
 
 * Modified `plot_relationship_network` for the visualization for GSEA result.
+
+# mapa 0.1.26
+
+* Added metabolite enrichment analysis based on HMDB and KEGG.

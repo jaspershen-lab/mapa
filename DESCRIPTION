@@ -1,8 +1,8 @@
 Package: mapa
 Type: Package
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.1.25
-Date: 2024-12-01
+Version: 0.1.26
+Date: 2025-02-04
 Authors@R: c(
     person(given = "Xiaotao",
            family = "Shen",
@@ -45,7 +45,7 @@ Imports:
     tidyr,
     ReactomePA,
     clusterProfiler,
-    metpath
+    metpath,
     extrafont,
     ggraph,
     igraph,
