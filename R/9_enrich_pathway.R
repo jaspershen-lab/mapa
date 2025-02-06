@@ -38,6 +38,7 @@
 # save(enriched_pathways,
 #      file = "result/enriched_pathways")
 
+# Metabolite enrichment analysis
 # data("query_id_hmdb", package = "metpath")
 # data("query_id_kegg", package = "metpath")
 # variable_info <- data.frame("hmdbid" = query_id_hmdb, "keggid" = query_id_kegg)

@@ -54,6 +54,7 @@ variable_info <-
 enriched_pathways <-
   enrich_pathway(
     variable_info = variable_info,
+    query_type = "gene",
     save_to_local = FALSE,
     path = "result",
     OrgDb = org.Hs.eg.db,

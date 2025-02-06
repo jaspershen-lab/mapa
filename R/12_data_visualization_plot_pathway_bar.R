@@ -105,17 +105,34 @@
 #   level = "functional_module",
 #   line_type = "meteor"
 # )
+#
+# Metabolite enrichment result
+# plot_pathway_bar(object = enriched_pathways,
+#                  top_n = 5,
+#                  level = "pathway",
+#                  line_type = "straight",
+#                  p.adjust.cutoff = 0.05,
+#                  count.cutoff = 5,
+#                  database = c("kegg", "hmdb"))
+#
+# plot_pathway_bar(object = enriched_pathways,
+#                  top_n = 5,
+#                  level = "pathway",
+#                  line_type = "meteor",
+#                  p.adjust.cutoff = 0.05,
+#                  count.cutoff = 5,
+#                  database = c("kegg", "hmdb"))
 
 
-
-#' Plot Pathway Bar Chart
+#' Plot Enriched Pathway/Module Bar Chart
 #'
-#' This function plots a bar chart representing enriched pathways, modules, or functional modules.
+#' This function generates a bar chart to visualize enriched pathways, modules, or functional modules.
 #' The bars are colored according to the database of origin.
+#' Depending on the type of enrichment analysis (e.g., ORA or GSEA) and the query type (gene or metabolite), different metrics are displayed on the x-axis.
 #'
 #' @param object An object containing the enrichment results and other relevant data.
 #' @param top_n An integer specifying the top N pathways to display.
-#' @param x_axis_name A character vector specifying the variable for x-axis when plotting ORA reslut. One of "qscore" (i.e. -log10(FDR adjusted P-values)), "RichFactor", or "FoldEnrichment". For GSEA result, use the default value NULL (i.e. NES).
+#' @param x_axis_name A character string indicating the metric to use for the x-axis in ORA results. Options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values), \code{"RichFactor"}, or \code{"FoldEnrichment"}. For metabolite enrichment, the adjusted p-value is used by default, and for GSEA results this parameter is ignored (NES is used instead).
 #' @param y_label_width An integer specifying the width of the Y-axis labels.
 #' @param translation translation or not.
 #' @param level A character string specifying the level of analysis.
@@ -125,8 +142,7 @@
 #' @param p.adjust.cutoff A numeric value for the FDR adjusted P-value cutoff.
 #' @param count.cutoff A numeric value for the count cutoff.
 #' @param database_color A named vector containing the colors for different databases.
-#' @param database A character vector specifying which databases to include in the plot.
-#' Should be "go", "kegg", or/and "reactome".
+#' @param database A character vector indicating which databases to include in the plot. For gene enrichment analysis valid options are \code{"go"}, \code{"kegg"}, and/or \code{"reactome"}. For metabolite enrichment analysis, valid options are \code{"hmdb"} and/or \code{"kegg"}.
 #'
 #' @return A ggplot object representing the bar chart.
 #'
@@ -177,20 +193,28 @@ plot_pathway_bar <-
              c(
                GO = "#1F77B4FF",
                KEGG = "#FF7F0EFF",
-               Reactome = "#2CA02CFF"
+               Reactome = "#2CA02CFF",
+               HMDB = "#9467BDFF"
              ),
-           database = c("go", "kegg", "reactome")) {
-    level <-
-      match.arg(level)
-    line_type <-
-      match.arg(line_type)
+           database = c("go", "kegg", "reactome", "hmdb")) {
+
+    level <- match.arg(level)
+    line_type <- match.arg(line_type)
+
+    query_type <- enriched_pathways@process_info[[1]]@parameter$query_type
 
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
-      if (is.null(x_axis_name)){
-        stop("Please provide a variable for x axis.")
+      if (query_type == "gene") {
+        if (is.null(x_axis_name)){
+          stop("Please provide a variable for x axis.")
+        } else {
+          x_axis_name <- match.arg(x_axis_name, choices = c("qscore", "RichFactor", "FoldEnrichment"))
+        }
       } else {
-        x_axis_name <- match.arg(x_axis_name, choices = c("qscore", "RichFactor", "FoldEnrichment"))
+        if (!is.null(x_axis_name)) {
+          message("For metabolite enrichment, use adjusted p value as x axis.")
+        }
       }
     } else {
       analysis_type <- "do_gsea"
@@ -265,80 +289,117 @@ plot_pathway_bar <-
     }
 
     if (level == "pathway") {
-      enrichment_go_result <-
-        tryCatch(
-          object@enrichment_go_result@result %>%
-            dplyr::mutate(class = "GO"),
-          error = function(e) {
-            NULL
-          }
-        )
-      enrichment_kegg_result <-
-        tryCatch(
-          object@enrichment_kegg_result@result %>%
-            dplyr::mutate(class = "KEGG"),
-          error = function(e) {
-            NULL
-          }
-        )
-      enrichment_reactome_result <-
-        tryCatch(
-          object@enrichment_reactome_result@result %>%
-            dplyr::mutate(class = "Reactome"),
-          error = function(e) {
-            NULL
-          }
-        )
+      ## For gene enrichment analysis
+      if (query_type == "gene") {
+        enrichment_go_result <-
+          tryCatch(
+            object@enrichment_go_result@result %>%
+              dplyr::mutate(class = "GO"),
+            error = function(e) {
+              NULL
+            }
+          )
+        enrichment_kegg_result <-
+          tryCatch(
+            object@enrichment_kegg_result@result %>%
+              dplyr::mutate(class = "KEGG"),
+            error = function(e) {
+              NULL
+            }
+          )
+        enrichment_reactome_result <-
+          tryCatch(
+            object@enrichment_reactome_result@result %>%
+              dplyr::mutate(class = "Reactome"),
+            error = function(e) {
+              NULL
+            }
+          )
 
-      if (is.null(enrichment_go_result) &
-          is.null(enrichment_kegg_result) &
-          is.null(enrichment_reactome_result)) {
-        stop("No enriched pathways for all the datasets")
-      }
+        if (is.null(enrichment_go_result) &
+            is.null(enrichment_kegg_result) &
+            is.null(enrichment_reactome_result)) {
+          stop("No enriched pathways for all the datasets")
+        }
 
-      if (!is.null(enrichment_reactome_result)) {
-        if (!is.null(enrichment_kegg_result)) {
-          if (ncol(enrichment_reactome_result) != ncol(enrichment_kegg_result)) {
-            enrichment_reactome_result <-
-              data.frame(
-                enrichment_reactome_result,
-                category = NA,
-                subcategory = NA
-              ) %>%
-              dplyr::select(category, subcategory, dplyr::everything())
+        if (!is.null(enrichment_reactome_result)) {
+          if (!is.null(enrichment_kegg_result)) {
+            if (ncol(enrichment_reactome_result) != ncol(enrichment_kegg_result)) {
+              enrichment_reactome_result <-
+                data.frame(
+                  enrichment_reactome_result,
+                  category = NA,
+                  subcategory = NA
+                ) %>%
+                dplyr::select(category, subcategory, dplyr::everything())
 
-            enrichment_kegg_result <-
-              enrichment_kegg_result %>%
-              dplyr::select(category, subcategory, dplyr::everything())
+              enrichment_kegg_result <-
+                enrichment_kegg_result %>%
+                dplyr::select(category, subcategory, dplyr::everything())
+            }
           }
         }
-      }
 
-      temp_data <-
-        rbind(enrichment_reactome_result, enrichment_kegg_result)
-
-      if (is.null(temp_data)) {
         temp_data <-
-          enrichment_go_result
-      } else{
-        if (!is.null(enrichment_go_result)) {
-          temp_data <-
-            enrichment_go_result %>%
-            dplyr::full_join(temp_data, by = intersect(colnames(.), colnames(temp_data)))
+          rbind(enrichment_reactome_result, enrichment_kegg_result)
 
-          if (analysis_type == "do_gsea") {
-            temp_data$Count <-
-              unlist(lapply(
-                stringr::str_split(temp_data$core_enrichment, "/"),
-                length
-              ))
+        if (is.null(temp_data)) {
+          temp_data <-
+            enrichment_go_result
+        } else{
+          if (!is.null(enrichment_go_result)) {
+            temp_data <-
+              enrichment_go_result %>%
+              dplyr::full_join(temp_data, by = intersect(colnames(.), colnames(temp_data)))
+
+            if (analysis_type == "do_gsea") {
+              temp_data$Count <-
+                unlist(lapply(
+                  stringr::str_split(temp_data$core_enrichment, "/"),
+                  length
+                ))
+            }
+
+            temp_data <-
+              temp_data %>%
+              dplyr::filter(p.adjust < p.adjust.cutoff &
+                              Count > count.cutoff)
           }
-
-          temp_data <-
-            temp_data %>%
-            dplyr::filter(p.adjust < p.adjust.cutoff &
-                            Count > count.cutoff)
         }
+      } else if (query_type == "metabolite") {
+        enrichment_hmdb_result <-
+          tryCatch(
+            object@enrichment_hmdb_result@result %>%
+              dplyr::mutate(class = "HMDB"),
+            error = function(e) {
+              NULL
+            }
+          )
+
+        enrichment_metkegg_result <-
+          tryCatch(
+            object@enrichment_metkegg_result@result %>%
+              dplyr::mutate(class = "KEGG"),
+            error = function(e) {
+              NULL
+            }
+          )
+
+        if (is.null(enrichment_hmdb_result) &
+            is.null(enrichment_metkegg_result)) {
+          stop("No enriched pathways for all the datasets.")
+        }
+
+        temp_data <-
+          rbind(enrichment_hmdb_result, enrichment_metkegg_result)
+
+        colnames(temp_data)[6] <- "p.adjust"
+        colnames(temp_data)[10] <- "Count"
+
+        temp_data <-
+          temp_data %>%
+          dplyr::filter(p.adjust < p.adjust.cutoff &
+                          Count > count.cutoff)
       }
     }
 
@@ -453,6 +514,7 @@ plot_pathway_bar <-
     database2[database2 == "go"] <- "GO"
     database2[database2 == "kegg"] <- "KEGG"
     database2[database2 == "reactome"] <- "Reactome"
+    database2[database2 == "hmdb"] <- "HMDB"
 
     if (level == "functional_module") {
       temp_data <-
@@ -519,17 +581,21 @@ plot_pathway_bar <-
     }
 
     if (analysis_type == "enrich_pathway") {
-      # temp_data <-
-      #   temp_data %>%
-      #   dplyr::arrange(p.adjust) %>%
-      #   head(top_n)
-      temp_data <-
-        temp_data %>%
-        dplyr::mutate(qscore = -log(p.adjust, 10)) %>%
-        dplyr::arrange(.data[[x_axis_name]]) %>%
-        tail(top_n)
+      if (query_type == "gene") {
+        temp_data <-
+          temp_data %>%
+          dplyr::mutate(qscore = -log(p.adjust, 10)) %>%
+          dplyr::arrange(.data[[x_axis_name]]) %>%
+          tail(top_n)
 
-      temp_data[[x_axis_name]] <- as.numeric(temp_data[[x_axis_name]])
+        temp_data[[x_axis_name]] <- as.numeric(temp_data[[x_axis_name]])
+      } else if (query_type == "metabolite") {
+        temp_data <-
+          temp_data %>%
+          dplyr::mutate(qscore = -log(p.adjust, 10)) %>%
+          dplyr::arrange(dplyr::desc(qscore)) %>%
+          head(top_n)
+      }
     } else{
       temp_data <-
         temp_data %>%
@@ -544,6 +610,7 @@ plot_pathway_bar <-
         line_type = line_type,
         level = level,
         analysis_type = analysis_type,
+        query_type = query_type,
         x_axis_name = x_axis_name,
         y_label_width = y_label_width,
         database_color = database_color
@@ -558,14 +625,15 @@ plot4pathway_enrichment <-
            line_type = c("straight", "meteor"),
            level = level,
            analysis_type = c("enrich_pathway", "do_gsea"),
+           query_type = NULL,
            x_axis_name = c(NULL, "qscore", "RichFactor", "FoldEnrichment"),
            y_label_width = 50,
            database_color =
-             c(
-               GO = "#1F77B4FF",
+             c(GO = "#1F77B4FF",
                KEGG = "#FF7F0EFF",
-               Reactome = "#2CA02CFF"
-             )) {
+               Reactome = "#2CA02CFF",
+               HMDB = "#9467BDFF")
+             ) {
     line_type <-
       match.arg(line_type)
     analysis_type <-
@@ -577,49 +645,93 @@ plot4pathway_enrichment <-
 
     if (line_type == "straight") {
       if (analysis_type == "enrich_pathway") {
-
-        plot <-
-          ggplot(data = temp_data,
-                 aes(x = .data[[x_axis_name]],
-                     y = reorder(Description, .data[[x_axis_name]], decreasing = FALSE))) +
-          scale_y_discrete(
-            labels = function(x)
-              stringr::str_wrap(x, width = y_label_width)
-          ) +
-          #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-          coord_cartesian(xlim = c(0, max(as.numeric(temp_data[[x_axis_name]]))*1.1),
-                          ylim = c(0.5, nrow(temp_data) + 0.5),
-                          expand = FALSE) +
-          geom_segment(
-            aes(
-              x = 0,
-              y = Description,
-              xend = .data[[x_axis_name]],
-              yend = Description,
-              color = class
-            ),
-            show.legend = FALSE
-          ) +
-          geom_point(aes(size = Count,
-                        fill = class),
-                     shape = 21) +
-                     #alpha = 1) +
-          scale_size_continuous(range = c(3, 7)) +
-          scale_fill_manual(values = database_color) +
-          scale_color_manual(values = database_color) +
-          theme_bw() +
-          labs(
-            title = paste0("Level: ", level),
-            y = "",
-            x = x_axis_name,
-            size = "Gene number",
-            fill = "Database"
-          ) +
-          #geom_vline(xintercept = 0) +
-          theme(panel.grid.minor = element_blank(),
-                axis.ticks.y = element_blank(),
-                plot.title = element_text(hjust = 0.5)) +
-          guides(fill = guide_legend(override.aes = list(size = 5)))
+        if (query_type == "gene") {
+          plot <-
+            ggplot(data = temp_data,
+                   aes(x = .data[[x_axis_name]],
+                       y = reorder(Description, .data[[x_axis_name]], decreasing = FALSE))) +
+            scale_y_discrete(
+              labels = function(x)
+                stringr::str_wrap(x, width = y_label_width)
+            ) +
+            #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+            coord_cartesian(xlim = c(0, max(as.numeric(temp_data[[x_axis_name]]))*1.1),
+                            ylim = c(0.5, nrow(temp_data) + 0.5),
+                            expand = FALSE) +
+            geom_segment(
+              aes(
+                x = 0,
+                y = Description,
+                xend = .data[[x_axis_name]],
+                yend = Description,
+                color = class
+              ),
+              show.legend = FALSE
+            ) +
+            geom_point(aes(size = Count,
+                           fill = class),
+                       shape = 21) +
+            #alpha = 1) +
+            scale_size_continuous(range = c(3, 7)) +
+            scale_fill_manual(values = database_color) +
+            scale_color_manual(values = database_color) +
+            theme_bw() +
+            labs(
+              title = paste0("Level: ", level),
+              y = "",
+              x = x_axis_name,
+              size = "Gene number",
+              fill = "Database"
+            ) +
+            #geom_vline(xintercept = 0) +
+            theme(panel.grid.minor = element_blank(),
+                  axis.ticks.y = element_blank(),
+                  plot.title = element_text(hjust = 0.5)) +
+            guides(fill = guide_legend(override.aes = list(size = 5)))
+        } else if (query_type == "metabolite") {
+          plot <-
+            ggplot(data = temp_data,
+                   aes(x = temp_data$qscore,
+                       y = reorder(temp_data$pathway_name, temp_data$qscore, decreasing = FALSE))) +
+            scale_y_discrete(
+              labels = function(x)
+                stringr::str_wrap(x, width = y_label_width)
+            ) +
+            #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+            coord_cartesian(xlim = c(0, max(as.numeric(temp_data$qscore))*1.1),
+                            ylim = c(0.5, nrow(temp_data) + 0.5),
+                            expand = FALSE) +
+            geom_segment(
+              aes(
+                x = 0,
+                y = temp_data$pathway_name,
+                xend = temp_data$qscore,
+                yend = temp_data$pathway_name,
+                color = temp_data$class
+              ),
+              show.legend = FALSE
+            ) +
+            geom_point(aes(size = temp_data$Count,
+                           fill = temp_data$class),
+                       shape = 21) +
+            #alpha = 1) +
+            scale_size_continuous(range = c(3, 7)) +
+            scale_fill_manual(values = database_color) +
+            scale_color_manual(values = database_color) +
+            theme_bw() +
+            labs(
+              title = paste0("Level: ", level),
+              y = "",
+              x = "qscore",
+              size = "Gene number",
+              fill = "Database"
+            ) +
+            #geom_vline(xintercept = 0) +
+            theme(panel.grid.minor = element_blank(),
+                  axis.ticks.y = element_blank(),
+                  plot.title = element_text(hjust = 0.5)) +
+            guides(fill = guide_legend(override.aes = list(size = 5)))
+        }
       }
 
       if (analysis_type == "do_gsea") {
@@ -670,73 +782,144 @@ plot4pathway_enrichment <-
 
 
     if (line_type == "meteor") {
+
       if (analysis_type == "enrich_pathway") {
-        plot <-
-          ggplot(data = temp_data,
-                 aes(x = .data[[x_axis_name]],
-                     y = reorder(Description, .data[[x_axis_name]], decreasing = FALSE))) +
-          scale_y_discrete(
-            labels = function(x)
-              stringr::str_wrap(x, width = y_label_width)
-          ) +
-          #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-          coord_cartesian(xlim = c(0, max(as.numeric(temp_data[[x_axis_name]]))*1.1),
-                          ylim = c(0.5, nrow(temp_data) + 0.5),
-                          expand = FALSE) +
-          # geom_segment(aes(
-          #   x = 0,
-          #   y = Description,
-          #   xend = log.p,
-          #   yend = Description,
-          #   color = class
-          # ),
-          # show.legend = FALSE) +
-          ggforce::geom_link(
-            aes(
-              x = 0,
-              y = Description,
-              xend = .data[[x_axis_name]],
-              yend = Description,
-              alpha = after_stat(index),
-              size = after_stat(index),
-              color = class
-            ),
-            show.legend = FALSE
-          ) +
-          geom_point(
-            aes(size = Count, color = class),
-            shape = 21,
-            size = 6,
-            fill = "white",
-            alpha = 1
-          ) +
-          geom_text(
-            aes(
-              x = .data[[x_axis_name]],
-              y = Description,
-              label = paste("Gene number:", Count)
-            ),
-            size = 2.5,
-            color = "white",
-            hjust = 1.2,
-            nudge_x = 0.05
-          ) +
-          scale_size_continuous(range = c(3, 7)) +
-          scale_fill_manual(values = database_color) +
-          scale_color_manual(values = database_color) +
-          theme_bw() +
-          labs(
-            title = paste0("Level: ", level),
-            y = "",
-            x = x_axis_name,
-            size = "Gene number",
-            fill = "Database"
-          ) +
-          #geom_vline(xintercept = 0) +
-          theme(panel.grid.minor = element_blank(),
-                axis.ticks.y = element_blank(),
-                plot.title = element_text(hjust = 0.5)) +
-          guides(fill = guide_legend(override.aes = list(size = 5)))
+        if (query_type == "gene") {
+          plot <-
+            ggplot(data = temp_data,
+                   aes(x = .data[[x_axis_name]],
+                       y = reorder(Description, .data[[x_axis_name]], decreasing = FALSE))) +
+            scale_y_discrete(
+              labels = function(x)
+                stringr::str_wrap(x, width = y_label_width)
+            ) +
+            #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+            coord_cartesian(xlim = c(0, max(as.numeric(temp_data[[x_axis_name]]))*1.1),
+                            ylim = c(0.5, nrow(temp_data) + 0.5),
+                            expand = FALSE) +
+            # geom_segment(aes(
+            #   x = 0,
+            #   y = Description,
+            #   xend = log.p,
+            #   yend = Description,
+            #   color = class
+            # ),
+            # show.legend = FALSE) +
+            ggforce::geom_link(
+              aes(
+                x = 0,
+                y = Description,
+                xend = .data[[x_axis_name]],
+                yend = Description,
+                alpha = after_stat(index),
+                size = after_stat(index),
+                color = class
+              ),
+              show.legend = FALSE
+            ) +
+            geom_point(
+              aes(size = Count, color = class),
+              shape = 21,
+              size = 6,
+              fill = "white",
+              alpha = 1
+            ) +
+            geom_text(
+              aes(
+                x = .data[[x_axis_name]],
+                y = Description,
+                label = paste("Gene number:", Count)
+              ),
+              size = 2.5,
+              color = "white",
+              hjust = 1.2,
+              nudge_x = 0.05
+            ) +
+            scale_size_continuous(range = c(3, 7)) +
+            scale_fill_manual(values = database_color) +
+            scale_color_manual(values = database_color) +
+            theme_bw() +
+            labs(
+              title = paste0("Level: ", level),
+              y = "",
+              x = x_axis_name,
+              size = "Gene number",
+              fill = "Database"
+            ) +
+            #geom_vline(xintercept = 0) +
+            theme(panel.grid.minor = element_blank(),
+                  axis.ticks.y = element_blank(),
+                  plot.title = element_text(hjust = 0.5)) +
+            guides(fill = guide_legend(override.aes = list(size = 5)))
+
+        } else if (query_type == "metabolite") {
+          plot <-
+            ggplot(data = temp_data,
+                   aes(x = temp_data$qscore,
+                       y = reorder(temp_data$pathway_name, temp_data$qscore, decreasing = FALSE))) +
+            scale_y_discrete(
+              labels = function(x)
+                stringr::str_wrap(x, width = y_label_width)
+            ) +
+            #scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+            coord_cartesian(xlim = c(0, max(as.numeric(temp_data$qscore))*1.1),
+                            ylim = c(0.5, nrow(temp_data) + 0.5),
+                            expand = FALSE) +
+            # geom_segment(aes(
+            #   x = 0,
+            #   y = Description,
+            #   xend = log.p,
+            #   yend = Description,
+            #   color = class
+            # ),
+            # show.legend = FALSE) +
+            ggforce::geom_link(
+              aes(
+                x = 0,
+                y = temp_data$pathway_name,
+                xend = temp_data$qscore,
+                yend = temp_data$pathway_name,
+                alpha = after_stat(index),
+                size = after_stat(index),
+                color = class
+              ),
+              show.legend = FALSE
+            ) +
+            geom_point(
+              aes(size = temp_data$Count, color = temp_data$class),
+              shape = 21,
+              size = 6,
+              fill = "white",
+              alpha = 1
+            ) +
+            geom_text(
+              aes(
+                x = temp_data$qscore,
+                y = temp_data$pathway_name,
+                label = paste("Gene number:", temp_data$Count)
+              ),
+              size = 2.5,
+              color = "white",
+              hjust = 1.2,
+              nudge_x = 0.05
+            ) +
+            scale_size_continuous(range = c(3, 7)) +
+            scale_fill_manual(values = database_color) +
+            scale_color_manual(values = database_color) +
+            theme_bw() +
+            labs(
+              title = paste0("Level: ", level),
+              y = "",
+              x = "qscore",
+              size = "Gene number",
+              fill = "Database"
+            ) +
+            #geom_vline(xintercept = 0) +
+            theme(panel.grid.minor = element_blank(),
+                  axis.ticks.y = element_blank(),
+                  plot.title = element_text(hjust = 0.5)) +
+            guides(fill = guide_legend(override.aes = list(size = 5)))
+        }
       }
 
       if (analysis_type == "do_gsea") {
