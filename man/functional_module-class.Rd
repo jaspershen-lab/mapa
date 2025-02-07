@@ -18,6 +18,10 @@ An S4 class to represent enriched pathways
 
 \item{\code{enrichment_reactome_result}}{ANY Object storing Reactome enrichment results.}
 
+\item{\code{enrichment_hmdb_result}}{ANY Object storing HMDB enrichment results.}
+
+\item{\code{enrichment_metkegg_result}}{ANY Object storing KEGG metabolite enrichment results.}
+
 \item{\code{merged_pathway_go}}{list List containing merged GO pathway information.}
 
 \item{\code{merged_pathway_kegg}}{list List containing merged KEGG pathway information.}

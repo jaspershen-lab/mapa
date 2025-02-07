@@ -6,7 +6,8 @@
 \usage{
 enrich_pathway(
   variable_info,
-  database = c("go", "kegg", "reactome"),
+  query_type = c("gene", "metabolite"),
+  database = c("go", "kegg", "reactome", "hmdb"),
   save_to_local = FALSE,
   path = "result",
   OrgDb,
@@ -31,7 +32,9 @@ enrich_pathway(
 \item{variable_info}{A data.frame containing relevant gene information or
 an object that has a specific method for \code{enrich_pathway}.}
 
-\item{database}{Character vector, specify which database(s) to use for enrichment ('go', 'kegg', 'reactome').}
+\item{query_type}{Character, the category of biological entity to query ("gene", "metabolite").}
+
+\item{database}{Character vector, specify which database(s) to use for enrichment ('go', 'kegg', 'reactome', 'hmdb').}
 
 \item{save_to_local}{Logical, if TRUE the results will be saved to local disk.}
 
@@ -43,7 +46,7 @@ an object that has a specific method for \code{enrich_pathway}.}
 
 \item{keyType}{Character, the type of key to be used.}
 
-\item{use_internal_data}{Logical, whether to use internal data for KEGG enrichment.}
+\item{use_internal_data}{Logical, whether to use internal database for KEGG and HMDB enrichment.}
 
 \item{ont}{Character, the ontology to be used for GO enrichment ('ALL', 'BP', 'CC', 'MF').}
 
@@ -73,8 +76,10 @@ an object that has a specific method for \code{enrich_pathway}.}
 An object containing the enrichment results and parameters.
 }
 \description{
-This function performs enrichment analysis on various databases such as GO, KEGG, and Reactome.
-It's a generic function that dispatches to specific methods based on the class of the 'object' parameter.
+Performs pathway enrichment analysis using multiple databases (GO, KEGG, Reactome, HMDB). This
+function acts as a generic interface that dispatches to specific methods based on the type of query: gene-based or metabolite-based.
+For gene queries, GO, KEGG, and Reactome enrichment are performed;
+for metabolite queries, HMDB and KEGG enrichment are performed.
 }
 \examples{
 \dontrun{

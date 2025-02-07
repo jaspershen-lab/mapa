@@ -165,7 +165,7 @@ do_gsea <-
     colnames(variable_info) <- tolower(colnames(variable_info))
 
     #####check variable_info
-    check_variable_info(variable_info = variable_info, order_by = order_by)
+    check_variable_info(variable_info = variable_info, query_type = "gene" ,order_by = order_by)
 
     variable_info <-
       variable_info %>%

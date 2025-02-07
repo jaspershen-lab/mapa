@@ -2,7 +2,7 @@
 % Please edit documentation in R/6_utils.R
 \name{get_go_result_sim}
 \alias{get_go_result_sim}
-\title{Pathway Enrichment Analysis and GO Similarity Measurement}
+\title{GO Similarity Measurement}
 \usage{
 get_go_result_sim(
   result,
@@ -17,7 +17,7 @@ get_go_result_sim(
 \item{sim.cutoff}{A numeric value for the similarity cutoff (default: 0).}
 
 \item{measure.method}{A character vector specifying the semantic similarity
-measure methods for GO terms. Default is \code{"Sim_XGraSM_2013"}. See \code{simona::term_sim()} for available measures.}
+measure methods for GO terms. Default is \code{"Sim_XGraSM_2013"}. See \code{simona::all_term_sim_methods()} for available measures.}
 
 \item{control.method}{a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
 }
@@ -25,8 +25,7 @@ measure methods for GO terms. Default is \code{"Sim_XGraSM_2013"}. See \code{sim
 A data frame containing pairs of GO terms and their similarity values.
 }
 \description{
-This function allows for the execution of pathway enrichment analysis and
-measurement of semantic similarity among Gene Ontology (GO) terms.
+This function allows for the computation of semantic similarity among Gene Ontology (GO) terms.
 }
 \examples{
 \dontrun{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/10_merge_pathways.R
 \name{merge_pathways}
 \alias{merge_pathways}
-\title{Merge Pathways from Multiple Databases}
+\title{Merge Pathways from Various Databases}
 \usage{
 merge_pathways(
   object,
@@ -69,9 +69,7 @@ merge_pathways(
 An object of class "functional_module" with slots for merged pathways from each database.
 }
 \description{
-This function merges pathway enrichment results from multiple databases (GO, KEGG, and Reactome)
-into a single object. The function takes an object of class "functional_module" and various
-parameters to filter and compute similarity measures.
+This function merges enrichment analysis results from different databases (GO, KEGG, and Reactome) into a single object respectively. The function takes an object of class "functional_module" and set up various parameters to compute and filter term similarity scores.
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}

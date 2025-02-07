@@ -188,7 +188,7 @@ plot_relationship_network <-
     variable_info <-
       object@variable_info
 
-    check_variable_info(variable_info = variable_info)
+    check_variable_info(variable_info = variable_info, query_type = "gene")
 
     if (all(names(object@process_info) != "merge_pathways")) {
       stop("Please use the merge_pathways() function to process first")
@@ -494,7 +494,7 @@ create_relation_network <-
     variable_info <-
       object@variable_info
 
-    check_variable_info(variable_info = variable_info)
+    check_variable_info(variable_info = variable_info, query_type = "gene")
 
 
     if (all(names(object@process_info) != "merge_pathways")) {

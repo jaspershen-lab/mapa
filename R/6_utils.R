@@ -265,7 +265,7 @@ get_jaccard_index_for_three_databases <-
            module_result_kegg,
            module_result_reactome,
            analysis_type = c("enrich_pathway", "do_gsea")) {
-    check_variable_info(variable_info)
+    check_variable_info(variable_info, query_type = "gene")
 
     analysis_type <- match.arg(analysis_type)
 
@@ -434,7 +434,7 @@ arrange_coords <- function(coords, ratio = 0.95) {
 #'   uniprot = c(NA, "P12345", "Q67890"),
 #'   entrezid = c(101, 102, 103)
 #' )
-#' check_variable_info(variable_info)
+#' check_variable_info(variable_info, query_type = "gene")
 
 check_variable_info <-
   function(variable_info, query_type, order_by = NULL) {

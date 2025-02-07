@@ -20,7 +20,7 @@ env
 
 \item{db}{A character string specifying the annotation database to use. Default is \code{"org.Hs.eg.db"}.}
 
-\item{measure}{A character string specifying the semantic similarity measure to use. Default is \code{"Sim_XGraSM_2013"}. See \code{simona::term_sim()} for available measures.}
+\item{measure}{A character string specifying the semantic similarity measure to use. Default is \code{"Sim_XGraSM_2013"}. See \code{simona::all_term_sim_methods()} for available measures.}
 
 \item{control.method}{a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
 }

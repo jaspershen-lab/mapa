@@ -4,14 +4,16 @@
 \alias{check_variable_info}
 \title{Check Variable Information}
 \usage{
-check_variable_info(variable_info, order_by = NULL)
+check_variable_info(variable_info, query_type, order_by = NULL)
 }
 \arguments{
 \item{variable_info}{A data frame. The data frame should have at least the columns
 "ensembl", "symbol", "uniprot", and "entrezid". Each of these columns should have
 at least one non-NA value.}
 
-\item{order_by}{A character specifying the column to order by.}
+\item{query_type}{Character, the category of biological entity to query ("gene", "metabolite") for pathway enrichment.}
+
+\item{order_by}{A character specifying the column to order by during GSEA.}
 }
 \value{
 This function does not return any value. It stops execution and throws an
@@ -28,7 +30,7 @@ variable_info <- data.frame(
   uniprot = c(NA, "P12345", "Q67890"),
   entrezid = c(101, 102, 103)
 )
-check_variable_info(variable_info)
+check_variable_info(variable_info, query_type = "gene")
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}

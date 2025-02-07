@@ -2,7 +2,7 @@
 % Please edit documentation in R/12_data_visualization_plot_pathway_bar.R
 \name{plot_pathway_bar}
 \alias{plot_pathway_bar}
-\title{Plot Pathway Bar Chart}
+\title{Plot Enriched Pathway/Module Bar Chart}
 \usage{
 plot_pathway_bar(
   object,
@@ -14,8 +14,9 @@ plot_pathway_bar(
   line_type = c("straight", "meteor"),
   p.adjust.cutoff = 0.05,
   count.cutoff = 5,
-  database_color = c(GO = "#1F77B4FF", KEGG = "#FF7F0EFF", Reactome = "#2CA02CFF"),
-  database = c("go", "kegg", "reactome")
+  database_color = c(GO = "#1F77B4FF", KEGG = "#FF7F0EFF", Reactome = "#2CA02CFF", HMDB =
+    "#9467BDFF"),
+  database = c("go", "kegg", "reactome", "hmdb")
 )
 }
 \arguments{
@@ -23,7 +24,7 @@ plot_pathway_bar(
 
 \item{top_n}{An integer specifying the top N pathways to display.}
 
-\item{x_axis_name}{A character vector specifying the variable for x-axis when plotting ORA reslut. One of "qscore" (i.e. -log10(FDR adjusted P-values)), "RichFactor", or "FoldEnrichment". For GSEA result, use the default value NULL (i.e. NES).}
+\item{x_axis_name}{A character string indicating the metric to use for the x-axis in ORA results. Options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values), \code{"RichFactor"}, or \code{"FoldEnrichment"}. For metabolite enrichment, the adjusted p-value is used by default, and for GSEA results this parameter is ignored (NES is used instead).}
 
 \item{y_label_width}{An integer specifying the width of the Y-axis labels.}
 
@@ -41,15 +42,15 @@ One of "straight" or "meteor".}
 
 \item{database_color}{A named vector containing the colors for different databases.}
 
-\item{database}{A character vector specifying which databases to include in the plot.
-Should be "go", "kegg", or/and "reactome".}
+\item{database}{A character vector indicating which databases to include in the plot. For gene enrichment analysis valid options are \code{"go"}, \code{"kegg"}, and/or \code{"reactome"}. For metabolite enrichment analysis, valid options are \code{"hmdb"} and/or \code{"kegg"}.}
 }
 \value{
 A ggplot object representing the bar chart.
 }
 \description{
-This function plots a bar chart representing enriched pathways, modules, or functional modules.
+This function generates a bar chart to visualize enriched pathways, modules, or functional modules.
 The bars are colored according to the database of origin.
+Depending on the type of enrichment analysis (e.g., ORA or GSEA) and the query type (gene or metabolite), different metrics are displayed on the x-axis.
 }
 \examples{
 \dontrun{
