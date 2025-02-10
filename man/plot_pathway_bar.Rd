@@ -24,7 +24,7 @@ plot_pathway_bar(
 
 \item{top_n}{An integer specifying the top N pathways to display.}
 
-\item{x_axis_name}{A character string indicating the metric to use for the x-axis in ORA results. Options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values), \code{"RichFactor"}, or \code{"FoldEnrichment"}. For metabolite enrichment, the adjusted p-value is used by default, and for GSEA results this parameter is ignored (NES is used instead).}
+\item{x_axis_name}{A character string indicating the metric to use for the x-axis in ORA results. Options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values), \code{"RichFactor"}, or \code{"FoldEnrichment"}. For metabolite enrichment, this parameter should be \code{"qscore"}, and for GSEA results this parameter should be \code{"NES"}.}
 
 \item{y_label_width}{An integer specifying the width of the Y-axis labels.}
 

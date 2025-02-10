@@ -1,3 +1,13 @@
+#' Merge Pathways UI Module
+#'
+#' Internal UI for merging enriched pathways.
+#'
+#' @param id Module id.
+#' @import shiny
+#' @importFrom shinyjs useShinyjs
+#' @importFrom shinyBS bsButton bsPopover
+#' @noRd
+
 merge_pathways_ui <- function(id) {
   ns <- NS(id)
   tabItem(tabName = "merge_pathways",
@@ -301,6 +311,22 @@ merge_pathways_ui <- function(id) {
             )
           ))
 }
+
+
+#' Merge Pathways Server Module
+#'
+#' Internal server logic for merging enriched pathways.
+#'
+#' @param input,output,session Internal parameters for {shiny}. DO NOT REMOVE.
+#' @param id Module id.
+#' @param enriched_pathways Reactive value containing enriched pathways.
+#' @param tab_switch Function to switch tabs.
+#' @import shiny
+#' @importFrom shinyjs toggleState useShinyjs
+#' @importFrom clusterProfiler merge_pathways
+#' @importFrom org.Hs.eg.db org.Hs.eg.db
+#' @importFrom ReactomePA enrichPathway
+#' @noRd
 
 merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
   moduleServer(
@@ -753,26 +779,26 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
         }
       })
 
-      ###Go to merge modules tab
-      ####if there is not enriched_modules, show a warning message
-      # observeEvent(input$go2merge_modules, {
-      #   # Check if enriched_modules is available
-      #   if (is.null(enriched_modules()) ||
-      #       length(enriched_modules()) == 0) {
-      #     showModal(
-      #       modalDialog(
-      #         title = "Warning",
-      #         "Please merge pathways first.",
-      #         easyClose = TRUE,
-      #         footer = modalButton("Close")
-      #       )
-      #     )
-      #   } else {
-      #     updateTabItems(session = session,
-      #                    inputId = "tabs",
-      #                    selected = "merge_modules")
-      #   }
-      # })
+      ##Go to merge modules tab
+      ###if there is not enriched_modules, show a warning message
+      observeEvent(input$go2merge_modules, {
+        # Check if enriched_modules is available
+        if (is.null(enriched_modules()) ||
+            length(enriched_modules()) == 0) {
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "Please merge pathways first.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else {
+          tab_switch("merge_modules")
+        }
+      })
+
+      return(enriched_modules)
     }
   )
 }

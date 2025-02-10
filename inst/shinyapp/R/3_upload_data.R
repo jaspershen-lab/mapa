@@ -1,4 +1,11 @@
-
+#' Upload Data Module UI
+#'
+#' Internal UI for data upload.
+#'
+#' @param id Module id.
+#' @import shiny
+#' @importFrom shinyjs hidden
+#' @noRd
 
 upload_data_ui <- function(id) {
   ns <- NS(id)
@@ -88,6 +95,19 @@ upload_data_ui <- function(id) {
       )
     ))
 }
+
+#' Upload Data Module Server
+#'
+#' Internal server for data upload and conversion.
+#'
+#' @param input,output,session Internal parameters for {shiny}.
+#'     DO NOT REMOVE.
+#' @param id Module id.
+#' @param tab_switch Function to switch tabs.
+#' @import shiny
+#' @importFrom shinyjs toggleElement toggleState disable enable hidden useShinyjs
+#' @importFrom readxl read_excel
+#' @noRd
 
 upload_data_server <- function(id, tab_switch) {
   moduleServer(

@@ -355,11 +355,11 @@ display: none;
 
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>MAPA is a Shiny application designed for analyzing and visualizing
-biological data, especially in the context of pathways and networks.
-This tutorial will walk you through the steps of using MAPA for data
-upload, enrichment, merging, visualization, interpretation, and
-reporting.</p>
+<p>MAPA is a Shiny application designed for analyzing your interested
+genes and/or metabolites and visualizing results, especially in the
+context of biological pathways and networks. This tutorial will walk you
+through the steps of using MAPA for data upload, enrichment, merging,
+visualization, interpretation, and reporting.</p>
 <p>This tutorial provides a step-by-step guide to using the MAPA Shiny
 app for biological data analysis. Each tab in the app is dedicated to a
 specific aspect of the analysis, ensuring a structured and comprehensive
@@ -377,12 +377,14 @@ needs.</p>
 format. You can also check “Use example” to work with preloaded
 data.</li>
 <li>Select the type of ID your data contains (ENSEMBL, UniProt, or
-EntrezID).</li>
+EntrezID)</li>
 </ul></li>
 <li><strong>ID Mapping</strong>:
 <ul>
-<li>Click “Submit” to map IDs using the <code>clusterProfiler</code> and
-<code>org.Hs.eg.db</code> packages.</li>
+<li>Click “Submit” to map IDs. For gene IDs, the
+<code>clusterProfiler</code> and <code>org.Hs.eg.db</code> packages are
+utilized. For metabolite IDs, the <code>metpath</code> package is
+applied.</li>
 <li>The mapped data will appear in a table. You can download it by
 clicking “Download”.</li>
 </ul></li>
@@ -391,18 +393,25 @@ clicking “Download”.</li>
 <div id="step-2-enrich-pathways" class="section level1">
 <h1>Step 2: Enrich Pathways</h1>
 <ol style="list-style-type: decimal">
+<li><strong>Select Query type</strong>
+<ul>
+<li>Choose the query type either <code>Gene</code> or
+<code>Metabolite</code>.</li>
+</ul></li>
 <li><strong>Select Databases and Parameters</strong>:
 <ul>
-<li>In the “Enrich Pathways” tab, choose the databases (GO, KEGG,
-Reactome) for pathway enrichment.</li>
+<li>Choose the databases for pathway enrichment. For genes, you can
+choose among GO, KEGG and Reactome. For metabolites, you can choose HMDB
+and KEGG.</li>
 <li>Set parameters like organism, P-value cutoff, adjustment method, and
 gene set size.</li>
 </ul></li>
 <li><strong>Run Enrichment</strong>:
 <ul>
 <li>Click “Submit” to start the enrichment process.</li>
-<li>Once completed, results for each selected database will appear in
-separate tabs. These can be downloaded.</li>
+<li>Once completed, results for each selected database and the generated
+R object containing all the results will appear in separate tabs. These
+can be downloaded.</li>
 </ul></li>
 </ol>
 </div>
@@ -420,8 +429,8 @@ similarity cutoff, and similarity method for each database.</li>
 <li>Click “Submit” to merge pathways.</li>
 <li>View the merged pathways in the result table and download if
 needed.</li>
-<li>You can also visualize the pathways by clicking on the “Generate
-plot” buttons under each database tab.</li>
+<li>You can also visualize the pathways in the Data visualization tab by
+clicking on the “Generate plot” buttons under each database tab.</li>
 </ul></li>
 </ol>
 </div>
@@ -433,11 +442,12 @@ plot” buttons under each database tab.</li>
 <li>In the “Merge Modules” tab, set the similarity cutoff and
 method.</li>
 <li>Click “Submit” to merge.</li>
-<li>View and download the merged module results.</li>
+<li>View and download the merged module results in the Table tab.</li>
 </ul></li>
 <li><strong>Visualize Merged Modules</strong>:
 <ul>
-<li>Generate a plot for the merged modules using provided controls for
+<li>In the Data visualization tab, click “Generate plot” buttons to
+generate a plot for the merged modules using provided controls for
 customization.</li>
 </ul></li>
 </ol>
@@ -449,6 +459,9 @@ customization.</li>
 <ul>
 <li>The “Data Visualization” tab offers various plotting options
 (Barplot, Module Similarity Network, etc.).</li>
+<li>Either upload the functional module file (i.e. An R object generated
+from previous steps) or use the results generated from previous steps in
+the current shiny app.</li>
 <li>Customize your plot using the available options and generate
 it.</li>
 <li>Use the download button to save your plot.</li>

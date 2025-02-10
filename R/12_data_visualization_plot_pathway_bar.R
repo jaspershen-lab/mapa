@@ -109,6 +109,7 @@
 # Metabolite enrichment result
 # plot_pathway_bar(object = enriched_pathways,
 #                  top_n = 5,
+#                  x_axis_name = "qscore",
 #                  level = "pathway",
 #                  line_type = "straight",
 #                  p.adjust.cutoff = 0.05,
@@ -132,7 +133,7 @@
 #'
 #' @param object An object containing the enrichment results and other relevant data.
 #' @param top_n An integer specifying the top N pathways to display.
-#' @param x_axis_name A character string indicating the metric to use for the x-axis in ORA results. Options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values), \code{"RichFactor"}, or \code{"FoldEnrichment"}. For metabolite enrichment, the adjusted p-value is used by default, and for GSEA results this parameter is ignored (NES is used instead).
+#' @param x_axis_name A character string indicating the metric to use for the x-axis in ORA results. Options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values), \code{"RichFactor"}, or \code{"FoldEnrichment"}. For metabolite enrichment, this parameter should be \code{"qscore"}, and for GSEA results this parameter should be \code{"NES"}.
 #' @param y_label_width An integer specifying the width of the Y-axis labels.
 #' @param translation translation or not.
 #' @param level A character string specifying the level of analysis.
@@ -201,7 +202,7 @@ plot_pathway_bar <-
     level <- match.arg(level)
     line_type <- match.arg(line_type)
 
-    query_type <- enriched_pathways@process_info[[1]]@parameter$query_type
+    query_type <- object@process_info$enrich_pathway@parameter$query_type
 
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
@@ -211,15 +212,15 @@ plot_pathway_bar <-
         } else {
           x_axis_name <- match.arg(x_axis_name, choices = c("qscore", "RichFactor", "FoldEnrichment"))
         }
-      } else {
-        if (!is.null(x_axis_name)) {
-          message("For metabolite enrichment, use adjusted p value as x axis.")
+      } else if (query_type == "metabolite") {
+        if (x_axis_name != "qscore") {
+          message("For metabolite enrichment, please use qscore(adjusted p value) as x axis.")
         }
       }
     } else {
       analysis_type <- "do_gsea"
-      if (!is.null(x_axis_name)) {
-        message("For GSEA, use NES as x axis.")
+      if (x_axis_name != "NES") {
+        stop("For GSEA, please use NES as x axis.")
       }
     }
 

@@ -1,3 +1,11 @@
+#' Enrich Pathways UI Module
+#'
+#' Internal server for enrichment analysis. For genes, both pathway enrichment analysis and Gene set enrichment analysis can be performed. For metabolites, only pathway enrichment analysis is available.
+#'
+#' @param id Module id.
+#' @import shiny
+#' @importFrom shinyjs hidden toggleElement useShinyjs
+#' @noRd
 
 enrich_pathway_ui <- function(id) {
   ns <- NS(id)
@@ -9,7 +17,7 @@ enrich_pathway_ui <- function(id) {
                 column(4,
                        radioButtons(
                          ns("query_type"),
-                         "Query type:",
+                         "Query type",
                          choices = c(
                            "Gene" = "gene",
                            "Metabolite" = "metabolite"
@@ -203,6 +211,22 @@ enrich_pathway_ui <- function(id) {
             )
           ))
 }
+
+
+#' Enrich Pathways Server Module
+#'
+#' Internal server for enrichment analysis. For genes, both pathway enrichment analysis and Gene set enrichment analysis can be performed. For metabolites, only pathway enrichment analysis is available.
+#'
+#' @param input,output,session Internal parameters for {shiny}. DO NOT REMOVE.
+#' @param id Module id.
+#' @param variable_info Reactive variable containing uploaded variable info.
+#' @param tab_switch Function to switch tabs.
+#' @import shiny
+#' @importFrom shinyjs toggleElement disable enable useShinyjs
+#' @importFrom clusterProfiler enrich_pathway do_gsea
+#' @importFrom org.Hs.eg.db org.Hs.eg.db
+#' @importFrom ReactomePA enrichPathway
+#' @noRd
 
 enrich_pathway_server <- function(id, variable_info = NULL, tab_switch) {
   moduleServer(
