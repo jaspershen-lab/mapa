@@ -102,3 +102,7 @@
 # mapa 0.1.26
 
 * Added metabolite enrichment analysis based on HMDB and KEGG.
+
+# mapa 0.1.27
+
+* Added biotext embedding similarity calculation.

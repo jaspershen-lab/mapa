@@ -1,8 +1,8 @@
 Package: mapa
 Type: Package
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.1.26
-Date: 2025-02-04
+Version: 0.1.27
+Date: 2025-03-24
 Authors@R: c(
     person(given = "Xiaotao",
            family = "Shen",
@@ -27,38 +27,41 @@ LazyDataCompression: xz
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
-Imports: 
+Imports:
+    KEGGREST,
+    Matrix,
+    ReactomePA,
+    cli,
+    clusterProfiler,
+    crayon,
+    digest,
     dplyr,
-    magrittr,
-    tibble,
+    extrafont,
+    ggforce,
+    ggraph,
     ggplot2,
+    ggwordcloud,
+    grid,
+    httr,
+    httr2,
+    igraph,
+    magrittr,
+    metpath,
     methods,
     openxlsx,
-    crayon,
-    cli,
-    purrr,
-    grid,
-    ggforce,
-    httr,
-    stats,
-    utils,
-    tidyr,
-    ReactomePA,
-    clusterProfiler,
-    metpath,
-    extrafont,
-    ggraph,
-    igraph,
     patchwork,
     plyr,
-    stringr,
-    tidygraph,
-    ggwordcloud,
-    rmarkdown,
-    Matrix,
     proxyC,
-    digest,
-    simona
+    purrr,
+    rmarkdown,
+    rtiktoken,
+    simona,
+    stats,
+    stringr,
+    tibble,
+    tidygraph,
+    tidyr,
+    utils
 Suggests: 
     knitr,
     BiocStyle,
