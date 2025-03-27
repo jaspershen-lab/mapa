@@ -406,10 +406,10 @@ merge_pathways_internal <-
     }
 
 
-    if (database == "go") {
-      result <-
-        dplyr::filter(result, ONTOLOGY != "CC")
-    }
+    # if (database == "go") {
+    #   result <-
+    #     dplyr::filter(result, ONTOLOGY != "CC")
+    # }
 
     if (nrow(result) == 0) {
       return(NULL)
@@ -421,7 +421,8 @@ merge_pathways_internal <-
       sim_matrix <-
         tryCatch(
           get_go_result_sim(
-            result = dplyr::filter(result, ONTOLOGY != "CC"),
+            # result = dplyr::filter(result, ONTOLOGY != "CC"),
+            result = result,
             sim.cutoff = sim.cutoff,
             measure.method = measure.method,
             control.method = control.method.go),

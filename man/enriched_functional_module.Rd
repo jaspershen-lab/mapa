@@ -5,7 +5,7 @@
 \alias{enriched_functional_module}
 \title{enriched_functional_module}
 \format{
-A enriched_functional_module object.
+An enriched_functional_module object.
 }
 \usage{
 enriched_functional_module

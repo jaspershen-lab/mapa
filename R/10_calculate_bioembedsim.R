@@ -1,8 +1,8 @@
 # setwd(r4projects::get_project_wd())
 # source("R/6_utils.R")
 # source("R/8_functional_module_class.R")
-# load("data/enriched_functional_module.rda")
-# object <- enriched_functional_module
+# load("data/enriched_pathways.rda")
+# object <- enriched_pathways
 # library(dplyr)
 # library(purrr)
 # library(httr2)
@@ -47,7 +47,13 @@
 # all_text_info <- c(go_info, kegg_info, reactome_info)
 # all_combined_info <- combine_info(info = all_text_info, include_gene_name = TRUE)
 
-# openai_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "openai",  text_embedding_model = "text-embedding-3-small", api_key = api_key)
+# openai_semantic_sim_matrix <-
+#   get_bioembedsim(object = enriched_pathways,
+#                   api_provider = "openai",
+#                   text_embedding_model = "text-embedding-3-small",
+#                   api_key = api_key,
+#                   save_to_local = TRUE,
+#                   path = "~/Desktop/result")
 # gemini_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "gemini",  text_embedding_model = "text-embedding-004", api_key = api_key)
 
 #' Calculate Biological Pathway Similarity Based on BioText Embeddings (biotext embedding similarity)
@@ -59,7 +65,7 @@
 #' previously performed enrichment analyses, and uses API providers like OpenAI or Gemini
 #' to generate embeddings.
 #'
-#' @param object An object containing enrichment analysis results from GO, KEGG, and/or Reactome databases
+#' @param object An object of class "functional_module", typically a result from enrich_pathway function.
 #' @param api_provider Character string specifying the API provider for text embeddings.
 #'   Options are "openai" or "gemini".
 #' @param text_embedding_model Character string specifying the embedding model to use
@@ -75,8 +81,11 @@
 #' @param count.cutoff.go Minimum gene count cutoff for GO terms (default: 5)
 #' @param count.cutoff.kegg Minimum gene count cutoff for KEGG pathways (default: 5)
 #' @param count.cutoff.reactome Minimum gene count cutoff for Reactome pathways (default: 5)
+#' @param save_to_local Logical. Whether to save the resulting data to local files. Default is `FALSE`.
+#' @param path Character. The directory path where intermediate results will be saved, if `save_to_local = TRUE`. Default is "result".
 #'
-#' @return A matrix of pairwise cosine similarity values between pathways
+#' @return A list containing a matrix of pairwise cosine similarity values between pathways and
+#' an object of class "functional_module" with updated parameter information.
 #'
 #' @details
 #' The function works in three main steps:
@@ -123,8 +132,8 @@
 get_bioembedsim <-
   function(object,
            api_provider = c("openai", "gemini"),
-           text_embedding_model,
-           api_key,
+           text_embedding_model = NULL,
+           api_key = NULL,
            include_gene_name = FALSE,
            database = c("go", "kegg", "reactome"),
            p.adjust.cutoff.go = 0.05,
@@ -132,9 +141,17 @@ get_bioembedsim <-
            p.adjust.cutoff.reactome = 0.05,
            count.cutoff.go = 5,
            count.cutoff.kegg = 5,
-           count.cutoff.reactome = 5) {
+           count.cutoff.reactome = 5,
+           save_to_local = FALSE,
+           path = "result") {
 
-    database <- match.arg(database, several.ok = TRUE)
+    if (missing(object)) {
+      stop("object is required")
+    }
+
+    if (!is(object, "functional_module")) {
+      stop("object must be result from enrich_pathway function")
+    }
 
     if (missing(api_provider)) {
       stop("api_provider is required.")
@@ -148,6 +165,8 @@ get_bioembedsim <-
     if (missing(api_key)) {
       stop("api_key is required.")
     }
+
+    database <- match.arg(database, several.ok = TRUE)
 
     ## Collect text information from databases
     all_text_info <- list()
@@ -208,7 +227,45 @@ get_bioembedsim <-
     ## Calculate pairwise cosine similarity
     sim_matrix <- calculate_cosine_sim(m = embedding_matrix)
 
-    return(sim_matrix)
+    ## Store parameters
+    parameter = new(
+      Class = "tidymass_parameter",
+      pacakge_name = "mapa",
+      function_name = "get_bioembedsim()",
+      parameter = list(
+        p.adjust.cutoff.go = p.adjust.cutoff.go,
+        p.adjust.cutoff.kegg = p.adjust.cutoff.kegg,
+        p.adjust.cutoff.reactome = p.adjust.cutoff.reactome,
+        count.cutoff.go = count.cutoff.go,
+        count.cutoff.kegg = count.cutoff.kegg,
+        count.cutoff.reactome = count.cutoff.reactome
+      ),
+      time = Sys.time()
+    )
+
+    process_info <-
+      slot(object, "process_info")
+
+    process_info$merge_pathways <-
+      parameter
+
+    slot(object, "process_info") <-
+      process_info
+
+    message("Biotext embedding and similarity calculation finished")
+
+    ## Save similarity matrix as intermediate data
+    if (save_to_local) {
+      dir.create(path, recursive = TRUE, showWarnings = FALSE)
+      dir.create(
+        file.path(path, "intermediate_data"),
+        showWarnings = FALSE,
+        recursive = TRUE
+      )
+      save(sim_matrix, file = file.path(path, "intermediate_data/sim_matrix"))
+    }
+
+    return(list(sim_matrix = sim_matrix, enriched_pathway = object))
 }
 
 # Step1: Extract text info =====
@@ -318,53 +375,110 @@ get_kegg_info <- function(kegg_ids, include_gene_name = FALSE){
   chunk_size <- 10
   chunks <- split(kegg_ids, ceiling(seq_along(kegg_ids) / chunk_size))
   kegg_info <- list()
+
   for (i in 1:length(chunks)) {
     sub_kegg_info <-
-      KEGGREST::keggGet(dbentries = chunks[[i]]) %>%
-      purrr::map(
-        function(x) {
-          # Initialize kegg2genename as empty
-          kegg2genename <- NA
+      tryCatch({
+        # Try to process the chunk as a batch first
+        KEGGREST::keggGet(dbentries = chunks[[i]]) %>%
+          purrr::map(
+            function(x) {
+              # Initialize kegg2genename as empty
+              kegg2genename <- NA
 
-          # Only get annotated Entrez ID if include_gene_name is TRUE
-          if (include_gene_name && "GENE" %in% names(x)) {
-            kegg2genename <-
-              x$GENE[seq(2, length(x$GENE), 2)] %>%
-              stringr::str_match(pattern = ";\\s*(.*?)\\s*\\[") %>%
-              as.data.frame() %>%
-              dplyr::pull(V2) %>%
-              paste0(collapse = ",")
+              # Only get annotated Entrez ID if include_gene_name is TRUE
+              if (include_gene_name && "GENE" %in% names(x)) {
+                kegg2genename <-
+                  x$GENE[seq(2, length(x$GENE), 2)] %>%
+                  stringr::str_match(pattern = ";\\s*(.*?)\\s*\\[") %>%
+                  as.data.frame() %>%
+                  dplyr::pull(V2) %>%
+                  paste0(collapse = ",")
+              }
+
+              # # Get PMID
+              # if ("REFERENCE" %in% names(x)) {
+              #   pmid_list <- lapply(x$REFERENCE,
+              #                       function(r) {
+              #                         if (grepl("^PMID", r$REFERENCE)) {
+              #                           pmid <- gsub("[^:]+:", "", r$REFERENCE)
+              #                         } else {
+              #                           pmid <- ""
+              #                         }
+              #                       })
+              #   pmid <- paste(unlist(pmid_list), collapse = ",")
+              # } else {
+              #   pmid <- ""
+              # }
+
+              # Collect base info (always included)
+              all_info <- list(
+                "id" = unname(x$ENTRY),
+                "term_name" = sub(" - Homo sapiens \\(human\\)$", "", x$NAME),
+                "term_definition" = paste(x$DESCRIPTION, collapse = " ")
+              )
+
+              # Only add gene name information if requested
+              if (include_gene_name) {
+                all_info$annotated_genename <- kegg2genename
+              }
+
+              return(all_info)
+            })
+      }, error = function(e) {
+        # If batch processing fails, process each ID individually
+        message("Batch processing failed, trying individual IDs: ", e$message)
+
+        # Process each ID in the current chunk individually
+        individual_results <- list()
+        for (kegg_id in chunks[[i]]) {
+          single_result <- tryCatch({
+            # Get a single KEGG entry
+            entry <- KEGGREST::keggGet(dbentries = kegg_id)[[1]]
+
+            # Initialize kegg2genename as empty
+            kegg2genename <- NA
+
+            # Only get annotated Entrez ID if include_gene_name is TRUE
+            if (include_gene_name && "GENE" %in% names(entry)) {
+              kegg2genename <-
+                entry$GENE[seq(2, length(entry$GENE), 2)] %>%
+                stringr::str_match(pattern = ";\\s*(.*?)\\s*\\[") %>%
+                as.data.frame() %>%
+                dplyr::pull(V2) %>%
+                paste0(collapse = ",")
+            }
+
+            # Collect base info (always included)
+            all_info <- list(
+              "id" = unname(entry$ENTRY),
+              "term_name" = sub(" - Homo sapiens \\(human\\)$", "", entry$NAME),
+              "term_definition" = paste(entry$DESCRIPTION, collapse = " ")
+            )
+
+            # Only add gene name information if requested
+            if (include_gene_name) {
+              all_info$annotated_genename <- kegg2genename
+            }
+
+            all_info
+          }, error = function(e2) {
+            message("  Failed to retrieve KEGG ID: ", kegg_id, " (", e2$message, ")")
+            return(NULL)
+          })
+
+          # Add non-NULL results to the list
+          if (!is.null(single_result)) {
+            individual_results <- c(individual_results, list(single_result))
           }
 
-          # # Get PMID
-          # if ("REFERENCE" %in% names(x)) {
-          #   pmid_list <- lapply(x$REFERENCE,
-          #                       function(r) {
-          #                         if (grepl("^PMID", r$REFERENCE)) {
-          #                           pmid <- gsub("[^:]+:", "", r$REFERENCE)
-          #                         } else {
-          #                           pmid <- ""
-          #                         }
-          #                       })
-          #   pmid <- paste(unlist(pmid_list), collapse = ",")
-          # } else {
-          #   pmid <- ""
-          # }
+          # Brief pause to avoid overwhelming the API
+          Sys.sleep(0.1)
+        }
 
-          # Collect base info (always included)
-          all_info <- list(
-            "id" = unname(x$ENTRY),
-            "term_name" = sub(" - Homo sapiens \\(human\\)$", "", x$NAME),
-            "term_definition" = paste(x$DESCRIPTION, collapse = " ")
-          )
+        return(individual_results)
+      })
 
-          # Only add gene name information if requested
-          if (include_gene_name) {
-            all_info$annotated_genename <- kegg2genename
-          }
-
-          return(all_info)
-        })
     kegg_info <- c(kegg_info, sub_kegg_info)
   }
   return(kegg_info)

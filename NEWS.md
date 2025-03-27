@@ -106,3 +106,9 @@
 # mapa 0.1.27
 
 * Added biotext embedding similarity calculation.
+
+# mapa 0.1.28
+
+* Added clustering based on biotext embedding similarity calculation.
+* Added cellular component sub-ontology.
+

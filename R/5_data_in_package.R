@@ -13,9 +13,20 @@
 #'
 #' @description enriched_functional_module
 #' @name enriched_functional_module
-#' @format A enriched_functional_module object.
+#' @format An enriched_functional_module object.
 #' @docType data
 #' @keywords data
 #' @examples
 #' data(enriched_functional_module)
 "enriched_functional_module"
+
+#' @title enriched_pathways
+#'
+#' @description enriched_pathways
+#' @name enriched_pathways
+#' @format An enriched_functional_module object.
+#' @docType data
+#' @keywords data
+#' @examples
+#' data(enriched_pathways)
+"enriched_pathways"

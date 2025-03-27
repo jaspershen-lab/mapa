@@ -7,8 +7,8 @@
 get_bioembedsim(
   object,
   api_provider = c("openai", "gemini"),
-  text_embedding_model,
-  api_key,
+  text_embedding_model = NULL,
+  api_key = NULL,
   include_gene_name = FALSE,
   database = c("go", "kegg", "reactome"),
   p.adjust.cutoff.go = 0.05,
@@ -16,11 +16,13 @@ get_bioembedsim(
   p.adjust.cutoff.reactome = 0.05,
   count.cutoff.go = 5,
   count.cutoff.kegg = 5,
-  count.cutoff.reactome = 5
+  count.cutoff.reactome = 5,
+  save_to_local = FALSE,
+  path = "result"
 )
 }
 \arguments{
-\item{object}{An object containing enrichment analysis results from GO, KEGG, and/or Reactome databases}
+\item{object}{An object of class "functional_module", typically a result from enrich_pathway function.}
 
 \item{api_provider}{Character string specifying the API provider for text embeddings.
 Options are "openai" or "gemini".}
@@ -47,9 +49,14 @@ and/or "reactome". Multiple selections allowed.}
 \item{count.cutoff.kegg}{Minimum gene count cutoff for KEGG pathways (default: 5)}
 
 \item{count.cutoff.reactome}{Minimum gene count cutoff for Reactome pathways (default: 5)}
+
+\item{save_to_local}{Logical. Whether to save the resulting data to local files. Default is \code{FALSE}.}
+
+\item{path}{Character. The directory path where intermediate results will be saved, if \code{save_to_local = TRUE}. Default is "result".}
 }
 \value{
-A matrix of pairwise cosine similarity values between pathways
+A list containing a matrix of pairwise cosine similarity values between pathways and
+an object of class "functional_module" with updated parameter information.
 }
 \description{
 This function calculates similarity between biological pathways by using text embedding

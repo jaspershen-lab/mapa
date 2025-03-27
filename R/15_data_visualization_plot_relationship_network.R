@@ -610,8 +610,9 @@ create_relation_network <-
             dplyr::filter(
               p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
                 Count > object@process_info$merge_pathways@parameter$count.cutoff.go
-              ) %>%
-            dplyr::filter(ONTOLOGY != "CC")
+              )
+          # %>%
+            # dplyr::filter(ONTOLOGY != "CC")
           if (analysis_type == "enrich_pathway") {
             temp_df %>%
               dplyr::select(from = ID,
@@ -661,7 +662,7 @@ create_relation_network <-
             p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
               Count > object@process_info$merge_pathways@parameter$count.cutoff.go
           ) %>%
-          dplyr::filter(ONTOLOGY != "CC") %>%
+          # dplyr::filter(ONTOLOGY != "CC") %>%
           dplyr::select(node = ID,
                         annotation = Description,
                         p.adjust,

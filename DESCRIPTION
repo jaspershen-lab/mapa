@@ -1,8 +1,8 @@
 Package: mapa
 Type: Package
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.1.27
-Date: 2025-03-24
+Version: 0.1.28
+Date: 2025-03-27
 Authors@R: c(
     person(given = "Xiaotao",
            family = "Shen",
@@ -49,6 +49,7 @@ Imports:
     metpath,
     methods,
     openxlsx,
+    org.Hs.eg.db,
     patchwork,
     plyr,
     proxyC,
@@ -56,6 +57,7 @@ Imports:
     rmarkdown,
     rtiktoken,
     simona,
+    simplifyEnrichment,
     stats,
     stringr,
     tibble,

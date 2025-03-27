@@ -96,31 +96,31 @@ setMethod(
             crayon::green(" features/markers in total"))
 
 
-    p.adjust.cutoff <-
-      tryCatch(
-        object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
-        error = function(e) {
-          tryCatch(
-            object@process_info$enrich_pathway@parameter$pvalueCutoff,
-            error = function(e) {
-              object@process_info$do_gse@parameter$pvalueCutoff
-            }
-          )
-        }
-      )
-
-    count.cutoff <-
-      tryCatch(
-        object@process_info$merge_pathways@parameter$count.cutoff.go,
-        error = function(e) {
-          tryCatch(
-            object@process_info$enrich_pathway@parameter$pvalueCutoff,
-            error = function(e) {
-              object@process_info$do_gse@parameter$pvalueCutoff
-            }
-          )
-        }
-      )
+    # p.adjust.cutoff <-
+    #   tryCatch(
+    #     object@process_info$merge_pathways@parameter$p.adjust.cutoff.go,
+    #     error = function(e) {
+    #       tryCatch(
+    #         object@process_info$enrich_pathway@parameter$pvalueCutoff,
+    #         error = function(e) {
+    #           object@process_info$do_gsea@parameter$pvalueCutoff
+    #         }
+    #       )
+    #     }
+    #   )
+    #
+    # count.cutoff <-
+    #   tryCatch(
+    #     object@process_info$merge_pathways@parameter$count.cutoff.go,
+    #     error = function(e) {
+    #       tryCatch(
+    #         object@process_info$enrich_pathway@parameter$pvalueCutoff,
+    #         error = function(e) {
+    #           object@process_info$do_gsea@parameter$pvalueCutoff
+    #         }
+    #       )
+    #     }
+    #   )
 
     ## message for enrichment results and modules of genes ====
     message(crayon::green("-----------Enrichment results and modules of genes------------"))
@@ -129,17 +129,18 @@ setMethod(
       message(crayon::green('No GO results'))
     } else{
       if (analysis_type == "enrich_pathway") {
+        p.adjust.cutoff <- object@process_info$merge_pathways@parameter$p.adjust.cutoff.go
+        count.cutoff <- object@process_info$merge_pathways@parameter$count.cutoff.go
         message(
           crayon::green(
             nrow(
               enrichment_go_result@result %>%
                 dplyr::filter(
                   p.adjust < p.adjust.cutoff &
-                    Count > count.cutoff &
-                    ONTOLOGY != "CC"
+                    Count > count.cutoff
                 )
             ),
-            "GO terms (BP and MF) with p.adjust <",
+            "GO terms with p.adjust <",
             p.adjust.cutoff,
             "and Count >",
             count.cutoff
@@ -149,10 +150,9 @@ setMethod(
         message(crayon::green(
           nrow(
             enrichment_go_result@result %>%
-              dplyr::filter(p.adjust < p.adjust.cutoff &
-                              ONTOLOGY != "CC")
+              dplyr::filter(p.adjust < p.adjust.cutoff)
           ),
-          "GO terms (BP and MF) with p.adjust <",
+          "GO terms with p.adjust <",
           p.adjust.cutoff
         ))
       }
@@ -171,6 +171,8 @@ setMethod(
     if (is.null(enrichment_kegg_result)) {
       message(crayon::green('No KEGG results'))
     } else{
+      p.adjust.cutoff <- object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg
+      count.cutoff <- object@process_info$merge_pathways@parameter$count.cutoff.kegg
       if (analysis_type == "enrich_pathway") {
         message(
           crayon::green(
@@ -210,6 +212,8 @@ setMethod(
     if (is.null(enrichment_reactome_result)) {
       message(crayon::green('No Reactome results'))
     } else{
+      p.adjust.cutoff <- object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome
+      count.cutoff <- object@process_info$merge_pathways@parameter$count.cutoff.reactome
       if (analysis_type == "enrich_pathway") {
         message(
           crayon::green(

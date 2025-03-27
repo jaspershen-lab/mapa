@@ -91,7 +91,7 @@ merge_modules <-
       if (analysis_type == "enrich_pathway") {
         module_result_go <-
           object@merged_pathway_go$module_result %>%
-          dplyr::filter(ONTOLOGY != "CC") %>%
+          # dplyr::filter(ONTOLOGY != "CC") %>%
           dplyr::arrange(p.adjust) %>%
           dplyr::mutate(database = "GO") %>%
           dplyr::select(
@@ -115,7 +115,7 @@ merge_modules <-
       } else{
         module_result_go <-
           object@merged_pathway_go$module_result %>%
-          dplyr::filter(ONTOLOGY != "CC") %>%
+          # dplyr::filter(ONTOLOGY != "CC") %>%
           dplyr::arrange(dplyr::desc(abs(NES))) %>%
           dplyr::mutate(database = "GO") %>%
           dplyr::select(
