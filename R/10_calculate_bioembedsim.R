@@ -47,6 +47,7 @@
 # all_text_info <- c(go_info, kegg_info, reactome_info)
 # all_combined_info <- combine_info(info = all_text_info, include_gene_name = TRUE)
 
+# For genes
 # openai_semantic_sim_matrix <-
 #   get_bioembedsim(object = enriched_pathways,
 #                   api_provider = "openai",
@@ -56,12 +57,22 @@
 #                   path = "~/Desktop/result")
 # gemini_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "gemini",  text_embedding_model = "text-embedding-004", api_key = api_key)
 
+# For metabolites
+# openai_sim_matrix_met <-
+#   get_bioembedsim(object = enriched_pathways,
+#                   api_provider = "openai",
+#                   database = c("hmdb", "kegg"),
+#                   text_embedding_model = "text-embedding-3-small",
+#                   api_key = api_key,
+#                   save_to_local = FALSE)
+
+
 #' Calculate Biological Pathway Similarity Based on BioText Embeddings (biotext embedding similarity)
 #'
 #' @description
 #' This function calculates similarity between biological pathways by using text embedding
 #' models to vectorize pathway information and compute cosine similarity between them.
-#' It extracts text information from GO, KEGG, and/or Reactome databases based on
+#' It extracts text information from GO, KEGG, HMDB and/or Reactome databases based on
 #' previously performed enrichment analyses, and uses API providers like OpenAI or Gemini
 #' to generate embeddings.
 #'
@@ -73,14 +84,18 @@
 #' @param api_key Character string of the API key for the specified provider
 #' @param include_gene_name Logical indicating whether to include annotated gene names
 #'   in the pathway descriptions (default: FALSE)
-#' @param database Character vector of databases to include. Options are "go", "kegg",
+#' @param database Character vector of databases to include. Options are "go", "kegg", "hmdb",
 #'   and/or "reactome". Multiple selections allowed.
 #' @param p.adjust.cutoff.go Numeric cutoff for adjusted p-value for GO terms (default: 0.05)
 #' @param p.adjust.cutoff.kegg Numeric cutoff for adjusted p-value for KEGG pathways (default: 0.05)
 #' @param p.adjust.cutoff.reactome Numeric cutoff for adjusted p-value for Reactome pathways (default: 0.05)
+#' @param p.adjust.cutoff.hmdb Numeric cutoff for adjusted p-value for HMDB pathways from metabolite enrichment analysis result (default: 0.05)
+#' @param p.adjust.cutoff.metkegg Numeric cutoff for adjusted p-value for KEGG pathways from metabolite enrichment analysis result (default: 0.05)
 #' @param count.cutoff.go Minimum gene count cutoff for GO terms (default: 5)
 #' @param count.cutoff.kegg Minimum gene count cutoff for KEGG pathways (default: 5)
 #' @param count.cutoff.reactome Minimum gene count cutoff for Reactome pathways (default: 5)
+#' @param count.cutoff.hmdb Minimum gene count cutoff for HMDB pathways from metabolite enrichment analysis result (default: 5)
+#' @param count.cutoff.metkegg Minimum gene count cutoff for KEGG pathways from metabolite enrichment analysis result (default: 5)
 #' @param save_to_local Logical. Whether to save the resulting data to local files. Default is `FALSE`.
 #' @param path Character. The directory path where intermediate results will be saved, if `save_to_local = TRUE`. Default is "result".
 #'
@@ -135,13 +150,17 @@ get_bioembedsim <-
            text_embedding_model = NULL,
            api_key = NULL,
            include_gene_name = FALSE,
-           database = c("go", "kegg", "reactome"),
+           database = c("go", "kegg", "reactome", "hmdb"),
            p.adjust.cutoff.go = 0.05,
            p.adjust.cutoff.kegg = 0.05,
            p.adjust.cutoff.reactome = 0.05,
+           p.adjust.cutoff.hmdb = 0.05,
+           p.adjust.cutoff.metkegg = 0.05,
            count.cutoff.go = 5,
            count.cutoff.kegg = 5,
            count.cutoff.reactome = 5,
+           count.cutoff.hmdb = 5,
+           count.cutoff.metkegg = 5,
            save_to_local = FALSE,
            path = "result") {
 
@@ -152,6 +171,8 @@ get_bioembedsim <-
     if (!is(object, "functional_module")) {
       stop("object must be result from enrich_pathway function")
     }
+
+    query_type <- object@process_info$enrich_pathway@parameter$query_type
 
     if (missing(api_provider)) {
       stop("api_provider is required.")
@@ -171,45 +192,91 @@ get_bioembedsim <-
     ## Collect text information from databases
     all_text_info <- list()
 
-    if ("go" %in% database) {
-      if (is.null(object@enrichment_go_result)) {
-        stop("Please perform pathway enrichment based on GO database at first.")
-      } else {
-        go_info <-
-          object@enrichment_go_result@result %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff.go) %>%
-          dplyr::filter(Count > count.cutoff.go) %>%
-          dplyr::pull(ID) %>%
-          get_go_info(include_gene_name = include_gene_name)
-        all_text_info <- c(all_text_info, go_info)
+    if (query_type == "gene") {
+      if ("go" %in% database) {
+        if (is.null(object@enrichment_go_result)) {
+          stop("Please perform pathway enrichment based on GO database at first.")
+        } else {
+          go_info <-
+            object@enrichment_go_result@result %>%
+            dplyr::filter(p.adjust < p.adjust.cutoff.go) %>%
+            dplyr::filter(Count > count.cutoff.go) %>%
+            dplyr::pull(ID) %>%
+            get_go_info(include_gene_name = include_gene_name)
+          all_text_info <- c(all_text_info, go_info)
+        }
       }
-    }
 
-    if ("kegg" %in% database) {
-      if (is.null(object@enrichment_kegg_result)) {
-        stop("Please perform pathway enrichment based on KEGG database at first.")
-      } else {
-        kegg_info <-
-          object@enrichment_kegg_result@result %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff.kegg) %>%
-          dplyr::filter(Count > count.cutoff.kegg) %>%
-          dplyr::pull(ID) %>%
-          get_kegg_info(include_gene_name = include_gene_name)
-        all_text_info <- c(all_text_info, kegg_info)
+      if ("kegg" %in% database) {
+        if (is.null(object@enrichment_kegg_result)) {
+          stop("Please perform pathway enrichment based on KEGG database at first.")
+        } else {
+          kegg_info <-
+            object@enrichment_kegg_result@result %>%
+            dplyr::filter(p.adjust < p.adjust.cutoff.kegg) %>%
+            dplyr::filter(Count > count.cutoff.kegg) %>%
+            dplyr::pull(ID) %>%
+            get_kegg_info(include_gene_name = include_gene_name)
+          all_text_info <- c(all_text_info, kegg_info)
+        }
       }
-    }
 
-    if ("reactome" %in% database) {
-      if (is.null(object@enrichment_reactome_result)) {
-        stop("Please perform pathway enrichment based on Reactome database at first.")
-      } else {
-        reactome_info <-
-          object@enrichment_reactome_result@result %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff.reactome) %>%
-          dplyr::filter(Count > count.cutoff.reactome) %>%
-          dplyr::pull(ID) %>%
-          get_reactome_info(include_gene_name = include_gene_name)
-        all_text_info <- c(all_text_info, reactome_info)
+      if ("reactome" %in% database) {
+        if (is.null(object@enrichment_reactome_result)) {
+          stop("Please perform pathway enrichment based on Reactome database at first.")
+        } else {
+          reactome_info <-
+            object@enrichment_reactome_result@result %>%
+            dplyr::filter(p.adjust < p.adjust.cutoff.reactome) %>%
+            dplyr::filter(Count > count.cutoff.reactome) %>%
+            dplyr::pull(ID) %>%
+            get_reactome_info(include_gene_name = include_gene_name)
+          all_text_info <- c(all_text_info, reactome_info)
+        }
+      }
+    } else if (query_type == "metabolite") {
+      if ("kegg" %in% database) {
+        if (is.null(object@enrichment_metkegg_result)) {
+          stop("Please perform pathway enrichment based on KEGG database at first.")
+        } else {
+          metkegg_info <- list()
+          metkegg_enrichment_result <-
+            object@enrichment_metkegg_result@result %>%
+            dplyr::filter(p_value_adjust < p.adjust.cutoff.metkegg) %>%
+            dplyr::filter(mapped_number > count.cutoff.metkegg)
+          for (i in 1:nrow(metkegg_enrichment_result)) {
+            entry <- metkegg_enrichment_result[i,]
+            all_info <- list(
+              "id" = entry$pathway_id,
+              "term_name" = entry$pathway_name,
+              "term_definition" = entry$describtion
+            )
+            metkegg_info <- c(metkegg_info, list(all_info))
+          }
+          all_text_info <- c(all_text_info, metkegg_info)
+        }
+      }
+
+      if ("hmdb" %in% database) {
+        if (is.null(object@enrichment_hmdb_result)) {
+          stop("Please perform pathway enrichment based on KEGG database at first.")
+        } else {
+          hmdb_info <- list()
+          hmdb_enrichment_result <-
+            object@enrichment_hmdb_result@result %>%
+            dplyr::filter(p_value_adjust < p.adjust.cutoff.hmdb) %>%
+            dplyr::filter(mapped_number > count.cutoff.hmdb)
+          for (i in 1:nrow(hmdb_enrichment_result)) {
+            entry <- hmdb_enrichment_result[i,]
+            all_info <- list(
+              "id" = entry$pathway_id,
+              "term_name" = entry$pathway_name,
+              "term_definition" = entry$describtion
+            )
+            hmdb_info <- c(hmdb_info, list(all_info))
+          }
+          all_text_info <- c(all_text_info, hmdb_info)
+        }
       }
     }
 
@@ -228,20 +295,37 @@ get_bioembedsim <-
     sim_matrix <- calculate_cosine_sim(m = embedding_matrix)
 
     ## Store parameters
-    parameter = new(
-      Class = "tidymass_parameter",
-      pacakge_name = "mapa",
-      function_name = "get_bioembedsim()",
-      parameter = list(
-        p.adjust.cutoff.go = p.adjust.cutoff.go,
-        p.adjust.cutoff.kegg = p.adjust.cutoff.kegg,
-        p.adjust.cutoff.reactome = p.adjust.cutoff.reactome,
-        count.cutoff.go = count.cutoff.go,
-        count.cutoff.kegg = count.cutoff.kegg,
-        count.cutoff.reactome = count.cutoff.reactome
-      ),
-      time = Sys.time()
-    )
+    if (query_type == "gene") {
+      parameter = new(
+        Class = "tidymass_parameter",
+        pacakge_name = "mapa",
+        function_name = "get_bioembedsim()",
+        parameter = list(
+          query_type = "gene",
+          p.adjust.cutoff.go = p.adjust.cutoff.go,
+          p.adjust.cutoff.kegg = p.adjust.cutoff.kegg,
+          p.adjust.cutoff.reactome = p.adjust.cutoff.reactome,
+          count.cutoff.go = count.cutoff.go,
+          count.cutoff.kegg = count.cutoff.kegg,
+          count.cutoff.reactome = count.cutoff.reactome
+        ),
+        time = Sys.time()
+      )
+    } else if (query_type == "metabolite") {
+      parameter = new(
+        Class = "tidymass_parameter",
+        pacakge_name = "mapa",
+        function_name = "get_bioembedsim()",
+        parameter = list(
+          query_type = "metabolite",
+          p.adjust.cutoff.hmdb = p.adjust.cutoff.hmdb,
+          p.adjust.cutoff.metkegg = p.adjust.cutoff.metkegg,
+          count.cutoff.hmdb = count.cutoff.hmdb,
+          count.cutoff.metkegg = count.cutoff.metkegg
+        ),
+        time = Sys.time()
+      )
+    }
 
     process_info <-
       slot(object, "process_info")

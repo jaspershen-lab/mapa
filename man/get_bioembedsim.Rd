@@ -10,13 +10,17 @@ get_bioembedsim(
   text_embedding_model = NULL,
   api_key = NULL,
   include_gene_name = FALSE,
-  database = c("go", "kegg", "reactome"),
+  database = c("go", "kegg", "reactome", "hmdb"),
   p.adjust.cutoff.go = 0.05,
   p.adjust.cutoff.kegg = 0.05,
   p.adjust.cutoff.reactome = 0.05,
+  p.adjust.cutoff.hmdb = 0.05,
+  p.adjust.cutoff.metkegg = 0.05,
   count.cutoff.go = 5,
   count.cutoff.kegg = 5,
   count.cutoff.reactome = 5,
+  count.cutoff.hmdb = 5,
+  count.cutoff.metkegg = 5,
   save_to_local = FALSE,
   path = "result"
 )
@@ -35,7 +39,7 @@ Options are "openai" or "gemini".}
 \item{include_gene_name}{Logical indicating whether to include annotated gene names
 in the pathway descriptions (default: FALSE)}
 
-\item{database}{Character vector of databases to include. Options are "go", "kegg",
+\item{database}{Character vector of databases to include. Options are "go", "kegg", "hmdb",
 and/or "reactome". Multiple selections allowed.}
 
 \item{p.adjust.cutoff.go}{Numeric cutoff for adjusted p-value for GO terms (default: 0.05)}
@@ -44,11 +48,19 @@ and/or "reactome". Multiple selections allowed.}
 
 \item{p.adjust.cutoff.reactome}{Numeric cutoff for adjusted p-value for Reactome pathways (default: 0.05)}
 
+\item{p.adjust.cutoff.hmdb}{Numeric cutoff for adjusted p-value for HMDB pathways from metabolite enrichment analysis result (default: 0.05)}
+
+\item{p.adjust.cutoff.metkegg}{Numeric cutoff for adjusted p-value for KEGG pathways from metabolite enrichment analysis result (default: 0.05)}
+
 \item{count.cutoff.go}{Minimum gene count cutoff for GO terms (default: 5)}
 
 \item{count.cutoff.kegg}{Minimum gene count cutoff for KEGG pathways (default: 5)}
 
 \item{count.cutoff.reactome}{Minimum gene count cutoff for Reactome pathways (default: 5)}
+
+\item{count.cutoff.hmdb}{Minimum gene count cutoff for HMDB pathways from metabolite enrichment analysis result (default: 5)}
+
+\item{count.cutoff.metkegg}{Minimum gene count cutoff for KEGG pathways from metabolite enrichment analysis result (default: 5)}
 
 \item{save_to_local}{Logical. Whether to save the resulting data to local files. Default is \code{FALSE}.}
 
@@ -61,7 +73,7 @@ an object of class "functional_module" with updated parameter information.
 \description{
 This function calculates similarity between biological pathways by using text embedding
 models to vectorize pathway information and compute cosine similarity between them.
-It extracts text information from GO, KEGG, and/or Reactome databases based on
+It extracts text information from GO, KEGG, HMDB and/or Reactome databases based on
 previously performed enrichment analyses, and uses API providers like OpenAI or Gemini
 to generate embeddings.
 }

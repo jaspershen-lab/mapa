@@ -60,7 +60,7 @@
 #   enrich_pathway(
 #     variable_info = variable_info,
 #     query_type = "metabolite",
-#     database = c("hmdb"),
+#     database = c("hmdb", "kegg"),
 #     use_internal_data = TRUE,
 #     save_to_local = FALSE,
 #     path = "result",
