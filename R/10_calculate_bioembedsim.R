@@ -262,7 +262,7 @@ get_bioembedsim <-
         showWarnings = FALSE,
         recursive = TRUE
       )
-      save(sim_matrix, file = file.path(path, "intermediate_data/sim_matrix"))
+      save(sim_matrix, file = file.path(path, "intermediate_data/sim_matrix.RData"))
     }
 
     return(list(sim_matrix = sim_matrix, enriched_pathway = object))

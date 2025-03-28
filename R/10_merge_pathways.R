@@ -479,7 +479,7 @@ merge_pathways_internal <-
     }
 
     if (save_to_local) {
-      save(sim_matrix, file = file.path(path, "intermediate_data/sim_matrix"))
+      save(sim_matrix, file = file.path(path, "intermediate_data/sim_matrix.RData"))
     }
 
     ####module detection
@@ -630,8 +630,8 @@ identify_modules <-
 
     if (save_to_local) {
       save(result_with_module,
-           file = file.path(path, "intermediate_data/result_with_module"))
-      save(graph_data, file = file.path(path, "intermediate_data/graph_data"))
+           file = file.path(path, "intermediate_data/result_with_module.RData"))
+      save(graph_data, file = file.path(path, "intermediate_data/graph_data.RData"))
     }
 
     if (analysis_type == "enrich_pathway") {
@@ -767,7 +767,7 @@ identify_modules <-
 
     if (save_to_local) {
       save(module_result,
-           file = file.path(path, "intermediate_data/module_result"))
+           file = file.path(path, "intermediate_data/module_result.RData"))
     }
 
     message("Done")

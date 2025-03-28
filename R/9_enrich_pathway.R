@@ -42,11 +42,25 @@
 # data("query_id_hmdb", package = "metpath")
 # data("query_id_kegg", package = "metpath")
 # variable_info <- data.frame("hmdbid" = query_id_hmdb, "keggid" = query_id_kegg)
+
+# variable_info <- variable_info_up
+# variable_info <-
+#   variable_info %>%
+#   dplyr::rename(hmdbid = HMDB.ID)
+# id_conversion <-
+#   metpath::hmdb_compound_database@spectra.info %>%
+#   dplyr::select(HMDB.ID, KEGG.ID) %>%
+#   dplyr::rename(hmdbid = HMDB.ID,
+#                 keggid = KEGG.ID)
+# variable_info <-
+#   variable_info %>%
+#   left_join(id_conversion)
+#
 # enriched_pathways <-
 #   enrich_pathway(
 #     variable_info = variable_info,
 #     query_type = "metabolite",
-#     database = c("kegg", "hmdb"),
+#     database = c("hmdb"),
 #     use_internal_data = TRUE,
 #     save_to_local = FALSE,
 #     path = "result",
@@ -86,6 +100,11 @@
 #' @param ... Additional arguments passed to the underlying methods.
 #'
 #' @return An object containing the enrichment results and parameters.
+#'
+#' @importFrom clusterProfiler enrichGO enrichKEGG
+#' @importFrom ReactomePA enrichPathway
+#' @importFrom metpath enrich_hmdb enrich_kegg
+#' @importFrom methods new
 #'
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #' @export

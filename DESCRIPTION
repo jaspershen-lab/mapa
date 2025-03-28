@@ -51,6 +51,7 @@ Imports:
     openxlsx,
     org.Hs.eg.db,
     patchwork,
+    pbapply,
     plyr,
     proxyC,
     purrr,

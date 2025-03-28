@@ -441,7 +441,7 @@ identify_functional_modules <-
       dplyr::left_join(module_content_number, by = "module")
 
     if (save_to_local) {
-      save(result_with_module, file = file.path(path, "result_with_module"))
+      save(result_with_module, file = file.path(path, "result_with_module.RData"))
     }
 
     graph_data <-
@@ -450,7 +450,7 @@ identify_functional_modules <-
       dplyr::left_join(module_content_number, by = "module")
 
     if (save_to_local) {
-      save(graph_data, file = file.path(path, "graph_data"))
+      save(graph_data, file = file.path(path, "graph_data.RData"))
     }
 
     if (analysis_type == "enrich_pathway") {
@@ -639,7 +639,7 @@ identify_functional_modules <-
 
     if (save_to_local) {
       save(functional_module_result,
-           file = file.path(path, "functional_module_result"))
+           file = file.path(path, "functional_module_result.RData"))
     }
 
     list(

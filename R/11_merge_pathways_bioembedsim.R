@@ -390,18 +390,13 @@ merge_pathways_bioembedsim <-
     if (save_to_local) {
       path <- file.path(path, "functional_modules")
       dir.create(path, showWarnings = FALSE, recursive = TRUE)
-      dir.create(
-        file.path(path, "intermediate_data"),
-        showWarnings = FALSE,
-        recursive = TRUE
-      )
 
       save(graph_data,
-           file = file.path(path, "graph_data"))
+           file = file.path(path, "graph_data.RData"))
       save(functional_module_result,
-           file = file.path(path, "functional_module_result"))
+           file = file.path(path, "functional_module_result.RData"))
       save(result_with_module,
-           file = file.path(path, "result_with_module"))
+           file = file.path(path, "result_with_module.RData"))
     }
 
     return(object$enriched_pathway)

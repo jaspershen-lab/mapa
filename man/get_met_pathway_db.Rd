@@ -4,34 +4,21 @@
 \alias{get_met_pathway_db}
 \title{Retrieve Metabolic Pathway Databases}
 \usage{
-get_met_pathway_db(use_internal_data)
+get_met_pathway_db(use_internal_data = TRUE)
 }
 \arguments{
 \item{use_internal_data}{Logical. Indicates whether to use internal (local) data for the KEGG pathway retrieval.
-Note that the HMDB pathway retrieval currently does not support online access, so the \code{use_internal_data} parameter
-is not applied for HMDB.}
+Note that the HMDB pathway retrieval currently does not support online access.}
 }
 \value{
 A named list with two elements:
 \describe{
-\item{hmdb_pathway}{A list of HMDB pathways filtered to include only those classified as "Metabolic;primary_pathway".}
-\item{kegg_pathway}{A list of KEGG pathways with disease-related pathways removed.}
+\item{hmdb_pathway}{A list of HMDB pathways.}
+\item{kegg_pathway}{A list of KEGG pathways.}
 }
 }
 \description{
 This function retrieves metabolic pathway data from the HMDB and KEGG databases.
-For HMDB, it obtains all pathways via \code{metpath::get_hmdb_pathway} and then filters to retain only primary metabolic pathways.
-For KEGG, it downloads pathways using \code{metpath::get_kegg_pathway} (with the \code{use_internal_data} flag controlling local data usage)
-and removes pathways related to diseases.
-}
-\details{
-The function uses 3 threads for both HMDB and KEGG pathway retrievals.
-\itemize{
-\item For HMDB: After retrieving the pathways, the function extracts only those with the classification
-"Metabolic;primary_pathway".
-\item For KEGG: The function retrieves pathways for the human organism (specified by \code{"hsa"})
-and filters out any pathway that contains the word "Disease".
-}
 }
 \examples{
 \dontrun{
@@ -46,3 +33,4 @@ and filters out any pathway that contains the word "Disease".
 }
 
 }
+\keyword{internal}

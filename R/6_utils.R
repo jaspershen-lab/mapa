@@ -838,28 +838,16 @@ overlap_dist <- function(m) {
 #' Retrieve Metabolic Pathway Databases
 #'
 #' This function retrieves metabolic pathway data from the HMDB and KEGG databases.
-#' For HMDB, it obtains all pathways via \code{metpath::get_hmdb_pathway} and then filters to retain only primary metabolic pathways.
-#' For KEGG, it downloads pathways using \code{metpath::get_kegg_pathway} (with the \code{use_internal_data} flag controlling local data usage)
-#' and removes pathways related to diseases.
 #'
 #' @param use_internal_data Logical. Indicates whether to use internal (local) data for the KEGG pathway retrieval.
-#'   Note that the HMDB pathway retrieval currently does not support online access, so the \code{use_internal_data} parameter
-#'   is not applied for HMDB.
+#'   Note that the HMDB pathway retrieval currently does not support online access.
 #'
 #' @return A named list with two elements:
 #' \describe{
-#'   \item{hmdb_pathway}{A list of HMDB pathways filtered to include only those classified as "Metabolic;primary_pathway".}
-#'   \item{kegg_pathway}{A list of KEGG pathways with disease-related pathways removed.}
+#'   \item{hmdb_pathway}{A list of HMDB pathways.}
+#'   \item{kegg_pathway}{A list of KEGG pathways.}
 #' }
 #'
-#' @details
-#' The function uses 3 threads for both HMDB and KEGG pathway retrievals.
-#' \itemize{
-#'   \item For HMDB: After retrieving the pathways, the function extracts only those with the classification
-#'         "Metabolic;primary_pathway".
-#'   \item For KEGG: The function retrieves pathways for the human organism (specified by \code{"hsa"})
-#'         and filters out any pathway that contains the word "Disease".
-#' }
 #'
 #' @examples
 #' \dontrun{
@@ -873,43 +861,268 @@ overlap_dist <- function(m) {
 #'   kegg <- pathways$kegg_pathway
 #' }
 #'
-#' @export
-get_met_pathway_db <- function(use_internal_data) {
+#' @keywords internal
+get_met_pathway_db <- function(use_internal_data = TRUE) {
   # Get hmdb pathway
   message("Get HMDB pathway ...")
   hmdb_pathway <-
-    metpath::get_hmdb_pathway(
+    get_hmdb_pathways(
+      ## TO DO: Get updated information.
       #local = use_internal_data,  # Currently this function unable to get online database
       threads = 3
     )
-  # Get primary hmdb pathway
-  remain_idx <-
-    metpath::pathway_class(hmdb_pathway) %>%
-    unlist() %>%
-    stringr::str_equal(., "Metabolic;primary_pathway") %>%
-    which()
-  hmdb_pathway <- hmdb_pathway[remain_idx]
 
   # Get KEGG pathway
   message("Get KEGG pathway ...")
   kegg_pathway <-
-    metpath::get_kegg_pathway(
+    get_kegg_pathways(
       local = use_internal_data,
       organism = "hsa",
       threads = 3
     )
-  # Remove disease related pathway in KEGG
-  remain_idx <-
-    metpath::pathway_class(kegg_pathway) %>%
-    unlist() %>%
-    stringr::str_detect("Disease") %>%
-    `!`() %>%
-    which()
-  kegg_pathway <- kegg_pathway[remain_idx]
 
   return(list(
     "hmdb_pathway" = hmdb_pathway,
     "kegg_pathway" = kegg_pathway
   ))
 }
+
+#' Get KEGG pathway database
+#'
+#' Retrieve pathway information from KEGG for a specified organism.
+#' This is an internal function used by get_met_pathway_db().
+#'
+#' @param local Logical. If TRUE (default), uses locally stored data. If FALSE,
+#'        retrieves data from KEGG API.
+#' @param organism Character. KEGG organism code (default: "hsa" for Homo sapiens)
+#' @param threads Integer. Number of threads to use for parallel processing (default: 3)
+#' @return A pathway_database class object containing KEGG pathway information
+#'
+#' @importFrom KEGGREST keggList keggGet
+#' @importFrom pbapply pblapply
+#' @importFrom purrr map
+#' @importFrom crayon yellow
+#' @importFrom stringr str_replace_all
+#'
+#' @source This function is adapted from the metpath package by Xiaotao Shen
+#'         \url{https://github.com/tidymass/metpath/blob/main/R/10_kegg_database.R}
+#' @references
+#' Shen, X., Yan, H., Wang, C. et al. TidyMass an object-oriented reproducible analysis framework
+#' for LC–MS data. Nat Commun 13, 4365 (2022).
+#'
+#' @keywords internal
+
+get_kegg_pathways <- function(local = TRUE,
+                             organism = "hsa",
+                             threads = 3) {
+  organism = match.arg(organism)
+  if (local) {
+    if (organism == "hsa") {
+      data("kegg_hsa_pathway", package = "metpath", envir = environment())
+      message(
+        crayon::yellow(
+          "This database is downloaded in",
+          kegg_hsa_pathway@database_info$version
+        )
+      )
+      # cat("\n")
+      return(kegg_hsa_pathway)
+    }
+  } else{
+    message(crayon::yellow("It may take a while...\n"))
+    organism = match.arg(organism)
+    pathway_ID <-
+      KEGGREST::keggList(database = "pathway", organism = organism) %>%
+      names() %>%
+      unique() %>%
+      stringr::str_replace_all(., "path:", "")
+
+    kegg_hsa_pathway_database <-
+      pbapply::pblapply(pathway_ID, function(x) {
+        KEGGREST::keggGet(dbentries = x)[[1]]
+      })
+
+    pathway_id =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        unname(x$ENTRY)
+      }) %>%
+      unlist()
+
+    pathway_name =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        unname(x$PATHWAY_MAP)
+        # stringr::str_split(pattern = " - ") %>%
+        # `[[`(1) %>%
+        # `[`(1)
+      }) %>%
+      unlist()
+
+    pathway_name =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        unname(x$PATHWAY_MAP)
+      }) %>%
+      unlist()
+
+    describtion =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        unname(x$DESCRIPTION)
+      })
+
+    pathway_class =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        unname(x$CLASS)
+      })
+
+    gene_list =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        gene = x$GENE
+        if (is.null(gene)) {
+          return(data.frame())
+        }
+        data.frame(
+          KEGG.ID = gene[seq(1, length(gene) - 1, by = 2)],
+          Gene.name = gene[seq(2, length(gene), by = 2)],
+          stringsAsFactors = FALSE
+        )
+      })
+
+    compound_list =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        data.frame(
+          KEGG.ID = names(x$COMPOUND),
+          Compound.name = x$COMPOUND,
+          stringsAsFactors = FALSE
+        )
+      })
+
+    reference_list =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        purrr::map(
+          x$REFERENCE,
+          .f = function(y) {
+            y = lapply(y, function(z) {
+              if (length(z) > 1) {
+                paste(z, collapse = "{}")
+              } else{
+                z
+              }
+            })
+            y = unlist(y)
+            if (any(names(y) == "JOURNAL")) {
+              names(y)[names(y) == "JOURNAL"] = "JOURNAL1"
+              c(y, JOURNAL2 = "")
+            }
+          }
+        ) %>%
+          do.call(rbind, .) %>%
+          as.data.frame()
+      })
+
+    related_disease =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        data.frame(
+          Disease.ID = names(x$DISEASE),
+          Disease.name = x$DISEASE,
+          stringsAsFactors = FALSE
+        )
+      })
+
+
+    related_module =
+      kegg_hsa_pathway_database %>%
+      purrr::map(function(x) {
+        data.frame(
+          Module.ID = names(x$MODULE),
+          Module.name = x$MODULE,
+          stringsAsFactors = FALSE
+        )
+      })
+
+    pathway =
+      new(
+        Class = "pathway_database",
+        database_info = list(source = "KEGG", version = as.character(Sys.Date())),
+        pathway_id = pathway_id,
+        pathway_name = pathway_name,
+        describtion = describtion,
+        pathway_class = pathway_class,
+        gene_list = gene_list,
+        compound_list = compound_list,
+        protein_list = list(),
+        reference_list = reference_list,
+        related_disease = related_disease,
+        related_module = related_module
+      )
+
+    if (length(pathway@gene_list) == 0) {
+      pathway@gene_list = vector(mode = "list",
+                                 length = length(pathway@pathway_id)) %>%
+        purrr::map(function(x) {
+          x = data.frame()
+          x
+        })
+    }
+
+    if (length(pathway@compound_list) == 0) {
+      pathway@compound_list = vector(mode = "list",
+                                     length = length(pathway@pathway_id)) %>%
+        purrr::map(function(x) {
+          x = data.frame()
+          x
+        })
+    }
+
+    if (length(pathway@protein_list) == 0) {
+      pathway@protein_list = vector(mode = "list",
+                                    length = length(pathway@pathway_id)) %>%
+        purrr::map(function(x) {
+          x = data.frame()
+          x
+        })
+    }
+
+    return(pathway)
+  }
+}
+
+#' Get HMDB pathway database
+#'
+#' Retrieve pathway information from the Human Metabolome Database (HMDB/SMPDB).
+#' This is an internal function used by get_met_pathway_db().
+#'
+#' @param threads Integer. Number of threads to use for parallel processing (default: 3)
+#' @return A pathway_database class object containing HMDB pathway information
+#'
+#' @importFrom crayon yellow
+#'
+#' @source This function is adapted from the metpath package by Xiaotao Shen
+#'         \url{https://github.com/tidymass/metpath/blob/main/R/9_hmdb_database.R}
+#'
+#' @references
+#' Shen, X., Yan, H., Wang, C. et al. TidyMass an object-oriented reproducible analysis framework
+#' for LC–MS data. Nat Commun 13, 4365 (2022).
+#'
+#' @keywords internal
+
+get_hmdb_pathways <-
+  function(threads = 3) {
+    data("hmdb_pathway", package = "metpath", envir = environment())
+    message(
+      crayon::yellow(
+        "This database is downloaded in",
+        hmdb_pathway@database_info$version
+      )
+    )
+    # cat("\n")
+    return(hmdb_pathway)
+  }
 
