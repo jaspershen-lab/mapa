@@ -15,7 +15,7 @@ term_similarity_KEGG(
 \arguments{
 \item{term_id}{Character, KEGG pathway IDs}
 
-\item{measure.method}{Character, method for calculating the semantic similarity
+\item{measure.method}{Character, method for calculating the similarity
 for KEGG terms, Choices are "jaccard", "dice", "overlap" and "kappa". Default is "jaccard".}
 }
 \value{

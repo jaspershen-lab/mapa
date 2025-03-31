@@ -38,6 +38,15 @@
 #
 # save(enriched_functional_module, file = "result/enriched_functional_module")
 
+# For metabolite
+# object <- merged_pathways
+# enriched_functional_modules <- merge_modules(
+#   object = object,
+#   sim.cutoff = 0,
+#   measure_method = "jaccard"
+# )
+
+
 #' Identify Functional Modules Across Different Databases
 #'
 #' This function identify functional modules from various databases, such as GO, KEGG, and Reactome.
@@ -64,8 +73,10 @@ merge_modules <-
            sim.cutoff = 0.5,
            measure_method = c("jaccard"),
            path = "result",
-           save_to_local = TRUE) {
+           save_to_local = FALSE) {
+
     variable_info <- object@variable_info
+
     if (save_to_local) {
       path <- file.path(path, "functional_modules")
       dir.create(path, showWarnings = FALSE, recursive = TRUE)
@@ -75,10 +86,13 @@ merge_modules <-
         recursive = TRUE
       )
     }
+
     ###check if it is been processed by merge_pathways
     if (all(names(object@process_info) != "merge_pathways")) {
       stop("Use merge_pathways() function to process first")
     }
+
+    query_type <- object@process_info$enrich_pathway@parameter$query_type
 
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
@@ -247,14 +261,87 @@ merge_modules <-
       module_result_reactome <- NULL
     }
 
+    if (length(object@merged_pathway_hmdb) != 0) {
+      if (analysis_type == "enrich_pathway") {
+        module_result_hmdb <-
+          object@merged_pathway_hmdb$module_result %>%
+          dplyr::arrange(p.adjust) %>%
+          dplyr::mutate(database = "HMDB") %>%
+          dplyr::filter(!is.na(module_annotation))
+      } else{
+        module_result_kegg <-
+          object@merged_pathway_kegg$module_result %>%
+          dplyr::arrange(dplyr::desc(abs(NES))) %>%
+          dplyr::mutate(database = "KEGG") %>%
+          dplyr::select(
+            module_annotation,
+            module,
+            Description,
+            pvalue,
+            qvalue,
+            p.adjust,
+            Count,
+            setSize,
+            enrichmentScore,
+            NES,
+            rank,
+            leading_edge,
+            core_enrichment,
+            database,
+            pathway_id = node
+          ) %>%
+          dplyr::filter(!is.na(module_annotation))
+      }
+    } else{
+      module_result_hmdb <- NULL
+    }
+
+    if (length(object@merged_pathway_metkegg) != 0) {
+      if (analysis_type == "enrich_pathway") {
+        module_result_metkegg <-
+          object@merged_pathway_metkegg$module_result %>%
+          dplyr::arrange(p.adjust) %>%
+          dplyr::mutate(database = "KEGG") %>%
+          dplyr::filter(!is.na(module_annotation))
+      } else{
+        module_result_kegg <-
+          object@merged_pathway_kegg$module_result %>%
+          dplyr::arrange(dplyr::desc(abs(NES))) %>%
+          dplyr::mutate(database = "KEGG") %>%
+          dplyr::select(
+            module_annotation,
+            module,
+            Description,
+            pvalue,
+            qvalue,
+            p.adjust,
+            Count,
+            setSize,
+            enrichmentScore,
+            NES,
+            rank,
+            leading_edge,
+            core_enrichment,
+            database,
+            pathway_id = node
+          ) %>%
+          dplyr::filter(!is.na(module_annotation))
+      }
+    } else{
+      module_result_metkegg <- NULL
+    }
+
     message("Calculating the similarity matrix...")
     jaccard_index <-
-      get_jaccard_index_for_three_databases(
+      get_jaccard_index_for_diff_databases(
+        query_type = query_type,
+        variable_info = object@variable_info,
+        analysis_type = analysis_type,
         module_result_go = module_result_go,
         module_result_kegg = module_result_kegg,
         module_result_reactome = module_result_reactome,
-        variable_info = variable_info,
-        analysis_type = analysis_type
+        module_result_hmdb = module_result_hmdb,
+        module_result_metkegg = module_result_metkegg
       )
 
     ####module detection
@@ -263,7 +350,9 @@ merge_modules <-
     node_data <-
       rbind(module_result_go,
             module_result_kegg,
-            module_result_reactome)
+            module_result_reactome,
+            module_result_hmdb,
+            module_result_metkegg)
 
     if (is.null(node_data)) {
       parameter = new(
@@ -293,7 +382,9 @@ merge_modules <-
 
     functional_modules <-
       identify_functional_modules(
+        query_type = query_type,
         sim_matrix = jaccard_index,
+        variable_info = object@variable_info,
         node_data = node_data,
         sim.cutoff = sim.cutoff,
         save_to_local = save_to_local,
@@ -334,6 +425,10 @@ merge_modules <-
 #'
 #' This function identifies functional modules from a similarity matrix and node data. It constructs a network graph, applies clustering algorithms, and generates module-level results, which can be saved locally. The function supports both pathway enrichment and gene set enrichment analysis (GSEA).
 #'
+#' @param query_type Character, the category of biological entity to query. Must be either "gene" or "metabolite".
+#' @param variable_info A data frame containing mapping information between different ID types.
+#'   For genes, should contain columns: "ensembl", "uniprot", and "entrezid".
+#'   For metabolites, should contain columns: "hmdbid" and "keggid".
 #' @param sim_matrix A data frame containing the similarity matrix with columns `name1`, `name2`, and `value`, representing the similarity between entities.
 #' @param node_data A data frame containing node information, such as module assignments and other relevant attributes. This parameter cannot be `NULL`.
 #' @param sim.cutoff Numeric. A similarity cutoff value used to filter edges in the similarity matrix. Only edges with similarity values greater than `sim.cutoff` will be included in the analysis. Default is `0.5`.
@@ -375,15 +470,21 @@ merge_modules <-
 #' @importFrom plyr dlply
 #' @export
 
-
-
 identify_functional_modules <-
-  function(sim_matrix,
+  function(query_type = c("gene", "metabolite"),
+           variable_info = NULL,
+           sim_matrix,
            node_data,
            sim.cutoff = 0.5,
            save_to_local = TRUE,
            path = ".",
            analysis_type = c("enrich_pathway", "do_gsea")) {
+
+    if (missing(query_type)) {
+      stop("query_type is required")
+    }
+    query_type <- match.arg(query_type)
+
     analysis_type <- match.arg(analysis_type)
 
     edge_data <-
@@ -397,10 +498,18 @@ identify_functional_modules <-
       return(NULL)
     }
 
-    node_data <-
-      node_data %>%
-      dplyr::select(module, dplyr::everything()) %>%
-      dplyr::rename(node = module)
+    if ("node" %in% colnames(node_data)) {
+      node_data <-
+        node_data %>%
+        dplyr::select(-node) %>%
+        dplyr::select(module, dplyr::everything()) %>%
+        dplyr::rename(node = module)
+    } else {
+      node_data <-
+        node_data %>%
+        dplyr::select(module, dplyr::everything()) %>%
+        dplyr::rename(node = module)
+    }
 
     graph_data <-
       tidygraph::tbl_graph(nodes = if (analysis_type == "do_gsea") node_data[, -c(12)] else node_data,
@@ -453,188 +562,279 @@ identify_functional_modules <-
       save(graph_data, file = file.path(path, "graph_data.RData"))
     }
 
-    if (analysis_type == "enrich_pathway") {
-      functional_module_result <-
-        result_with_module %>%
-        plyr::dlply(.variables = .(module)) %>%
-        purrr::map(function(x) {
-          # cat(unique(x$module), " ")
-          if (nrow(x) == 1) {
+    if (query_type == "gene") {
+      if (analysis_type == "enrich_pathway") {
+        functional_module_result <-
+          result_with_module %>%
+          plyr::dlply(.variables = .(module)) %>%
+          purrr::map(function(x) {
+            # cat(unique(x$module), " ")
+            if (nrow(x) == 1) {
+              x$module_content <-
+                paste(x$node, collapse = ";")
+              x <-
+                x %>%
+                dplyr::select(module, everything()) %>%
+                dplyr::distinct(module, .keep_all = TRUE) %>%
+                dplyr::select(-node)
+              return(x)
+            }
+
+            x =
+              x %>%
+              dplyr::arrange(p.adjust)
+
             x$module_content <-
               paste(x$node, collapse = ";")
+
+            x$Description <-
+              paste(x$Description, collapse = ";")
+
+            x$BgRatio <-
+              paste(x$BgRatio, collapse = ";")
+
+            x$pvalue <- min(as.numeric(x$pvalue))
+            x$p.adjust <- min(as.numeric(x$p.adjust))
+            x$qvalue <- min(as.numeric(x$qvalue))
+            x$geneID =
+              x$geneID %>%
+              stringr::str_split(pattern = "/") %>%
+              unlist() %>%
+              unify_id_internal(variable_info = variable_info,
+                                query_type = "gene") %>%
+              unique() %>%
+              paste(collapse = '/')
+
+            x$Count <-
+              length(stringr::str_split(x$geneID[1], pattern = "/")[[1]])
+
+            x$pathway_id <-
+              paste(x$pathway_id, collapse = ";")
+
             x <-
               x %>%
               dplyr::select(module, everything()) %>%
               dplyr::distinct(module, .keep_all = TRUE) %>%
               dplyr::select(-node)
-            return(x)
-          }
+            x
+          }) %>%
+          do.call(rbind, .) %>%
+          as.data.frame() %>%
+          dplyr::mutate(module_annotation = ifelse(module == "Other", Description, sapply(strsplit(
+            Description, ";"
+          ), `[`, 1))) %>%
+          dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
+          dplyr::arrange(p.adjust) %>%
+          dplyr::select(module_annotation, everything())
 
-          x =
-            x %>%
-            dplyr::arrange(p.adjust)
+        functional_module_result$module_annotation <-
+          stringr::str_split(functional_module_result$Description, ";") %>%
+          purrr::map(function(x) {
+            x[1]
+          }) %>%
+          unlist()
 
-          x$module_content <-
-            paste(x$node, collapse = ";")
+        functional_module_result$Count <-
+          as.numeric(functional_module_result$Count)
+        functional_module_result$pvalue <-
+          as.numeric(functional_module_result$pvalue)
+        functional_module_result$degree <-
+          as.numeric(functional_module_result$degree)
+        functional_module_result$qvalue <-
+          as.numeric(functional_module_result$qvalue)
+      } else{
+        functional_module_result <-
+          result_with_module %>%
+          plyr::dlply(.variables = .(module)) %>%
+          purrr::map(function(x) {
+            if (nrow(x) == 1) {
+              x$module_content <-
+                paste(x$node, collapse = ";")
+              x <-
+                x %>%
+                dplyr::select(module, everything()) %>%
+                dplyr::distinct(module, .keep_all = TRUE) %>%
+                dplyr::select(-node)
+              x$geneID =
+                x$core_enrichment %>%
+                stringr::str_replace(";", "/") %>%
+                stringr::str_split(pattern = "/") %>%
+                unlist() %>%
+                unify_id_internal(variable_info = variable_info,
+                                  query_type = "gene") %>%
+                unique() %>%
+                paste(collapse = '/')
+              # x$Count <-
+              #   length(stringr::str_split(x$geneID[1], pattern = "/")[[1]])
+              x <-
+                x %>%
+                dplyr::select(module, everything()) %>%
+                dplyr::distinct(module, .keep_all = TRUE)
+              return(x)
+            }
 
-          x$Description <-
-            paste(x$Description, collapse = ";")
-
-          x$BgRatio <-
-            paste(x$BgRatio, collapse = ";")
-
-          x$pvalue <- min(as.numeric(x$pvalue))
-          x$p.adjust <- min(as.numeric(x$p.adjust))
-          x$qvalue <- min(as.numeric(x$qvalue))
-          x$geneID =
-            x$geneID %>%
-            stringr::str_split(pattern = "/") %>%
-            unlist() %>%
-            unique() %>%
-            paste(collapse = '/')
-
-          x$Count <-
-            length(stringr::str_split(x$geneID[1], pattern = "/")[[1]])
-
-          x$pathway_id <-
-            paste(x$pathway_id, collapse = ";")
-
-          x <-
-            x %>%
-            dplyr::select(module, everything()) %>%
-            dplyr::distinct(module, .keep_all = TRUE) %>%
-            dplyr::select(-node)
-          x
-        }) %>%
-        do.call(rbind, .) %>%
-        as.data.frame() %>%
-        dplyr::mutate(module_annotation = ifelse(module == "Other", Description, sapply(strsplit(
-          Description, ";"
-        ), `[`, 1))) %>%
-        dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
-        dplyr::arrange(p.adjust) %>%
-        dplyr::select(module_annotation, everything())
-
-      functional_module_result$module_annotation <-
-        stringr::str_split(functional_module_result$Description, ";") %>%
-        purrr::map(function(x) {
-          x[1]
-        }) %>%
-        unlist()
-
-      functional_module_result$Count <-
-        as.numeric(functional_module_result$Count)
-      functional_module_result$pvalue <-
-        as.numeric(functional_module_result$pvalue)
-      functional_module_result$degree <-
-        as.numeric(functional_module_result$degree)
-      functional_module_result$qvalue <-
-        as.numeric(functional_module_result$qvalue)
-    } else{
-      functional_module_result <-
-        result_with_module %>%
-        plyr::dlply(.variables = .(module)) %>%
-        purrr::map(function(x) {
-          if (nrow(x) == 1) {
-            x$module_content <-
-              paste(x$node, collapse = ";")
             x <-
               x %>%
-              dplyr::select(module, everything()) %>%
-              dplyr::distinct(module, .keep_all = TRUE) %>%
-              dplyr::select(-node)
+              dplyr::arrange(p.adjust)
+
+            x$module_content <-
+              paste(x$node, collapse = ";")
+
+            x$Description <-
+              paste(x$Description, collapse = ";")
+
+            x$pvalue <- as.numeric(x$pvalue)[1]
+            x$p.adjust <- as.numeric(x$p.adjust)[1]
+            x$qvalue <- as.numeric(x$qvalue)[1]
+
+
+            x$setSize <- as.numeric(x$setSize)[1]
+            x$enrichmentScore <- as.numeric(x$enrichmentScore)[1]
+            x$NES <- as.numeric(x$NES)[1]
+            x$rank <- as.numeric(x$rank)[1]
+            x$leading_edge <- x$leading_edge[1]
+            x$core_enrichment <-
+              paste0(unique(unlist(
+                stringr::str_split(x$core_enrichment, pattern = "/")
+              )), collapse = "/")
+            x$degree <- as.numeric(x$degree)[1]
+
             x$geneID =
               x$core_enrichment %>%
               stringr::str_replace(";", "/") %>%
               stringr::str_split(pattern = "/") %>%
               unlist() %>%
+              unify_id_internal(variable_info = variable_info,
+                                query_type = "gene") %>%
               unique() %>%
               paste(collapse = '/')
-            x$Count <-
-              length(stringr::str_split(x$geneID[1], pattern = "/")[[1]])
+
+            x$pathway_id <-
+              paste(x$pathway_id, collapse = ";")
+
             x <-
               x %>%
               dplyr::select(module, everything()) %>%
-              dplyr::distinct(module, .keep_all = TRUE)
-            return(x)
-          }
+              dplyr::distinct(module, .keep_all = TRUE) %>%
+              dplyr::select(-node)
+            x
+          }) %>%
+          do.call(rbind, .) %>%
+          as.data.frame() %>%
+          dplyr::mutate(module_annotation = ifelse(module == "Other", Description, sapply(strsplit(
+            Description, ";"
+          ), `[`, 1))) %>%
+          dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
+          dplyr::arrange(p.adjust) %>%
+          dplyr::select(module_annotation, everything())
 
-          x <-
-            x %>%
-            dplyr::arrange(p.adjust)
+        functional_module_result$module_annotation <-
+          stringr::str_split(functional_module_result$Description, ";") %>%
+          purrr::map(function(x) {
+            x[1]
+          }) %>%
+          unlist()
 
-          x$module_content <-
-            paste(x$node, collapse = ";")
+        functional_module_result$Count <-
+          purrr::map(functional_module_result$geneID, function(x) {
+            length(stringr::str_split(x, pattern = "/")[[1]])
+          }) %>%
+          unlist()
 
-          x$Description <-
-            paste(x$Description, collapse = ";")
+        functional_module_result$Count <-
+          as.numeric(functional_module_result$Count)
+        functional_module_result$pvalue <-
+          as.numeric(functional_module_result$pvalue)
+        functional_module_result$degree <-
+          as.numeric(functional_module_result$degree)
+        functional_module_result$qvalue <-
+          as.numeric(functional_module_result$qvalue)
+        functional_module_result$NES <-
+          as.numeric(functional_module_result$NES)
+      }
+    } else if (query_type == "metabolite") {
+      if ("enrich_pathway" %in% names(object@process_info)) {
+        result_with_module <-
+          result_with_module %>%
+          dplyr::select(-c(all_id, all_number, mapped_number, mapped_percentage))
 
-          x$pvalue <- as.numeric(x$pvalue)[1]
-          x$p.adjust <- as.numeric(x$p.adjust)[1]
-          x$qvalue <- as.numeric(x$qvalue)[1]
+        functional_module_result <-
+          result_with_module %>%
+          plyr::dlply(.variables = .(module)) %>%
+          purrr::map(function(x) {
+            # cat(unique(x$module), " ")
+            if (nrow(x) == 1) {
+              x$module_content <-
+                paste(x$node, collapse = ";")
 
+              x$mapped_id <-
+                x$mapped_id %>%
+                stringr::str_split(pattern = ";") %>%
+                unlist() %>%
+                unify_id_internal(variable_info = variable_info,
+                                  query_type = "metabolite") %>%
+                unique() %>%
+                paste(collapse = '/')
 
-          x$setSize <- as.numeric(x$setSize)[1]
-          x$enrichmentScore <- as.numeric(x$enrichmentScore)[1]
-          x$NES <- as.numeric(x$NES)[1]
-          x$rank <- as.numeric(x$rank)[1]
-          x$leading_edge <- x$leading_edge[1]
-          x$core_enrichment <-
-            paste0(unique(unlist(
-              stringr::str_split(x$core_enrichment, pattern = "/")
-            )), collapse = "/")
-          x$degree <- as.numeric(x$degree)[1]
+              x$Count <-
+                length(stringr::str_split(x$mapped_id[1], pattern = "/")[[1]])
 
-          x$geneID =
-            x$core_enrichment %>%
-            stringr::str_replace(";", "/") %>%
-            stringr::str_split(pattern = "/") %>%
-            unlist() %>%
-            unique() %>%
-            paste(collapse = '/')
+              x <-
+                x %>%
+                dplyr::select(module, everything()) %>%
+                dplyr::distinct(module, .keep_all = TRUE) %>%
+                dplyr::select(-node)
+              return(x)
+            }
 
-          x$pathway_id <-
-            paste(x$pathway_id, collapse = ";")
+            x =
+              x %>%
+              dplyr::arrange(p.adjust)
 
-          x <-
-            x %>%
-            dplyr::select(module, everything()) %>%
-            dplyr::distinct(module, .keep_all = TRUE) %>%
-            dplyr::select(-node)
-          x
-        }) %>%
-        do.call(rbind, .) %>%
-        as.data.frame() %>%
-        dplyr::mutate(module_annotation = ifelse(module == "Other", Description, sapply(strsplit(
-          Description, ";"
-        ), `[`, 1))) %>%
-        dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
-        dplyr::arrange(p.adjust) %>%
-        dplyr::select(module_annotation, everything())
+            x$node <-
+              paste(x$node, collapse = ";")
 
-      functional_module_result$module_annotation <-
-        stringr::str_split(functional_module_result$Description, ";") %>%
-        purrr::map(function(x) {
-          x[1]
-        }) %>%
-        unlist()
+            x$Description <-
+              paste(x$Description, collapse = ";")
 
-      functional_module_result$Count <-
-        purrr::map(functional_module_result$core_enrichment, function(x) {
-          length(stringr::str_split(x, pattern = "/")[[1]])
-        }) %>%
-        unlist()
+            x$p_value <- min(as.numeric(x$p_value))
+            x$p.adjust <- min(as.numeric(x$p.adjust))
 
-      functional_module_result$Count <-
-        as.numeric(functional_module_result$Count)
-      functional_module_result$pvalue <-
-        as.numeric(functional_module_result$pvalue)
-      functional_module_result$degree <-
-        as.numeric(functional_module_result$degree)
-      functional_module_result$qvalue <-
-        as.numeric(functional_module_result$qvalue)
-      functional_module_result$NES <-
-        as.numeric(functional_module_result$NES)
+            x$mapped_id <-
+              x$mapped_id %>%
+              stringr::str_split(pattern = ";") %>%
+              unlist() %>%
+              unify_id_internal(variable_info = variable_info,
+                                query_type = "metabolite") %>%
+              unique() %>%
+              paste(collapse = '/')
+
+            x$Count <-
+              length(stringr::str_split(x$mapped_id[1], pattern = "/")[[1]])
+
+            x =
+              x %>%
+              dplyr::select(module, everything()) %>%
+              dplyr::distinct(module, .keep_all = TRUE) %>%
+              dplyr::select(-node)
+
+            x
+
+          }) %>%
+          do.call(rbind, .) %>%
+          as.data.frame() %>%
+          dplyr::mutate(module_annotation = ifelse(module == "Other", Description, sapply(strsplit(
+            Description, ";"
+          ), `[`, 1))) %>%
+          dplyr::mutate(
+            p.adjust = as.numeric(p.adjust),
+            Count = as.numeric(Count),
+            p_value = as.numeric(p_value),
+            degree = as.numeric(degree)
+          ) %>%
+          dplyr::arrange(p.adjust) %>%
+          dplyr::select(module_annotation, everything())
+      }
     }
 
     if (save_to_local) {

@@ -9,7 +9,7 @@ merge_modules(
   sim.cutoff = 0.5,
   measure_method = c("jaccard"),
   path = "result",
-  save_to_local = TRUE
+  save_to_local = FALSE
 )
 }
 \arguments{

@@ -94,8 +94,8 @@
 #' @param count.cutoff.go Minimum gene count cutoff for GO terms (default: 5)
 #' @param count.cutoff.kegg Minimum gene count cutoff for KEGG pathways (default: 5)
 #' @param count.cutoff.reactome Minimum gene count cutoff for Reactome pathways (default: 5)
-#' @param count.cutoff.hmdb Minimum gene count cutoff for HMDB pathways from metabolite enrichment analysis result (default: 5)
-#' @param count.cutoff.metkegg Minimum gene count cutoff for KEGG pathways from metabolite enrichment analysis result (default: 5)
+#' @param count.cutoff.hmdb Minimum metabolite count cutoff for HMDB pathways (default: 5)
+#' @param count.cutoff.metkegg Minimum metabolite count cutoff for KEGG pathways (default: 5)
 #' @param save_to_local Logical. Whether to save the resulting data to local files. Default is `FALSE`.
 #' @param path Character. The directory path where intermediate results will be saved, if `save_to_local = TRUE`. Default is "result".
 #'

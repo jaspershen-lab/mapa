@@ -28,6 +28,10 @@ An S4 class to represent enriched pathways
 
 \item{\code{merged_pathway_reactome}}{list List containing merged Reactome pathway information.}
 
+\item{\code{merged_pathway_hmdb}}{list List containing merged HMDB pathway information for metabolite enrichment result.}
+
+\item{\code{merged_pathway_metkegg}}{list List containing merged KEGG pathway information for metabolite enrichment result.}
+
 \item{\code{merged_module}}{list List containing merged modules.}
 
 \item{\code{process_info}}{list List containing information about the processes.}

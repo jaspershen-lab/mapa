@@ -12,6 +12,7 @@
 #     path = "~/Desktop/result"
 #   )
 
+# For metabolite
 # object <- openai_sim_matrix_met
 # enriched_functional_module <-
 #   merge_pathways_bioembedsim(
@@ -279,6 +280,18 @@ merge_pathways_bioembedsim <-
           purrr::map(function(x) {
             # cat(unique(x$module), " ")
             if (nrow(x) == 1) {
+              x$geneID <-
+                x$core_enrichment %>%
+                stringr::str_split(pattern = "/") %>%
+                unlist() %>%
+                unify_id_internal(variable_info = object$enriched_pathway@variable_info,
+                                  query_type = "gene") %>%
+                unique() %>%
+                paste(collapse = '/')
+
+              x$Count <-
+                length(stringr::str_split(x$geneID[1], pattern = "/")[[1]])
+
               return(x)
             }
 
@@ -298,10 +311,12 @@ merge_pathways_bioembedsim <-
             x$pvalue <- min(as.numeric(x$pvalue))
             x$p.adjust <- min(as.numeric(x$p.adjust))
             x$qvalue <- min(as.numeric(x$qvalue))
-            x$geneID =
+            x$geneID <-
               x$geneID %>%
               stringr::str_split(pattern = "/") %>%
               unlist() %>%
+              unify_id_internal(variable_info = object$enriched_pathway@variable_info,
+                                query_type = "gene") %>%
               unique() %>%
               paste(collapse = '/')
 
@@ -337,6 +352,15 @@ merge_pathways_bioembedsim <-
           purrr::map(function(x) {
             # cat(unique(x$module), " ")
             if (nrow(x) == 1) {
+              x$geneID <-
+                x$core_enrichment %>%
+                stringr::str_split(pattern = "/") %>%
+                unlist() %>%
+                unify_id_internal(variable_info = object$enriched_pathway@variable_info,
+                                  query_type = "gene") %>%
+                unique() %>%
+                paste(collapse = '/')
+
               return(x)
             }
 
@@ -360,10 +384,21 @@ merge_pathways_bioembedsim <-
             x$NES <- as.numeric(x$NES)[1]
             x$rank <- as.numeric(x$rank)[1]
             x$leading_edge <- x$leading_edge[1]
+
             x$core_enrichment <-
               paste0(unique(unlist(
                 stringr::str_split(x$core_enrichment, pattern = "/")
               )), collapse = "/")
+
+            x$geneID <-
+              x$core_enrichment %>%
+              stringr::str_split(pattern = "/") %>%
+              unlist() %>%
+              unify_id_internal(variable_info = object$enriched_pathway@variable_info,
+                                query_type = "gene") %>%
+              unique() %>%
+              paste(collapse = '/')
+
             x$degree <- as.numeric(x$degree)[1]
 
             x <-
@@ -390,13 +425,17 @@ merge_pathways_bioembedsim <-
           dplyr::select(module_annotation, everything())
 
         functional_module_result$Count <-
-          purrr::map(functional_module_result$core_enrichment, function(x) {
+          purrr::map(functional_module_result$geneID, function(x) {
             length(stringr::str_split(x, pattern = "/")[[1]])
           }) %>%
           unlist()
       }
     } else if (query_type == "metabolite") {
       if ("enrich_pathway" %in% names(object$enriched_pathway@process_info)) {
+        result_with_module <-
+          result_with_module %>%
+          dplyr::select(-c(all_id, all_number, mapped_number, mapped_percentage))
+
         functional_module_result <-
           result_with_module %>%
           dplyr::select(-database) %>%
@@ -405,8 +444,20 @@ merge_pathways_bioembedsim <-
             # cat(unique(x$module), " ")
             if (nrow(x) == 1) {
               x <- x %>%
-                dplyr::mutate(Description = pathway_name,
-                              Count = 1)
+                dplyr::mutate(Description = pathway_name)
+
+              x$mapped_id =
+                x$mapped_id %>%
+                stringr::str_split(pattern = ";") %>%
+                unlist() %>%
+                unify_id_internal(variable_info = object$enriched_pathway@variable_info,
+                                  query_type = "metabolite") %>%
+                unique() %>%
+                paste(collapse = '/')
+
+              x$Count <-
+                length(stringr::str_split(x$mapped_id, pattern = "/")[[1]])
+
               return(x)
             }
 
@@ -427,6 +478,8 @@ merge_pathways_bioembedsim <-
               x$mapped_id %>%
               stringr::str_split(pattern = ";") %>%
               unlist() %>%
+              unify_id_internal(variable_info = object$enriched_pathway@variable_info,
+                                query_type = "metabolite") %>%
               unique() %>%
               paste(collapse = '/')
 

@@ -58,9 +58,9 @@ and/or "reactome". Multiple selections allowed.}
 
 \item{count.cutoff.reactome}{Minimum gene count cutoff for Reactome pathways (default: 5)}
 
-\item{count.cutoff.hmdb}{Minimum gene count cutoff for HMDB pathways from metabolite enrichment analysis result (default: 5)}
+\item{count.cutoff.hmdb}{Minimum metabolite count cutoff for HMDB pathways (default: 5)}
 
-\item{count.cutoff.metkegg}{Minimum gene count cutoff for KEGG pathways from metabolite enrichment analysis result (default: 5)}
+\item{count.cutoff.metkegg}{Minimum metabolite count cutoff for KEGG pathways (default: 5)}
 
 \item{save_to_local}{Logical. Whether to save the resulting data to local files. Default is \code{FALSE}.}
 

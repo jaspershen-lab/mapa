@@ -2,19 +2,25 @@
 % Please edit documentation in R/10_merge_pathways.R
 \name{merge_pathways}
 \alias{merge_pathways}
-\title{Merge Pathways from Various Databases}
+\title{This function merges enrichment analysis results from different databases (GO, KEGG, and Reactome) into a single object respectively. The function takes an object of class "functional_module" and set up various parameters to compute and filter term similarity scores.}
 \usage{
 merge_pathways(
   object,
   p.adjust.cutoff.go = 0.05,
   p.adjust.cutoff.kegg = 0.05,
   p.adjust.cutoff.reactome = 0.05,
+  p.adjust.cutoff.hmdb = 0.05,
+  p.adjust.cutoff.metkegg = 0.05,
   count.cutoff.go = 5,
   count.cutoff.kegg = 5,
   count.cutoff.reactome = 5,
+  count.cutoff.hmdb = 5,
+  count.cutoff.metkegg = 5,
   sim.cutoff.go = 0.5,
   sim.cutoff.kegg = 0.5,
   sim.cutoff.reactome = 0.5,
+  sim.cutoff.hmdb = 0.5,
+  sim.cutoff.metkegg = 0.5,
   measure.method.go = c("Sim_XGraSM_2013", "Sim_Wang_2007", "Sim_Lin_1998",
     "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010",
     "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018",
@@ -28,6 +34,8 @@ merge_pathways(
   control.method.go = list(),
   measure.method.kegg = c("jaccard", "dice", "overlap", "kappa"),
   measure.method.reactome = c("jaccard", "dice", "overlap", "kappa"),
+  measure.method.hmdb = c("jaccard", "dice", "overlap", "kappa"),
+  measure.method.metkegg = c("jaccard", "dice", "overlap", "kappa"),
   path = "result",
   save_to_local = FALSE
 )
@@ -41,17 +49,29 @@ merge_pathways(
 
 \item{p.adjust.cutoff.reactome}{Adjusted p-value cutoff for Reactome database. Default is 0.05.}
 
-\item{count.cutoff.go}{Count cutoff for GO database. Default is 5.}
+\item{p.adjust.cutoff.hmdb}{Adjusted p-value cutoff for HMDB pathways from metabolite enrichment analysis result. Default is 0.05.}
 
-\item{count.cutoff.kegg}{Count cutoff for KEGG database. Default is 5.}
+\item{p.adjust.cutoff.metkegg}{Adjusted p-value cutoff for KEGG pathways from metabolite enrichment analysis result. Default is 0.05.}
 
-\item{count.cutoff.reactome}{Count cutoff for Reactome database. Default is 5.}
+\item{count.cutoff.go}{Gene count cutoff for GO terms from gene enrichment analysis. Default is 5.}
+
+\item{count.cutoff.kegg}{Gene count cutoff for KEGG pathways from gene enrichment analysis. Default is 5.}
+
+\item{count.cutoff.reactome}{Count cutoff for Reactome pathways from gene enrichment analysis. Default is 5.}
+
+\item{count.cutoff.hmdb}{Metabolite count cutoff for HMDB pathways from metabolite enrichment analysis result. Default is 5.}
+
+\item{count.cutoff.metkegg}{Metabolite count cutoff for KEGG pathways from metabolite enrichment analysis result. Default is 5.}
 
 \item{sim.cutoff.go}{Similarity cutoff for GO database. Default is 0.5.}
 
 \item{sim.cutoff.kegg}{Similarity cutoff for KEGG database. Default is 0.5.}
 
 \item{sim.cutoff.reactome}{Similarity cutoff for Reactome database. Default is 0.5.}
+
+\item{sim.cutoff.hmdb}{Similarity cutoff for HMDB database when interpreting metabolite enrichment result. Default is 0.5.}
+
+\item{sim.cutoff.metkegg}{Similarity cutoff for KEGG database when interpreting metabolite enrichment result. Default is 0.5.}
 
 \item{measure.method.go}{A character vector specifying the term semantic similarity measure method for GO terms. Default is \code{"Sim_XGraSM_2013"}. See \code{simona::term_sim()} for available measures.}
 
@@ -60,6 +80,10 @@ merge_pathways(
 \item{measure.method.kegg}{A character vector specifying the similarity measure method for KEGG. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
 
 \item{measure.method.reactome}{A character vector specifying the similarity measure method for Reactome. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
+
+\item{measure.method.hmdb}{A character vector specifying the similarity measure method for HMDB when interpreting metabolite enrichment result. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
+
+\item{measure.method.metkegg}{A character vector specifying the similarity measure method for KEGG when interpreting metabolite enrichment result. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
 
 \item{path}{Directory path to save the results. Default is "result".}
 

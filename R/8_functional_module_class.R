@@ -9,6 +9,8 @@
 #' @slot merged_pathway_go list List containing merged GO pathway information.
 #' @slot merged_pathway_kegg list List containing merged KEGG pathway information.
 #' @slot merged_pathway_reactome list List containing merged Reactome pathway information.
+#' @slot merged_pathway_hmdb list List containing merged HMDB pathway information for metabolite enrichment result.
+#' @slot merged_pathway_metkegg list List containing merged KEGG pathway information for metabolite enrichment result.
 #' @slot merged_module list List containing merged modules.
 #' @slot process_info list List containing information about the processes.
 #'
@@ -26,20 +28,25 @@ setClass(
     merged_pathway_go = "list",
     merged_pathway_kegg = "list",
     merged_pathway_reactome = "list",
+    merged_pathway_hmdb = "list",
+    merged_pathway_metkegg = "list",
     merged_module = "list",
     process_info = "list"
   )
 )
 
-# a validity method to enforce that `enrichment_go_result` is either a enrichResult, gseaResult or a NULL
+# A validity method to enforce that:
+# gene enrichment analysis result is an enrichResult, a gseaResult or a NULL
+# metabolite enrichment analysis result is an enrich_result or a NULL
 setValidity("functional_module", function(object) {
+  ## For gene enrichment result
   if (!(
     is(object@enrichment_go_result, "enrichResult") ||
     is(object@enrichment_go_result, "gseaResult") ||
     is.null(object@enrichment_go_result)
   )) {
     return(
-      "The 'enrichment_go_result' slot must be either a enrichResult, gseaResult or a NULL."
+      "The 'enrichment_go_result' slot must be an enrichResult, a gseaResult or a NULL."
     )
   }
   if (!(
@@ -48,7 +55,7 @@ setValidity("functional_module", function(object) {
     is.null(object@enrichment_kegg_result)
   )) {
     return(
-      "The 'enrichment_kegg_result' slot must be either a enrichResult, gseaResult or a NULL."
+      "The 'enrichment_kegg_result' slot must be an enrichResult, a gseaResult or a NULL."
     )
   }
   if (!(
@@ -57,9 +64,28 @@ setValidity("functional_module", function(object) {
     is.null(object@enrichment_reactome_result)
   )) {
     return(
-      "The 'enrichment_reactome_result' slot must be either a enrichResult, gseaResult or a NULL."
+      "The 'enrichment_reactome_result' slot must be an enrichResult, a gseaResult or a NULL."
     )
   }
+
+  ## For metabolite enrichment result
+  if (!(
+    is(object@enrichment_hmdb_result, "enrich_result") ||
+    is.null(object@enrichment_hmdb_result)
+  )) {
+    return(
+      "The 'enrichment_hmdb_result' slot must be either an enrich_result or a NULL."
+    )
+  }
+  if (!(
+    is(object@enrichment_metkegg_result, "enrich_result") ||
+    is.null(object@enrichment_metkegg_result)
+  )) {
+    return(
+      "The 'enrichment_metkegg_result' slot must be either an enrich_result or a NULL."
+    )
+  }
+
   TRUE
 })
 
@@ -257,12 +283,28 @@ setMethod(
     } else {
       enrichment_hmdb_result
     }
+    if (length(object@merged_pathway_hmdb) == 0) {
+      message(crayon::green('No HMDB modules'))
+    } else{
+      message(crayon::green(
+        length(object@merged_pathway_hmdb$module_result$module),
+        "HMDB modules"
+      ))
+    }
 
     message(crayon::green("-----------KEGG Metabolite------------"))
     if (is.null(enrichment_metkegg_result)) {
       message(crayon::green('No KEGG metabolite enrichment results'))
     } else {
       enrichment_metkegg_result
+    }
+    if (length(object@merged_pathway_metkegg) == 0) {
+      message(crayon::green('No KEGG modules'))
+    } else{
+      message(crayon::green(
+        length(object@merged_pathway_metkegg$module_result$module),
+        "KEGG modules"
+      ))
     }
 
     message(crayon::green("-----------Functional modules------------"))

@@ -15,7 +15,7 @@ term_similarity_Reactome(
 \arguments{
 \item{term_id}{Character, Reactome term IDs}
 
-\item{measure.method}{Character, method for calculating the semantic similarity
+\item{measure.method}{Character, method for calculating the similarity
 for Reactome terms, Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
 }
 \value{

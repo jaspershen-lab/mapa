@@ -9,24 +9,24 @@
 #' data(demo_data)
 "demo_data"
 
-#' @title enriched_functional_module
+#' #' @title enriched_functional_module
+#' #'
+#' #' @description enriched_functional_module
+#' #' @name enriched_functional_module
+#' #' @format An enriched_functional_module object.
+#' #' @docType data
+#' #' @keywords data
+#' #' @examples
+#' #' data(enriched_functional_module)
+#' "enriched_functional_module"
 #'
-#' @description enriched_functional_module
-#' @name enriched_functional_module
-#' @format An enriched_functional_module object.
-#' @docType data
-#' @keywords data
-#' @examples
-#' data(enriched_functional_module)
-"enriched_functional_module"
-
-#' @title enriched_pathways
-#'
-#' @description enriched_pathways
-#' @name enriched_pathways
-#' @format An enriched_functional_module object.
-#' @docType data
-#' @keywords data
-#' @examples
-#' data(enriched_pathways)
-"enriched_pathways"
+#' #' @title enriched_pathways
+#' #'
+#' #' @description enriched_pathways
+#' #' @name enriched_pathways
+#' #' @format An enriched_functional_module object.
+#' #' @docType data
+#' #' @keywords data
+#' #' @examples
+#' #' data(enriched_pathways)
+#' "enriched_pathways"

@@ -5,6 +5,8 @@
 \title{Identify Functional Modules in a Similarity Matrix}
 \usage{
 identify_functional_modules(
+  query_type = c("gene", "metabolite"),
+  variable_info = NULL,
   sim_matrix,
   node_data,
   sim.cutoff = 0.5,
@@ -14,6 +16,12 @@ identify_functional_modules(
 )
 }
 \arguments{
+\item{query_type}{Character, the category of biological entity to query. Must be either "gene" or "metabolite".}
+
+\item{variable_info}{A data frame containing mapping information between different ID types.
+For genes, should contain columns: "ensembl", "uniprot", and "entrezid".
+For metabolites, should contain columns: "hmdbid" and "keggid".}
+
 \item{sim_matrix}{A data frame containing the similarity matrix with columns \code{name1}, \code{name2}, and \code{value}, representing the similarity between entities.}
 
 \item{node_data}{A data frame containing node information, such as module assignments and other relevant attributes. This parameter cannot be \code{NULL}.}

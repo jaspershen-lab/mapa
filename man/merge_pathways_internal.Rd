@@ -5,11 +5,12 @@
 \title{Merge Pathway Enrichment Results Internally}
 \usage{
 merge_pathways_internal(
+  query_type = c("gene", "metabolite"),
   pathway_result,
   analysis_type = c("enrich_pathway", "do_gsea"),
   p.adjust.cutoff = 0.05,
   count.cutoff = 5,
-  database = c("go", "kegg", "reactome"),
+  database = c("go", "kegg", "reactome", "hmdb"),
   sim.cutoff = 0.5,
   measure.method,
   control.method.go = list(),
@@ -18,6 +19,8 @@ merge_pathways_internal(
 )
 }
 \arguments{
+\item{query_type}{Character, the category of biological entity to query ("gene", "metabolite") for merging pathway enrichment result.}
+
 \item{pathway_result}{A required object containing results from the \code{enrich_pathway} function.}
 
 \item{analysis_type}{Character, type of analysis to perform: either \code{"enrich_pathway"} or \code{"do_gsea"}.}
@@ -26,7 +29,7 @@ merge_pathways_internal(
 
 \item{count.cutoff}{Numeric, count cutoff for filtering enriched pathways.}
 
-\item{database}{Character vector, the database from which the enrichment results were obtained ('go', 'kegg', 'reactome').}
+\item{database}{Character vector, the database from which the enrichment results were obtained ('go', 'kegg', 'reactome', 'hmdb').}
 
 \item{sim.cutoff}{Numeric, similarity cutoff for clustering pathways.}
 

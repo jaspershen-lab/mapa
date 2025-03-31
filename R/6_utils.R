@@ -243,76 +243,139 @@ remove_words <-
 
 
 
-#' get_jaccard_index_for_three_databases Function
+#' get_jaccard_index_for_diff_databases Function
 #'
-#' This function computes the Jaccard index, a measure of similarity for the genes listed in the results of three different databases (GO, KEGG, Reactome).
-#' It first extracts the relevant gene information from the provided object, then computes the Jaccard index between all pairs of modules across the three databases.
+#' This function computes the Jaccard index, a measure of similarity between gene or metabolite sets
+#' from different pathway databases. For genes, it can compare GO, KEGG, and Reactome databases.
+#' For metabolites, it can compare HMDB and KEGG databases.
 #'
-#' @param variable_info An variable_info containing gene information.
-#' @param module_result_go A data frame containing module results from GO database.
-#' @param module_result_kegg A data frame containing module results from KEGG database.
-#' @param module_result_reactome A data frame containing module results from Reactome database.
-#' @param analysis_type Character, type of analysis to perform: either `"enrich_pathway"` or `"do_gsea"`.
+#' @param query_type Character, the category of biological entity to query. Must be either "gene" or "metabolite".
+#' @param variable_info An object containing mapping information between different identifiers
+#'        (for genes: uniprot, entrezid, ensembl; for metabolites: keggid, hmdbid).
+#' @param module_result_go A data frame containing module results from GO term enrichment analysis.
+#'        Required if query_type is "gene". Default is NULL.
+#' @param module_result_kegg A data frame containing module results from KEGG pathway enrichment analysis
+#'        for genes. Required if query_type is "gene". Default is NULL.
+#' @param module_result_reactome A data frame containing module results from Reactome pathway enrichment analysis.
+#'        Required if query_type is "gene". Default is NULL.
+#' @param module_result_hmdb A data frame containing module results from HMDB pathway enrichment analysis.
+#'        Required if query_type is "metabolite". Default is NULL.
+#' @param module_result_metkegg A data frame containing module results from KEGG pathway enrichment analysis
+#'        for metabolites. Required if query_type is "metabolite". Default is NULL.
+#' @param analysis_type Character, type of analysis to perform: either "enrich_pathway" or "do_gsea".
+#'        Default is "enrich_pathway".
 #'
-#' @return A data frame with the Jaccard index values between all pairs of modules across the three databases.
+#' @return A data frame with three columns:
+#'         \item{name1}{Character, name of the first module}
+#'         \item{name2}{Character, name of the second module}
+#'         \item{value}{Numeric, Jaccard index value between the two modules}
+#'         Returns an empty data frame if insufficient data is provided.
 #'
 #' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @author Yifei Ge \email{Yifei.ge@outlook.com}
+#'
+#' @importFrom dplyr rename mutate select %>%
+#' @importFrom stringr str_replace str_split str_detect
+#' @importFrom purrr map
 #' @export
 
-get_jaccard_index_for_three_databases <-
-  function(variable_info,
-           module_result_go,
-           module_result_kegg,
-           module_result_reactome,
-           analysis_type = c("enrich_pathway", "do_gsea")) {
-    check_variable_info(variable_info, query_type = "gene")
+get_jaccard_index_for_diff_databases <- function(
+    query_type = c("gene", "metabolite"),
+    variable_info,
+    module_result_go = NULL,
+    module_result_kegg = NULL,
+    module_result_reactome = NULL,
+    module_result_hmdb = NULL,
+    module_result_metkegg = NULL,
+    analysis_type = c("enrich_pathway", "do_gsea")) {
 
     analysis_type <- match.arg(analysis_type)
 
-    met_data <-
-      rbind(module_result_go,
-            module_result_kegg,
-            module_result_reactome)
-
-    if (is.null(met_data)) {
-      return(data.frame(
-        name1 = character(),
-        name2 = character(),
-        value = numeric()
-      ))
+    if (missing(query_type)) {
+      stop("query_type is required")
     }
+    query_type <- match.arg(query_type)
 
-    if (nrow(met_data) == 0 | nrow(met_data) == 1) {
-      return(data.frame(
-        name1 = character(),
-        name2 = character(),
-        value = numeric()
-      ))
-    }
-
-    if (analysis_type == "do_gsea") {
+    if (query_type == "gene") {
+      check_variable_info(variable_info, query_type = "gene")
       met_data <-
-        met_data %>%
-        dplyr::rename(geneID = core_enrichment) %>%
-        dplyr::mutate(geneID = stringr::str_replace(geneID, ";", "/"))
+        rbind(module_result_go,
+              module_result_kegg,
+              module_result_reactome)
+      if (is.null(met_data)) {
+        return(data.frame(
+          name1 = character(),
+          name2 = character(),
+          value = numeric()
+        ))
+      }
+      if (nrow(met_data) == 0 | nrow(met_data) == 1) {
+        return(data.frame(
+          name1 = character(),
+          name2 = character(),
+          value = numeric()
+        ))
+      }
+
+      if (analysis_type == "do_gsea") {
+        met_data <-
+          met_data %>%
+          dplyr::rename(geneID = core_enrichment) %>%
+          dplyr::mutate(geneID = stringr::str_replace(geneID, ";", "/"))
+      }
+
+      temp_data <-
+        met_data$geneID %>%
+        stringr::str_split("/") %>%
+        #unique() %>%
+        purrr::map(function(x) {
+          if (stringr::str_detect(x[1], "ENSG")) {
+            return(x)
+          }
+
+          if (stringr::str_detect(x[1], "[A-Za-z]")) {
+            return(variable_info$ensembl[match(x, variable_info$uniprot)])
+          }
+
+          return(variable_info$ensembl[match(x, variable_info$entrezid)])
+
+        })
+
+    } else if (query_type == "metabolite") {
+      check_variable_info(variable_info, query_type = "metabolite")
+      met_data <-
+        rbind(module_result_hmdb,
+              module_result_metkegg)
+      if (is.null(met_data)) {
+        return(data.frame(
+          name1 = character(),
+          name2 = character(),
+          value = numeric()
+        ))
+      }
+      if (nrow(met_data) == 0 | nrow(met_data) == 1) {
+        return(data.frame(
+          name1 = character(),
+          name2 = character(),
+          value = numeric()
+        ))
+      }
+
+      temp_data <-
+        met_data$mapped_id %>%
+        stringr::str_split("/") %>%
+        #unique() %>%
+        purrr::map(function(x) {
+          if (stringr::str_detect(x[1], "HMDB")) {
+            return(x)
+          }
+
+          if (stringr::str_detect(x[1], "C")) {
+            return(variable_info$hmdbid[match(x, variable_info$keggid)])
+          }
+        })
+
     }
-
-    temp_data <-
-      met_data$geneID %>%
-      stringr::str_split("/") %>%
-      #unique() %>%
-      purrr::map(function(x) {
-        if (stringr::str_detect(x[1], "ENSG")) {
-          return(x)
-        }
-
-        if (stringr::str_detect(x[1], "[A-Za-z]")) {
-          return(variable_info$ensembl[match(x, variable_info$uniprot)])
-        }
-
-        return(variable_info$ensembl[match(x, variable_info$entrezid)])
-
-      })
 
     names(temp_data) =
       met_data$module
@@ -340,8 +403,6 @@ get_jaccard_index_for_three_databases <-
       as.data.frame()
     return(jaccard_index)
   }
-
-
 
 arrange_coords <- function(coords, ratio = 0.95) {
   coords <-
@@ -710,7 +771,7 @@ GO_similarity_internal = function(go_id,
 #' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
 #'
 #' @param term_id Character, KEGG pathway IDs
-#' @param measure.method Character, method for calculating the semantic similarity
+#' @param measure.method Character, method for calculating the similarity
 #' for KEGG terms, Choices are "jaccard", "dice", "overlap" and "kappa". Default is "jaccard".
 #'
 #' @return A symmetric matrix
@@ -747,7 +808,7 @@ term_similarity_KEGG <- function(term_id,
 #' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
 #'
 #' @param term_id Character, Reactome term IDs
-#' @param measure.method Character, method for calculating the semantic similarity
+#' @param measure.method Character, method for calculating the similarity
 #' for Reactome terms, Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #'
 #' @return A symmetric matrix
@@ -764,6 +825,36 @@ term_similarity_Reactome <- function(term_id,
                            measure.method = measure.method)
 }
 
+#' Similarity calculation between enriched HMDB or KEGG pathways from metabolite enrichment analysis
+#'
+#' @note This function was adapted from the simplifyEnrichment package (version 1.14.0) by Zuguang Gu.
+#'
+#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#'
+#' @source Source code download link: https://bioconductor.org/packages/3.19/bioc/src/contrib/Archive/simplifyEnrichment/simplifyEnrichment_1.14.0.tar.gz
+#'
+#' @param enrichment_result Dataframe, result from metabolite enrichment analysis
+#' @param measure.method Character, method for calculating the similarity
+#' between enriched pathways, Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
+#'
+#' @return A symmetric matrix
+#'
+
+term_similarity_metabolite <- function(enrichment_result,
+                                       measure.method = c("jaccard", "dice", "overlap", "kappa")) {
+  measure.method <- match.arg(measure.method)
+
+  ## Get annotated gene list for pathways
+  gene_list <- split(enrichment_result$all_id, enrichment_result$pathway_id)
+  for (i in 1:length(gene_list)) {
+    metabolite_ids <- stringr::str_split(gene_list[[i]], pattern = ";")[[1]]
+    gene_list[[i]] <- metabolite_ids
+  }
+
+  ## Calculate similarity
+  term_similarity_internal(gl = gene_list,
+                           measure.method = measure.method)
+}
 
 #' Similarity calculation between pathways.
 #'
@@ -1126,3 +1217,78 @@ get_hmdb_pathways <-
     return(hmdb_pathway)
   }
 
+
+#' Unify Various ID Types to One Unified ID Type
+#'
+#' @description
+#' An internal function that converts different types of identifiers into a unified format.
+#' For genes, it converts to Ensembl IDs, and for metabolites, it converts to HMDB IDs.
+#'
+#' @param ids A character vector of IDs to be unified.
+#' @param variable_info A data frame containing mapping information between different ID types.
+#'   For genes, should contain columns: "ensembl", "uniprot", and "entrezid".
+#'   For metabolites, should contain columns: "hmdbid" and "keggid".
+#' @param query_type Character string specifying the type of IDs to unify.
+#'   Must be either "gene" or "metabolite". Default is "gene".
+#'
+#' @return A character vector of unified IDs in the standard format (Ensembl IDs for genes,
+#'   HMDB IDs for metabolites).
+#'
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' # Gene ID unification
+#' gene_info <- data.frame(
+#'   ensembl = c("ENSG00000139618", "ENSG00000141510"),
+#'   uniprot = c("P51587", "P04637"),
+#'   entrezid = c("675", "7157")
+#' )
+#' unify_id_internal(gene_info, "gene", c("P51587", "7157"))
+#'
+#' # Metabolite ID unification
+#' metabolite_info <- data.frame(
+#'   hmdbid = c("HMDB0000001", "HMDB0000002"),
+#'   keggid = c("C00001", "C00002")
+#' )
+#' unify_id_internal(metabolite_info, "metabolite", c("HMDB0000001", "C00002"))
+#' }
+#'
+unify_id_internal <- function(ids = NULL,
+                              variable_info = NULL,
+                              query_type = c("gene", "metabolite")) {
+
+  query_type <- match.arg(query_type)
+
+  if (query_type == "gene") {
+    unified_ids <-
+      ids %>%
+      purrr::map_chr(function(x) {
+        if (stringr::str_detect(x, "ENSG")) {
+          return(x)
+        }
+
+        if (stringr::str_detect(x, "[A-Za-z]")) {
+          return(variable_info$ensembl[match(x, variable_info$uniprot)])
+        }
+
+        if (stringr::str_detect(x, "^\\d+$")) {
+          return(variable_info$ensembl[match(x, variable_info$entrezid)])
+        }
+      })
+  } else if (query_type == "metabolite") {
+    unified_ids <-
+      ids %>%
+      purrr::map_chr(function(x) {
+        if (stringr::str_detect(x, "HMDB")) {
+          return(x)
+        }
+
+        if (stringr::str_detect(x, "C")) {
+          return(variable_info$hmdbid[match(x, variable_info$keggid)])
+        }
+      })
+  }
+
+  return(unified_ids)
+}
