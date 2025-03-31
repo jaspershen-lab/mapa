@@ -434,7 +434,8 @@ merge_pathways_bioembedsim <-
       if ("enrich_pathway" %in% names(object$enriched_pathway@process_info)) {
         result_with_module <-
           result_with_module %>%
-          dplyr::select(-c(all_id, all_number, mapped_number, mapped_percentage))
+          dplyr::rename(Count = mapped_number) %>%
+          dplyr::select(-c(all_id, all_number, mapped_percentage))
 
         functional_module_result <-
           result_with_module %>%

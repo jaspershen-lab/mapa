@@ -91,6 +91,16 @@
 # plot[[2]]
 # plot[[3]]
 
+# For metabolite
+# plot <-
+#   plot_module_info(object = enriched_functional_module,
+#                    level = "functional_module",
+#                    module_id = "Functional_module_2")
+#
+# plot[[1]]
+# plot[[2]]
+# plot[[3]]
+
 #' Plot Module Information for Enrichment Analysis
 #'
 #' This function generates various visualizations including a network plot, bar plot,
