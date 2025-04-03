@@ -625,19 +625,19 @@ get_go_result_sim <-
       tidyr::pivot_longer(cols = -name1,
                           names_to = "name2",
                           values_to = "sim") %>%
-      dplyr::filter(name1 != name2) %>%
+      dplyr::filter(name1 < name2) %>%
       dplyr::filter(sim > sim.cutoff)
 
-    name <- apply(bp_sim_df, 1, function(x) {
-      paste(sort(x[1:2]), collapse = "_")
-    })
-
-    bp_sim_df <-
-      bp_sim_df %>%
-      dplyr::mutate(name = name) %>%
-      dplyr::arrange(name) %>%
-      dplyr::distinct(name, .keep_all = TRUE) %>%
-      dplyr::select(-name)
+    # name <- apply(bp_sim_df, 1, function(x) {
+    #   paste(sort(x[1:2]), collapse = "_")
+    # })
+    #
+    # bp_sim_df <-
+    #   bp_sim_df %>%
+    #   dplyr::mutate(name = name) %>%
+    #   dplyr::arrange(name) %>%
+    #   dplyr::distinct(name, .keep_all = TRUE) %>%
+    #   dplyr::select(-name)
 
     mf_sim_matrix <-
       GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "MF"],
@@ -652,19 +652,19 @@ get_go_result_sim <-
       tidyr::pivot_longer(cols = -name1,
                           names_to = "name2",
                           values_to = "sim") %>%
-      dplyr::filter(name1 != name2) %>%
+      dplyr::filter(name1 < name2) %>%
       dplyr::filter(sim > sim.cutoff)
 
-    name <- apply(mf_sim_df, 1, function(x) {
-      paste(sort(x[1:2]), collapse = "_")
-    })
-
-    mf_sim_df <-
-      mf_sim_df %>%
-      dplyr::mutate(name = name) %>%
-      dplyr::arrange(name) %>%
-      dplyr::distinct(name, .keep_all = TRUE) %>%
-      dplyr::select(-name)
+    # name <- apply(mf_sim_df, 1, function(x) {
+    #   paste(sort(x[1:2]), collapse = "_")
+    # })
+    #
+    # mf_sim_df <-
+    #   mf_sim_df %>%
+    #   dplyr::mutate(name = name) %>%
+    #   dplyr::arrange(name) %>%
+    #   dplyr::distinct(name, .keep_all = TRUE) %>%
+    #   dplyr::select(-name)
 
     cc_sim_matrix <-
       GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "CC"],
@@ -679,19 +679,19 @@ get_go_result_sim <-
       tidyr::pivot_longer(cols = -name1,
                           names_to = "name2",
                           values_to = "sim") %>%
-      dplyr::filter(name1 != name2) %>%
+      dplyr::filter(name1 < name2) %>%
       dplyr::filter(sim > sim.cutoff)
 
-    name <- apply(cc_sim_df, 1, function(x) {
-      paste(sort(x[1:2]), collapse = "_")
-    })
-
-    cc_sim_df <-
-      cc_sim_df %>%
-      dplyr::mutate(name = name) %>%
-      dplyr::arrange(name) %>%
-      dplyr::distinct(name, .keep_all = TRUE) %>%
-      dplyr::select(-name)
+    # name <- apply(cc_sim_df, 1, function(x) {
+    #   paste(sort(x[1:2]), collapse = "_")
+    # })
+    #
+    # cc_sim_df <-
+    #   cc_sim_df %>%
+    #   dplyr::mutate(name = name) %>%
+    #   dplyr::arrange(name) %>%
+    #   dplyr::distinct(name, .keep_all = TRUE) %>%
+    #   dplyr::select(-name)
 
     sim_matrix <-
       rbind(bp_sim_df, mf_sim_df, cc_sim_df)

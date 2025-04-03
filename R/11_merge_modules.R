@@ -40,7 +40,7 @@
 
 # For metabolite
 # object <- merged_pathways
-# enriched_functional_modules <- merge_modules(
+# enriched_functional_module_met <- merge_modules(
 #   object = object,
 #   sim.cutoff = 0,
 #   measure_method = "jaccard"
@@ -501,7 +501,7 @@ identify_functional_modules <-
     if ("node" %in% colnames(node_data)) {
       node_data <-
         node_data %>%
-        dplyr::select(-node) %>%
+        dplyr::rename(pathway_id = node) %>%
         dplyr::select(module, dplyr::everything()) %>%
         dplyr::rename(node = module)
     } else {
@@ -572,6 +572,16 @@ identify_functional_modules <-
             if (nrow(x) == 1) {
               x$module_content <-
                 paste(x$node, collapse = ";")
+
+              x$geneID =
+                x$geneID %>%
+                stringr::str_split(pattern = "/") %>%
+                unlist() %>%
+                unify_id_internal(variable_info = variable_info,
+                                  query_type = "gene") %>%
+                unique() %>%
+                paste(collapse = '/')
+
               x <-
                 x %>%
                 dplyr::select(module, everything()) %>%
@@ -769,7 +779,7 @@ identify_functional_modules <-
 
               x$mapped_id <-
                 x$mapped_id %>%
-                stringr::str_split(pattern = ";") %>%
+                stringr::str_split(pattern = "/") %>%
                 unlist() %>%
                 unify_id_internal(variable_info = variable_info,
                                   query_type = "metabolite") %>%
@@ -791,8 +801,11 @@ identify_functional_modules <-
               x %>%
               dplyr::arrange(p.adjust)
 
-            x$node <-
+            x$module_content <-
               paste(x$node, collapse = ";")
+
+            x$pathway_id <-
+              paste(x$pathway_id, collapse = ";")
 
             x$Description <-
               paste(x$Description, collapse = ";")
@@ -802,7 +815,7 @@ identify_functional_modules <-
 
             x$mapped_id <-
               x$mapped_id %>%
-              stringr::str_split(pattern = ";") %>%
+              stringr::str_split(pattern = "/") %>%
               unlist() %>%
               unify_id_internal(variable_info = variable_info,
                                 query_type = "metabolite") %>%

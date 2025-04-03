@@ -7,7 +7,7 @@
 plot_similarity_network(
   object,
   level = c("module", "functional_module"),
-  database = c("go", "kegg", "reactome"),
+  database = c("go", "kegg", "reactome", "hmdb"),
   degree_cutoff = 0,
   module_id,
   text = TRUE,
@@ -23,7 +23,7 @@ the necessary data for plotting.}
 either "module" or "functional_module".}
 
 \item{database}{A character string indicating the database to be used,
-either "go", "kegg", or "reactome".}
+one of "go", "kegg", "reactome", or "hmdb".}
 
 \item{degree_cutoff}{A numeric value indicating the degree cutoff for
 filtering nodes in the network.}
@@ -38,7 +38,8 @@ to include in the plot.}
 \item{translation}{translation or not.}
 }
 \value{
-A ggplot object representing the similarity network.
+A ggplot object representing the similarity network, or an empty
+ggplot if no modules pass the filtering criteria.
 }
 \description{
 This function plots a similarity network based on the given parameters.
@@ -55,4 +56,6 @@ plot_similarity_network(obj, level = "functional_module", degree_cutoff = 2)
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
+
+Yifei Ge \href{mailto:yifeii.ge@outlook.com}{yifeii.ge@outlook.com}
 }

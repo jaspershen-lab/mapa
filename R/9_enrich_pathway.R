@@ -106,6 +106,7 @@
 #' @importFrom ReactomePA enrichPathway
 #' @importFrom metpath enrich_hmdb enrich_kegg
 #' @importFrom methods new
+#' @import org.Hs.eg.db
 #'
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #' @export

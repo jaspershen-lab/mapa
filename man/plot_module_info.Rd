@@ -7,21 +7,25 @@
 plot_module_info(
   object,
   level = c("module", "functional_module"),
-  database = c("go", "kegg", "reactome"),
+  database = c("go", "kegg", "reactome", "hmdb"),
+  database_color = c(GO = "#eeca40", KEGG = "#fd7541", Reactome = "#23b9c7", HMDB =
+    "#7998ad"),
   module_id,
   translation = FALSE
 )
 }
 \arguments{
-\item{object}{An object of a specific class containing enrichment results.}
+\item{object}{An object of class "functional_module" containing enrichment results.}
 
 \item{level}{A character string specifying the level of biological organization, either "module" or "functional_module".}
 
-\item{database}{A character string specifying the source database, either "go", "kegg" or "reactome".}
+\item{database}{A character string specifying the source database, either "go", "kegg", "reactome", or "hmdb".}
+
+\item{database_color}{A named vector specifying colors for each database. Default colors are provided.}
 
 \item{module_id}{A single identifier specifying the module of interest.}
 
-\item{translation}{translation or not.}
+\item{translation}{Logical, whether to use translated descriptions (requires prior use of 'translate_language' function).}
 }
 \value{
 A list containing three ggplot objects: network plot (\code{network}), bar plot (\code{barplot}), and word cloud (\code{wordcloud}).
@@ -33,11 +37,13 @@ and word cloud to provide detailed insights into the enriched functional or biol
 \examples{
 \dontrun{
 result <- plot_module_info(object = myObject,
-level = "module",
-database = "go",
-module_id = "M123")
+                          level = "module",
+                          database = "go",
+                          module_id = "M123")
 }
 }
 \author{
 Xiaotao Shen \href{mailto:shenxt1990@outlook.com}{shenxt1990@outlook.com}
+
+Yifei Ge \href{mailto:yifeii.ge@outlook.com}{yifeii.ge@outlook.com}
 }

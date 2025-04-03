@@ -11,44 +11,6 @@
 # library(showtext)
 # showtext_auto(enable = TRUE)
 #
-# plot_pathway_bar(
-#   object = enriched_functional_module,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "pathway",
-#   translation = FALSE
-# )
-#
-# plot_pathway_bar(
-#   object = enriched_functional_module,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "pathway",
-#   translation = TRUE
-# )
-#
-# plot_pathway_bar(
-#   object = enriched_functional_module,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "module"
-# )
-#
-# plot_pathway_bar(
-#   object = enriched_functional_module,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "functional_module"
-# )
-#
-# plot_pathway_bar(
-#   object = enriched_functional_module,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "functional_module",
-#   line_type = "meteor"
-# )
-#
 #
 # plot_pathway_bar(
 #   object = enriched_functional_module,
@@ -75,7 +37,7 @@
 # showtext_auto(enable = TRUE)
 #
 # plot_pathway_bar(
-#   object = object,
+#   object = gsea_pathways,
 #   top_n = 10,
 #   y_label_width = 30,
 #   level = "pathway",
@@ -107,7 +69,7 @@
 # )
 #
 # Metabolite enrichment result
-# plot_pathway_bar(object = enriched_pathways,
+# plot_pathway_bar(object =  enriched_functional_modules,
 #                  top_n = 5,
 #                  x_axis_name = "qscore",
 #                  level = "pathway",
@@ -116,42 +78,71 @@
 #                  count.cutoff = 5,
 #                  database = c("kegg", "hmdb"))
 #
-# plot_pathway_bar(object = enriched_pathways,
+
+# plot_pathway_bar(object = enriched_functional_modules,
 #                  top_n = 5,
-#                  level = "pathway",
-#                  line_type = "meteor",
+#                  x_axis_name = "qscore",
+#                  level = "module",
+#                  line_type = "straight",
 #                  p.adjust.cutoff = 0.05,
 #                  count.cutoff = 5,
-#                  database = c("kegg", "hmdb"))
+#                  database = c("hmdb", "kegg"))
 
+# plot_pathway_bar(object = enriched_functional_modules,
+#                  top_n = 5,
+#                  x_axis_name = "qscore",
+#                  level = "functional_module",
+#                  line_type = "straight",
+#                  p.adjust.cutoff = 0.05,
+#                  count.cutoff = 5,
+#                  database = c("hmdb", "kegg"))
 
 #' Plot Enriched Pathway/Module Bar Chart
 #'
 #' This function generates a bar chart to visualize enriched pathways, modules, or functional modules.
-#' The bars are colored according to the database of origin.
-#' Depending on the type of enrichment analysis (e.g., ORA or GSEA) and the query type (gene or metabolite), different metrics are displayed on the x-axis.
+#' The bars are colored according to the database of origin (GO, KEGG, Reactome, or HMDB).
+#' Different metrics are displayed on the x-axis depending on the type of enrichment analysis
+#' (ORA or GSEA) and the query type (gene or metabolite).
 #'
-#' @param object An object containing the enrichment results and other relevant data.
-#' @param top_n An integer specifying the top N pathways to display.
-#' @param x_axis_name A character string indicating the metric to use for the x-axis in ORA results. Options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values), \code{"RichFactor"}, or \code{"FoldEnrichment"}. For metabolite enrichment, this parameter should be \code{"qscore"}, and for GSEA results this parameter should be \code{"NES"}.
-#' @param y_label_width An integer specifying the width of the Y-axis labels.
-#' @param translation translation or not.
+#' @param object An object of class "functional_module" containing the enrichment results and other relevant data.
+#' @param top_n An integer specifying the top N pathways to display. Default is 10.
+#' @param x_axis_name A character string indicating the metric to use for the x-axis.
+#'   For gene ORA, options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values),
+#'   \code{"RichFactor"}, or \code{"FoldEnrichment"}.
+#'   For metabolite enrichment, this parameter should be \code{"qscore"}.
+#'   For GSEA results, this parameter should be \code{"NES"}.
+#' @param y_label_width An integer specifying the width of the Y-axis labels for text wrapping. Default is 50.
+#' @param translation Logical indicating whether to use translated descriptions. If TRUE,
+#'   the function will use the translated descriptions from the `translate_language` function. Default is FALSE.
 #' @param level A character string specifying the level of analysis.
-#' One of "pathway", "module", or "functional_module".
+#'   One of "pathway", "module", or "functional_module". Default is "pathway".
 #' @param line_type A character string specifying the type of line to use for the bar chart.
-#' One of "straight" or "meteor".
-#' @param p.adjust.cutoff A numeric value for the FDR adjusted P-value cutoff.
-#' @param count.cutoff A numeric value for the count cutoff.
+#'   One of "straight" or "meteor". Default is "straight".
+#' @param p.adjust.cutoff A numeric value for the FDR adjusted P-value cutoff. Default is 0.05.
+#' @param count.cutoff A numeric value for the minimum count of genes/metabolites to include. Default is 5.
 #' @param database_color A named vector containing the colors for different databases.
-#' @param database A character vector indicating which databases to include in the plot. For gene enrichment analysis valid options are \code{"go"}, \code{"kegg"}, and/or \code{"reactome"}. For metabolite enrichment analysis, valid options are \code{"hmdb"} and/or \code{"kegg"}.
+#'   Default colors are provided for GO, KEGG, Reactome, and HMDB.
+#' @param database A character vector indicating which databases to include in the plot.
+#'   For gene enrichment analysis, valid options are \code{"go"}, \code{"kegg"}, and/or \code{"reactome"}.
+#'   For metabolite enrichment analysis, valid options are \code{"hmdb"} and/or \code{"kegg"}.
+#'   Default includes all databases.
 #'
-#' @return A ggplot object representing the bar chart.
+#' @return A ggplot object representing the enrichment bar chart.
 #'
-#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
+#' @import ggplot2
+#' @importFrom ggforce geom_link
+#' @importFrom dplyr mutate filter select rename full_join arrange
+#' @importFrom stringr str_wrap str_split str_detect
+#' @importFrom purrr map map_chr
+#' @importFrom methods is
+#'
+#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @examples
 #' \dontrun{
 #' data("enriched_functional_module", package = "mapa")
+#' # Basic pathway plot
 #' plot_pathway_bar(
 #'   object = enriched_functional_module,
 #'   top_n = 10,
@@ -159,6 +150,7 @@
 #'   level = "pathway"
 #' )
 #'
+#' # Using meteor line type
 #' plot_pathway_bar(
 #'   object = enriched_functional_module,
 #'   top_n = 10,
@@ -167,18 +159,31 @@
 #'   line_type = "meteor"
 #' )
 #'
-#' plot_pathway_bar(enriched_functional_module,
-#'                  top_n = 10,
-#'                  level = "module")
+#' # Module level plot
+#' plot_pathway_bar(
+#'   enriched_functional_module,
+#'   top_n = 10,
+#'   level = "module"
+#' )
 #'
+#' # Functional module plot with custom p-value cutoff
 #' plot_pathway_bar(
 #'   enriched_functional_module,
 #'   top_n = 10,
 #'   level = "functional_module",
 #'   p.adjust.cutoff = 0.05
 #' )
+#'
+#' # Specifying x-axis metric for gene enrichment
+#' plot_pathway_bar(
+#'   enriched_functional_module,
+#'   top_n = 10,
+#'   x_axis_name = "RichFactor",
+#'   level = "pathway"
+#' )
 #' }
-#'@export
+#'
+#' @export
 
 plot_pathway_bar <-
   function(object,
@@ -192,19 +197,18 @@ plot_pathway_bar <-
            count.cutoff = 5,
            database_color =
              c(
-               GO = "#1F77B4FF",
-               KEGG = "#FF7F0EFF",
-               Reactome = "#2CA02CFF",
-               HMDB = "#9467BDFF"
+               GO = "#eeca40",
+               KEGG = "#fd7541",
+               Reactome = "#23b9c7",
+               HMDB = "#7998ad"
              ),
            database = c("go", "kegg", "reactome", "hmdb")) {
 
     level <- match.arg(level)
     line_type <- match.arg(line_type)
 
-    query_type <- object@process_info$enrich_pathway@parameter$query_type
-
     if ("enrich_pathway" %in% names(object@process_info)) {
+      query_type <- object@process_info$enrich_pathway@parameter$query_type
       analysis_type <- "enrich_pathway"
       if (query_type == "gene") {
         if (is.null(x_axis_name)){
@@ -218,10 +222,9 @@ plot_pathway_bar <-
         }
       }
     } else {
+      query_type <- "gene"
       analysis_type <- "do_gsea"
-      if (x_axis_name != "NES") {
-        stop("For GSEA, please use NES as x axis.")
-      }
+      x_axis_name <- "NES"
     }
 
     if (translation) {
@@ -405,74 +408,107 @@ plot_pathway_bar <-
     }
 
     if (level == "module") {
-      if (length(object@merged_pathway_go) == 0 &
-          length(object@merged_pathway_kegg) == 0 &
-          length(object@merged_pathway_reactome) == 0) {
-        stop("Please use the merge_pathways() function to process first")
-      } else{
-        module_result_go <-
-          tryCatch(
-            object@merged_pathway_go$module_result %>%
-              dplyr::mutate(class = "GO"),
-            error = function(e) {
-              NULL
-            }
-          )
-        module_result_kegg <-
-          tryCatch(
-            object@merged_pathway_kegg$module_result %>%
-              dplyr::mutate(class = "KEGG"),
-            error = function(e) {
-              NULL
-            }
-          )
-
-        module_result_reactome <-
-          tryCatch(
-            object@merged_pathway_reactome$module_result %>%
-              dplyr::mutate(class = "Reactome"),
-            error = function(e) {
-              NULL
-            }
-          )
-
-        if (!is.null(module_result_reactome)) {
-          if (!is.null(module_result_kegg)) {
-            if (ncol(module_result_reactome) != ncol(module_result_kegg)) {
-              module_result_reactome <-
-                data.frame(module_result_reactome,
-                           category = NA,
-                           subcategory = NA) %>%
-                dplyr::select(category, subcategory, dplyr::everything())
-
-              module_result_kegg <-
-                module_result_kegg %>%
-                dplyr::select(category, subcategory, dplyr::everything())
-            }
-          }
-        }
-
-        temp_data <-
-          rbind(module_result_kegg, module_result_reactome)
-
-        if (is.null(temp_data)) {
-          temp_data <-
-            module_result_go
+      if (query_type == "gene") {
+        if (length(object@merged_pathway_go) == 0 &
+            length(object@merged_pathway_kegg) == 0 &
+            length(object@merged_pathway_reactome) == 0) {
+          stop("Please use the merge_pathways() function to process first")
         } else{
-          if (!is.null(module_result_go)) {
-            temp_data <-
-              temp_data %>%
-              dplyr::full_join(module_result_go, by = intersect(colnames(.), colnames(module_result_go)))
+          module_result_go <-
+            tryCatch(
+              object@merged_pathway_go$module_result %>%
+                dplyr::mutate(class = "GO"),
+              error = function(e) {
+                NULL
+              }
+            )
+          module_result_kegg <-
+            tryCatch(
+              object@merged_pathway_kegg$module_result %>%
+                dplyr::mutate(class = "KEGG"),
+              error = function(e) {
+                NULL
+              }
+            )
+
+          module_result_reactome <-
+            tryCatch(
+              object@merged_pathway_reactome$module_result %>%
+                dplyr::mutate(class = "Reactome"),
+              error = function(e) {
+                NULL
+              }
+            )
+
+          if (!is.null(module_result_reactome)) {
+            if (!is.null(module_result_kegg)) {
+              if (ncol(module_result_reactome) != ncol(module_result_kegg)) {
+                module_result_reactome <-
+                  data.frame(module_result_reactome,
+                             category = NA,
+                             subcategory = NA) %>%
+                  dplyr::select(category, subcategory, dplyr::everything())
+
+                module_result_kegg <-
+                  module_result_kegg %>%
+                  dplyr::select(category, subcategory, dplyr::everything())
+              }
+            }
           }
+
+          temp_data <-
+            rbind(module_result_kegg, module_result_reactome)
+
+          if (is.null(temp_data)) {
+            temp_data <-
+              module_result_go
+          } else{
+            if (!is.null(module_result_go)) {
+              temp_data <-
+                temp_data %>%
+                dplyr::full_join(module_result_go, by = intersect(colnames(.), colnames(module_result_go)))
+            }
+          }
+
+          temp_data <-
+            temp_data %>%
+            dplyr::filter(p.adjust < p.adjust.cutoff &
+                            Count > count.cutoff) %>%
+            dplyr::select(-Description) %>%
+            dplyr::rename(Description = module_annotation)
         }
+      } else if (query_type == "metabolite") {
+        if (length(object@merged_pathway_hmdb) == 0 &
+            length(object@merged_pathway_metkegg) == 0) {
+          stop("Please use the merge_pathways() function to process first")
+        } else {
+          module_result_hmdb <-
+            tryCatch(
+              object@merged_pathway_hmdb$module_result%>%
+                dplyr::mutate(class = "HMDB"),
+              error = function(e) {
+                NULL
+              }
+            )
+          module_result_metkegg <-
+            tryCatch(
+              object@merged_pathway_metkegg$module_result %>%
+                dplyr::mutate(class = "KEGG"),
+              error = function(e) {
+                NULL
+              }
+            )
 
-        temp_data <-
-          temp_data %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff &
-                          Count > count.cutoff) %>%
-          dplyr::select(-Description) %>%
-          dplyr::rename(Description = module_annotation)
+          temp_data <-
+            rbind(module_result_hmdb, module_result_metkegg)
 
+          temp_data <-
+            temp_data %>%
+            dplyr::filter(p.adjust < p.adjust.cutoff &
+                            Count > count.cutoff) %>%
+            dplyr::select(-Description) %>%
+            dplyr::rename(Description = module_annotation)
+        }
       }
     }
 
@@ -502,9 +538,10 @@ plot_pathway_bar <-
             dbs <- unique(dplyr::case_when(
               stringr::str_detect(modules, "^go_Module") ~ "GO",
               stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
-              stringr::str_detect(modules, "^reactome_Module") ~ "Reactome"
+              stringr::str_detect(modules, "^reactome_Module") ~ "Reactome",
+              stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB"
             ))
-            paste(sort(dbs), collapse = "/")
+            dbs[1]
           })
       )
     }
@@ -525,16 +562,16 @@ plot_pathway_bar <-
             dbs <- stringr::str_split(x, "/")[[1]]
             dbs <- intersect(dbs, database2)
             if (length(dbs) == 0) return(NA_character_)
-            if (length(dbs) > 1) {
-              colors <- col2rgb(database_color[dbs])
-              mixed_color <- rgb(
-                mean(colors[1,]) / 255,
-                mean(colors[2,]) / 255,
-                mean(colors[3,]) / 255,
-                alpha = 0.6
-              )
-              database_color[x] <- mixed_color
-            }
+            # if (length(dbs) > 1) {
+            #   colors <- col2rgb(database_color[dbs])
+            #   mixed_color <- rgb(
+            #     mean(colors[1,]) / 255,
+            #     mean(colors[2,]) / 255,
+            #     mean(colors[3,]) / 255,
+            #     alpha = 0.6
+            #   )
+            #   database_color[x] <- mixed_color
+            # }
             paste(sort(dbs), collapse = "/")
           })
         ) %>%
@@ -627,13 +664,13 @@ plot4pathway_enrichment <-
            level = level,
            analysis_type = c("enrich_pathway", "do_gsea"),
            query_type = NULL,
-           x_axis_name = c(NULL, "qscore", "RichFactor", "FoldEnrichment"),
+           x_axis_name = c("NES", "qscore", "RichFactor", "FoldEnrichment"),
            y_label_width = 50,
            database_color =
-             c(GO = "#1F77B4FF",
-               KEGG = "#FF7F0EFF",
-               Reactome = "#2CA02CFF",
-               HMDB = "#9467BDFF")
+             c(GO = "#eeca40",
+               KEGG = "#fd7541",
+               Reactome = "#23b9c7",
+               HMDB = "#7998ad")
              ) {
     line_type <-
       match.arg(line_type)

@@ -13,6 +13,7 @@
 #   enriched_functional_module
 # object <-
 #   gsea_enriched_functional_module
+# object <- enriched_functional_module_met
 #
 # object@merged_module$functional_module_result <-
 #   head(object@merged_module$functional_module_result, 2)
@@ -188,7 +189,14 @@ plot_relationship_network <-
     variable_info <-
       object@variable_info
 
-    check_variable_info(variable_info = variable_info, query_type = "gene")
+    if ("enrich_pathway" %in% names(object@process_info)) {
+      analysis_type <- "enrich_pathway"
+      query_type <- object@process_info$enrich_pathway@parameter$query_type
+    } else {
+      analysis_type <- "do_gsea"
+      query_type <- "gene"
+    }
+    check_variable_info(variable_info = variable_info, query_type = query_type)
 
     if (all(names(object@process_info) != "merge_pathways")) {
       stop("Please use the merge_pathways() function to process first")
@@ -494,7 +502,14 @@ create_relation_network <-
     variable_info <-
       object@variable_info
 
-    check_variable_info(variable_info = variable_info, query_type = "gene")
+    if ("enrich_pathway" %in% names(object@process_info)) {
+      analysis_type <- "enrich_pathway"
+      query_type <- object@process_info$enrich_pathway@parameter$query_type
+    } else {
+      analysis_type <- "do_gsea"
+      query_type <- "gene"
+    }
+    check_variable_info(variable_info = variable_info, query_type = query_type)
 
 
     if (all(names(object@process_info) != "merge_pathways")) {
@@ -505,8 +520,8 @@ create_relation_network <-
       stop("Please use the merge_modules() function to process first")
     }
 
-    ######create edge_data and node_data
-    ####1functional_module vs module
+    # Create edge_data and node_data ====
+    ## 1. functional_module vs module ====
     if (length(object@merged_module) == 0) {
       stop('No enriched functional modules')
     }
@@ -552,7 +567,7 @@ create_relation_network <-
       )
 
 
-    ###2 module vs pathway
+    ## 2. module vs pathway ====
     edge_data2 <-
       tryCatch(
         object@merged_module$result_with_module %>%
@@ -595,7 +610,7 @@ create_relation_network <-
       )
 
 
-    #####3 pathway vs molecule
+    ## 3. pathway vs molecule ====
     # Determine analysis type
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
@@ -603,6 +618,7 @@ create_relation_network <-
       analysis_type <- "do_gsea"
     }
 
+    ### For genes: collect enriched go term and molecules ====
     edge_data3_go <-
       tryCatch(
         expr = {
@@ -639,7 +655,6 @@ create_relation_network <-
           NULL
         }
       )
-
     if (!is.null(edge_data3_go)) {
       if (nrow(edge_data3_go) > 0) {
         edge_data3_go <-
@@ -647,17 +662,16 @@ create_relation_network <-
           dplyr::filter(from %in% edge_data2$to)
       }
     }
-
     if(translation){
       object@enrichment_go_result@result <-
         object@enrichment_go_result@result %>%
         dplyr::select(-Description) %>%
         dplyr::rename(Description = Description_trans)
     }
-
     node_data3_go <-
       tryCatch(
-        object@enrichment_go_result@result %>%
+        expr = {
+          object@enrichment_go_result@result %>%
           dplyr::filter(
             p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
               Count > object@process_info$merge_pathways@parameter$count.cutoff.go
@@ -667,12 +681,12 @@ create_relation_network <-
                         annotation = Description,
                         p.adjust,
                         Count) %>%
-          dplyr::mutate(database = "GO"),
+          dplyr::mutate(database = "GO")
+          },
         error = function(e) {
           NULL
         }
       )
-
     if (!is.null(node_data3_go)) {
       if (nrow(node_data3_go) > 0) {
         node_data3_go <-
@@ -681,6 +695,7 @@ create_relation_network <-
       }
     }
 
+    ## Collect enriched kegg pathways and molecules
     edge_data3_kegg <-
       tryCatch(
         expr = {
@@ -716,7 +731,6 @@ create_relation_network <-
           NULL
         }
       )
-
     if (!is.null(edge_data3_kegg)) {
       if (nrow(edge_data3_kegg) > 0) {
         edge_data3_kegg <-
@@ -724,17 +738,15 @@ create_relation_network <-
           dplyr::filter(from %in% edge_data2$to)
       }
     }
-
     if(translation){
       object@enrichment_kegg_result@result <-
         object@enrichment_kegg_result@result %>%
         dplyr::select(-Description) %>%
         dplyr::rename(Description = Description_trans)
     }
-
     node_data3_kegg <-
       tryCatch(
-        object@enrichment_kegg_result@result %>%
+        expr = {object@enrichment_kegg_result@result %>%
           dplyr::filter(
             p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg &
               Count > object@process_info$merge_pathways@parameter$count.cutoff.kegg
@@ -743,12 +755,11 @@ create_relation_network <-
                         annotation = Description,
                         p.adjust,
                         Count) %>%
-          dplyr::mutate(database = "KEGG"),
+          dplyr::mutate(database = "KEGG")},
         error = function(e) {
           NULL
         }
       )
-
     if (!is.null(node_data3_kegg)) {
       if (nrow(node_data3_kegg) > 0) {
         node_data3_kegg <-
@@ -757,6 +768,7 @@ create_relation_network <-
       }
     }
 
+    ## Collect enriched reactome pathways and molecules
     edge_data3_reactome <-
       tryCatch(
         expr = {
@@ -792,8 +804,6 @@ create_relation_network <-
           NULL
         }
       )
-
-
     if (!is.null(edge_data3_reactome)) {
       if (nrow(edge_data3_reactome) > 0) {
         edge_data3_reactome <-
@@ -801,17 +811,15 @@ create_relation_network <-
           dplyr::filter(from %in% edge_data2$to)
       }
     }
-
     if(translation){
       object@enrichment_reactome_result@result <-
         object@enrichment_reactome_result@result %>%
         dplyr::select(-Description) %>%
         dplyr::rename(Description = Description_trans)
     }
-
     node_data3_reactome <-
       tryCatch(
-        object@enrichment_reactome_result@result %>%
+        expr = {object@enrichment_reactome_result@result %>%
           dplyr::filter(
             p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome &
               Count > object@process_info$merge_pathways@parameter$count.cutoff.reactome
@@ -820,12 +828,11 @@ create_relation_network <-
                         annotation = Description,
                         p.adjust,
                         Count) %>%
-          dplyr::mutate(database = "Reactome"),
+          dplyr::mutate(database = "Reactome")},
         error = function(e) {
           NULL
         }
       )
-
     if (!is.null(node_data3_reactome)) {
       if (nrow(node_data3_reactome) > 0) {
         node_data3_reactome <-
@@ -834,18 +841,169 @@ create_relation_network <-
       }
     }
 
+    ### For metabolites: collect enriched hmdb pathways and molecules ====
+    edge_data3_hmdb <-
+      tryCatch(
+        expr = {
+          temp_df <-
+            object@enrichment_hmdb_result@result %>%
+            dplyr::filter(
+              p_value_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.hmdb &
+                mapped_number > object@process_info$merge_pathways@parameter$count.cutoff.hmdb
+            )
+
+          if (analysis_type == "enrich_pathway") {
+            temp_df %>%
+              dplyr::select(from = pathway_id,
+                            to = mapped_id) %>%
+              apply(1, function(x) {
+                data.frame(from = as.character(x[1]),
+                           to = as.character(stringr::str_split(x[2], ";")[[1]]))
+              }) %>%
+              do.call(rbind, .) %>%
+              as.data.frame()
+          }
+          # else {
+          #   temp_df %>%
+          #     dplyr::select(from = ID,
+          #                   to = core_enrichment) %>%
+          #     apply(1, function(x) {
+          #       data.frame(from = as.character(x[1]),
+          #                  to = as.character(stringr::str_split(x[2], "/")[[1]]))
+          #     }) %>%
+          #     do.call(rbind, .) %>%
+          #     as.data.frame()
+          # }
+        },
+        error = function(e) {
+          NULL
+        }
+      )
+    if (!is.null(edge_data3_hmdb)) {
+      if (nrow(edge_data3_hmdb) > 0) {
+        edge_data3_hmdb <-
+          edge_data3_hmdb %>%
+          dplyr::filter(from %in% edge_data2$to)
+      }
+    }
+    node_data3_hmdb <-
+      tryCatch(
+        expr = {object@enrichment_hmdb_result@result %>%
+            dplyr::filter(
+              p_value_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.hmdb &
+                mapped_number > object@process_info$merge_pathways@parameter$count.cutoff.hmdb
+            ) %>%
+            dplyr::select(node = pathway_id,
+                          annotation = pathway_name,
+                          p_value_adjust,
+                          mapped_number) %>%
+            dplyr::mutate(database = "HMDB")},
+        error = function(e) {
+          NULL
+        }
+      )
+    if (!is.null(node_data3_hmdb)) {
+      if (nrow(node_data3_hmdb) > 0) {
+        node_data3_hmdb <-
+          node_data3_hmdb %>%
+          dplyr::filter(node %in% edge_data3_hmdb$from)
+      }
+    }
+
+    ## Collect enriched kegg pathways and molecules (metabolites)
+    edge_data3_metkegg <-
+      tryCatch(
+        expr = {
+          temp_df <-
+            object@enrichment_metkegg_result@result %>%
+            dplyr::filter(
+              p_value_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.metkegg &
+                mapped_number > object@process_info$merge_pathways@parameter$count.cutoff.metkegg
+            )
+
+          if (analysis_type == "enrich_pathway") {
+            temp_df %>%
+              dplyr::select(from = pathway_id,
+                            to = mapped_id) %>%
+              apply(1, function(x) {
+                data.frame(from = as.character(x[1]),
+                           to = as.character(stringr::str_split(x[2], ";")[[1]]))
+              }) %>%
+              do.call(rbind, .) %>%
+              as.data.frame()
+          }
+          # else {
+          #   temp_df %>%
+          #     dplyr::select(from = ID,
+          #                   to = core_enrichment) %>%
+          #     apply(1, function(x) {
+          #       data.frame(from = as.character(x[1]),
+          #                  to = as.character(stringr::str_split(x[2], "/")[[1]]))
+          #     }) %>%
+          #     do.call(rbind, .) %>%
+          #     as.data.frame()
+          # }
+        },
+        error = function(e) {
+          NULL
+        }
+      )
+    if (!is.null(edge_data3_metkegg)) {
+      if (nrow(edge_data3_metkegg) > 0) {
+        edge_data3_metkegg <-
+          edge_data3_metkegg %>%
+          dplyr::filter(from %in% edge_data2$to)
+      }
+    }
+    node_data3_metkegg <-
+      tryCatch(
+        expr = {object@enrichment_metkegg_result@result %>%
+            dplyr::filter(
+              p_value_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.metkegg &
+                mapped_number > object@process_info$merge_pathways@parameter$count.cutoff.metkegg
+            ) %>%
+            dplyr::select(node = pathway_id,
+                          annotation = pathway_name,
+                          p_value_adjust,
+                          mapped_number) %>%
+            dplyr::mutate(database = "KEGG")},
+        error = function(e) {
+          NULL
+        }
+      )
+    if (!is.null(node_data3_metkegg)) {
+      if (nrow(node_data3_metkegg) > 0) {
+        node_data3_metkegg <-
+          node_data3_metkegg %>%
+          dplyr::filter(node %in% edge_data3_metkegg$from)
+      }
+    }
+
+    ##
     colnames(variable_info) <- tolower(colnames(variable_info))
 
-    node_data3_molecule <-
-      variable_info %>%
-      dplyr::select(node = ensembl,
-                    uniprot,
-                    symbol,
-                    entrezid) %>%
-      dplyr::mutate(annotation = symbol,
-                    Count = 1,
-                    class = "Molecule")
-
+    if (query_type == "gene") {
+      ### For gene
+      node_data3_molecule <-
+        variable_info %>%
+        dplyr::select(node = ensembl,
+                      uniprot,
+                      symbol,
+                      entrezid) %>%
+        dplyr::mutate(annotation = symbol,
+                      Count = 1,
+                      class = "Molecule")
+    } else if (query_type == "metabolite") {
+      ### For metabolite molecule
+      node_data3_molecule <-
+        variable_info %>%
+        dplyr::select(node = "hmdbid",
+                      keggid,
+                      variable_id) %>%
+        dplyr::mutate(annotation = variable_id,
+                      Count = 1,
+                      class = "Molecule")
+    }
 
     if (analysis_type == "enrich_pathway") {
       if (!is.null(edge_data3_kegg)) {
@@ -856,6 +1014,10 @@ create_relation_network <-
         edge_data3_reactome$to <-
           variable_info$ensembl[match(edge_data3_reactome$to,
                                       variable_info$entrezid)]}
+      if (!is.null(edge_data3_metkegg)) {
+        edge_data3_metkegg$to <-
+          variable_info$hmdbid[match(edge_data3_metkegg$to,
+                                      variable_info$keggid)]}
       } else {
       if (!is.null(edge_data3_go)) {
         edge_data3_go$to <-
@@ -875,7 +1037,9 @@ create_relation_network <-
     edge_data3 <-
       rbind(edge_data3_go,
             edge_data3_kegg,
-            edge_data3_reactome) %>%
+            edge_data3_reactome,
+            edge_data3_hmdb,
+            edge_data3_metkegg) %>%
       dplyr::filter(!is.na(to)) %>%
       dplyr::distinct(from, to, .keep_all = TRUE) %>%
       dplyr::mutate(class = "Pathway-Molecule")
@@ -883,7 +1047,9 @@ create_relation_network <-
     node_data3_pathway <-
       rbind(node_data3_go,
             node_data3_kegg,
-            node_data3_reactome) %>%
+            node_data3_reactome,
+            node_data3_hmdb,
+            node_data3_metkegg) %>%
       dplyr::mutate(class = "Pathway")
 
     node_data3_molecule <-
@@ -898,7 +1064,7 @@ create_relation_network <-
                          colnames(node_data3_molecule)
                        ))
 
-    ####4. functional_module vs pathway
+    ## 4. functional_module vs pathway ====
     edge_data4 <-
       data.frame(
         from = object@merged_module$functional_module_result$module,
@@ -912,12 +1078,13 @@ create_relation_network <-
       as.data.frame() %>%
       dplyr::mutate(class = "Functional_module-Pathway")
 
-    ####5. functional_module vs molecule
+    ## 5. functional_module vs molecule ====
     edge_data5 <-
-      data.frame(
-        from = object@merged_module$functional_module_result$module,
-        to = object@merged_module$functional_module_result$geneID
-      ) %>%
+      object@merged_module$functional_module_result %>%
+      dplyr::mutate(queryID = if (query_type == "gene") geneID else mapped_id) %>%
+      dplyr::select(module, queryID) %>%
+      dplyr::rename(from = module,
+                    to = queryID) %>%
       apply(1, function(x) {
         data.frame(from = as.character(x[1]),
                    to = as.character(stringr::str_split(x[2], "/")[[1]]))
@@ -926,26 +1093,26 @@ create_relation_network <-
       as.data.frame() %>%
       dplyr::mutate(class = "Functional_module-Molecule")
 
-    if (analysis_type == "enrich_pathway") {
-      id2 <-
-        variable_info$ensembl[match(edge_data5$to, variable_info$uniprot)]
-      id3 <-
-        variable_info$ensembl[match(edge_data5$to, variable_info$entrezid)]
+    # if (analysis_type == "enrich_pathway") {
+    #   id2 <-
+    #     variable_info$ensembl[match(edge_data5$to, variable_info$uniprot)]
+    #   id3 <-
+    #     variable_info$ensembl[match(edge_data5$to, variable_info$entrezid)]
+    #
+    #   edge_data5$to <-
+    #     data.frame(id1 = edge_data5$to,
+    #                id2,
+    #                id3) %>%
+    #     apply(1, function(x) {
+    #       x <- x[!is.na(x)]
+    #       grep("ENSG", x, value = TRUE)
+    #     })
+    # } else {
+    #   edge_data5$to <-
+    #     variable_info$ensembl[match(edge_data5$to, variable_info$entrezid)]
+    # }
 
-      edge_data5$to <-
-        data.frame(id1 = edge_data5$to,
-                   id2,
-                   id3) %>%
-        apply(1, function(x) {
-          x <- x[!is.na(x)]
-          grep("ENSG", x, value = TRUE)
-        })
-    } else {
-      edge_data5$to <-
-        variable_info$ensembl[match(edge_data5$to, variable_info$entrezid)]
-    }
-
-    ####6. module vs molecule
+    ## 6. module vs molecule ====
     if (analysis_type == "do_gsea") {
       object@merged_pathway_go$module_result <-
         object@merged_pathway_go$module_result %>%
@@ -962,6 +1129,7 @@ create_relation_network <-
 
     edge_data6 <-
       rbind(
+        ### For gene
         data.frame(
           from = object@merged_pathway_go$module_result$module,
           to = object@merged_pathway_go$module_result$geneID
@@ -973,6 +1141,15 @@ create_relation_network <-
         data.frame(
           from = object@merged_pathway_reactome$module_result$module,
           to = object@merged_pathway_reactome$module_result$geneID
+        ),
+        ### For metabolite
+        data.frame(
+          from = object@merged_pathway_hmdb$module_result$module,
+          to = object@merged_pathway_hmdb$module_result$mapped_id
+        ),
+        data.frame(
+          from = object@merged_pathway_metkegg$module_result$module,
+          to = object@merged_pathway_metkegg$module_result$mapped_id
         )
       ) %>%
       apply(1, function(x) {
@@ -983,26 +1160,38 @@ create_relation_network <-
       as.data.frame() %>%
       dplyr::mutate(class = "Module-Molecule")
 
-    if (analysis_type == "enrich_pathway") {
-      id2 <-
-        variable_info$ensembl[match(edge_data6$to, variable_info$uniprot)]
-      id3 <-
-        variable_info$ensembl[match(edge_data6$to, variable_info$entrezid)]
-
+    if (query_type == "gene") {
       edge_data6$to <-
-        data.frame(id1 = edge_data6$to,
-                   id2,
-                   id3) %>%
-        apply(1, function(x) {
-          x <- x[!is.na(x)]
-          grep("ENSG", x, value = TRUE)
-        })
-    } else {
+        edge_data6$to %>%
+        unify_id_internal(variable_info = object@variable_info,
+                          query_type = "gene")
+    } else if (query_type == "metabolite") {
       edge_data6$to <-
-        variable_info$ensembl[match(edge_data6$to, variable_info$entrezid)]
+        edge_data6$to %>%
+        unify_id_internal(variable_info = object@variable_info,
+                          query_type = "metabolite")
     }
 
-    #####graph network
+    # if (analysis_type == "enrich_pathway") {
+    #   id2 <-
+    #     variable_info$ensembl[match(edge_data6$to, variable_info$uniprot)]
+    #   id3 <-
+    #     variable_info$ensembl[match(edge_data6$to, variable_info$entrezid)]
+    #
+    #   edge_data6$to <-
+    #     data.frame(id1 = edge_data6$to,
+    #                id2,
+    #                id3) %>%
+    #     apply(1, function(x) {
+    #       x <- x[!is.na(x)]
+    #       grep("ENSG", x, value = TRUE)
+    #     })
+    # } else {
+    #   edge_data6$to <-
+    #     variable_info$ensembl[match(edge_data6$to, variable_info$entrezid)]
+    # }
+
+    # Graph network ====
     edge_data <-
       rbind(edge_data1,
             edge_data2,

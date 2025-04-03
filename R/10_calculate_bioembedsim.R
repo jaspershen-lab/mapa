@@ -53,7 +53,7 @@
 #                   api_provider = "openai",
 #                   text_embedding_model = "text-embedding-3-small",
 #                   api_key = api_key,
-#                   save_to_local = TRUE,
+#                   save_to_local = FALSE,
 #                   path = "~/Desktop/result")
 # gemini_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "gemini",  text_embedding_model = "text-embedding-004", api_key = api_key)
 

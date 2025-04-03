@@ -26,24 +26,7 @@
 #   translation = TRUE
 # )
 #
-# plot_similarity_network(
-#   object = enriched_functional_module,
-#   level = "module",
-#   database = "go",
-#   degree_cutoff = 10,
-#   module_id = "go_Module_10",
-#   text_all = TRUE
-# )
 #
-# plot_similarity_network(
-#   object = enriched_functional_module,
-#   level = "module",
-#   database = "go",
-#   degree_cutoff = 10,
-#   module_id = "go_Module_10",
-#   text_all = TRUE,
-#   translation = TRUE
-# )
 #
 # plot_similarity_network(
 #   object = enriched_functional_module,
@@ -52,16 +35,6 @@
 #   degree_cutoff = 1,
 #   module_id = "Functional_module_53",
 #   text_all = TRUE
-# )
-#
-# plot_similarity_network(
-#   object = enriched_functional_module,
-#   level = "functional_module",
-#   database = "go",
-#   degree_cutoff = 1,
-#   module_id = "Functional_module_53",
-#   text_all = TRUE,
-#   translation = TRUE
 # )
 #
 # GSEA result
@@ -79,6 +52,14 @@
 #   degree_cutoff = 2,
 #   database = "go",
 # )
+#
+# metabolite
+# plot_similarity_network(
+#   object = enriched_functional_modules,
+#   level = "module",
+#   degree_cutoff = 0,
+#   database = c("kegg")
+# )
 
 
 #' Plot Similarity Network
@@ -92,7 +73,7 @@
 #' @param level A character string indicating the level of analysis,
 #' either "module" or "functional_module".
 #' @param database A character string indicating the database to be used,
-#' either "go", "kegg", or "reactome".
+#' one of "go", "kegg", "reactome", or "hmdb".
 #' @param degree_cutoff A numeric value indicating the degree cutoff for
 #' filtering nodes in the network.
 #' @param module_id Optional, a character or numeric vector of module IDs
@@ -100,9 +81,11 @@
 #' @param text Logical, whether to include text annotations on the plot.
 #' @param text_all Logical, whether to include text annotations for all nodes.
 #' @param translation translation or not.
-#' @return A ggplot object representing the similarity network.
+#' @return A ggplot object representing the similarity network, or an empty
+#' ggplot if no modules pass the filtering criteria.
 #'
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
+#' @author Yifei Ge <yifeii.ge@outlook.com>
 #'
 #' @examples
 #' \dontrun{
@@ -117,7 +100,7 @@ plot_similarity_network <-
   function(object,
            level = c("module",
                      "functional_module"),
-           database = c("go", "kegg", "reactome"),
+           database = c("go", "kegg", "reactome", "hmdb"),
            degree_cutoff = 0,
            module_id,
            text = TRUE,
@@ -141,92 +124,152 @@ plot_similarity_network <-
     # Determine analysis type
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
+      query_type <- object@process_info$enrich_pathway@parameter$query_type
     } else {
       analysis_type <- "do_gsea"
+      query_type <- "gene"
     }
 
     if (level == "module") {
       if (all(names(object@process_info) != "merge_pathways")) {
         stop("Please use the merge_pathways() function to process first")
       }
-      ###GO
-      if (database == "go") {
-        if (length(object@merged_pathway_go) == 0) {
-          warning("No enriched GO modules")
-          return(ggplot() +
-                   geom_blank())
-        } else{
-          graph_data <-
-            object@merged_pathway_go$graph_data
-          result_with_module <-
-            object@merged_pathway_go$result_with_module
-
-          if(translation){
-            result_with_module <-
-              result_with_module %>%
-              dplyr::select(-Description) %>%
-              dplyr::rename(Description = Description_trans)
+      if (query_type == "gene") {
+        ###GO
+        if (database == "go") {
+          if (length(object@merged_pathway_go) == 0) {
+            warning("No enriched GO modules")
+            return(ggplot() +
+                     geom_blank())
+          } else{
             graph_data <-
-              graph_data %>%
-              tidygraph::activate(what = "nodes") %>%
-              dplyr::select(-Description) %>%
-              dplyr::left_join(result_with_module[,c("node", "Description")],
-                               by = "node")
-          }
-
-        }
-      }
-
-      ###KEGG
-      if (database == "kegg") {
-        if (length(object@merged_pathway_kegg) == 0) {
-          warning("No enriched KEGG modules")
-          return(ggplot() +
-                   geom_blank())
-        } else{
-          graph_data <-
-            object@merged_pathway_kegg$graph_data
-          result_with_module <-
-            object@merged_pathway_kegg$result_with_module
-
-          if(translation){
+              object@merged_pathway_go$graph_data
             result_with_module <-
-              result_with_module %>%
-              dplyr::select(-Description) %>%
-              dplyr::rename(Description = Description_trans)
-            graph_data <-
-              graph_data %>%
-              tidygraph::activate(what = "nodes") %>%
-              dplyr::select(-Description) %>%
-              dplyr::left_join(result_with_module[,c("node", "Description")],
-                               by = "node")
+              object@merged_pathway_go$result_with_module
+
+            if(translation){
+              result_with_module <-
+                result_with_module %>%
+                dplyr::select(-Description) %>%
+                dplyr::rename(Description = Description_trans)
+              graph_data <-
+                graph_data %>%
+                tidygraph::activate(what = "nodes") %>%
+                dplyr::select(-Description) %>%
+                dplyr::left_join(result_with_module[,c("node", "Description")],
+                                 by = "node")
+            }
+
           }
         }
-      }
 
-      ###Reactome
-      if (database == "reactome") {
-        if (length(object@merged_pathway_reactome) == 0) {
-          warning("No enriched Reactome modules")
-          return(ggplot() +
-                   geom_blank())
-        } else{
-          graph_data <-
-            object@merged_pathway_reactome$graph_data
-          result_with_module <-
-            object@merged_pathway_reactome$result_with_module
-
-          if(translation){
-            result_with_module <-
-              result_with_module %>%
-              dplyr::select(-Description) %>%
-              dplyr::rename(Description = Description_trans)
+        ###KEGG
+        if (database == "kegg") {
+          if (length(object@merged_pathway_kegg) == 0) {
+            warning("No enriched KEGG modules")
+            return(ggplot() +
+                     geom_blank())
+          } else{
             graph_data <-
-              graph_data %>%
-              tidygraph::activate(what = "nodes") %>%
-              dplyr::select(-Description) %>%
-              dplyr::left_join(result_with_module[,c("node", "Description")],
-                               by = "node")
+              object@merged_pathway_kegg$graph_data
+            result_with_module <-
+              object@merged_pathway_kegg$result_with_module
+
+            if(translation){
+              result_with_module <-
+                result_with_module %>%
+                dplyr::select(-Description) %>%
+                dplyr::rename(Description = Description_trans)
+              graph_data <-
+                graph_data %>%
+                tidygraph::activate(what = "nodes") %>%
+                dplyr::select(-Description) %>%
+                dplyr::left_join(result_with_module[,c("node", "Description")],
+                                 by = "node")
+            }
+          }
+        }
+
+        ###Reactome
+        if (database == "reactome") {
+          if (length(object@merged_pathway_reactome) == 0) {
+            warning("No enriched Reactome modules")
+            return(ggplot() +
+                     geom_blank())
+          } else{
+            graph_data <-
+              object@merged_pathway_reactome$graph_data
+            result_with_module <-
+              object@merged_pathway_reactome$result_with_module
+
+            if(translation){
+              result_with_module <-
+                result_with_module %>%
+                dplyr::select(-Description) %>%
+                dplyr::rename(Description = Description_trans)
+              graph_data <-
+                graph_data %>%
+                tidygraph::activate(what = "nodes") %>%
+                dplyr::select(-Description) %>%
+                dplyr::left_join(result_with_module[,c("node", "Description")],
+                                 by = "node")
+            }
+          }
+        }
+
+      } else if (query_type == "metabolite") {
+        ###HMDB
+        if (database == "hmdb") {
+          if (length(object@merged_pathway_hmdb) == 0) {
+            warning("No enriched GO modules")
+            return(ggplot() +
+                     geom_blank())
+          } else{
+            graph_data <-
+              object@merged_pathway_hmdb$graph_data
+            result_with_module <-
+              object@merged_pathway_hmdb$result_with_module
+
+            if(translation){
+              result_with_module <-
+                result_with_module %>%
+                dplyr::select(-Description) %>%
+                dplyr::rename(Description = Description_trans)
+              graph_data <-
+                graph_data %>%
+                tidygraph::activate(what = "nodes") %>%
+                dplyr::select(-Description) %>%
+                dplyr::left_join(result_with_module[,c("node", "Description")],
+                                 by = "node")
+            }
+
+          }
+        }
+
+        ###KEGG
+        if (database == "kegg") {
+          if (length(object@merged_pathway_metkegg) == 0) {
+            warning("No enriched KEGG modules")
+            return(ggplot() +
+                     geom_blank())
+          } else{
+            graph_data <-
+              object@merged_pathway_metkegg$graph_data
+            result_with_module <-
+              object@merged_pathway_metkegg$result_with_module
+
+            if(translation){
+              result_with_module <-
+                result_with_module %>%
+                dplyr::select(-Description) %>%
+                dplyr::rename(Description = Description_trans)
+              graph_data <-
+                graph_data %>%
+                tidygraph::activate(what = "nodes") %>%
+                dplyr::select(-Description) %>%
+                dplyr::left_join(result_with_module[,c("node", "Description")],
+                                 by = "node")
+            }
           }
         }
       }
@@ -245,6 +288,13 @@ plot_similarity_network <-
       } else{
         graph_data <-
           object@merged_module$graph_data
+        if (query_type == "metabolite") {
+          graph_data <-
+            graph_data %>%
+            tidygraph::activate(what = "nodes") %>%
+            dplyr::rename(module_content_number = module_content_number.y)
+        }
+
         result_with_module <-
           object@merged_module$result_with_module
 
@@ -274,7 +324,8 @@ plot_similarity_network <-
     graph_data <-
       graph_data %>%
       tidygraph::activate(what = "nodes") %>%
-      dplyr::filter(module_content_number > degree_cutoff)
+      dplyr::filter(module_content_number > degree_cutoff) %>%
+      dplyr::mutate(label = if (query_type == "gene") Description else pathway_name)
 
     if (igraph::gorder(graph_data) == 0) {
       warning("No functional modules have degree > ", degree_cutoff)
@@ -308,13 +359,13 @@ plot_similarity_network <-
               dplyr::group_by(module) %>%
               dplyr::arrange(p.adjust, desc(Count), .by_group = TRUE) %>%
               dplyr::slice_head(n = 1) %>%
-              dplyr::pull(Description)
+              dplyr::pull(label)
           } else {
             df %>%
               dplyr::group_by(module) %>%
               dplyr::arrange(desc(abs(NES)), desc(Count), .by_group = TRUE) %>%
               dplyr::slice_head(n = 1) %>%
-              dplyr::pull(Description)
+              dplyr::pull(label)
         }
           },
         error = function(e) {
@@ -330,7 +381,9 @@ plot_similarity_network <-
     }
 
     cluster_label_all <-
-      igraph::as_data_frame(graph_data, what = "vertices")$Description
+      graph_data %>%
+      tidygraph::activate(what = "nodes") %>%
+      dplyr::pull(label)
 
     plot <-
       graph_data %>%
@@ -367,7 +420,7 @@ plot_similarity_network <-
           plot +
           ggraph::geom_node_text(aes(x = x,
                                      y = y,
-                                     label = Description),
+                                     label = label),
                                  size = 3,
                                  repel = TRUE)
       } else{
@@ -376,7 +429,7 @@ plot_similarity_network <-
           ggraph::geom_node_text(aes(
             x = x,
             y = y,
-            label = ifelse(Description %in% cluster_label_module, Description, NA)
+            label = ifelse(label %in% cluster_label_module, label, NA)
           ),
           size = 3,
           repel = TRUE)
@@ -384,9 +437,6 @@ plot_similarity_network <-
     }
     plot
   }
-
-
-
 
 
 ####output some results

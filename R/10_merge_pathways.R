@@ -574,7 +574,7 @@ merge_pathways_internal <-
                 names_to = "name2",
                 values_to = "sim"
               ) %>%
-              dplyr::filter(name1 != name2),
+              dplyr::filter(name1 < name2),
             error = function(x) {
               data.frame(name1 = character(),
                          name2 = character(),
@@ -596,7 +596,7 @@ merge_pathways_internal <-
                 names_to = "name2",
                 values_to = "sim"
               ) %>%
-              dplyr::filter(name1 != name2),
+              dplyr::filter(name1 < name2),
             error = function(x) {
               data.frame(name1 = character(),
                          name2 = character(),
