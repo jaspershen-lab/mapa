@@ -8,7 +8,7 @@
 plot_relationship_network(
   object,
   include_functional_modules = TRUE,
-  include_modules = TRUE,
+  include_modules = FALSE,
   include_pathways = TRUE,
   include_molecules = TRUE,
   functional_module_color = "#F05C3BFF",
@@ -16,7 +16,7 @@ plot_relationship_network(
   pathway_color = "#197EC0FF",
   molecule_color = "#3B4992FF",
   functional_module_text = TRUE,
-  module_text = TRUE,
+  module_text = FALSE,
   pathway_text = TRUE,
   molecule_text = FALSE,
   functional_module_text_size = 3,
