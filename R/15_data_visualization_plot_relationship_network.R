@@ -118,7 +118,7 @@
 plot_relationship_network <-
   function(object,
            include_functional_modules = TRUE,
-           include_modules = TRUE,
+           include_modules = FALSE,
            include_pathways = TRUE,
            include_molecules = TRUE,
            functional_module_color = "#F05C3BFF",
@@ -126,7 +126,7 @@ plot_relationship_network <-
            pathway_color = "#197EC0FF",
            molecule_color = "#3B4992FF",
            functional_module_text = TRUE,
-           module_text = TRUE,
+           module_text = FALSE,
            pathway_text = TRUE,
            molecule_text = FALSE,
            functional_module_text_size = 3,
@@ -146,9 +146,9 @@ plot_relationship_network <-
     ###at least two classes of nodes
 
     if(translation){
-      if(all(names(object@process_info) != "translate_language")){
-        stop("Please use the 'translate_language' function to translate first.")
-      }
+      # if(all(names(object@process_info) != "translate_language")){
+      #   stop("Please use the 'translate_language' function to translate first.")
+      # }
     }
 
     if (sum(
@@ -477,9 +477,9 @@ create_relation_network <-
     ###at least two classes of nodes
 
     if(translation){
-      if(all(names(object@process_info) != "translate_language")){
-        stop("Please use the 'translate_language' function to translate first.")
-      }
+      # if(all(names(object@process_info) != "translate_language")){
+      #   stop("Please use the 'translate_language' function to translate first.")
+      # }
     }
 
     if (sum(
@@ -546,10 +546,10 @@ create_relation_network <-
       )
 
     if(translation){
-      object@merged_module$functional_module_result <-
-        object@merged_module$functional_module_result %>%
-        dplyr::select(-module_annotation) %>%
-        dplyr::rename(module_annotation = module_annotation_trans)
+      # object@merged_module$functional_module_result <-
+      #   object@merged_module$functional_module_result %>%
+      #   dplyr::select(-module_annotation) %>%
+      #   dplyr::rename(module_annotation = module_annotation_trans)
     }
 
     node_data1 <-
@@ -587,10 +587,10 @@ create_relation_network <-
       )
 
     if(translation){
-      object@merged_module$result_with_module <-
-        object@merged_module$result_with_module %>%
-        dplyr::select(-module_annotation) %>%
-        dplyr::rename(module_annotation = module_annotation_trans)
+      # object@merged_module$result_with_module <-
+      #   object@merged_module$result_with_module %>%
+      #   dplyr::select(-module_annotation) %>%
+      #   dplyr::rename(module_annotation = module_annotation_trans)
     }
 
     node_data2 <-
@@ -655,19 +655,21 @@ create_relation_network <-
           NULL
         }
       )
-    if (!is.null(edge_data3_go)) {
+    if (!is.null(edge_data3_go) & sim_method != "get_bioembedsim()") {
       if (nrow(edge_data3_go) > 0) {
         edge_data3_go <-
           edge_data3_go %>%
           dplyr::filter(from %in% edge_data2$to)
       }
     }
+
     if(translation){
-      object@enrichment_go_result@result <-
-        object@enrichment_go_result@result %>%
-        dplyr::select(-Description) %>%
-        dplyr::rename(Description = Description_trans)
+      # object@enrichment_go_result@result <-
+      #   object@enrichment_go_result@result %>%
+      #   dplyr::select(-Description) %>%
+      #   dplyr::rename(Description = Description_trans)
     }
+
     node_data3_go <-
       tryCatch(
         expr = {
@@ -731,7 +733,7 @@ create_relation_network <-
           NULL
         }
       )
-    if (!is.null(edge_data3_kegg)) {
+    if (!is.null(edge_data3_kegg) & sim_method != "get_bioembedsim()") {
       if (nrow(edge_data3_kegg) > 0) {
         edge_data3_kegg <-
           edge_data3_kegg %>%
@@ -739,10 +741,10 @@ create_relation_network <-
       }
     }
     if(translation){
-      object@enrichment_kegg_result@result <-
-        object@enrichment_kegg_result@result %>%
-        dplyr::select(-Description) %>%
-        dplyr::rename(Description = Description_trans)
+      # object@enrichment_kegg_result@result <-
+      #   object@enrichment_kegg_result@result %>%
+      #   dplyr::select(-Description) %>%
+      #   dplyr::rename(Description = Description_trans)
     }
     node_data3_kegg <-
       tryCatch(
@@ -804,7 +806,7 @@ create_relation_network <-
           NULL
         }
       )
-    if (!is.null(edge_data3_reactome)) {
+    if (!is.null(edge_data3_reactome) & sim_method != "get_bioembedsim()") {
       if (nrow(edge_data3_reactome) > 0) {
         edge_data3_reactome <-
           edge_data3_reactome %>%
@@ -812,10 +814,10 @@ create_relation_network <-
       }
     }
     if(translation){
-      object@enrichment_reactome_result@result <-
-        object@enrichment_reactome_result@result %>%
-        dplyr::select(-Description) %>%
-        dplyr::rename(Description = Description_trans)
+      # object@enrichment_reactome_result@result <-
+      #   object@enrichment_reactome_result@result %>%
+      #   dplyr::select(-Description) %>%
+      #   dplyr::rename(Description = Description_trans)
     }
     node_data3_reactome <-
       tryCatch(
@@ -879,7 +881,7 @@ create_relation_network <-
           NULL
         }
       )
-    if (!is.null(edge_data3_hmdb)) {
+    if (!is.null(edge_data3_hmdb) & sim_method != "get_bioembedsim()") {
       if (nrow(edge_data3_hmdb) > 0) {
         edge_data3_hmdb <-
           edge_data3_hmdb %>%
@@ -948,7 +950,7 @@ create_relation_network <-
           NULL
         }
       )
-    if (!is.null(edge_data3_metkegg)) {
+    if (!is.null(edge_data3_metkegg) & sim_method != "get_bioembedsim()") {
       if (nrow(edge_data3_metkegg) > 0) {
         edge_data3_metkegg <-
           edge_data3_metkegg %>%
@@ -1065,18 +1067,48 @@ create_relation_network <-
                        ))
 
     ## 4. functional_module vs pathway ====
-    edge_data4 <-
-      data.frame(
-        from = object@merged_module$functional_module_result$module,
-        to = object@merged_module$functional_module_result$pathway_id
-      ) %>%
-      apply(1, function(x) {
-        data.frame(from = as.character(x[1]),
-                   to = as.character(stringr::str_split(x[2], ";")[[1]]))
-      }) %>%
-      do.call(rbind, .) %>%
-      as.data.frame() %>%
-      dplyr::mutate(class = "Functional_module-Pathway")
+    if (sim_method == "get_bioembedsim()") {
+      edge_data4 <-
+        data.frame(
+          from = object@merged_module$functional_module_result$module,
+          to = object@merged_module$functional_module_result$node
+        ) %>%
+        apply(1, function(x) {
+          data.frame(from = as.character(x[1]),
+                     to = as.character(stringr::str_split(x[2], ";")[[1]]))
+        }) %>%
+        do.call(rbind, .) %>%
+        as.data.frame() %>%
+        dplyr::mutate(class = "Functional_module-Pathway")
+
+      if (nrow(edge_data3) > 0) {
+        edge_data3 <-
+          edge_data3 %>%
+          dplyr::filter(from %in% edge_data4$to)
+      }
+
+      if (!is.null(node_data3)) {
+        if (nrow(node_data3) > 0) {
+          node_data3 <-
+            node_data3 %>%
+            dplyr::filter(node %in% edge_data3$from | node %in% edge_data3$to)
+        }
+      }
+
+    } else {
+      edge_data4 <-
+        data.frame(
+          from = object@merged_module$functional_module_result$module,
+          to = object@merged_module$functional_module_result$pathway_id
+        ) %>%
+        apply(1, function(x) {
+          data.frame(from = as.character(x[1]),
+                     to = as.character(stringr::str_split(x[2], ";")[[1]]))
+        }) %>%
+        do.call(rbind, .) %>%
+        as.data.frame() %>%
+        dplyr::mutate(class = "Functional_module-Pathway")
+    }
 
     ## 5. functional_module vs molecule ====
     edge_data5 <-
@@ -1200,14 +1232,22 @@ create_relation_network <-
             edge_data5,
             edge_data6)
 
-    node_data <-
-      node_data1 %>%
-      dplyr::full_join(node_data2,
-                       by = intersect(colnames(.),
-                                      colnames(node_data2))) %>%
-      dplyr::full_join(node_data3,
-                       by = intersect(colnames(.),
-                                      colnames(node_data3)))
+    if (sim_method == "get_bioembedsim()") {
+      node_data <-
+        node_data1 %>%
+        dplyr::full_join(node_data3,
+                         by = intersect(colnames(.),
+                                        colnames(node_data3)))
+    } else {
+      node_data <-
+        node_data1 %>%
+        dplyr::full_join(node_data2,
+                         by = intersect(colnames(.),
+                                        colnames(node_data2))) %>%
+        dplyr::full_join(node_data3,
+                         by = intersect(colnames(.),
+                                        colnames(node_data3)))
+    }
 
     node_data <-
       node_data %>%
