@@ -3,13 +3,13 @@
 # sim.cutoff <- 0.8
 # hclust.method <- "complete"
 
+# For gene
 # enriched_functional_module <-
 #   merge_pathways_bioembedsim(
 #     object = openai_semantic_sim_matrix,
 #     cluster_method = "girvan newman",
 #     sim.cutoff = 0.5,
-#     save_to_local = TRUE,
-#     path = "~/Desktop/result"
+#     save_to_local = FALSE
 #   )
 
 # For metabolite
@@ -517,9 +517,12 @@ merge_pathways_bioembedsim <-
         x[1]
       }) %>%
       unlist()
-    functional_module_result <-
-      functional_module_result %>%
-      dplyr::select(-c(describtion))
+
+    if (query_type == "metabolite") {
+      functional_module_result <-
+        functional_module_result %>%
+        dplyr::select(-c(describtion))
+    }
 
     ## Collect all results (graph_data, functional_module_result, result_with_module) and parameters ====
     functional_modules <- list(

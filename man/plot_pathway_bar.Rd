@@ -36,7 +36,8 @@ For GSEA results, this parameter should be \code{"NES"}.}
 the function will use the translated descriptions from the \code{translate_language} function. Default is FALSE.}
 
 \item{level}{A character string specifying the level of analysis.
-One of "pathway", "module", or "functional_module". Default is "pathway".}
+One of "pathway", "module", or "functional_module". Default is "pathway".
+For biotext embedding results, only "pathway" or "functional_module" can be used.}
 
 \item{line_type}{A character string specifying the type of line to use for the bar chart.
 One of "straight" or "meteor". Default is "straight".}
