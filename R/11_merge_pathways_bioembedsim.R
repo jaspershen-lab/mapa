@@ -281,7 +281,7 @@ merge_pathways_bioembedsim <-
             # cat(unique(x$module), " ")
             if (nrow(x) == 1) {
               x$geneID <-
-                x$core_enrichment %>%
+                x$geneID %>%
                 stringr::str_split(pattern = "/") %>%
                 unlist() %>%
                 unify_id_internal(variable_info = object$enriched_pathway@variable_info,

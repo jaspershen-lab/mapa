@@ -573,7 +573,7 @@ identify_functional_modules <-
               x$module_content <-
                 paste(x$node, collapse = ";")
 
-              x$geneID =
+              x$geneID <-
                 x$geneID %>%
                 stringr::str_split(pattern = "/") %>%
                 unlist() %>%

@@ -57,12 +57,12 @@
 # plot <-
 #   plot_module_info(object = enriched_functional_module,
 #                    level = "functional_module",
-#                    module_id = "Functional_module_47")
+#                    module_id = "Functional_module_4")
 #
 # plot[[1]]
 # plot[[2]]
 # plot[[3]]
-#
+# #
 #
 # export_module_info_plot(object = object,
 #                         path = "result")

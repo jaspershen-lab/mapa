@@ -206,6 +206,8 @@ plot_relationship_network <-
       stop("Please use the merge_modules() function to process first")
     }
 
+    sim_method <- object@process_info$merge_pathways@function_name
+
     ######create edge_data and node_data and network
     total_graph <-
       create_relation_network(
@@ -519,6 +521,8 @@ create_relation_network <-
     if (all(names(object@process_info) != "merge_modules")) {
       stop("Please use the merge_modules() function to process first")
     }
+
+    sim_method <- object@process_info$merge_pathways@function_name
 
     # Create edge_data and node_data ====
     ## 1. functional_module vs module ====

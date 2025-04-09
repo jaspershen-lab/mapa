@@ -44,7 +44,7 @@ demo_data
 ```
 
 # Pathway enrichment
-```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE, error=TRUE}
 variable_info <-
   demo_data %>%
   massdataset::activate_mass_dataset(what = "variable_info") %>%

@@ -831,6 +831,9 @@ identify_modules <-
             x$node <-
               paste(x$node, collapse = ";")
 
+            x$Description <-
+              paste(x$Description, collapse = ";")
+
             x$BgRatio <-
               paste(x$BgRatio, collapse = ";")
 

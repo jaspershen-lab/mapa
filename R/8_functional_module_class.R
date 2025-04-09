@@ -155,21 +155,17 @@ setMethod(
       message(crayon::green('No GO results'))
     } else{
       if (analysis_type == "enrich_pathway") {
-        p.adjust.cutoff <- object@process_info$merge_pathways@parameter$p.adjust.cutoff.go
-        count.cutoff <- object@process_info$merge_pathways@parameter$count.cutoff.go
+        p.adjust.cutoff <- object@enrichment_go_result@pvalueCutoff
         message(
           crayon::green(
             nrow(
               enrichment_go_result@result %>%
                 dplyr::filter(
-                  p.adjust < p.adjust.cutoff &
-                    Count > count.cutoff
+                  p.adjust < p.adjust.cutoff
                 )
             ),
             "GO terms with p.adjust <",
-            p.adjust.cutoff,
-            "and Count >",
-            count.cutoff
+            p.adjust.cutoff
           )
         )
       } else{
@@ -197,20 +193,16 @@ setMethod(
     if (is.null(enrichment_kegg_result)) {
       message(crayon::green('No KEGG results'))
     } else{
-      p.adjust.cutoff <- object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg
-      count.cutoff <- object@process_info$merge_pathways@parameter$count.cutoff.kegg
+      p.adjust.cutoff <- object@enrichment_kegg_result@pvalueCutoff
       if (analysis_type == "enrich_pathway") {
         message(
           crayon::green(
             nrow(
               enrichment_kegg_result@result %>%
-                dplyr::filter(p.adjust < p.adjust.cutoff &
-                                Count > count.cutoff)
+                dplyr::filter(p.adjust < p.adjust.cutoff)
             ),
             "KEGG pathways with p.adjust <",
-            p.adjust.cutoff,
-            "and Count >",
-            count.cutoff
+            p.adjust.cutoff
           )
         )
       } else{
@@ -238,20 +230,17 @@ setMethod(
     if (is.null(enrichment_reactome_result)) {
       message(crayon::green('No Reactome results'))
     } else{
-      p.adjust.cutoff <- object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome
-      count.cutoff <- object@process_info$merge_pathways@parameter$count.cutoff.reactome
+      p.adjust.cutoff <- object@enrichment_reactome_result@pvalueCutoff
+
       if (analysis_type == "enrich_pathway") {
         message(
           crayon::green(
             nrow(
               enrichment_reactome_result@result %>%
-                dplyr::filter(p.adjust < p.adjust.cutoff &
-                                Count > count.cutoff)
+                dplyr::filter(p.adjust < p.adjust.cutoff)
             ),
             "Reactome pathways with p.adjust <",
-            p.adjust.cutoff,
-            "and Count >",
-            count.cutoff
+            p.adjust.cutoff
           )
         )
       } else{

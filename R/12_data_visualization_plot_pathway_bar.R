@@ -548,7 +548,7 @@ plot_pathway_bar <-
       functional_module_result <-
         object@merged_module$functional_module_result
 
-      if (any(colnames(temp_data) == "module_content")) {
+      if (any(colnames(functional_module_result) == "module_content")) {
         temp_data <-
           functional_module_result %>%
           dplyr::filter(p.adjust < p.adjust.cutoff &

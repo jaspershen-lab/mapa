@@ -31,10 +31,8 @@
 # plot_similarity_network(
 #   object = enriched_functional_module,
 #   level = "functional_module",
-#   database = "go",
-#   degree_cutoff = 1,
-#   module_id = "Functional_module_53",
-#   text_all = TRUE
+#   degree_cutoff = 5,
+#   text_all = FALSE
 # )
 #
 # GSEA result
