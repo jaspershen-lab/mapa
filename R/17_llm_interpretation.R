@@ -1,139 +1,134 @@
-# setwd(r4projects::get_project_wd())
-# source("R/8_functional_module_class.R")
-# source("R/6_utils.R")
-# setwd("demo_data/")
-# library(clusterProfiler)
-# library(org.Hs.eg.db)
-# library(ReactomePA)
-# library(igraph)
-#
-# load("result/enriched_functional_module")
-#
-# object <-
-#   enriched_functional_module
-#
-# interpretation_result <-
-#   interpret_pathways(
-#     object = object,
-#     p.adjust.cutoff = 0.05,
-#     disease = "pregnancy",
-#     count.cutoff = 5,
-#     top_n = 3
-#   )
-#
-# save(interpretation_result,
-#      file = "interpretation_result.rda")
+# source("llm_modules/pathway_infor.R")
+# source("llm_modules/online_retrieval.R")
+# source("llm_modules/embedding_database.R")
+# source("llm_modules/RAG_strategy.R")
+# source("llm_modules/utils.R")
+# source('llm_modules/output_generation.R')
 
-#' Interpret Pathways in Functional Modules
+#' Interpret Functional Module using LLM Integrated with RAG Strategy
 #'
-#' This function interprets the pathways in functional modules, particularly focused on a specific disease.
-#' It filters and arranges functional modules based on p-value adjustment and count cutoffs,
-#' then retrieves and formats information about the top pathways related to the disease.
+#' @description This function processes functional module results by retrieving
+#' relevant papers using a Retrieval-Augmented Generation (RAG) strategy. It includes pathway
+#' description extraction, PubMed searching, embedding of search results, and retrieving
+#' related papers with ranking. Finally, input the functional module information and
+#' abstract and title of retrieved and filtered papers into LLM to generate a name and a summary
+#' for each functional module.
 #'
-#' @param object An object of class "functional_module". This object contains the functional module data that needs to be interpreted.
-#' @param disease A character string specifying the disease to focus on. Default is "pregnancy".
-#' @param p.adjust.cutoff A numeric value representing the p-value adjustment cutoff for filtering functional modules. Default is 0.05.
-#' @param count.cutoff A numeric value representing the count cutoff for filtering functional modules. Default is 5.
-#' @param top_n An integer indicating the number of top pathways to return. Default is 3.
+#' @param object A functional_module class object.
+#' @param api_key Character string. API key for OpenAI or other embedding service. (Currently, only API key for OpenAI can be used)
+#' @param embedding_output_dir Character string. Directory where embedding results will be saved.
+#' @param local_corpus Logical. Whether to use local files. Default is FALSE.
+#' @param local_corpus_dir Character string. Directory containing local files provided by users.
+#'   Required if local_corpus is TRUE.
+#' @param save_dir_local_corpus_embed Character string. Directory to save embedded local corpus.
+#'   Required if local_corpus is TRUE.
+#' @param chunk_size Integer. Chunk size for processing data. Default is 5.
+#' @param years Integer. Number of recent years to search in PubMed. Default is 5.
+#' @param retmax Integer. Maximum number of records to return from PubMed. Default is 20.
+#' @param similarity_filter_num Integer. Number of papers to filter based on similarity. Default is 10.
+#' @param GPT_filter_num Integer. Number of papers to filter using GPT. Default is 5.
+#' @param orgdb Object. Organism database for gene annotation, default is org.Hs.eg.db. Only used for gene enrichment results.
 #'
-#' @return A character string or list containing the interpreted pathway information. If no enriched functional modules are found,
-#' a message is returned indicating that no enriched functional modules are found and suggesting different cutoffs.
+#' @return A list containing the final results with module names and study summaries.
 #'
-#' @importFrom dplyr filter arrange
-#' @importFrom stringr str_split
+#' @importFrom methods is
+#' @importFrom dplyr filter mutate
+#' @import org.Hs.eg.db
+#'
+#' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
+#'
 #' @export
 
-interpret_pathways <-
-  function(object,
-           disease = "pregnancy",
-           p.adjust.cutoff = 0.05,
-           count.cutoff = 5,
-           top_n = 3) {
-    ###check object and variable_info
-    if (!is(object, "functional_module")) {
-      stop("object should be functional_module class")
-    }
+interpret_functional_module <- function(object,
+                                        api_key,
+                                        embedding_output_dir,
+                                        local_corpus = FALSE,
+                                        local_corpus_dir = NULL,
+                                        save_dir_local_corpus_embed = NULL,
+                                        chunk_size = 5,
+                                        years = 5,
+                                        retmax = 10,
+                                        similarity_filter_num = 20,
+                                        GPT_filter_num = 5,
+                                        orgdb = org.Hs.eg.db) {
 
-    enriched_functional_module <-
-      object@merged_module$functional_module_result
-
-    if (is.null(enriched_functional_module)) {
-      enriched_functional_module <-
-        data.frame()
-    }
-
-    enriched_functional_module <-
-      enriched_functional_module %>%
-      dplyr::filter(p.adjust < p.adjust.cutoff,
-                    Count >= count.cutoff) %>%
-      dplyr::arrange(p.adjust) %>%
-      head(top_n)
-
-    if (nrow(enriched_functional_module) == 0) {
-      return(
-        "No enriched functional modules are found. Please try different p.adjust.cutoff and count.cutoff."
-      )
-    }
-
-    functions_list <-
-      vector(mode = "list",
-             length = nrow(enriched_functional_module))
-
-    names(functions_list) <-
-      enriched_functional_module$module
-
-    for (idx in seq_len(nrow(enriched_functional_module))) {
-      message("Module: ", enriched_functional_module$module[idx], "\n")
-      pathway_names <-
-        enriched_functional_module$Description[idx] %>%
-        stringr::str_split(";") %>%
-        `[[`(1)
-
-      pathway_ids <-
-        enriched_functional_module$pathway_id[idx] %>%
-        stringr::str_split(";") %>%
-        `[[`(1)
-
-      pathway_info <-
-        paste0(pathway_names,
-               " (ID is: ",
-               pathway_ids,
-               ")") %>%
-        paste0(collapse = "; ")
-
-      functions <-
-        request_chatgpt_response(
-          prompt = paste0(
-            "I am interested in understanding the role of these pathways: ",
-            pathway_info,
-            ", in relation to ",
-            disease,
-            ".\nHere are my requirements for the response:",
-            "\n1. Present the findings in markdown format.",
-            "\n2. Organize the information in a list format, but please avoid using markdown headings.",
-            "\n3. Give the response directly, don't say anything else.",
-            "\n4. The response should be simple, conise, and easy to understand, no more than 300 words, and at least 100 words.",
-            "\n5. Include references for the information provided.
-            The references should be formatted similarly to those in Nature Journal and should be listed at the end of the response.",
-            "\n6. In case there is a lack of published papers directly linking this pathway to ",
-            disease,
-            " I would appreciate an informed hypothesis based on the known functions of the pathway."
-          )
-        )
-
-      functions_list[[idx]] <-
-        functions
-    }
-
-    message("Done.")
-
-    for (idx in seq_along(functions_list)) {
-      functions_list[[idx]] <-
-        paste0("## ", names(functions_list)[idx], "\n\n", functions_list[[idx]])
-    }
-
-    functions_list <-
-      paste(functions_list, collapse = "\n\n")
-
-    return(functions_list)
+  # 1. Collect functional module result
+  if (!is(object, "functional_module")) {
+    stop("object should be functional_module class")
   }
+  if (all(names(object@process_info) != "merge_modules")) {
+    stop("Please use the merge_modules() function to process first")
+  }
+  functional_module_result <- object@merged_module$functional_module_result
+
+  # Check if local corpus parameters are provided when local_corpus is TRUE
+  if (local_corpus) {
+    if (is.null(local_corpus_dir) || is.null(save_dir_local_corpus_embed)) {
+      stop("When local_corpus is TRUE, both local_corpus_dir and save_dir_local_corpus_embed must be provided")
+    }
+  }
+
+  # 2. Create vector database for local corpus uploaded by user
+  clear_output_dir(output_dir = embedding_output_dir) # Clear output directory
+
+  if (local_corpus) {
+    embedding_local_corpus(api_key = api_key,
+                           local_corpus_dir = local_corpus_dir,
+                           embedding_output_dir = embedding_output_dir,
+                           save_dir_local_corpus_embed = save_dir_local_corpus_embed)
+  }
+
+  # 3. Extract pathway description, molecule name, and pmid of references
+  processed_data <- preprocess_module(df = functional_module_result,
+                                      orgdb = orgdb)
+
+  # 4. Retrieve PubMedIDs of related articles
+  pubmed_result <- pubmed_search(processed_data = processed_data,
+                                 chunk_size = chunk_size,
+                                 years = years,
+                                 retmax = retmax)
+
+  # Reference paper PMID save to PubmedIDs
+  for (module in names(pubmed_result)) {
+    # Extract PathwayReferencePMID
+    pmids <- pubmed_result[[module]][["PathwayReferencePMID"]]
+
+    # Ensure pmids exists, and remove empty strings
+    if (!is.null(pmids)) {
+      pmids <- pmids[pmids != "" & !is.na(pmids)]
+
+      # If PubmedIDs already exists, then merge, otherwise create
+      if (!is.null(pubmed_result[[module]][["PubmedIDs"]])) {
+        pubmed_result[[module]][["PubmedIDs"]] <- unique(c(pubmed_result[[module]][["PubmedIDs"]], pmids))
+      } else {
+        pubmed_result[[module]][["PubmedIDs"]] <- pmids
+      }
+    }
+  }
+
+  # 5. Save search results for each module as CSV.GZ files using embedding database
+  embedding_pubmed_search(pubmed_result = pubmed_result,
+                          api_key = api_key,
+                          embedding_output_dir = embedding_output_dir)
+
+  # 6. Retrieve and rank related papers using RAG strategy
+  related_paper <- retrieve_strategy(pubmed_result = pubmed_result,
+                                     api_key = api_key,
+                                     similarity_filter_num = similarity_filter_num,
+                                     GPT_filter_num = GPT_filter_num,
+                                     local_corpus = local_corpus,
+                                     embedding_output_dir = embedding_output_dir,
+                                     save_dir_local_corpus_embed = save_dir_local_corpus_embed)
+
+  paper_result <- Map(function(x, y) {
+    # Customize operations for each pair of related data
+    return(list(related_paper = x, pubmed_result = y))
+  }, related_paper, pubmed_result)
+
+  # 7. Generate module names and study summaries
+  final_result <- module_name_generation(paper_result = paper_result,
+                                         api_key = api_key)
+
+  return(final_result)
+}

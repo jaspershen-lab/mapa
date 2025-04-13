@@ -112,3 +112,7 @@
 * Added clustering based on biotext embedding similarity calculation.
 * Added cellular component sub-ontology.
 
+# mapa 0.1.29
+
+* Added functional module interpretation.
+

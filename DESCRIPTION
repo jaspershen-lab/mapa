@@ -1,62 +1,59 @@
-Package: mapa
 Type: Package
+Package: mapa
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.1.28
-Date: 2025-03-27
+Version: 0.1.29
+Date: 2025-04-13
 Authors@R: c(
-    person(given = "Xiaotao",
-           family = "Shen",
-           role = c("aut", "cre"),
-           email = "shenxt1990@outlook.com",
+    person("Xiaotao", "Shen", , "shenxt1990@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-9608-9964")),
-        person(given = "Yifei",
-           family = "Ge",
-           role = c("aut", "ctb"))
-           )
-Description: Moudule Annotation for Pathway Analysis Result.
-    This is used for transcriptomics and proteomics data.
+    person("Yifei", "Ge", , "yifeii.ge@outlook.com", role = c("aut", "cre")),
+    person("feifan", "Zhang", , "FEIFAN004@e.ntu.edu.sg", role = c("aut", "cre"))
+  )
+Description: Moudule Annotation for Pathway Analysis Result.  This is used
+    for transcriptomics and proteomics data.
+License: MIT + file LICENSE
 URL: https://github.com/jaspershen/mapa
 BugReports: https://github.com/jaspershen/mapa/issues
 Depends: 
-    R (>= 4.1),
-    massdataset
-License: MIT + file LICENSE
-Encoding: UTF-8
-LazyData: true
-LazyDataCompression: xz
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
-VignetteBuilder: knitr
+    massdataset,
+    R (>= 4.1)
 Imports:
-    KEGGREST,
-    Matrix,
-    ReactomePA,
+    AnnotationDbi,
     cli,
     clusterProfiler,
     crayon,
+    data.table,
     digest,
     dplyr,
     extrafont,
     ggforce,
-    ggraph,
     ggplot2,
+    ggraph,
     ggwordcloud,
     grid,
     httr,
     httr2,
     igraph,
+    jsonlite,
+    KEGGREST,
     magrittr,
-    metpath,
+    Matrix,
     methods,
+    metpath,
     openxlsx,
     org.Hs.eg.db,
     patchwork,
     pbapply,
+    pdftools,
     plyr,
     proxyC,
     purrr,
+    rbioapi,
+    ReactomePA,
+    rentrez,
     rmarkdown,
     rtiktoken,
+    rvest,
     simona,
     simplifyEnrichment,
     stats,
@@ -66,15 +63,22 @@ Imports:
     tidyr,
     utils
 Suggests: 
-    knitr,
-    BiocStyle,
-    RUnit,
     BiocGenerics,
-    tidyverse,
-    testthat (>= 3.0.0),
+    BiocStyle,
     ggplotify,
+    knitr,
+    org.Hs.eg.db,
+    RUnit,
     shiny,
-    org.Hs.eg.db
+    testthat (>= 3.0.0),
+    tidyverse
+VignetteBuilder: 
+    knitr
 Remotes: 
     gitlab::tidymass/massdataset
 Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
