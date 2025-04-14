@@ -20,3 +20,4 @@ _pkgdown.yml
 
 ^.*\.baiduyun\.uploading\.cfg$
 
+^R/17_deprec_llm_interpretation\.R$

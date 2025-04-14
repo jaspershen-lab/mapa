@@ -93,11 +93,13 @@
 
 # mapa 0.1.24
 
-* 1.Fixed bug in `do_gsea()` and `plot_pathway_bar` for GSEA. 2.Added database color to the barplot for `plot_module_info()` when level equals to "functional_module". 3.Added visualization for GSEA result.
+* 1.Fixed bug in `do_gsea()` and `plot_pathway_bar()` for GSEA. 
+* 2.Added database color to the barplot for `plot_module_info()` when level equals to "functional_module". 
+* 3.Added visualization for GSEA result.
 
 # mapa 0.1.25
 
-* Modified `plot_relationship_network` for the visualization for GSEA result.
+* Modified `plot_relationship_network()` for the visualization for GSEA result.
 
 # mapa 0.1.26
 
@@ -105,7 +107,7 @@
 
 # mapa 0.1.27
 
-* Added biotext embedding similarity calculation.
+* New `get_bioembedsim()` supports pathway similarity calculation via embedding.
 
 # mapa 0.1.28
 
@@ -114,5 +116,5 @@
 
 # mapa 0.1.29
 
-* Added functional module interpretation.
+* New `llm_interpret_module()` utilizes LLMs integrated with RAG to annotate functional modules.
 

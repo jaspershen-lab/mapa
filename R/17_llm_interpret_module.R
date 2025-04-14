@@ -1,18 +1,27 @@
-# source("llm_modules/pathway_infor.R")
-# source("llm_modules/online_retrieval.R")
-# source("llm_modules/embedding_database.R")
-# source("llm_modules/RAG_strategy.R")
-# source("llm_modules/utils.R")
-# source('llm_modules/output_generation.R')
+# source("R/17_llm_module_pathway_infor.R")
+# source("R/17_llm_module_online_retrieval.R")
+# source("R/17_llm_module_embedding_database.R")
+# source("R/17_llm_module_RAG_strategy.R")
+# source("R/17_llm_module_utils.R")
+# source('R/17_llm_module_output_generation.R')
+
+# Metabolite
+# functional_module_annotation <-
+#   llm_interpret_module(
+#     object = enriched_functional_module,
+#     api_key = api_key,
+#     embedding_output_dir = "demo_data/pregnancy_data/results/results_biotext/embedding_output/",
+#     local_corpus = FALSE
+#   )
 
 #' Interpret Functional Module using LLM Integrated with RAG Strategy
 #'
 #' @description This function processes functional module results by retrieving
-#' relevant papers using a Retrieval-Augmented Generation (RAG) strategy. It includes pathway
-#' description extraction, PubMed searching, embedding of search results, and retrieving
-#' related papers with ranking. Finally, input the functional module information and
-#' abstract and title of retrieved and filtered papers into LLM to generate a name and a summary
-#' for each functional module.
+#'   relevant papers using a Retrieval-Augmented Generation (RAG) strategy. It includes pathway
+#'   description extraction, PubMed searching, embedding of search results, and retrieving
+#'   related papers with ranking. Finally, input the functional module information and
+#'   abstract and title of retrieved and filtered papers into LLM to generate a name and a summary
+#'   for each functional module.
 #'
 #' @param object A functional_module class object.
 #' @param api_key Character string. API key for OpenAI or other embedding service. (Currently, only API key for OpenAI can be used)
@@ -24,8 +33,8 @@
 #'   Required if local_corpus is TRUE.
 #' @param chunk_size Integer. Chunk size for processing data. Default is 5.
 #' @param years Integer. Number of recent years to search in PubMed. Default is 5.
-#' @param retmax Integer. Maximum number of records to return from PubMed. Default is 20.
-#' @param similarity_filter_num Integer. Number of papers to filter based on similarity. Default is 10.
+#' @param retmax Integer. Maximum number of records to return from PubMed. Default is 10.
+#' @param similarity_filter_num Integer. Number of papers to filter based on similarity. Default is 20.
 #' @param GPT_filter_num Integer. Number of papers to filter using GPT. Default is 5.
 #' @param orgdb Object. Organism database for gene annotation, default is org.Hs.eg.db. Only used for gene enrichment results.
 #'
@@ -40,18 +49,18 @@
 #'
 #' @export
 
-interpret_functional_module <- function(object,
-                                        api_key,
-                                        embedding_output_dir,
-                                        local_corpus = FALSE,
-                                        local_corpus_dir = NULL,
-                                        save_dir_local_corpus_embed = NULL,
-                                        chunk_size = 5,
-                                        years = 5,
-                                        retmax = 10,
-                                        similarity_filter_num = 20,
-                                        GPT_filter_num = 5,
-                                        orgdb = org.Hs.eg.db) {
+llm_interpret_module <- function(object,
+                                 api_key,
+                                 embedding_output_dir,
+                                 local_corpus = FALSE,
+                                 local_corpus_dir = NULL,
+                                 save_dir_local_corpus_embed = NULL,
+                                 chunk_size = 5,
+                                 years = 5,
+                                 retmax = 10,
+                                 similarity_filter_num = 20,
+                                 GPT_filter_num = 5,
+                                 orgdb = org.Hs.eg.db) {
 
   # 1. Collect functional module result
   if (!is(object, "functional_module")) {

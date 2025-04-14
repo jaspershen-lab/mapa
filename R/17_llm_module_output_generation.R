@@ -39,7 +39,7 @@ single_module_generation <- function(module_related_paper,
   }, titles, cleaned_texts)
   combined_texts <- paste(title_text_pairs, collapse = "\n\n")
 
-  prompt_text <- readLines("R/17_llm_interpretation/prompt/prompt.md", warn = FALSE)
+  prompt_text <- readLines("R/17_llm_prompt.md", warn = FALSE)
   prompt_text <- paste(prompt_text, collapse = "\n")
   prompt_text <- gsub("\\{pathway_info\\}", pathway_info, prompt_text)
 

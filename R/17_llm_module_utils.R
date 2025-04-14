@@ -1,27 +1,27 @@
-#This file includes general utils
-library(httr)
-library(httr2)
-library(curl)
-library(jsonlite)
-library(roxygen2)
+# #This file includes general utils
+# library(httr)
+# library(httr2)
+# library(curl)
+# library(jsonlite)
+# library(roxygen2)
 
 #' gpt_api_call: Function for calling GPT model APIs (supports OpenAI and Gemini providers)
 #'
-#' This internal function is designed to interact with GPT-based APIs (such as OpenAI's GPT or a hypothetical Gemini API). 
-#' It handles HTTP requests, retries failed attempts, and parses responses. 
+#' This internal function is designed to interact with GPT-based APIs (such as OpenAI's GPT or a hypothetical Gemini API).
+#' It handles HTTP requests, retries failed attempts, and parses responses.
 #' This function is not intended for direct use by package users.
-#' 
-#' @param messages A list of messages to send to the GPT model, usually representing the conversation history. 
+#'
+#' @param messages A list of messages to send to the GPT model, usually representing the conversation history.
 #'                 Each message should be a list with `role` (e.g., "system", "user", or "assistant") and `content`.
 #' @param api_key A string containing the API key required for authentication.
 #' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
 #' @param max_tokens An integer indicating the maximum number of tokens to generate in the response (default is `1000`).
-#' @param temperature A numeric value between 0 and 1 to control the randomness of the response 
+#' @param temperature A numeric value between 0 and 1 to control the randomness of the response
 #'                    (default is `0.7`, where lower values produce more deterministic results).
 #' @param retry_attempts An integer specifying the maximum number of retry attempts if the API call fails (default is `3`).
 #' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
 #'
-#' @return The generated text from the GPT model if the call is successful. If the call fails after the specified number 
+#' @return The generated text from the GPT model if the call is successful. If the call fails after the specified number
 #'         of retries, the function returns `NULL`.
 #'
 #' @examples
@@ -54,13 +54,13 @@ library(roxygen2)
 #' )
 #' print(gemini_response)
 #'
-#' @note Ensure you have a valid API key and the correct endpoint for your chosen provider. For Gemini, update the URL 
+#' @note Ensure you have a valid API key and the correct endpoint for your chosen provider. For Gemini, update the URL
 #'       in the code if necessary.
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
-#' 
+#'
 #' @keywords internal
-gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", max_tokens = 1000, 
+gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", max_tokens = 1000,
                          temperature = 0.7, retry_attempts = 3, api_provider = "openai") {
   # 根据 API 提供者选择 URL
   api_url <- switch(
@@ -69,7 +69,7 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
     "gemini" = "https://api.gemini.com/v1/chat/completions", # 假设 Gemini 的 URL
     stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
   )
-  
+
   # 构造 HTTP 请求的 body
   request_body <- jsonlite::toJSON(list(
     model = model,
@@ -78,26 +78,26 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
     temperature = temperature,
     n = 1
   ), auto_unbox = TRUE)
-  
+
   # 初始化重试计数
   attempt <- 0
-  
+
   # 循环重试逻辑
   repeat {
     attempt <- attempt + 1
-    
-    
+
+
     # 使用 curl 发送请求
     handle <- curl::new_handle()
-    curl::handle_setopt(handle, 
+    curl::handle_setopt(handle,
                         url = api_url,
                         postfields = request_body,
                         customrequest = "POST",
                         timeout = 100)
-    curl::handle_setheaders(handle, 
+    curl::handle_setheaders(handle,
                             Authorization = paste("Bearer", api_key),
                             `Content-Type` = "application/json")
-    
+
     response <- tryCatch({
       curl::curl_fetch_memory(api_url, handle)
     }, error = function(e) {
@@ -105,9 +105,9 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
       message(paste("Attempt", attempt, "failed with error:", e$message))
       NULL
     })
-    
 
-    
+
+
     # 如果请求失败，判断是否需要重试
     if (is.null(response)) {
       if (attempt >= retry_attempts) {
@@ -116,12 +116,12 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
       }
       next
     }
-    
+
     # 检查 HTTP 响应状态
     if (response$status_code == 200) {
       # 如果成功返回，解析 JSON 内容
       response_content <- jsonlite::fromJSON(rawToChar(response$content))
-      
+
       # 根据不同的 API 提供者解析响应
       gpt_output <- switch(
         api_provider,
@@ -129,13 +129,13 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
         "gemini" = response_content$choices[[1]]$text, # 假设 Gemini 的字段是 "text"
         stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
       )
-      
+
       return(gpt_output)
     } else {
       # 打印错误信息
       message(paste("Attempt", attempt, "failed with status code:", response$status_code,
                     "and message:", rawToChar(response$content)))
-      
+
       # 如果超过最大重试次数，停止执行
       if (attempt >= retry_attempts) {
         warning("Failed to call GPT API after ", retry_attempts, " attempts. Last error status code: ", response$status_code)
@@ -148,8 +148,8 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 
 #' get_embedding: Internal function to retrieve embeddings from an API
 #'
-#' This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI or Gemini). 
-#' It supports error handling, retries, and flexible model configurations. The function returns the embedding 
+#' This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI or Gemini).
+#' It supports error handling, retries, and flexible model configurations. The function returns the embedding
 #' vector for a given input text chunk.
 #'
 #' @param chunk A character string representing the input text for which the embedding is required.
@@ -157,7 +157,7 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 #' @param model_name A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
 #'
-#' @return A numeric vector representing the embedding for the input text. If the API call fails after retries, 
+#' @return A numeric vector representing the embedding for the input text. If the API call fails after retries,
 #'         the function returns `NULL`.
 #'
 #' @examples
@@ -172,11 +172,11 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 #' )
 #' print(embedding)
 #'
-#' @note This function is for internal use only and supports retry logic for API failures. Ensure you have 
+#' @note This function is for internal use only and supports retry logic for API failures. Ensure you have
 #'       valid API credentials and the provider's URL is correctly set.
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
-#' 
+#'
 #' @keywords internal
 get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small", api_provider = "openai") {
   # 根据 API 提供者选择 URL
@@ -186,19 +186,19 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
     "gemini" = "https://api.gemini.com/v1/embeddings",
     stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
   )
-  
+
   # Body specifying model and text
   data <- list(
     model = model_name,  # 可配置的模型名称
     input = chunk        # 输入文本
   )
-  
+
   # 请求嵌入向量
   embedding <- tryCatch(
     expr = {
       # 创建请求对象
       req <- httr2::request(url)
-      
+
       resp <- req %>%
         req_auth_bearer_token(token = api_key) %>%
         req_body_json(data = data) %>%
@@ -208,7 +208,7 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
           after = \(resp) is.null(resp) && resp$status_code != 200  # 重试条件
         ) %>%
         req_perform()
-      
+
       # 提取嵌入向量
       embedding <- resp_body_json(resp)$data[[1]]$embedding   # 解析 JSON 响应
       unlist(embedding)
@@ -218,7 +218,7 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
       NULL
     }
   )
-  
+
   return(embedding)
 }
 
@@ -226,14 +226,14 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
 
 #' Clear the embedding_output directory
 #'
-#' This internal function checks for the existence of a specified directory. 
-#' If the directory exists, it recursively deletes all files and subdirectories within it, 
-#' and then removes the empty directory itself. If the directory does not exist, it provides 
+#' This internal function checks for the existence of a specified directory.
+#' If the directory exists, it recursively deletes all files and subdirectories within it,
+#' and then removes the empty directory itself. If the directory does not exist, it provides
 #' a message indicating so.
 #'
-#' @param output_dir A character string specifying the directory to be checked and cleared. 
-#' 
-#' @return This function does not return a value. It prints a success or failure message 
+#' @param output_dir A character string specifying the directory to be checked and cleared.
+#'
+#' @return This function does not return a value. It prints a success or failure message
 #'         to the console based on whether the directory was found and cleared.
 #'
 #'
@@ -241,7 +241,7 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
 #' # Example usage (not recommended for direct access by users):
 #' clear_output_dir("path/to/embedding_output")
 #'
-#' @note This function is designed for internal use to manage temporary or output files. 
+#' @note This function is designed for internal use to manage temporary or output files.
 #'       Ensure that the specified directory does not contain critical data before clearing.
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}

@@ -30,3 +30,4 @@ This function was adapted from the simplifyEnrichment package (version 1.14.0) b
 \references{
 Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
 }
+\keyword{internal}

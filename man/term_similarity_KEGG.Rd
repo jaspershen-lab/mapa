@@ -30,3 +30,4 @@ This function was adapted from term_similarity__from_KEGG() in the simplifyEnric
 \references{
 Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
 }
+\keyword{internal}

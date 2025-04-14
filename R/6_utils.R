@@ -776,6 +776,7 @@ GO_similarity_internal = function(go_id,
 #'
 #' @return A symmetric matrix
 #'
+#' @keywords internal
 term_similarity_KEGG <- function(term_id,
                                  measure.method = c("jaccard", "dice", "overlap", "kappa")) {
 
@@ -813,6 +814,7 @@ term_similarity_KEGG <- function(term_id,
 #'
 #' @return A symmetric matrix
 #'
+#' @keywords internal
 term_similarity_Reactome <- function(term_id,
                                      measure.method = c("jaccard", "dice", "overlap", "kappa")) {
 
@@ -839,6 +841,7 @@ term_similarity_Reactome <- function(term_id,
 #'
 #' @return A symmetric matrix
 #'
+#' @keywords internal
 
 term_similarity_metabolite <- function(enrichment_result,
                                        measure.method = c("jaccard", "dice", "overlap", "kappa")) {
@@ -1234,7 +1237,6 @@ get_hmdb_pathways <-
 #' @return A character vector of unified IDs in the standard format (Ensembl IDs for genes,
 #'   HMDB IDs for metabolites).
 #'
-#' @keywords internal
 #'
 #' @examples
 #' \dontrun{
@@ -1254,6 +1256,7 @@ get_hmdb_pathways <-
 #' unify_id_internal(metabolite_info, "metabolite", c("HMDB0000001", "C00002"))
 #' }
 #'
+#' @keywords internal
 unify_id_internal <- function(ids = NULL,
                               variable_info = NULL,
                               query_type = c("gene", "metabolite")) {
