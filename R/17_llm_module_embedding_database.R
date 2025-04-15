@@ -437,7 +437,11 @@ embedding_single_module_pubmed_search <- function(module_name, PID_list, api_key
   }
 
   # 提取所有标题和摘要
-  titles <- sapply(abstracts_and_titles_list, function(x) x$title)
+  titles <- sapply(names(abstracts_and_titles_list),
+                   function(x) {
+                     title <- abstracts_and_titles_list[[x]]$title
+                     paste0(title, " (PubMedID:", x, ")")
+                   })
   abstracts <- sapply(abstracts_and_titles_list, function(x) x$abstract)
 
   # 并行处理embeddings生成
