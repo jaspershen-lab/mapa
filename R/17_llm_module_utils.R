@@ -253,12 +253,14 @@ clear_output_dir <- function(output_dir = NULL) {
     # Get all files and subdirectories in the directory
     files <- list.files(output_dir, full.names = TRUE)
 
-    # Recursively delete files and subdirectories
-    unlink(files, recursive = TRUE)
+    if (length(files) != 0) {
+      # Recursively delete files and subdirectories
+      unlink(files, recursive = TRUE)
+      cat("Successfully cleared the directory:", output_dir, "\n")
+    }
 
-    # Delete the empty directory
-    unlink(output_dir, recursive = TRUE)
-    cat("Successfully cleared the directory:", output_dir, "\n")
+    # # Delete the empty directory
+    # unlink(output_dir, recursive = TRUE)
   } else {
     stop("Directory does not exist:", output_dir, "\n")
   }

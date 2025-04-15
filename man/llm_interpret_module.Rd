@@ -11,6 +11,7 @@ llm_interpret_module(
   local_corpus = FALSE,
   local_corpus_dir = NULL,
   save_dir_local_corpus_embed = NULL,
+  phenotype = NULL,
   chunk_size = 5,
   years = 5,
   retmax = 10,
@@ -33,6 +34,8 @@ Required if local_corpus is TRUE.}
 
 \item{save_dir_local_corpus_embed}{Character string. Directory to save embedded local corpus.
 Required if local_corpus is TRUE.}
+
+\item{phenotype}{Character string. Phenotype or disease to focus on. Default is NULL.}
 
 \item{chunk_size}{Integer. Chunk size for processing data. Default is 5.}
 

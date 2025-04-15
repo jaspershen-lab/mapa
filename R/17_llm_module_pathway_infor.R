@@ -59,7 +59,7 @@
 #'   \item Retrieves pathway descriptions and references based on pathway IDs.
 #'   \item Organizes the results into a named list, where each module is represented as an element containing pathway and gene/metabolite information.
 #' }
-#' 
+#'
 #' The function handles both gene and metabolite data differently, based on the columns present in the input data frame.
 #'
 #' @seealso \code{\link[AnnotationDbi]{mapIds}} for gene ID mapping.
@@ -68,23 +68,24 @@
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-preprocess_module <- function(df, 
+preprocess_module <- function(df,
                               orgdb = org.Hs.eg.db  # Annotation database, can be replaced based on species
                               ) {
   if ("geneID" %in% colnames(df)) {
     # functional_module_result for genes
     query_type <- "gene"
-    df <- df %>% 
+    df <- df %>%
       dplyr::rename(queryid = geneID)
     if ("node" %in% colnames(df)) {
-      df <- df %>% 
+      df <- df %>%
         dplyr::rename(pathway_id = node)
     }
   } else if ("mapped_id" %in% colnames(df)) {
     # functional_module_result for metabolites
     query_type <- "metabolite"
-    df <- df %>% 
-      dplyr::rename(queryid = mapped_id)
+    df <- df %>%
+      dplyr::rename(queryid = mapped_id) %>%
+      dplyr::rename(pathway_id = node)
   }
 
   required_cols <- c("Description", "queryid", "module", "pathway_id")
@@ -92,20 +93,20 @@ preprocess_module <- function(df,
   if (length(missing_cols) > 0) {
     stop(paste("Data frame is missing the following columns:", paste(missing_cols, collapse = ", ")))
   }
-  
+
   result_list <- list()
-  
+
   for (i in seq_len(nrow(df))) {
     # Collect module information
     pthName_raw <- df$Description[i]
     qID_raw <- df$queryid[i]
     mod_raw  <- df$module[i]
     pthID_raw <- df$pathway_id[i]
-    
+
     pthName_vec <- unlist(strsplit(pthName_raw, ";"))
     pthID_vec <- unlist(strsplit(pthID_raw, ";"))
     qIDs_vec <- unlist(strsplit(qID_raw, "/"))
-    
+
     pthName_vec <- trimws(pthName_vec)
     qIDs_vec <- trimws(qIDs_vec)
     pthID_vec <- trimws(pthID_vec)
@@ -116,7 +117,7 @@ preprocess_module <- function(df,
       pathway_info <- get_pathway_and_gene_info(pthID_vec)
       pathwayDescription_vec <- pathway_info$pathwayDescription_vec
       pathwayReferencePMID_vec <- pathway_info$PMID_vec
-      
+
       ##这是返回pathway里所有的gene，由于结果太多废弃了
       # GeneIDs_vec <- pathway_info$annotated_entrez_vec
       # GeneSymbols_vec <- pathway_info$annotated_symbol_vec  # 获取标准基因符号
@@ -127,7 +128,7 @@ preprocess_module <- function(df,
       # GeneNames_vec <- gene_conversion$GeneNames_vec
       suppressMessages(GeneSymbols_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first") %>% unname())
       suppressMessages(GeneNames_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "GENENAME", keytype = "ENSEMBL", multiVals = "first") %>% unname())
-      
+
       result_list[[mod_raw]] <- list(
         PathwayNames = pthName_vec,
         PathwayDescription = pathwayDescription_vec,
@@ -136,7 +137,7 @@ preprocess_module <- function(df,
         GeneSymbols = unique(GeneSymbols_vec),
         GeneNames_vec = unique(GeneNames_vec)
       )
-      
+
       # if (mod_raw %in% names(result_list)) {
       #   result_list[[mod_raw]]$PathwayNames <- c(result_list[[mod_raw]]$PathwayNames, pthName_vec)
       #   result_list[[mod_raw]]$PathwayDescription <- c(result_list[[mod_raw]]$PathwayDescription, pathwayDescription_vec)
@@ -150,12 +151,12 @@ preprocess_module <- function(df,
       pathway_info <- get_pathway_and_metabolite_info(pthID_vec)
       pathwayDescription_vec = pathway_info$pathwayDescription_vec
       pathwayReferencePMID_vec = pathway_info$PMID_vec
-      
-      MetNames_vec <- 
-        metpath::hmdb_compound_database@spectra.info %>% 
-        dplyr::filter(HMDB.ID %in% MetIDs_vec) %>% 
+
+      MetNames_vec <-
+        metpath::hmdb_compound_database@spectra.info %>%
+        dplyr::filter(HMDB.ID %in% MetIDs_vec) %>%
         dplyr::pull(Compound.name)
-      
+
       result_list[[mod_raw]] <- list(
         PathwayNames = pthName_vec,
         PathwayDescription = pathwayDescription_vec,
@@ -175,7 +176,7 @@ preprocess_module <- function(df,
 #' (GO, KEGG, Reactome) based on provided pathway IDs.
 #'
 #' @param pathwayID_vec A character vector of pathway IDs. IDs should follow the format conventions
-#'        of their respective databases: GO IDs should start with "GO:", KEGG IDs should match the 
+#'        of their respective databases: GO IDs should start with "GO:", KEGG IDs should match the
 #'        pattern "hsa\\d+", and Reactome IDs should match the pattern "R-HSA-\\d+".
 #'
 #' @return A list containing the following components:
@@ -189,16 +190,16 @@ preprocess_module <- function(df,
 #' # Get information for a mix of GO, KEGG, and Reactome pathways
 #' pathway_ids <- c("GO:0006915", "hsa04210", "R-HSA-109581")
 #' pathway_info <- get_pathway_and_gene_info(pathway_ids)
-#' 
+#'
 #' # Access pathway descriptions
 #' print(pathway_info$pathwayDescription_vec)
-#' 
+#'
 #' # Access reference PMIDs
 #' print(pathway_info$PMID_vec)
 #' }
-#' 
+#'
 #' @details
-#' This function identifies the database source of each pathway ID and calls the appropriate 
+#' This function identifies the database source of each pathway ID and calls the appropriate
 #' specialized function to retrieve information:
 #' \itemize{
 #'   \item GO pathway information is retrieved using \code{get_go_term_info}.
@@ -216,14 +217,14 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
   go_ids <- pathwayID_vec[grepl("^GO:", pathwayID_vec)]
   kegg_ids <- pathwayID_vec[grepl("^hsa\\d+$", pathwayID_vec)]
   reactome_ids <- pathwayID_vec[grepl("^R-HSA-\\d+$", pathwayID_vec)]
-  
+
   # Initialize the structure of retrieved data
   pathwayDescription_vec <- c()
   PMID_vec <- c()
   # annotated_entrez_vec <- c()
   # annotated_symbol_vec <- c()
   # annotated_queryname_vec <- c()
-  
+
   # Retrieve GO info
   if (length(go_ids) > 0) {
     go_info <- get_go_term_info(go_ids)
@@ -235,7 +236,7 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
       # annotated_queryname_vec <- c(annotated_queryname_vec, x$annotated_genename)
     }
   }
-  
+
   # Retrieve KEGG info
   if (length(kegg_ids) > 0) {
     kegg_info <- get_kegg_info(kegg_ids)
@@ -247,7 +248,7 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
       # annotated_queryname_vec <- c(annotated_queryname_vec, x$annotated_genename)
     }
   }
-  
+
   # Retrieve Reactome info
   if (length(reactome_ids) > 0) {
     reactome_info <- get_reactome_info(reactome_ids)
@@ -259,14 +260,14 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
       # annotated_queryname_vec <- c(annotated_queryname_vec, x$annotated_genename)
     }
   }
-  
+
   # **返回所有合并后的向量**
   return(list(
-    pathwayDescription_vec = pathwayDescription_vec,  
-    PMID_vec = PMID_vec 
-    # annotated_entrez_vec = annotated_entrez_vec,  
-    # annotated_symbol_vec = annotated_symbol_vec,  
-    # annotated_queryname_vec = annotated_queryname_vec  
+    pathwayDescription_vec = pathwayDescription_vec,
+    PMID_vec = PMID_vec
+    # annotated_entrez_vec = annotated_entrez_vec,
+    # annotated_symbol_vec = annotated_symbol_vec,
+    # annotated_queryname_vec = annotated_queryname_vec
   ))
 }
 
@@ -276,7 +277,7 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
 #' (KEGG, SMPDB) based on provided pathway IDs.
 #'
 #' @param pathwayID_vec A character vector of pathway IDs. IDs should follow the format conventions
-#'        of their respective databases: KEGG IDs should match the pattern "hsa\\d+", and SMPDB IDs 
+#'        of their respective databases: KEGG IDs should match the pattern "hsa\\d+", and SMPDB IDs
 #'        should match the pattern "SMP\\d+".
 #'
 #' @return A list containing the following components:
@@ -290,16 +291,16 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
 #' # Get information for a mix of KEGG and SMPDB pathways
 #' pathway_ids <- c("hsa00010", "SMP00001")
 #' pathway_info <- get_pathway_and_metabolite_info(pathway_ids)
-#' 
+#'
 #' # Access pathway descriptions
 #' print(pathway_info$pathwayDescription_vec)
-#' 
+#'
 #' # Access reference PMIDs
 #' print(pathway_info$PMID_vec)
 #' }
-#' 
+#'
 #' @details
-#' This function identifies the database source of each pathway ID and calls the appropriate 
+#' This function identifies the database source of each pathway ID and calls the appropriate
 #' specialized function to retrieve information:
 #' \itemize{
 #'   \item KEGG pathway information is retrieved using \code{get_metkegg_info}.
@@ -315,11 +316,11 @@ get_pathway_and_metabolite_info <- function(pathwayID_vec) {
   # Identify different types of pathway ID
   kegg_ids <- pathwayID_vec[grepl("^hsa\\d+$", pathwayID_vec)]
   smpdb_ids <- pathwayID_vec[grepl("^SMP\\d+$", pathwayID_vec)]
-  
+
   # Initialize the structure of retrieved data
   pathwayDescription_vec <- c()
   PMID_vec <- c()
-  
+
   # Retrieve KEGG info
   if (length(kegg_ids) > 0) {
     metkegg_info <- get_metkegg_info(kegg_ids)
@@ -328,7 +329,7 @@ get_pathway_and_metabolite_info <- function(pathwayID_vec) {
       PMID_vec <- c(PMID_vec, x$PMID)
     }
   }
-  
+
   # Retrieve SMPDB info
   if (length(smpdb_ids) > 0) {
     smpdb_info <- get_smpdb_info(smpdb_ids)
@@ -337,10 +338,10 @@ get_pathway_and_metabolite_info <- function(pathwayID_vec) {
       PMID_vec <- c(PMID_vec, x$PMID)
     }
   }
-  
+
   # **返回所有合并后的向量**
   return(list(
-    pathwayDescription_vec = pathwayDescription_vec,  
+    pathwayDescription_vec = pathwayDescription_vec,
     PMID_vec = PMID_vec
   ))
 }
@@ -349,7 +350,7 @@ get_pathway_and_metabolite_info <- function(pathwayID_vec) {
 # convert_gene_identifiers <- function(gene_vec, orgdb) {
 #   gene_symbols <- c()
 #   gene_descriptions <- c()
-# 
+#
 #   for (gene in gene_vec) {
 #     if (grepl("^ENSG", gene)) {  # ENSG00000163513 -> ENSEMBL
 #       symbol <- mapIds(orgdb, keys = gene, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first")
@@ -364,11 +365,11 @@ get_pathway_and_metabolite_info <- function(pathwayID_vec) {
 #       symbol <- gene
 #       description <- gene
 #     }
-# 
+#
 #     gene_symbols <- c(gene_symbols, ifelse(is.na(symbol), gene, symbol))
 #     gene_descriptions <- c(gene_descriptions, ifelse(is.na(description), gene, description))
 #   }
-# 
+#
 #   return(list(GeneSymbols_vec = gene_symbols, GeneDescriptions_vec = gene_descriptions))
 # }
 

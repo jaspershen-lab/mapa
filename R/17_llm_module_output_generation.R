@@ -10,6 +10,7 @@
 #'
 #' @param module_related_paper A list of related papers with titles and cleaned texts for the module.
 #' @param module_info A list containing pathway names and gene symbols relevant to the module.
+#' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
 #' @param api_key A string containing the API key required to access the AI API.
 #'
 #' @return A list containing two elements: \code{module_name} (the generated biological module name)
@@ -23,6 +24,7 @@
 # Generate a biological module name and research summary using GPT
 single_module_generation <- function(module_related_paper,
                                      module_info,
+                                     phenotype = NULL,
                                      api_key) {
   pathway_info <- paste(module_info[["PathwayNames"]], "(", module_info[["PathwayDescription"]], ")", collapse = "; ")
   if ("GeneNames_vec" %in% names(module_info)) {
@@ -39,7 +41,13 @@ single_module_generation <- function(module_related_paper,
   }, titles, cleaned_texts)
   combined_texts <- paste(title_text_pairs, collapse = "\n\n")
 
-  prompt_text <- readLines("R/17_llm_prompt.md", warn = FALSE)
+  if (is.null(phenotype)) {
+    prompt_text <- readLines("R/17_llm_prompt.md", warn = FALSE)
+  } else {
+    prompt_text <- readLines("R/17_llm_prompt with_phenotype.md", warn = FALSE)
+    prompt_text <- gsub("\\{phenotype\\}", phenotype, prompt_text)
+  }
+
   prompt_text <- paste(prompt_text, collapse = "\n")
   prompt_text <- gsub("\\{pathway_info\\}", pathway_info, prompt_text)
 
@@ -53,7 +61,11 @@ single_module_generation <- function(module_related_paper,
     prompt_text <- gsub("\\{query_product\\}", "compound", prompt_text)
   }
 
-  prompt_text <- gsub("\\{combined_texts\\}", combined_texts, prompt_text)
+  if (nchar(combined_texts) == 0) {
+    prompt_text <- gsub("Below are related articles: \\{combined_texts\\}", combined_texts, prompt_text)
+  } else {
+    prompt_text <- gsub("\\{combined_texts\\}", combined_texts, prompt_text)
+  }
 
   messages <- list(
     list(role = "system", content = "You are an efficient and insightful assistant to a molecular biologist."),
@@ -80,11 +92,20 @@ single_module_generation <- function(module_related_paper,
 
   result <- jsonlite::fromJSON(gpt_response)
 
-  return(list(
-    module_name = result$module_name,
-    summary = result$summary,
-    confidence_score = result$confidence_score
-  ))
+  if (is.null(phenotype)) {
+    return(list(
+      module_name = result$module_name,
+      summary = result$summary,
+      confidence_score = result$confidence_score
+    ))
+  } else {
+    return(list(
+      module_name = result$module_name,
+      summary = result$summary,
+      phenotype_analysis = result$phenotype_analysis,
+      confidence_score = result$confidence_score
+    ))
+  }
 }
 
 check_json_format <- function(response) {
@@ -130,6 +151,7 @@ modify_prompt_for_format <- function(messages) {
 #' and summaries for all modules by calling \code{single_module_generation}.
 #'
 #' @param paper_result A list containing module information, including related papers and PubMed results.
+#' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
 #' @param api_key A string containing the API key required to access the AI API.
 #'
 #' @return A list of results for each module, where each element is a list containing
@@ -144,7 +166,9 @@ modify_prompt_for_format <- function(messages) {
 #' @keywords internal
 
 # Generate final module names and summaries for all modules
-module_name_generation <- function(paper_result, api_key) {
+module_name_generation <- function(paper_result,
+                                   phenotype = NULL,
+                                   api_key) {
   for (module_index in seq_along(paper_result)) {
     module_list <- paper_result[[module_index]]
 
@@ -153,6 +177,7 @@ module_name_generation <- function(paper_result, api_key) {
 
     final_result <- single_module_generation(module_related_paper = module_related_paper,
                                              module_info = module_info,
+                                             phenotype = phenotype,
                                              api_key = api_key)
 
     # 将结果直接存入 paper_result

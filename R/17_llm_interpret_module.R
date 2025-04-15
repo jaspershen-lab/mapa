@@ -9,8 +9,18 @@
 # functional_module_annotation <-
 #   llm_interpret_module(
 #     object = enriched_functional_module,
+#     phenotype = "pregnancy",
 #     api_key = api_key,
 #     embedding_output_dir = "demo_data/pregnancy_data/results/results_biotext/embedding_output/",
+#     local_corpus = FALSE
+#   )
+
+# Gene
+# functional_module_annotation <-
+#   llm_interpret_module(
+#     object = enriched_functional_module,
+#     api_key = api_key,
+#     embedding_output_dir = "demo_data/updated_object_results_for_genes/gene_overlap_result/embedding_output/",
 #     local_corpus = FALSE
 #   )
 
@@ -31,6 +41,7 @@
 #'   Required if local_corpus is TRUE.
 #' @param save_dir_local_corpus_embed Character string. Directory to save embedded local corpus.
 #'   Required if local_corpus is TRUE.
+#' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
 #' @param chunk_size Integer. Chunk size for processing data. Default is 5.
 #' @param years Integer. Number of recent years to search in PubMed. Default is 5.
 #' @param retmax Integer. Maximum number of records to return from PubMed. Default is 10.
@@ -55,6 +66,7 @@ llm_interpret_module <- function(object,
                                  local_corpus = FALSE,
                                  local_corpus_dir = NULL,
                                  save_dir_local_corpus_embed = NULL,
+                                 phenotype = NULL,
                                  chunk_size = 5,
                                  years = 5,
                                  retmax = 10,
@@ -137,6 +149,7 @@ llm_interpret_module <- function(object,
 
   # 7. Generate module names and study summaries
   final_result <- module_name_generation(paper_result = paper_result,
+                                         phenotype = phenotype,
                                          api_key = api_key)
 
   return(final_result)

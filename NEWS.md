@@ -118,3 +118,7 @@
 
 * New `llm_interpret_module()` utilizes LLMs integrated with RAG to annotate functional modules.
 
+# mapa 0.1.30
+
+* Allow analysis of the association between functional modules and specified phenotype using LLM.
+

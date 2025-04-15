@@ -4,12 +4,19 @@
 \alias{single_module_generation}
 \title{Single Module Generation}
 \usage{
-single_module_generation(module_related_paper, module_info, api_key)
+single_module_generation(
+  module_related_paper,
+  module_info,
+  phenotype = NULL,
+  api_key
+)
 }
 \arguments{
 \item{module_related_paper}{A list of related papers with titles and cleaned texts for the module.}
 
 \item{module_info}{A list containing pathway names and gene symbols relevant to the module.}
+
+\item{phenotype}{Character string. Phenotype or disease to focus on. Default is NULL.}
 
 \item{api_key}{A string containing the API key required to access the AI API.}
 }

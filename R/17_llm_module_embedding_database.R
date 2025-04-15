@@ -365,7 +365,9 @@ embedding_pubmed_search <- function(pubmed_result, api_key, embedding_output_dir
     PID_list <- module$PubmedIDs
     cat(sprintf("Processing module: %s\n", module_name))
     cat(sprintf("Including PID number: %s\n", length(PID_list)))
-    embedding_single_module_pubmed_search(module_name, PID_list,api_key, embedding_output_dir)
+    if (length(PID_list) != 0) {
+      embedding_single_module_pubmed_search(module_name, PID_list,api_key, embedding_output_dir)
+    }
   }
 }
 
