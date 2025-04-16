@@ -117,6 +117,7 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #' @param module_list A list or data frame containing module information with at least:
 #'   \code{PathwayNames} (character vector) and one of \code{GeneNames_vec} or \code{MetNames_vec}
 #'   (character vectors defining molecules of interest).
+#' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding generation service.
 #'
 #' @return A numeric vector representing the generated embedding for the module.
@@ -125,7 +126,7 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #'
 #' @keywords internal
 #基于pathway和gene为module生成embedding
-get_module_embedding <- function(module_list, api_key){
+get_module_embedding <- function(module_list, api_key, embedding_model = "text-embedding-3-small"){
   if ("GeneNames_vec" %in% names(module_list)) {
     module_str <- paste0(
       paste(module_list$PathwayNames, collapse = " "),
@@ -140,7 +141,7 @@ get_module_embedding <- function(module_list, api_key){
     )
   }
 
-  get_embedding(module_str, api_key)
+  get_embedding(module_str, api_key, model_name = embedding_model)
 }
 
 
@@ -199,6 +200,7 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #'   \code{PathwayNames} (character vector) and one of \code{GeneNames_vec} or \code{MetNames_vec}
 #'   (character vectors defining molecules of interest).
 #' @param api_key A character string containing the API key for the GPT service.
+#' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
 #'
 #' @return A list of results where each element is a list containing:
 #' \item{relevance_score}{A numeric value between 0 and 1, indicating the relevance of the chunk.}
@@ -230,7 +232,7 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #'   GeneNames_vec = c("Gene1", "Gene2", "Gene3")
 #' )
 #' api_key <- "your_openai_api_key"
-#' results <- GPT_process_chunk(abstracts, module_info, api_key)
+#' results <- GPT_process_chunk(abstracts, module_info, api_key, model)
 #'
 #' # Access the most relevant result
 #' top_result <- results[[1]]
@@ -247,7 +249,7 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-GPT_process_chunk <- function(chunks, module_list, api_key) {
+GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini-2024-07-18") {
   # 初始化结果列表
   reranked_results <- list()
 
@@ -259,90 +261,12 @@ GPT_process_chunk <- function(chunks, module_list, api_key) {
     molecules <- paste(module_list[["MetNames_vec"]], collapse = ", ")
   }
 
-  # 定义验证 JSON 格式的函数
-  check_json_format <- function(response) {
-    tryCatch({
-      result <- jsonlite::fromJSON(response)
-      if (!is.null(result$relevance_score) && !is.null(result$cleaned_text)) {
-        return(TRUE)
-      }
-    }, error = function(e) {
-      return(FALSE)
-    })
-    return(FALSE)
-  }
-
-  # 定义修改格式的逻辑
-  modify_prompt_for_format <- function(original_prompt) {
-    # 将原始 prompt 和附加信息封装为 messages 格式
-    messages <- list(
-      list(role = "system", content = "You are an AI tasked with ensuring responses follow a strict JSON format."),
-      list(role = "user", content = paste0(
-        original_prompt, "\n\n",
-        "If your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
-        "{\n",
-        "  \"relevance_score\": <score>,\n",
-        "  \"cleaned_text\": \"<cleaned text>\"\n",
-        "}"
-      ))
-    )
-
-    return(messages)
-  }
-
-  # 遍历 chunks，调用 GPT API
-  process_chunk <- function(chunk, pathways, molecules, api_key) {
-    # 构建 GPT API 的 prompt
-    messages <- list(
-      list(role = "system", content = "You are an AI tasked with identifying the most relevant and valuable articles for the given module."),
-      list(role = "user", content = paste0(
-        "The module is defined by the following pathways: ", pathways, ". ",
-        "The module also focuses on the following molecules: ", molecules, ". ",
-        "Below is an abstract or chunk of text. Please:\n",
-        "1. Rank its relevance to the module in terms of how well it aligns with the pathways and molecules.\n",
-        "2. Remove unrelated information such as author names, affiliations, and non-relevant metadata.\n",
-        "3. Return the cleaned text and assign it a relevance score (from 0 to 1, where 1 is highly relevant).\n\n",
-        "Text:\n", chunk, "\n\n",
-        "Please respond in the following JSON format:\n",
-        "{\n",
-        "  \"relevance_score\": <score>,\n",
-        "  \"cleaned_text\": \"<cleaned text>\"\n",
-        "}"
-      ))
-    )
-
-
-    # 初次调用 GPT API
-    gpt_response <- gpt_api_call(messages, api_key)
-
-    # 检查格式是否正确
-    if (!check_json_format(gpt_response)) {
-      # 格式不对，重复调用两次
-      gpt_response <- gpt_api_call(messages, api_key)
-      if (!check_json_format(gpt_response)) {
-        # 第二次格式依然不对，再次修改 prompt
-        messages <- modify_prompt_for_format(messages)
-        gpt_response <- gpt_api_call(messages, api_key)
-        if (!check_json_format(gpt_response)) {
-          # 三次调用仍然失败，返回一个固定格式的默认失败结果
-          gpt_response <- '{"relevance_score": 0, "cleaned_text": "Unable to process the request."}'
-        }
-      }
-    }
-
-    # 解析 GPT 返回的 JSON 格式结果
-    result <- jsonlite::fromJSON(gpt_response)
-
-    # 返回解析后的结果
-    return(list(relevance_score = result$relevance_score, cleaned_text = result$cleaned_text))
-  }
-
   # 根据操作系统选择不同的并行处理方式
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(min(detectCores()-1, 10))
 
     # 导出所有必需的变量到集群
-    parallel::clusterExport(cl, c("chunks", "pathways", "molecules", "api_key"),
+    parallel::clusterExport(cl, c("chunks", "pathways", "molecules", "api_key", "model"),
                            envir = environment())
 
     # 导出工具函数
@@ -354,13 +278,13 @@ GPT_process_chunk <- function(chunks, module_list, api_key) {
     parallel::clusterEvalQ(cl, {
       library(jsonlite)
       library(curl)
-      source("R/17_llm_interpretation/modules/utils.R")  # 导入包含 gpt_api_call 的文件
+      source("R/17_llm_module_utils.R")  # 导入包含 gpt_api_call 的文件
     })
 
     # 执行并行处理
     reranked_results <- parallel::parLapply(cl, chunks,
                                           function(chunk) {
-                                            process_chunk(chunk, pathways, molecules, api_key)
+                                            process_chunk(chunk, pathways, molecules, api_key, model = model)
                                           })
     parallel::stopCluster(cl)
   } else {
@@ -368,6 +292,7 @@ GPT_process_chunk <- function(chunks, module_list, api_key) {
                                   pathways = pathways,
                                   molecules = molecules,
                                   api_key = api_key,
+                                  model = model,
                                   mc.cores = detectCores()-1)
   }
 
@@ -375,6 +300,88 @@ GPT_process_chunk <- function(chunks, module_list, api_key) {
   reranked_results <- reranked_results[order(sapply(reranked_results, function(x) x$relevance_score), decreasing = TRUE)]
 
   return(reranked_results)
+}
+
+# 定义验证 JSON 格式的函数
+check_json_format <- function(response) {
+  tryCatch({
+    result <- jsonlite::fromJSON(response)
+    if (!is.null(result$relevance_score) && !is.null(result$cleaned_text)) {
+      return(TRUE)
+    }
+  }, error = function(e) {
+    return(FALSE)
+  })
+  return(FALSE)
+}
+
+# 定义修改格式的逻辑
+modify_prompt_for_format <- function(original_prompt) {
+  # 将原始 prompt 和附加信息封装为 messages 格式
+  messages <- list(
+    list(role = "system", content = "You are an AI tasked with ensuring responses follow a strict JSON format."),
+    list(role = "user", content = paste0(
+      original_prompt, "\n\n",
+      "If your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
+      "{\n",
+      "  \"relevance_score\": <score>,\n",
+      "  \"cleaned_text\": \"<cleaned text>\"\n",
+      "}"
+    ))
+  )
+
+  return(messages)
+}
+
+# 遍历 chunks，调用 GPT API
+process_chunk <- function(chunk,
+                          pathways,
+                          molecules,
+                          api_key,
+                          model = "gpt-4o-mini-2024-07-18") {
+  # 构建 GPT API 的 prompt
+  messages <- list(
+    list(role = "system", content = "You are an AI tasked with identifying the most relevant and valuable articles for the given module."),
+    list(role = "user", content = paste0(
+      "The module is defined by the following pathways: ", pathways, ". ",
+      "The module also focuses on the following molecules: ", molecules, ". ",
+      "Below is an abstract or chunk of text. Please:\n",
+      "1. Rank its relevance to the module in terms of how well it aligns with the pathways and molecules.\n",
+      "2. Remove unrelated information such as author names, affiliations, and non-relevant metadata.\n",
+      "3. Return the cleaned text and assign it a relevance score (from 0 to 1, where 1 is highly relevant).\n\n",
+      "Text:\n", chunk, "\n\n",
+      "Please respond in the following JSON format:\n",
+      "{\n",
+      "  \"relevance_score\": <score>,\n",
+      "  \"cleaned_text\": \"<cleaned text>\"\n",
+      "}"
+    ))
+  )
+
+
+  # 初次调用 GPT API
+  gpt_response <- gpt_api_call(messages, api_key, model = model)
+
+  # 检查格式是否正确
+  if (!check_json_format(gpt_response)) {
+    # 格式不对，重复调用两次
+    gpt_response <- gpt_api_call(messages, api_key, model = model)
+    if (!check_json_format(gpt_response)) {
+      # 第二次格式依然不对，再次修改 prompt
+      messages <- modify_prompt_for_format(messages)
+      gpt_response <- gpt_api_call(messages, api_key, model = model)
+      if (!check_json_format(gpt_response)) {
+        # 三次调用仍然失败，返回一个固定格式的默认失败结果
+        gpt_response <- '{"relevance_score": 0, "cleaned_text": "Unable to process the request."}'
+      }
+    }
+  }
+
+  # 解析 GPT 返回的 JSON 格式结果
+  result <- jsonlite::fromJSON(gpt_response)
+
+  # 返回解析后的结果
+  return(list(relevance_score = result$relevance_score, cleaned_text = result$cleaned_text))
 }
 
 #' Retrieve and Rerank Strategy for Modules
@@ -385,6 +392,8 @@ GPT_process_chunk <- function(chunks, module_list, api_key) {
 #'
 #' @param pubmed_result A named list where each element corresponds to a module,
 #'   containing \code{PathwayNames} and one of \code{GeneNames_vec} or \code{MetNames_vec}.
+#' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
+#' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the GPT service.
 #' @param similarity_filter_num An integer specifying the number of top documents to keep
 #'   after similarity filtering (default is 15).
@@ -431,6 +440,8 @@ GPT_process_chunk <- function(chunks, module_list, api_key) {
 #' @keywords internal
 #对于每个module进行检索，检索后通过GPT进行rerank然后顺便清洗一下
 retrieve_strategy <- function(pubmed_result,
+                              model = "gpt-4o-mini-2024-07-18",
+                              embedding_model = "text-embedding-3-small",
                               api_key,
                               similarity_filter_num = 15,
                               GPT_filter_num = 5,
@@ -457,7 +468,7 @@ retrieve_strategy <- function(pubmed_result,
       final_result <- list()
     } else {
       cat("- Generating module embeddings...\n")
-      module_embedding <- get_module_embedding(module_list,api_key)
+      module_embedding <- get_module_embedding(module_list = module_list, embedding_model = embedding_model, api_key = api_key)
 
       cat("- Reading and calculating PubMed similarity...\n")
       pubmed_embeddings <- read_embeddings(save_dir = file.path(embedding_output_dir, module_name))
@@ -534,7 +545,7 @@ retrieve_strategy <- function(pubmed_result,
       }
 
       cat("- Processing document content using GPT...\n")
-      combined_GPT_result <- GPT_process_chunk(combined_chunks, module_list, api_key)
+      combined_GPT_result <- GPT_process_chunk(combined_chunks, module_list, api_key, model = model)
 
       cat("- Filtering the most relevant results...\n")
       # 筛选 GPT 结果 Top N（由 GPT_filter_num 决定）

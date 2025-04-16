@@ -11,6 +11,7 @@
 #' @param module_related_paper A list of related papers with titles and cleaned texts for the module.
 #' @param module_info A list containing pathway names and gene symbols relevant to the module.
 #' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
+#' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
 #'
 #' @return A list containing two elements: \code{module_name} (the generated biological module name)
@@ -25,6 +26,7 @@
 single_module_generation <- function(module_related_paper,
                                      module_info,
                                      phenotype = NULL,
+                                     model = "gpt-4o-mini-2024-07-18",
                                      api_key) {
   pathway_info <- paste(module_info[["PathwayNames"]], "(", module_info[["PathwayDescription"]], ")", collapse = "; ")
   if ("GeneNames_vec" %in% names(module_info)) {
@@ -76,13 +78,13 @@ single_module_generation <- function(module_related_paper,
   )
 
 
-  gpt_response <- gpt_api_call(messages, api_key)
+  gpt_response <- gpt_api_call(messages, api_key, model = model)
 
   if (!check_json_format(gpt_response)) {
-    gpt_response <- gpt_api_call(messages, api_key)
+    gpt_response <- gpt_api_call(messages, api_key, model = model)
     if (!check_json_format(gpt_response)) {
       prompt <- modify_prompt_for_format(messages)
-      gpt_response <- gpt_api_call(prompt, api_key)
+      gpt_response <- gpt_api_call(prompt, api_key, model = model)
       if (!check_json_format(gpt_response)) {
         print(gpt_response)
         gpt_response <- '{"module_name": "Default Module Name", "summary": "Unable to process the request."}'
@@ -152,6 +154,7 @@ modify_prompt_for_format <- function(messages) {
 #'
 #' @param paper_result A list containing module information, including related papers and PubMed results.
 #' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
+#' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
 #'
 #' @return A list of results for each module, where each element is a list containing
@@ -168,6 +171,7 @@ modify_prompt_for_format <- function(messages) {
 # Generate final module names and summaries for all modules
 module_name_generation <- function(paper_result,
                                    phenotype = NULL,
+                                   model = "gpt-4o-mini-2024-07-18",
                                    api_key) {
   for (module_index in seq_along(paper_result)) {
     module_list <- paper_result[[module_index]]
@@ -178,6 +182,7 @@ module_name_generation <- function(paper_result,
     final_result <- single_module_generation(module_related_paper = module_related_paper,
                                              module_info = module_info,
                                              phenotype = phenotype,
+                                             model = model,
                                              api_key = api_key)
 
     # 将结果直接存入 paper_result

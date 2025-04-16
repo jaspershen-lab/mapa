@@ -9,7 +9,8 @@
 # functional_module_annotation <-
 #   llm_interpret_module(
 #     object = enriched_functional_module,
-#     phenotype = "pregnancy",
+#     llm_model = "gpt-4.1-2025-04-14",
+#     embedding_model = "text-embedding-3-small",
 #     api_key = api_key,
 #     embedding_output_dir = "demo_data/pregnancy_data/results/results_biotext/embedding_output/",
 #     local_corpus = FALSE
@@ -34,6 +35,8 @@
 #'   for each functional module.
 #'
 #' @param object A functional_module class object.
+#' @param llm_model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
+#' @param embedding_model A string specifying the embedding model to use. Default is `"text-embedding-3-small"`.
 #' @param api_key Character string. API key for OpenAI or other embedding service. (Currently, only API key for OpenAI can be used)
 #' @param embedding_output_dir Character string. Directory where embedding results will be saved.
 #' @param local_corpus Logical. Whether to use local files. Default is FALSE.
@@ -61,6 +64,8 @@
 #' @export
 
 llm_interpret_module <- function(object,
+                                 llm_model = "gpt-4o-mini-2024-07-18",
+                                 embedding_model = "text-embedding-3-small",
                                  api_key,
                                  embedding_output_dir,
                                  local_corpus = FALSE,
@@ -94,7 +99,8 @@ llm_interpret_module <- function(object,
   clear_output_dir(output_dir = embedding_output_dir) # Clear output directory
 
   if (local_corpus) {
-    embedding_local_corpus(api_key = api_key,
+    embedding_local_corpus(embedding_model = embedding_model,
+                           api_key = api_key,
                            local_corpus_dir = local_corpus_dir,
                            embedding_output_dir = embedding_output_dir,
                            save_dir_local_corpus_embed = save_dir_local_corpus_embed)
@@ -130,11 +136,14 @@ llm_interpret_module <- function(object,
 
   # 5. Save search results for each module as CSV.GZ files using embedding database
   embedding_pubmed_search(pubmed_result = pubmed_result,
+                          embedding_model = embedding_model,
                           api_key = api_key,
                           embedding_output_dir = embedding_output_dir)
 
   # 6. Retrieve and rank related papers using RAG strategy
   related_paper <- retrieve_strategy(pubmed_result = pubmed_result,
+                                     model = llm_model,
+                                     embedding_model = embedding_model,
                                      api_key = api_key,
                                      similarity_filter_num = similarity_filter_num,
                                      GPT_filter_num = GPT_filter_num,
@@ -150,6 +159,7 @@ llm_interpret_module <- function(object,
   # 7. Generate module names and study summaries
   final_result <- module_name_generation(paper_result = paper_result,
                                          phenotype = phenotype,
+                                         model = llm_model,
                                          api_key = api_key)
 
   return(final_result)

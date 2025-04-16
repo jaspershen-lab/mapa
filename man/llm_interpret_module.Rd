@@ -6,6 +6,8 @@
 \usage{
 llm_interpret_module(
   object,
+  llm_model = "gpt-4o-mini-2024-07-18",
+  embedding_model = "text-embedding-3-small",
   api_key,
   embedding_output_dir,
   local_corpus = FALSE,
@@ -22,6 +24,10 @@ llm_interpret_module(
 }
 \arguments{
 \item{object}{A functional_module class object.}
+
+\item{llm_model}{A string specifying the GPT model to use. Default is \code{"gpt-4o-mini-2024-07-18"}.}
+
+\item{embedding_model}{A string specifying the embedding model to use. Default is \code{"text-embedding-3-small"}.}
 
 \item{api_key}{Character string. API key for OpenAI or other embedding service. (Currently, only API key for OpenAI can be used)}
 

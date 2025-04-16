@@ -6,6 +6,8 @@
 \usage{
 retrieve_strategy(
   pubmed_result,
+  model = "gpt-4o-mini-2024-07-18",
+  embedding_model = "text-embedding-3-small",
   api_key,
   similarity_filter_num = 15,
   GPT_filter_num = 5,
@@ -17,6 +19,10 @@ retrieve_strategy(
 \arguments{
 \item{pubmed_result}{A named list where each element corresponds to a module,
 containing \code{PathwayNames} and one of \code{GeneNames_vec} or \code{MetNames_vec}.}
+
+\item{model}{A string specifying the GPT model to use (default is \code{"gpt-4o-mini-2024-07-18"}).}
+
+\item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 
 \item{api_key}{A character string containing the API key for the GPT service.}
 

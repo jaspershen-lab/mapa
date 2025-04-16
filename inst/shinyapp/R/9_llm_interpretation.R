@@ -126,8 +126,27 @@ llm_interpretation_ui <- function(id) {
                 column(8,
                        tabsetPanel(
                          tabPanel(
-                           title = "LLM interpretation results",
-                           uiOutput(ns("llm_interpretation_result")),
+                           title = "Interpretation results",
+                           # uiOutput(ns("llm_interpretation_result")),
+                           selectInput(
+                             inputId = ns("module_selector"),
+                             label = "Select Functional Module:",
+                             choices = NULL,  # we will update this dynamically in the server
+                             selected = NULL
+                           ),
+                           hr(),
+                           h3("Module Information"),
+                           strong("Module Name:"),
+                           textOutput(ns("module_name"), container = span),
+                           br(),
+                           strong("Module Summary:"),
+                           textOutput(ns("module_summary"), container = span),
+                           br(),
+                           strong("Association With Phenotype:"),
+                           textOutput(ns("association_summary"), container = span),
+                           br(),
+                           strong("Confidence Score:"),
+                           textOutput(ns("confidence_score"), container = span),
                            br(),
                            shinyjs::useShinyjs(),
                            downloadButton(ns("download_llm_interpretation_result"),
@@ -136,8 +155,15 @@ llm_interpretation_ui <- function(id) {
                                           style = "background-color: #d83428; color: white;")
                          ),
                          tabPanel(
-                           title = "Functional module table 1",
-                           shiny::dataTableOutput(ns("llm_enriched_functional_modules1"))
+                           title = "Full Prompt",
+                           h3("LLM Prompt Used"),
+                           uiOutput(ns("prompt")),
+                           br(),
+                           shinyjs::useShinyjs(),
+                           downloadButton(ns("download_llm_interpretation_prompt"),
+                                          "Download",
+                                          class = "btn-primary",
+                                          style = "background-color: #d83428; color: white;")
                          )
 
                          # tabPanel(
@@ -154,6 +180,63 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
   moduleServer(
     id,
     function(input, output, session) {
+      ## Section1: Load enriched_functional_module.rda ====
+      observeEvent(
+        input$upload_enriched_functional_module, {
+          if (!is.null(input$upload_enriched_functional_module$datapath)) {
+            message("Loading data")
+            tempEnv <- new.env()
+            load(input$upload_enriched_functional_module$datapath,
+                 envir = tempEnv)
+
+            names <- ls(tempEnv)
+
+            if (length(names) == 1) {
+              enriched_functional_module(get(names[1], envir = tempEnv))
+            } else {
+              message("The .rda file does not contain exactly one object.")
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  "The uploaded file should contain exactly one object.",
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
+                )
+              )
+            }
+          }
+      })
+
+      observeEvent(input$submit_llm_interpretation, {
+        message("Interpreting functional modules in progress. This comprehensive analysis requires some time...")
+        if (is.null(enriched_functional_module())) {
+          # No enriched functional module available
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "No enriched functional module data available. Please complete the previous steps or upload the data",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else {
+          module_names <- enriched_functional_module()@merged_module$functional_module_result$module
+          updateSelectInput(
+            session = session,
+            inputId = "module_selector",
+            choices = module_names
+          )
+          ## Section2: Interpretation ====
+          if (length(input$pathway_database) == 0) {
+            showModal(modalDialog(
+              title = "Warning",
+              "Please select at least one pathway database.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            ))
+          }
+        }})
+
       # Define enriched_functional_module as a reactive value
       llm_interpretation_result <- reactiveVal("")
 

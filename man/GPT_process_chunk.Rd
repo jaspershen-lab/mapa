@@ -4,7 +4,12 @@
 \alias{GPT_process_chunk}
 \title{Process Chunks with GPT for Relevance Scoring and Text Cleaning}
 \usage{
-GPT_process_chunk(chunks, module_list, api_key)
+GPT_process_chunk(
+  chunks,
+  module_list,
+  api_key,
+  model = "gpt-4o-mini-2024-07-18"
+)
 }
 \arguments{
 \item{chunks}{A character vector where each element is a text chunk (e.g., abstracts or articles) to process.}
@@ -14,6 +19,8 @@ GPT_process_chunk(chunks, module_list, api_key)
 (character vectors defining molecules of interest).}
 
 \item{api_key}{A character string containing the API key for the GPT service.}
+
+\item{model}{A string specifying the GPT model to use (default is \code{"gpt-4o-mini-2024-07-18"}).}
 }
 \value{
 A list of results where each element is a list containing:
@@ -51,7 +58,7 @@ module_info <- list(
   GeneNames_vec = c("Gene1", "Gene2", "Gene3")
 )
 api_key <- "your_openai_api_key"
-results <- GPT_process_chunk(abstracts, module_info, api_key)
+results <- GPT_process_chunk(abstracts, module_info, api_key, model)
 
 # Access the most relevant result
 top_result <- results[[1]]

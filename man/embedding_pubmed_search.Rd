@@ -4,11 +4,18 @@
 \alias{embedding_pubmed_search}
 \title{Generate Embeddings for PubMed Search Results Across Multiple Modules}
 \usage{
-embedding_pubmed_search(pubmed_result, api_key, embedding_output_dir)
+embedding_pubmed_search(
+  pubmed_result,
+  embedding_model = "text-embedding-3-small",
+  api_key,
+  embedding_output_dir
+)
 }
 \arguments{
 \item{pubmed_result}{A named list where each element corresponds to a module.
 Each module contains a vector of PubMed IDs under the \code{PubmedIDs} field.}
+
+\item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 
 \item{api_key}{Character string containing the API key for the embedding service.}
 

@@ -14,6 +14,7 @@
 #'
 #' Processes all PDF files in a specified local corpus directory by generating embeddings and saving them to the database.
 #'
+#' @param embedding_model A string specifying the embedding model to use. Default is `"text-embedding-3-small"`.
 #' @param api_key A character string containing the API key for the embedding service.
 #' @param local_corpus_dir A character string specifying the name of the directory where the local files
 #'        provided by users are saved. Defaults to "local_corpus".
@@ -51,7 +52,8 @@
 #'
 #' @keywords internal
 embedding_local_corpus <-
-  function(api_key = NULL,
+  function(embedding_model = "text-embedding-3-small",
+           api_key = NULL,
            local_corpus_dir = "local_corpus",
            embedding_output_dir = "embedding_output",
            save_dir_local_corpus_embed = "local") {
@@ -76,7 +78,7 @@ embedding_local_corpus <-
 
   for (pdf_path in pdf_files) {
     print(paste("Embedding in progress for file:", pdf_path))
-    pdf_embeddings <- embedding_single_pdf(pdf_path, api_key)
+    pdf_embeddings <- embedding_single_pdf(pdf_path, embedding_model = embedding_model, api_key)
     save_embedding(pdf_embeddings, embedding_output_dir = embedding_output_dir, save_dir = save_dir_local_corpus_embed)
   }
 }
@@ -86,6 +88,7 @@ embedding_local_corpus <-
 #' Processes a single PDF file by extracting text, splitting it into manageable chunks, and generating embeddings for each chunk.
 #'
 #' @param pdf_path A character string specifying the path to the PDF file.
+#' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding service.
 #'
 #' @return A data frame containing the following columns:
@@ -118,7 +121,9 @@ embedding_local_corpus <-
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-embedding_single_pdf <- function(pdf_path, api_key){
+embedding_single_pdf <- function(pdf_path,
+                                 embedding_model = "text-embedding-3-small",
+                                 api_key){
   paper_title <- tools::file_path_sans_ext(basename(pdf_path))
   text_pages <- pdftools::pdf_text(pdf_path)
   full_text <- paste(text_pages, collapse = "\n")
@@ -126,21 +131,21 @@ embedding_single_pdf <- function(pdf_path, api_key){
 
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(min(detectCores()-1, 10)) # Creates four clusters
-    parallel::clusterExport(cl, varlist = c("chunks", "api_key", "get_embedding"), envir = environment()) # Export the variables into the global environment of newly created clusters so that they can use them
+    parallel::clusterExport(cl, varlist = c("chunks", "api_key", "embedding_model", "get_embedding"), envir = environment()) # Export the variables into the global environment of newly created clusters so that they can use them
     parallel::clusterEvalQ(cl, {
       library(httr2)
     })
     embeddings <- parallel::parLapply(cl, chunks,
                                       function(chunk) {
                                         Sys.sleep(1)
-                                        embedding <- get_embedding(chunk, api_key)
+                                        embedding <- get_embedding(chunk, api_key, model_name = embedding_model)
                                         return(embedding)
                                       })
     parallel::stopCluster(cl) # Stop the clusters and close the parallel backend.
   } else if (.Platform$OS.type == "unix") {
     embeddings <- pbmclapply(chunks, function(chunk) {
       Sys.sleep(1)
-      embedding <- get_embedding(chunk, api_key)
+      embedding <- get_embedding(chunk, api_key, model_name = embedding_model)
       return(embedding)
     }, mc.cores = detectCores()-1)
   }
@@ -325,6 +330,7 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #'
 #' @param pubmed_result A named list where each element corresponds to a module.
 #'   Each module contains a vector of PubMed IDs under the `PubmedIDs` field.
+#' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
@@ -357,7 +363,7 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #'
 #' @keywords internal
 
-embedding_pubmed_search <- function(pubmed_result, api_key, embedding_output_dir){
+embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embedding-3-small", api_key, embedding_output_dir){
   module_names <- names(pubmed_result)
 
   for (module_name in module_names) {
@@ -366,7 +372,7 @@ embedding_pubmed_search <- function(pubmed_result, api_key, embedding_output_dir
     cat(sprintf("Processing module: %s\n", module_name))
     cat(sprintf("Including PID number: %s\n", length(PID_list)))
     if (length(PID_list) != 0) {
-      embedding_single_module_pubmed_search(module_name, PID_list,api_key, embedding_output_dir)
+      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_key, embedding_output_dir)
     }
   }
 }
@@ -380,6 +386,7 @@ embedding_pubmed_search <- function(pubmed_result, api_key, embedding_output_dir
 #' @param module_name Character string specifying the name of the module (used for
 #'   organizing output files).
 #' @param PID_list Character vector containing PubMed IDs to process.
+#' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
@@ -423,7 +430,11 @@ embedding_pubmed_search <- function(pubmed_result, api_key, embedding_output_dir
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-embedding_single_module_pubmed_search <- function(module_name, PID_list, api_key, embedding_output_dir) {
+embedding_single_module_pubmed_search <- function(module_name,
+                                                  PID_list,
+                                                  embedding_model = "text-embedding-3-small",
+                                                  api_key,
+                                                  embedding_output_dir) {
   # 将PID_list分成每组5个的批次
   batch_size <- 5
   PID_batches <- split(PID_list, ceiling(seq_along(PID_list)/batch_size))
@@ -447,19 +458,19 @@ embedding_single_module_pubmed_search <- function(module_name, PID_list, api_key
   # 并行处理embeddings生成
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(min(parallel::detectCores()-1, 10))
-    parallel::clusterExport(cl, varlist = c("get_embedding", "api_key"))
+    parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model"))
     parallel::clusterEvalQ(cl, {
       library(httr2)
     })
 
     embeddings <- parallel::parLapply(cl, abstracts, function(abstract) {
-      get_embedding(abstract, api_key)
+      get_embedding(abstract, api_key, model_name = embedding_model)
     })
 
     parallel::stopCluster(cl)
   } else {
     embeddings <- pbmclapply(abstracts, function(abstract) {
-      get_embedding(abstract, api_key)
+      get_embedding(abstract, api_key, model_name = embedding_model)
     }, mc.cores = parallel::detectCores() - 1)
   }
 

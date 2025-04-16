@@ -4,10 +4,16 @@
 \alias{embedding_single_pdf}
 \title{Process Single PDF for Embedding}
 \usage{
-embedding_single_pdf(pdf_path, api_key)
+embedding_single_pdf(
+  pdf_path,
+  embedding_model = "text-embedding-3-small",
+  api_key
+)
 }
 \arguments{
 \item{pdf_path}{A character string specifying the path to the PDF file.}
+
+\item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 
 \item{api_key}{A character string containing the API key for the embedding service.}
 }

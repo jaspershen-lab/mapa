@@ -4,7 +4,11 @@
 \alias{get_module_embedding}
 \title{Generate Module Embedding}
 \usage{
-get_module_embedding(module_list, api_key)
+get_module_embedding(
+  module_list,
+  api_key,
+  embedding_model = "text-embedding-3-small"
+)
 }
 \arguments{
 \item{module_list}{A list or data frame containing module information with at least:
@@ -12,6 +16,8 @@ get_module_embedding(module_list, api_key)
 (character vectors defining molecules of interest).}
 
 \item{api_key}{A character string containing the API key for the embedding generation service.}
+
+\item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 }
 \value{
 A numeric vector representing the generated embedding for the module.

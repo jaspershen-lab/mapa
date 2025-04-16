@@ -7,6 +7,7 @@
 embedding_single_module_pubmed_search(
   module_name,
   PID_list,
+  embedding_model = "text-embedding-3-small",
   api_key,
   embedding_output_dir
 )
@@ -16,6 +17,8 @@ embedding_single_module_pubmed_search(
 organizing output files).}
 
 \item{PID_list}{Character vector containing PubMed IDs to process.}
+
+\item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 
 \item{api_key}{Character string containing the API key for the embedding service.}
 

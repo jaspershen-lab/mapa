@@ -8,6 +8,7 @@ single_module_generation(
   module_related_paper,
   module_info,
   phenotype = NULL,
+  model = "gpt-4o-mini-2024-07-18",
   api_key
 )
 }
@@ -17,6 +18,8 @@ single_module_generation(
 \item{module_info}{A list containing pathway names and gene symbols relevant to the module.}
 
 \item{phenotype}{Character string. Phenotype or disease to focus on. Default is NULL.}
+
+\item{model}{A string specifying the GPT model to use. Default is \code{"gpt-4o-mini-2024-07-18"}.}
 
 \item{api_key}{A string containing the API key required to access the AI API.}
 }

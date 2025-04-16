@@ -4,12 +4,19 @@
 \alias{module_name_generation}
 \title{Module Name Generation}
 \usage{
-module_name_generation(paper_result, phenotype = NULL, api_key)
+module_name_generation(
+  paper_result,
+  phenotype = NULL,
+  model = "gpt-4o-mini-2024-07-18",
+  api_key
+)
 }
 \arguments{
 \item{paper_result}{A list containing module information, including related papers and PubMed results.}
 
 \item{phenotype}{Character string. Phenotype or disease to focus on. Default is NULL.}
+
+\item{model}{A string specifying the GPT model to use. Default is \code{"gpt-4o-mini-2024-07-18"}.}
 
 \item{api_key}{A string containing the API key required to access the AI API.}
 }
