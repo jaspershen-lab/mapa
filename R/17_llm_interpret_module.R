@@ -9,7 +9,7 @@
 # functional_module_annotation <-
 #   llm_interpret_module(
 #     object = enriched_functional_module,
-#     llm_model = "gpt-4.1-2025-04-14",
+#     llm_model = "gpt-4o-mini-2024-07-18",
 #     embedding_model = "text-embedding-3-small",
 #     api_key = api_key,
 #     embedding_output_dir = "demo_data/pregnancy_data/results/results_biotext/embedding_output/",
@@ -42,8 +42,6 @@
 #' @param local_corpus Logical. Whether to use local files. Default is FALSE.
 #' @param local_corpus_dir Character string. Directory containing local files provided by users.
 #'   Required if local_corpus is TRUE.
-#' @param save_dir_local_corpus_embed Character string. Directory to save embedded local corpus.
-#'   Required if local_corpus is TRUE.
 #' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
 #' @param chunk_size Integer. Chunk size for processing data. Default is 5.
 #' @param years Integer. Number of recent years to search in PubMed. Default is 5.
@@ -70,7 +68,6 @@ llm_interpret_module <- function(object,
                                  embedding_output_dir,
                                  local_corpus = FALSE,
                                  local_corpus_dir = NULL,
-                                 save_dir_local_corpus_embed = NULL,
                                  phenotype = NULL,
                                  chunk_size = 5,
                                  years = 5,
@@ -90,9 +87,10 @@ llm_interpret_module <- function(object,
 
   # Check if local corpus parameters are provided when local_corpus is TRUE
   if (local_corpus) {
-    if (is.null(local_corpus_dir) || is.null(save_dir_local_corpus_embed)) {
-      stop("When local_corpus is TRUE, both local_corpus_dir and save_dir_local_corpus_embed must be provided")
+    if (is.null(local_corpus_dir)) {
+      stop("When local_corpus is TRUE, local_corpus_dir must be provided.")
     }
+    save_dir_local_corpus_embed = "local"
   }
 
   # 2. Create vector database for local corpus uploaded by user

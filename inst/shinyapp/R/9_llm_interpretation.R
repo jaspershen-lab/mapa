@@ -28,50 +28,25 @@ llm_interpretation_ui <- function(id) {
                            )
                     )
                   ),
-                  tags$p("(Optional) Select a local folder with PDFs as local corpus:"),
-                  fluidRow(
-                    column(12,
-                           shinyFiles::shinyDirButton(
-                             ns("local_corpus_dir"),
-                             "Choose local corpus directory",
-                             title = "Please select the local corpus directory",
-                             style = "width: 300px;"
-                           )
-                    )
-                  ),
-                  tags$p("(Optional) Select a local folder to store generated local corpus embeddings:"),
-                  fluidRow(
-                    column(12,
-                           shinyFiles::shinyDirButton(
-                             ns("save_local_corpus_embed"),
-                             "Choose directory",
-                             title = "Please select a directory to save embeddings of local corpus",
-                             style = "width: 300px;"
-                           )
-                    )
-                  ),
-                  br(),
+                  # br(),
                   fluidRow(
                     column(
-                      5,
-                      selectInput(
-                        ns("llm_model"),
-                        "LLM model",
-                        choices = c("gpt-4o-mini-2024-07-18" = "chatgpt"),
-                        selected = "chatgpt"
-                      )
+                      6,
+                      textInput(ns("llm_model"),
+                                "LLM model",
+                                value = "gpt-4o-mini-2024-07-18")
                     ),
                     column(
-                      7,
-                      textInput(ns("api_key"),
-                                "API key",
-                                value = "")
+                      6,
+                      textInput(ns("embedding_model"),
+                                "Embedding model",
+                                value = "text-embedding-3-small")
                     )),
                   fluidRow(
                     column(
                       5,
                       numericInput(ns("years"),
-                                   "Years to search in PubMed",
+                                   "Years to search",
                                    value = 5,
                                    min = 1,
                                    max = 1000)
@@ -85,6 +60,38 @@ llm_interpretation_ui <- function(id) {
                         width = "100%"
                       )
                     )),
+                  fluidRow(
+                    column(
+                      12,
+                      textInput(ns("api_key"),
+                                "API key",
+                                value = "")
+                    )
+                  ),
+                  tags$p("(Optional) Select a local folder with PDFs as local corpus:"),
+                  fluidRow(
+                    column(12,
+                           shinyFiles::shinyDirButton(
+                             ns("local_corpus_dir"),
+                             "Choose local corpus directory",
+                             title = "Please select the local corpus directory",
+                             style = "width: 300px;"
+                           )
+                    )
+                  ),
+                  br(),
+                  tags$p("Select a local folder to store generated embeddings:"),
+                  fluidRow(
+                    column(12,
+                           shinyFiles::shinyDirButton(
+                             ns("embedding_output_dir"),
+                             "Choose directory",
+                             title = "Please select a directory to save embeddings",
+                             style = "width: 300px;"
+                           )
+                    )
+                  ),
+                  br(),
                   # fluidRow(
                   #   # column(4,
                   #   #        numericInput(ns("llm_interpretation_p_adjust_cutoff"),

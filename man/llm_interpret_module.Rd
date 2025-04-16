@@ -12,7 +12,6 @@ llm_interpret_module(
   embedding_output_dir,
   local_corpus = FALSE,
   local_corpus_dir = NULL,
-  save_dir_local_corpus_embed = NULL,
   phenotype = NULL,
   chunk_size = 5,
   years = 5,
@@ -36,9 +35,6 @@ llm_interpret_module(
 \item{local_corpus}{Logical. Whether to use local files. Default is FALSE.}
 
 \item{local_corpus_dir}{Character string. Directory containing local files provided by users.
-Required if local_corpus is TRUE.}
-
-\item{save_dir_local_corpus_embed}{Character string. Directory to save embedded local corpus.
 Required if local_corpus is TRUE.}
 
 \item{phenotype}{Character string. Phenotype or disease to focus on. Default is NULL.}
