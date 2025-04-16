@@ -3,56 +3,104 @@ llm_interpretation_ui <- function(id) {
   tabItem(
     tabName = "llm_interpretation",
     fluidPage(titlePanel("LLM Interpretation"),
-              fluidPage(fluidRow(
+              fluidPage(
+                fluidRow(
+                ## Input layout ====
                 column(
                   4,
-                  fluidRow(column(
-                    5,
-                    selectInput(
-                      ns("llm_model"),
-                      "LLM model",
-                      choices = c("ChatGPT" = "chatgpt"),
-                      selected = "chatgpt"
-                    )
-                  ),
-                  column(
-                    7,
-                    textInput(ns("openai_key"),
-                              "OpenAI key",
-                              value = "")
-                  )),
-                  fluidRow(column(
-                    12,
-                    textInput(
-                      ns("llm_interpretation_disease"),
-                      "Disease or phenotype",
-                      value = "pregnancy",
-                      width = "100%"
-                    )
-                  )),
                   fluidRow(
-                    column(4,
-                           numericInput(ns("llm_interpretation_top_n"),
-                                        "Top N",
-                                        value = 5,
-                                        min = 1,
-                                        max = 1000)
-                    ),
-                    column(4,
-                           numericInput(ns("llm_interpretation_p_adjust_cutoff"),
-                                        "P-adjust cutoff",
-                                        value = 0.05,
-                                        min = 0,
-                                        max = 0.5),
-                    ),
-                    column(4,
-                           numericInput(ns("llm_interpretation_count_cutoff"),
-                                        "Count cutoff",
-                                        value = 5,
-                                        min = 1,
-                                        max = 1000)
+                    column(12,
+                           fileInput(inputId = ns("upload_enriched_functional_module"),
+                                     label = tags$span("Upload functional module",
+                                                       shinyBS::bsButton(ns("upload_functional_module_info"),
+                                                                         label = "",
+                                                                         icon = icon("info"),
+                                                                         style = "info",
+                                                                         size = "extra-small")),
+                                     accept = ".rda"),
+                           bsPopover(
+                             id = ns("upload_functional_module_info"),
+                             title = "",
+                             content = "You can upload the functional module result here.",
+                             placement = "right",
+                             trigger = "hover",
+                             options = list(container = "body")
+                           )
                     )
                   ),
+                  tags$p("(Optional) Select a local folder with PDFs as local corpus:"),
+                  fluidRow(
+                    column(12,
+                           shinyFiles::shinyDirButton(
+                             ns("local_corpus_dir"),
+                             "Choose local corpus directory",
+                             title = "Please select the local corpus directory",
+                             style = "width: 300px;"
+                           )
+                    )
+                  ),
+                  tags$p("(Optional) Select a local folder to store generated local corpus embeddings:"),
+                  fluidRow(
+                    column(12,
+                           shinyFiles::shinyDirButton(
+                             ns("save_local_corpus_embed"),
+                             "Choose directory",
+                             title = "Please select a directory to save embeddings of local corpus",
+                             style = "width: 300px;"
+                           )
+                    )
+                  ),
+                  br(),
+                  fluidRow(
+                    column(
+                      5,
+                      selectInput(
+                        ns("llm_model"),
+                        "LLM model",
+                        choices = c("gpt-4o-mini-2024-07-18" = "chatgpt"),
+                        selected = "chatgpt"
+                      )
+                    ),
+                    column(
+                      7,
+                      textInput(ns("api_key"),
+                                "API key",
+                                value = "")
+                    )),
+                  fluidRow(
+                    column(
+                      5,
+                      numericInput(ns("years"),
+                                   "Years to search in PubMed",
+                                   value = 5,
+                                   min = 1,
+                                   max = 1000)
+                    ),
+                    column(
+                      7,
+                      textInput(
+                        ns("phenotype"),
+                        "Disease or phenotype",
+                        value = "NULL",
+                        width = "100%"
+                      )
+                    )),
+                  # fluidRow(
+                  #   # column(4,
+                  #   #        numericInput(ns("llm_interpretation_p_adjust_cutoff"),
+                  #   #                     "P-adjust cutoff",
+                  #   #                     value = 0.05,
+                  #   #                     min = 0,
+                  #   #                     max = 0.5),
+                  #   # ),
+                  #   # column(4,
+                  #   #        numericInput(ns("llm_interpretation_count_cutoff"),
+                  #   #                     "Count cutoff",
+                  #   #                     value = 5,
+                  #   #                     min = 1,
+                  #   #                     max = 1000)
+                  #   # )
+                  # ),
                   actionButton(
                     ns("submit_llm_interpretation"),
                     "Submit",
@@ -74,6 +122,7 @@ llm_interpretation_ui <- function(id) {
                   ),
                   style = "border-right: 1px solid #ddd; padding-right: 20px;"
                 ),
+                ## Output layout ====
                 column(8,
                        tabsetPanel(
                          tabPanel(
@@ -89,11 +138,12 @@ llm_interpretation_ui <- function(id) {
                          tabPanel(
                            title = "Functional module table 1",
                            shiny::dataTableOutput(ns("llm_enriched_functional_modules1"))
-                         ),
-                         tabPanel(
-                           title = "Functional module table 2",
-                           shiny::dataTableOutput(ns("llm_enriched_functional_modules2"))
                          )
+
+                         # tabPanel(
+                         #   title = "Functional module table 2",
+                         #   shiny::dataTableOutput(ns("llm_enriched_functional_modules2"))
+                         # )
                        )
                 )
               )))

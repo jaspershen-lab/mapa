@@ -4,11 +4,11 @@ id_conversion <- function(data, from_id_type, to_id_type, orgDb) {
 
   # Ensure package availability
   if (!require(clusterProfiler)) {
-    install.packages("clusterProfiler")
+    BiocManager::install("clusterProfiler")
     library(clusterProfiler)
   }
   if (!require(org.Hs.eg.db)) {
-    install.packages("org.Hs.eg.db")
+    BiocManager::install("org.Hs.eg.db", force = TRUE)
     library(org.Hs.eg.db)
   }
 

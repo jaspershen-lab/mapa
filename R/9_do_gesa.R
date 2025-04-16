@@ -2,13 +2,13 @@
 # source("R/6_utils.R")
 # source("R/8_functional_module_class.R")
 # setwd("demo_data/")
-#
+
 # library(clusterProfiler)
 # library(org.Hs.eg.db)
 # library(ReactomePA)
 #
 # load("covid_data/covid_data.RData")
-#
+
 # variable_info <-
 #   covid_data %>%
 #   massdataset::activate_mass_dataset(what = "variable_info") %>%

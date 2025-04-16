@@ -169,6 +169,7 @@ setMethod(
           )
         )
       } else{
+        p.adjust.cutoff <- object@enrichment_go_result@params$pvalueCutoff
         message(crayon::green(
           nrow(
             enrichment_go_result@result %>%
@@ -193,8 +194,8 @@ setMethod(
     if (is.null(enrichment_kegg_result)) {
       message(crayon::green('No KEGG results'))
     } else{
-      p.adjust.cutoff <- object@enrichment_kegg_result@pvalueCutoff
       if (analysis_type == "enrich_pathway") {
+        p.adjust.cutoff <- object@enrichment_kegg_result@pvalueCutoff
         message(
           crayon::green(
             nrow(
@@ -206,6 +207,7 @@ setMethod(
           )
         )
       } else{
+        p.adjust.cutoff <- object@enrichment_kegg_result@params$pvalueCutoff
         message(crayon::green(
           nrow(
             enrichment_kegg_result@result %>%
@@ -230,9 +232,8 @@ setMethod(
     if (is.null(enrichment_reactome_result)) {
       message(crayon::green('No Reactome results'))
     } else{
-      p.adjust.cutoff <- object@enrichment_reactome_result@pvalueCutoff
-
       if (analysis_type == "enrich_pathway") {
+        p.adjust.cutoff <- object@enrichment_reactome_result@pvalueCutoff
         message(
           crayon::green(
             nrow(
@@ -244,6 +245,7 @@ setMethod(
           )
         )
       } else{
+        p.adjust.cutoff <- object@enrichment_reactome_result@params$pvalueCutoff
         message(crayon::green(
           nrow(
             enrichment_reactome_result@result %>%
