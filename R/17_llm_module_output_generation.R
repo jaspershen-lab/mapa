@@ -13,6 +13,7 @@
 #' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
 #' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
+#' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
 #'
 #' @return A list containing two elements: \code{module_name} (the generated biological module name)
 #' and \code{summary} (the research summary).
@@ -27,7 +28,8 @@ single_module_generation <- function(module_related_paper,
                                      module_info,
                                      phenotype = NULL,
                                      model = "gpt-4o-mini-2024-07-18",
-                                     api_key) {
+                                     api_key,
+                                     output_prompt = TRUE) {
   pathway_info <- paste(module_info[["PathwayNames"]], "(", module_info[["PathwayDescription"]], ")", collapse = "; ")
   if ("GeneNames_vec" %in% names(module_info)) {
     gene_names <- paste(module_info[["GeneNames_vec"]], collapse = ", ")
@@ -95,18 +97,37 @@ single_module_generation <- function(module_related_paper,
   result <- jsonlite::fromJSON(gpt_response)
 
   if (is.null(phenotype)) {
-    return(list(
-      module_name = result$module_name,
-      summary = result$summary,
-      confidence_score = result$confidence_score
-    ))
+    if (output_prompt) {
+      return(list(
+        module_name = result$module_name,
+        summary = result$summary,
+        confidence_score = result$confidence_score,
+        prompt = messages
+      ))
+    } else {
+      return(list(
+        module_name = result$module_name,
+        summary = result$summary,
+        confidence_score = result$confidence_score
+      ))
+    }
   } else {
-    return(list(
-      module_name = result$module_name,
-      summary = result$summary,
-      phenotype_analysis = result$phenotype_analysis,
-      confidence_score = result$confidence_score
-    ))
+    if (output_prompt) {
+      return(list(
+        module_name = result$module_name,
+        summary = result$summary,
+        phenotype_analysis = result$phenotype_analysis,
+        confidence_score = result$confidence_score,
+        prompt = messages
+      ))
+    } else {
+      return(list(
+        module_name = result$module_name,
+        summary = result$summary,
+        phenotype_analysis = result$phenotype_analysis,
+        confidence_score = result$confidence_score
+      ))
+    }
   }
 }
 
@@ -156,6 +177,7 @@ modify_prompt_for_format <- function(messages) {
 #' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
 #' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
+#' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
 #'
 #' @return A list of results for each module, where each element is a list containing
 #' \code{module_name} and \code{summary}.
@@ -172,7 +194,8 @@ modify_prompt_for_format <- function(messages) {
 module_name_generation <- function(paper_result,
                                    phenotype = NULL,
                                    model = "gpt-4o-mini-2024-07-18",
-                                   api_key) {
+                                   api_key,
+                                   output_prompt = TRUE) {
   for (module_index in seq_along(paper_result)) {
     module_list <- paper_result[[module_index]]
 
@@ -183,7 +206,8 @@ module_name_generation <- function(paper_result,
                                              module_info = module_info,
                                              phenotype = phenotype,
                                              model = model,
-                                             api_key = api_key)
+                                             api_key = api_key,
+                                             output_prompt = output_prompt)
 
     # 将结果直接存入 paper_result
     paper_result[[module_index]][["generated_name"]] <- final_result

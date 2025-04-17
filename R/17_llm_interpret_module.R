@@ -12,8 +12,7 @@
 #     llm_model = "gpt-4o-mini-2024-07-18",
 #     embedding_model = "text-embedding-3-small",
 #     api_key = api_key,
-#     embedding_output_dir = "demo_data/pregnancy_data/results/results_biotext/embedding_output/",
-#     local_corpus = FALSE
+#     embedding_output_dir = "demo_data/pregnancy_data/results/results_biotext/embedding_output/"
 #   )
 
 # Gene
@@ -21,8 +20,7 @@
 #   llm_interpret_module(
 #     object = enriched_functional_module,
 #     api_key = api_key,
-#     embedding_output_dir = "demo_data/updated_object_results_for_genes/gene_overlap_result/embedding_output/",
-#     local_corpus = FALSE
+#     embedding_output_dir = "demo_data/updated_object_results_for_genes/gene_overlap_result/embedding_output/"
 #   )
 
 #' Interpret Functional Module using LLM Integrated with RAG Strategy
@@ -39,9 +37,7 @@
 #' @param embedding_model A string specifying the embedding model to use. Default is `"text-embedding-3-small"`.
 #' @param api_key Character string. API key for OpenAI or other embedding service. (Currently, only API key for OpenAI can be used)
 #' @param embedding_output_dir Character string. Directory where embedding results will be saved.
-#' @param local_corpus Logical. Whether to use local files. Default is FALSE.
-#' @param local_corpus_dir Character string. Directory containing local files provided by users.
-#'   Required if local_corpus is TRUE.
+#' @param local_corpus_dir Character string. Directory containing local files provided by users. Default is NULL.
 #' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
 #' @param chunk_size Integer. Chunk size for processing data. Default is 5.
 #' @param years Integer. Number of recent years to search in PubMed. Default is 5.
@@ -49,6 +45,7 @@
 #' @param similarity_filter_num Integer. Number of papers to filter based on similarity. Default is 20.
 #' @param GPT_filter_num Integer. Number of papers to filter using GPT. Default is 5.
 #' @param orgdb Object. Organism database for gene annotation, default is org.Hs.eg.db. Only used for gene enrichment results.
+#' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
 #'
 #' @return A list containing the final results with module names and study summaries.
 #'
@@ -66,7 +63,6 @@ llm_interpret_module <- function(object,
                                  embedding_model = "text-embedding-3-small",
                                  api_key,
                                  embedding_output_dir,
-                                 local_corpus = FALSE,
                                  local_corpus_dir = NULL,
                                  phenotype = NULL,
                                  chunk_size = 5,
@@ -74,7 +70,8 @@ llm_interpret_module <- function(object,
                                  retmax = 10,
                                  similarity_filter_num = 20,
                                  GPT_filter_num = 5,
-                                 orgdb = org.Hs.eg.db) {
+                                 orgdb = org.Hs.eg.db,
+                                 output_prompt = TRUE) {
 
   # 1. Collect functional module result
   if (!is(object, "functional_module")) {
@@ -85,18 +82,24 @@ llm_interpret_module <- function(object,
   }
   functional_module_result <- object@merged_module$functional_module_result
 
-  # Check if local corpus parameters are provided when local_corpus is TRUE
-  if (local_corpus) {
-    if (is.null(local_corpus_dir)) {
-      stop("When local_corpus is TRUE, local_corpus_dir must be provided.")
-    }
+  # # Check if local corpus parameters are provided when local_corpus is TRUE
+  # if (local_corpus) {
+  #   if (is.null(local_corpus_dir)) {
+  #     stop("When local_corpus is TRUE, local_corpus_dir must be provided.")
+  #   }
+  #   save_dir_local_corpus_embed = "local"
+  # }
+  if (!is.null(local_corpus_dir)) {
+    local_corpus <- TRUE
     save_dir_local_corpus_embed = "local"
+  } else {
+    local_corpus <- FALSE
   }
 
   # 2. Create vector database for local corpus uploaded by user
   clear_output_dir(output_dir = embedding_output_dir) # Clear output directory
 
-  if (local_corpus) {
+  if (!is.null(local_corpus_dir)) {
     embedding_local_corpus(embedding_model = embedding_model,
                            api_key = api_key,
                            local_corpus_dir = local_corpus_dir,
@@ -158,7 +161,8 @@ llm_interpret_module <- function(object,
   final_result <- module_name_generation(paper_result = paper_result,
                                          phenotype = phenotype,
                                          model = llm_model,
-                                         api_key = api_key)
+                                         api_key = api_key,
+                                         output_prompt = output_prompt)
 
   return(final_result)
 }

@@ -70,26 +70,34 @@ llm_interpretation_ui <- function(id) {
                   ),
                   tags$p("(Optional) Select a local folder with PDFs as local corpus:"),
                   fluidRow(
-                    column(12,
+                    column(2,
                            shinyFiles::shinyDirButton(
                              ns("local_corpus_dir"),
-                             "Choose local corpus directory",
+                             "Browse",
                              title = "Please select the local corpus directory",
-                             style = "width: 300px;"
+                             class = "btn-primary",
+                             style = "background-color: #d83428; color: white; width: 75px;"
                            )
-                    )
+                    ),
+                    column(10,
+                           textInput(ns("corpus_path_display"), NULL, width = "100%", placeholder = "No local corpus directory selected", value = "")
+                           )
                   ),
                   br(),
                   tags$p("Select a local folder to store generated embeddings:"),
                   fluidRow(
-                    column(12,
+                    column(2,
                            shinyFiles::shinyDirButton(
                              ns("embedding_output_dir"),
-                             "Choose directory",
+                             "Browse",
                              title = "Please select a directory to save embeddings",
-                             style = "width: 300px;"
+                             class = "btn-primary",
+                             style = "background-color: #d83428; color: white; width: 75px;"
                            )
-                    )
+                           ),
+                    column(10,
+                           textInput(ns("embedding_path_display"), NULL, width = "100%", placeholder = "No embeddings output directory selected", value = "")
+                           )
                   ),
                   br(),
                   # fluidRow(
@@ -178,16 +186,16 @@ llm_interpretation_ui <- function(id) {
                          #   shiny::dataTableOutput(ns("llm_enriched_functional_modules2"))
                          # )
                        )
-                )
-              )))
-  )
+                  )
+                )))
+   )
 }
 
 llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab_switch) {
   moduleServer(
     id,
     function(input, output, session) {
-      ## Section1: Load enriched_functional_module.rda ====
+      ## Section1: Load enriched_functional_module.rda and navigate to specified directory ====
       observeEvent(
         input$upload_enriched_functional_module, {
           if (!is.null(input$upload_enriched_functional_module$datapath)) {
@@ -214,6 +222,83 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           }
       })
 
+      ### Set up shinyFiles directory selection
+      volumes <- shinyFiles::getVolumes()
+      ### Define reactive values to store the selected directories
+      selected_dirs <- reactiveValues(
+        local_corpus_dir = NULL,
+        embedding_output_dir = NULL
+      )
+      ### Set up the directory chooser for the local corpus directory
+      shinyFiles::shinyDirChoose(
+        input,
+        "local_corpus_dir",
+        roots = volumes(),
+        session = session,
+        restrictions = system.file(package = "base")
+      )
+      ### Observer for the corpus directory selection
+      observeEvent(input$local_corpus_dir, {
+        if (!is.null(input$local_corpus_dir)) {
+          # Get the directory path
+          local_corpus_path <- shinyFiles::parseDirPath(volumes(), input$local_corpus_dir)
+
+          # Update the reactive value
+          if (length(local_corpus_path) > 0) {
+            selected_dirs$local_corpus_dir <- local_corpus_path
+
+            # Optional: Display a confirmation message
+            showNotification(
+              paste("Selected local corpus directory:", local_corpus_path),
+              type = "message"
+            )
+          }
+        }
+      })
+      ### Set up the directory chooser for the embedding output directory
+      shinyFiles::shinyDirChoose(
+        input,
+        "embedding_output_dir",
+        roots = volumes(),
+        session = session,
+        restrictions = system.file(package = "base")
+      )
+      ### Observer for the embedding directory selection
+      observeEvent(input$embedding_output_dir, {
+        if (!is.null(input$embedding_output_dir)) {
+          # Get the directory path
+          embedding_output_path <- shinyFiles::parseDirPath(volumes(), input$embedding_output_dir)
+
+          # Update the reactive value
+          if (length(embedding_output_path) > 0) {
+            selected_dirs$embedding_output_dir <- embedding_output_path
+
+            # Optional: Display a confirmation message
+            showNotification(
+              paste("Selected embeddings out directory:", embedding_output_path),
+              type = "message"
+            )
+          }
+        }
+      })
+
+      ### show pathway
+      observeEvent(selected_dirs$local_corpus_dir, {
+        if (!is.null(selected_dirs$local_corpus_dir) && length(selected_dirs$local_corpus_dir) > 0) {
+          updateTextInput(session, "corpus_path_display", value = selected_dirs$local_corpus_dir)
+        }
+      })
+
+      observeEvent(selected_dirs$embedding_output_dir, {
+        if (!is.null(selected_dirs$embedding_output_dir) && length(selected_dirs$embedding_output_dir) > 0) {
+          updateTextInput(session, "embedding_path_display", value = selected_dirs$embedding_output_dir)
+        }
+      })
+
+      ## Define annotation result as reactive values
+      annotation_result <- reactiveVal()
+      llm_interpretation_code <- reactiveVal()
+
       observeEvent(input$submit_llm_interpretation, {
         message("Interpreting functional modules in progress. This comprehensive analysis requires some time...")
         if (is.null(enriched_functional_module())) {
@@ -234,174 +319,94 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
             choices = module_names
           )
           ## Section2: Interpretation ====
-          if (length(input$pathway_database) == 0) {
+          functional_module_annotation <-
+            tryCatch({
+              llm_interpret_module(
+                object = enriched_functional_module(),
+                llm_model = input$llm_model,
+                embedding_model = input$embedding_model,
+                api_key = input$api_key,
+                embedding_output_dir = selected_dirs$embedding_output_dir,
+                local_corpus_dir = selected_dirs$local_corpus_dir,
+                phenotype = input$phenotype,
+                years = input$years
+              )
+            }, error = function(e) {
             showModal(modalDialog(
-              title = "Warning",
-              "Please select at least one pathway database.",
+              title = "Error",
+              paste("Details:", e$message),
               easyClose = TRUE,
               footer = modalButton("Close")
             ))
-          }
-        }})
-
-      # Define enriched_functional_module as a reactive value
-      llm_interpretation_result <- reactiveVal("")
-
-      llm_interpretation_code <- reactiveVal()
-
-      openai_key <- reactiveVal()
-
-      observeEvent(input$submit_llm_interpretation, {
-        openai_key1 <-
-          Sys.getenv("chatgpt_api_key")
-
-        openai_key2 <-
-          input$openai_key
-
-        # Check if enriched_modules is available
-        if (is.null(enriched_functional_module()) ||
-            length(enriched_functional_module()) == 0) {
-          showModal(
-            modalDialog(
-              title = "Warning",
-              "No enriched functional modules data available.",
-              easyClose = TRUE,
-              footer = modalButton("Close")
-            )
-          )
-        } else {
-          if (openai_key1 != "") {
-            openai_key(openai_key1)
-          } else{
-            if (openai_key2 != "") {
-              openai_key(openai_key2)
-            } else{
-              openai_key("")
-            }
-          }
-
-          if (openai_key() == "") {
-            showModal(
-              modalDialog(
-                title = "Warning",
-                "No OpenAI Key provided. No interpretation will be generated.",
-                easyClose = TRUE,
-                footer = modalButton("Close")
-              )
-            )
-          } else{
-            set_chatgpt_api_key(api_key = openai_key())
-          }
-
-          # shinyjs::show("loading")
-
-          withProgress(message = 'Analysis in progress...', {
-            tryCatch({
-              llm_interpretation_result <-
-                interpret_pathways(
-                  object = enriched_functional_module(),
-                  p.adjust.cutoff = input$llm_interpretation_p_adjust_cutoff,
-                  disease = input$llm_interpretation_disease,
-                  count.cutoff = input$llm_interpretation_count_cutoff,
-                  top_n = input$llm_interpretation_top_n
-                )
-              llm_interpretation_result(llm_interpretation_result)
-            },
-            error = function(e) {
-              showModal(modalDialog(
-                title = "Error",
-                paste("Details:", e$message),
-                easyClose = TRUE,
-                footer = modalButton("Close")
-              ))
-              llm_interpretation_result("No result")
-            })
+            return(NULL)
           })
-          # shinyjs::hide("loading")
 
-          ##save code
-          llm_interpretation_code <-
-            sprintf(
-              '
-            llm_interpretation_result <-
-            interpret_pathways(
-            object = enriched_functional_module,
-            p.adjust.cutoff = %s,
-            disease = %s,
-            count.cutoff = %s,
-            top_n = %s)
-            ',
-              input$llm_interpretation_p_adjust_cutoff,
-              paste0('"', input$llm_interpretation_disease, '"'),
-              input$llm_interpretation_count_cutoff,
-              input$llm_interpretation_top_n
-            )
+        annotation_result(functional_module_annotation)
 
-          llm_interpretation_code(llm_interpretation_code)
-        }
-      })
-
-      output$llm_interpretation_result <-
-        renderUI({
-          shiny::HTML(markdown::markdownToHTML(llm_interpretation_result(),
-                                               fragment.only = TRUE))
+        ## Section3: Assign output ====
+        output$module_name <- renderText({
+          req(annotation_result() && input$module_selector)
+          tryCatch(
+            annotation_result[[input$module_selector]]$generated_name$module_name,
+            error = function(e)
+              paste("Error details:", e$message))
         })
 
-      output$download_llm_interpretation_result <-
-        shiny::downloadHandler(
-          filename = function() {
-            "llm_interpretation_result.md"
-          },
-          content = function(file) {
-            writeLines(llm_interpretation_result(), file)
-          }
-        )
-
-      observe({
-        if (is.null(llm_interpretation_result()) ||
-            length(llm_interpretation_result()) == 0) {
-          shinyjs::disable("download_llm_interpretation_result")
-        } else {
-          shinyjs::enable("download_llm_interpretation_result")
-        }
-      })
-
-
-      output$llm_enriched_functional_modules1 <-
-        shiny::renderDataTable({
-          req(tryCatch(
-            enriched_functional_module()@merged_module$functional_module_result,
+        output$module_summary <- renderText({
+          req(annotation_result() && input$module_selector)
+          tryCatch(
+            annotation_result[[input$module_selector]]$generated_name$summary,
             error = function(e)
-              NULL
-          ))
-        },
-        options = list(pageLength = 10,
-                       scrollX = TRUE))
+              paste("Error details:", e$message))
+        })
 
-      output$llm_enriched_functional_modules2 <-
-        shiny::renderDataTable({
-          req(tryCatch(
-            enriched_functional_module()@merged_module$result_with_module,
+        output$association_summary <- renderText({
+          req(annotation_result() && input$module_selector)
+          tryCatch(
+            annotation_result[[input$module_selector]]$generated_name$phenotype_analysis,
             error = function(e)
-              NULL
-          ))
-        },
-        options = list(pageLength = 10,
-                       scrollX = TRUE))
+              paste("Error details:", e$message))
+        })
 
-      observe({
-        if (is.null(llm_interpretation_result()) ||
-            length(llm_interpretation_result()) == 0 ||
-            llm_interpretation_result() == "") {
-          shinyjs::disable("download_llm_interpretation_result")
-        } else {
-          shinyjs::enable("download_llm_interpretation_result")
+        output$confidence_score <- renderText({
+          req(annotation_result() && input$module_selector)
+          tryCatch(
+            annotation_result[[input$module_selector]]$generated_name$confidence_score,
+            error = function(e)
+              paste("Error details:", e$message))
+        })
 
-        }
-      })
+        ### Save code
+        llm_interpretation_code <-
+          functional_module_annotation_code <-
+          sprintf(
+            "
+            functional_module_annotation <-
+              llm_interpret_module(
+                object              = enriched_functional_module(),
+                llm_model           = %s,
+                embedding_model     = %s,
+                api_key             = %s,
+                embedding_output_dir = %s,
+                local_corpus_dir    = %s,
+                phenotype           = %s,
+                years               = %s
+              )
+            ",
+            ## wrap character inputs in quotes:
+            paste0('"', input$llm_model, '"'),
+            paste0('"', input$embedding_model, '"'),
+            paste0('"', input$api_key, '"'),
+            paste0('"', selected_dirs$embedding_output_dir, '"'),
+            if (is.null(selected_dirs$local_corpus_dir)) NULL else (paste0('"', selected_dirs$local_corpus_dir, '"')),
+            paste0('"', input$phenotype, '"'),
+            input$years
+          )
+        llm_interpretation_code(llm_interpretation_code)
 
+        }})
 
-      ####show code
+      ### Show code
       observeEvent(input$show_llm_interpretation_code, {
         if (is.null(llm_interpretation_code()) ||
             length(llm_interpretation_code()) == 0) {
@@ -427,6 +432,167 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
         }
       })
 
+      #
+      # # Define enriched_functional_module as a reactive value
+      # llm_interpretation_result <- reactiveVal("")
+      #
+      # llm_interpretation_code <- reactiveVal()
+      #
+      # openai_key <- reactiveVal()
+      #
+      # observeEvent(input$submit_llm_interpretation, {
+      #   openai_key1 <-
+      #     Sys.getenv("chatgpt_api_key")
+      #
+      #   openai_key2 <-
+      #     input$openai_key
+      #
+      #   # Check if enriched_modules is available
+      #   if (is.null(enriched_functional_module()) ||
+      #       length(enriched_functional_module()) == 0) {
+      #     showModal(
+      #       modalDialog(
+      #         title = "Warning",
+      #         "No enriched functional modules data available.",
+      #         easyClose = TRUE,
+      #         footer = modalButton("Close")
+      #       )
+      #     )
+      #   } else {
+      #     if (openai_key1 != "") {
+      #       openai_key(openai_key1)
+      #     } else{
+      #       if (openai_key2 != "") {
+      #         openai_key(openai_key2)
+      #       } else{
+      #         openai_key("")
+      #       }
+      #     }
+      #
+      #     if (openai_key() == "") {
+      #       showModal(
+      #         modalDialog(
+      #           title = "Warning",
+      #           "No OpenAI Key provided. No interpretation will be generated.",
+      #           easyClose = TRUE,
+      #           footer = modalButton("Close")
+      #         )
+      #       )
+      #     } else{
+      #       set_chatgpt_api_key(api_key = openai_key())
+      #     }
+      #
+      #     # shinyjs::show("loading")
+      #
+      #     withProgress(message = 'Analysis in progress...', {
+      #       tryCatch({
+      #         llm_interpretation_result <-
+      #           interpret_pathways(
+      #             object = enriched_functional_module(),
+      #             p.adjust.cutoff = input$llm_interpretation_p_adjust_cutoff,
+      #             disease = input$llm_interpretation_disease,
+      #             count.cutoff = input$llm_interpretation_count_cutoff,
+      #             top_n = input$llm_interpretation_top_n
+      #           )
+      #         llm_interpretation_result(llm_interpretation_result)
+      #       },
+      #       error = function(e) {
+      #         showModal(modalDialog(
+      #           title = "Error",
+      #           paste("Details:", e$message),
+      #           easyClose = TRUE,
+      #           footer = modalButton("Close")
+      #         ))
+      #         llm_interpretation_result("No result")
+      #       })
+      #     })
+      #     # shinyjs::hide("loading")
+      #
+      #     ##save code
+      #     llm_interpretation_code <-
+      #       sprintf(
+      #         '
+      #       llm_interpretation_result <-
+      #       interpret_pathways(
+      #       object = enriched_functional_module,
+      #       p.adjust.cutoff = %s,
+      #       disease = %s,
+      #       count.cutoff = %s,
+      #       top_n = %s)
+      #       ',
+      #         input$llm_interpretation_p_adjust_cutoff,
+      #         paste0('"', input$llm_interpretation_disease, '"'),
+      #         input$llm_interpretation_count_cutoff,
+      #         input$llm_interpretation_top_n
+      #       )
+      #
+      #     llm_interpretation_code(llm_interpretation_code)
+      #   }
+      # })
+      #
+      # output$llm_interpretation_result <-
+      #   renderUI({
+      #     shiny::HTML(markdown::markdownToHTML(llm_interpretation_result(),
+      #                                          fragment.only = TRUE))
+      #   })
+      #
+      # output$download_llm_interpretation_result <-
+      #   shiny::downloadHandler(
+      #     filename = function() {
+      #       "llm_interpretation_result.md"
+      #     },
+      #     content = function(file) {
+      #       writeLines(llm_interpretation_result(), file)
+      #     }
+      #   )
+      #
+      # observe({
+      #   if (is.null(llm_interpretation_result()) ||
+      #       length(llm_interpretation_result()) == 0) {
+      #     shinyjs::disable("download_llm_interpretation_result")
+      #   } else {
+      #     shinyjs::enable("download_llm_interpretation_result")
+      #   }
+      # })
+      #
+      #
+      # output$llm_enriched_functional_modules1 <-
+      #   shiny::renderDataTable({
+      #     req(tryCatch(
+      #       enriched_functional_module()@merged_module$functional_module_result,
+      #       error = function(e)
+      #         NULL
+      #     ))
+      #   },
+      #   options = list(pageLength = 10,
+      #                  scrollX = TRUE))
+      #
+      # output$llm_enriched_functional_modules2 <-
+      #   shiny::renderDataTable({
+      #     req(tryCatch(
+      #       enriched_functional_module()@merged_module$result_with_module,
+      #       error = function(e)
+      #         NULL
+      #     ))
+      #   },
+      #   options = list(pageLength = 10,
+      #                  scrollX = TRUE))
+      #
+      # observe({
+      #   if (is.null(llm_interpretation_result()) ||
+      #       length(llm_interpretation_result()) == 0 ||
+      #       llm_interpretation_result() == "") {
+      #     shinyjs::disable("download_llm_interpretation_result")
+      #   } else {
+      #     shinyjs::enable("download_llm_interpretation_result")
+      #
+      #   }
+      # })
+      #
+      #
+
+      ###temp
+      llm_interpretation_result <- reactiveVal(1)
       ###Go to result tab
       ####if there is not enriched_functional_module, show a warning message
       observeEvent(input$go2results, {
