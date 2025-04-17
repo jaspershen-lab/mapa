@@ -638,10 +638,7 @@ do_gsea_meta <- function(variable_info = variable_info,
     # process variable_info
     variable_info <- variable_info |>
       dplyr::filter(!is.na(keggid)) |>
-      dplyr::group_by(keggid) |>
-      dplyr::mutate(p_adjust = min(p_value_adjust)) |>
-      dplyr::ungroup() |>
-      dplyr::distinct(keggid, .keep_all = TRUE)
+      dplyr::distinct()
 
     # check KEGG ID format
     if (!any(grepl("^C\\d{5}$", variable_info$keggid))) {
@@ -713,10 +710,7 @@ do_gsea_meta <- function(variable_info = variable_info,
     # process variable_info
     variable_info <- variable_info |>
       dplyr::filter(!is.na(hmdbid)) |>
-      dplyr::group_by(hmdbid) |>
-      dplyr::mutate(p_adjust = min(p_value_adjust)) |>
-      dplyr::ungroup() |>
-      dplyr::distinct(hmdbid, .keep_all = TRUE)
+      dplyr::distinct()
 
     # check HMDB ID format
     if (!any(grepl("^HMDB\\d{7}$", variable_info$hmdbid))) {
