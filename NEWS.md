@@ -122,3 +122,7 @@
 
 * Allow analysis of the association between functional modules and specified phenotype using LLM.
 
+# mapa 0.1.31
+
+* Expand the functionality of `do_gsea()` function to let it accept metabolite gsea.
+
