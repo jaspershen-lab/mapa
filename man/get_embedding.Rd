@@ -33,19 +33,6 @@ vector for a given input text chunk.
 This function is for internal use only and supports retry logic for API failures. Ensure you have
 valid API credentials and the provider's URL is correctly set.
 }
-\examples{
-# Example usage (not recommended for direct access by users):
-chunk <- "This is a sample text to retrieve an embedding."
-api_key <- "your_openai_api_key"
-embedding <- get_embedding(
-  chunk = chunk,
-  api_key = api_key,
-  model_name = "text-embedding-3-small",
-  api_provider = "openai"
-)
-print(embedding)
-
-}
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }

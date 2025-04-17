@@ -560,8 +560,8 @@ query_abstracts_and_titles_by_pubmed_ids <- function(PID_list, retries = 2, paus
 
     if (attempt > retries) {
       results[[pmid]] <- list(
-        title = sprintf("Error: Failed to retrieve title for PubMed ID %s after %d attempts", pmid, retries),
-        abstract = sprintf("Error: Failed to retrieve abstract for PubMed ID %s after %d attempts", pmid, retries)
+        title = sprintf("Error: Failed to retrieve title for PubMed ID %s after %d attempts. Probably because this is a review.", pmid, retries),
+        abstract = sprintf("Error: Failed to retrieve abstract for PubMed ID %s after %d attempts. Probably because this is a review.", pmid, retries)
       )
     }
   }

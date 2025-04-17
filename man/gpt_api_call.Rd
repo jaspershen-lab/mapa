@@ -44,37 +44,6 @@ This function is not intended for direct use by package users.
 Ensure you have a valid API key and the correct endpoint for your chosen provider. For Gemini, update the URL
 in the code if necessary.
 }
-\examples{
-# Example: Calling OpenAI's GPT API
-messages <- list(
-  list(role = "system", content = "You are a helpful assistant."),
-  list(role = "user", content = "What is the capital of France?")
-)
-api_key <- "your_openai_api_key"
-gpt_response <- gpt_api_call(
-  messages = messages,
-  api_key = api_key,
-  model = "gpt-4",
-  max_tokens = 50,
-  temperature = 0.5,
-  retry_attempts = 3,
-  api_provider = "openai"
-)
-print(gpt_response)
-
-# Example: Calling Gemini's GPT-like API
-gemini_response <- gpt_api_call(
-  messages = messages,
-  api_key = "your_gemini_api_key",
-  model = "gemini-model-v1",
-  max_tokens = 50,
-  temperature = 0.5,
-  retry_attempts = 3,
-  api_provider = "gemini"
-)
-print(gemini_response)
-
-}
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }

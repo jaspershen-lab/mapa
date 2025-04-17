@@ -6,8 +6,8 @@ Date: 2025-04-15
 Authors@R: c(
     person("Xiaotao", "Shen", , "shenxt1990@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-9608-9964")),
-    person("Yifei", "Ge", , "yifeii.ge@outlook.com", role = c("aut", "cre")),
-    person("feifan", "Zhang", , "FEIFAN004@e.ntu.edu.sg", role = c("aut", "cre"))
+    person("Yifei", "Ge", , "yifeii.ge@outlook.com", role = c("aut")),
+    person("feifan", "Zhang", , "FEIFAN004@e.ntu.edu.sg", role = c("aut"))
   )
 Description: Moudule Annotation for Pathway Analysis Result.  This is used
     for transcriptomics and proteomics data.
@@ -44,6 +44,7 @@ Imports:
     org.Hs.eg.db,
     patchwork,
     pbapply,
+    pbmcapply,
     pdftools,
     plyr,
     proxyC,

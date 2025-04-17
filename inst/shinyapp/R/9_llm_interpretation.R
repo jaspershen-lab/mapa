@@ -143,25 +143,26 @@ llm_interpretation_ui <- function(id) {
                          tabPanel(
                            title = "Interpretation results",
                            # uiOutput(ns("llm_interpretation_result")),
-                           selectInput(
-                             inputId = ns("module_selector"),
-                             label = "Select Functional Module:",
-                             choices = NULL,  # we will update this dynamically in the server
-                             selected = NULL
-                           ),
-                           hr(),
-                           h3("Module Information"),
-                           strong("Module Name:"),
-                           textOutput(ns("module_name"), container = span),
-                           br(),
-                           strong("Module Summary:"),
-                           textOutput(ns("module_summary"), container = span),
-                           br(),
-                           strong("Association With Phenotype:"),
-                           textOutput(ns("association_summary"), container = span),
-                           br(),
-                           strong("Confidence Score:"),
-                           textOutput(ns("confidence_score"), container = span),
+                           uiOutput(ns("llm_module_annotation_details")),
+                           # selectInput(
+                           #   inputId = ns("module_selector"),
+                           #   label = "Select Functional Module:",
+                           #   choices = NULL,  # we will update this dynamically in the server
+                           #   selected = NULL
+                           # ),
+                           # hr(),
+                           # h3("Module Information"),
+                           # strong("Module Name:"),
+                           # textOutput(ns("module_name"), container = span),
+                           # br(),
+                           # strong("Module Summary:"),
+                           # textOutput(ns("module_summary"), container = span),
+                           # br(),
+                           # strong("Association With Phenotype:"),
+                           # textOutput(ns("association_summary"), container = span),
+                           # br(),
+                           # strong("Confidence Score:"),
+                           # textOutput(ns("confidence_score"), container = span),
                            br(),
                            shinyjs::useShinyjs(),
                            downloadButton(ns("download_llm_interpretation_result"),
@@ -171,7 +172,7 @@ llm_interpretation_ui <- function(id) {
                          ),
                          tabPanel(
                            title = "Full Prompt",
-                           h3("LLM Prompt Used"),
+                           # h3("LLM Prompt Used"),
                            uiOutput(ns("prompt")),
                            br(),
                            shinyjs::useShinyjs(),
@@ -298,89 +299,66 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
       ## Define annotation result as reactive values
       annotation_result <- reactiveVal()
       llm_interpretation_code <- reactiveVal()
+      module_prompt <- reactiveVal()
+
+      # Set up the future plan - this determines how parallel tasks will run
+      future::plan(future::multisession)
 
       observeEvent(input$submit_llm_interpretation, {
         message("Interpreting functional modules in progress. This comprehensive analysis requires some time...")
+
+        library(future)
+        library(promises)
+
+        # Show a modal with a spinner to indicate work is happening
+        showModal(modalDialog(
+          title = "Analysis in Progress",
+          "The LLM interpretation is running in the background. Results will appear when ready.",
+          footer = NULL,
+          easyClose = FALSE,
+          size = "m"
+        ))
+
         if (is.null(enriched_functional_module())) {
-          # No enriched functional module available
-          showModal(
-            modalDialog(
-              title = "Warning",
-              "No enriched functional module data available. Please complete the previous steps or upload the data",
-              easyClose = TRUE,
-              footer = modalButton("Close")
-            )
+          removeModal()
+          showModal(modalDialog(
+            title = "Warning",
+            "No enriched functional module data available. Please complete the previous steps or upload the data",
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          ))
+          return()
+        }
+
+        # Run the interpretation asynchronously
+        promises::future_promise({
+          # This code runs in a separate R process
+          llm_interpret_module(
+            object = enriched_functional_module(),
+            llm_model = input$llm_model,
+            embedding_model = input$embedding_model,
+            api_key = input$api_key,
+            embedding_output_dir = selected_dirs$embedding_output_dir,
+            local_corpus_dir = selected_dirs$local_corpus_dir,
+            phenotype = if(input$phenotype == "NULL") NULL else input$phenotype,
+            years = input$years
           )
-        } else {
-          module_names <- enriched_functional_module()@merged_module$functional_module_result$module
-          updateSelectInput(
-            session = session,
-            inputId = "module_selector",
-            choices = module_names
-          )
-          ## Section2: Interpretation ====
-          functional_module_annotation <-
-            tryCatch({
-              llm_interpret_module(
-                object = enriched_functional_module(),
-                llm_model = input$llm_model,
-                embedding_model = input$embedding_model,
-                api_key = input$api_key,
-                embedding_output_dir = selected_dirs$embedding_output_dir,
-                local_corpus_dir = selected_dirs$local_corpus_dir,
-                phenotype = input$phenotype,
-                years = input$years
-              )
-            }, error = function(e) {
-            showModal(modalDialog(
-              title = "Error",
-              paste("Details:", e$message),
-              easyClose = TRUE,
-              footer = modalButton("Close")
-            ))
-            return(NULL)
-          })
+        },
+        globals = TRUE) %...>%
+          # This runs when the future completes successfully
+          (function(result) {
+            # Store the results
+            annotation_result(result)
 
-        annotation_result(functional_module_annotation)
+            ### Save prompt
+            module_prompt <- annotation_result()[[input$module_selector]]$generated_name$prompt
+            module_prompt(module_prompt)
 
-        ## Section3: Assign output ====
-        output$module_name <- renderText({
-          req(annotation_result() && input$module_selector)
-          tryCatch(
-            annotation_result[[input$module_selector]]$generated_name$module_name,
-            error = function(e)
-              paste("Error details:", e$message))
-        })
-
-        output$module_summary <- renderText({
-          req(annotation_result() && input$module_selector)
-          tryCatch(
-            annotation_result[[input$module_selector]]$generated_name$summary,
-            error = function(e)
-              paste("Error details:", e$message))
-        })
-
-        output$association_summary <- renderText({
-          req(annotation_result() && input$module_selector)
-          tryCatch(
-            annotation_result[[input$module_selector]]$generated_name$phenotype_analysis,
-            error = function(e)
-              paste("Error details:", e$message))
-        })
-
-        output$confidence_score <- renderText({
-          req(annotation_result() && input$module_selector)
-          tryCatch(
-            annotation_result[[input$module_selector]]$generated_name$confidence_score,
-            error = function(e)
-              paste("Error details:", e$message))
-        })
-
-        ### Save code
-        llm_interpretation_code <-
-          functional_module_annotation_code <-
-          sprintf(
-            "
+            ### Save code
+            llm_interpretation_code <-
+              functional_module_annotation_code <-
+              sprintf(
+                "
             functional_module_annotation <-
               llm_interpret_module(
                 object              = enriched_functional_module(),
@@ -393,18 +371,100 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
                 years               = %s
               )
             ",
-            ## wrap character inputs in quotes:
-            paste0('"', input$llm_model, '"'),
-            paste0('"', input$embedding_model, '"'),
-            paste0('"', input$api_key, '"'),
-            paste0('"', selected_dirs$embedding_output_dir, '"'),
-            if (is.null(selected_dirs$local_corpus_dir)) NULL else (paste0('"', selected_dirs$local_corpus_dir, '"')),
-            paste0('"', input$phenotype, '"'),
-            input$years
-          )
-        llm_interpretation_code(llm_interpretation_code)
+                ## wrap character inputs in quotes:
+                paste0('"', input$llm_model, '"'),
+                paste0('"', input$embedding_model, '"'),
+                paste0('"', input$api_key, '"'),
+                paste0('"', selected_dirs$embedding_output_dir, '"'),
+                if (is.null(selected_dirs$local_corpus_dir)) NULL else (paste0('"', selected_dirs$local_corpus_dir, '"')),
+                paste0('"', input$phenotype, '"'),
+                input$years
+              )
+            llm_interpretation_code(llm_interpretation_code)
 
-        }})
+            # Close the modal
+            removeModal()
+
+            # Show success notification
+            showNotification("LLM interpretation completed successfully!", type = "message")
+          }) %...!%
+          # This runs if the future encounters an error
+          (function(error) {
+            # Close the modal
+            removeModal()
+
+            # Show error message
+            showModal(modalDialog(
+              title = "Error",
+              HTML(paste("An error occurred during LLM interpretation:<br><pre>",
+                         error$message, "</pre>")),
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            ))
+          })
+      })
+
+      output$module_details <- renderUI({
+        req(annotation_result())
+
+        tagList(
+          selectInput(
+            inputId = ns("module_selector"),
+            label = "Select Functional Module:",
+            choices = names(annotation_result()),
+            selected = names(annotation_result())[1]
+          ),
+          hr(),
+          h3("Module Information"),
+          strong("Module Name:"),
+          textOutput(ns("module_name"), container = span),
+          br(),
+          strong("Module Summary:"),
+          textOutput(ns("module_summary"), container = span),
+          br(),
+          strong("Association With Phenotype:"),
+          textOutput(ns("association_summary"), container = span),
+          br(),
+          strong("Confidence Score:"),
+          textOutput(ns("confidence_score"), container = span)
+        )
+      })
+
+      output$module_name <- renderText({
+        req(annotation_result(), input$module_selector)
+        tryCatch(
+          annotation_result()[[input$module_selector]]$generated_name$module_name,
+          error = function(e)
+            paste("Error details:", e$message)
+        )
+      })
+
+      output$module_summary <- renderText({
+        req(annotation_result(), input$module_selector)
+        tryCatch(
+          annotation_result()[[input$module_selector]]$generated_name$summary,
+          error = function(e)
+            paste("Error details:", e$message)
+        )
+      })
+
+      output$association_summary <- renderText({
+        req(annotation_result(), input$module_selector)
+        tryCatch(
+          annotation_result()[[input$module_selector]]$generated_name$phenotype_analysis,
+          error = function(e)
+            paste("Error details:", e$message)
+        )
+      })
+
+      output$confidence_score <- renderText({
+        req(annotation_result(), input$module_selector)
+        tryCatch(
+          annotation_result()[[input$module_selector]]$generated_name$confidence_score,
+          error = function(e)
+            paste("Error details:", e$message)
+        )
+      })
 
       ### Show code
       observeEvent(input$show_llm_interpretation_code, {
@@ -431,6 +491,84 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           ))
         }
       })
+
+      ### Format the prompt for display
+      output$prompt <- renderUI({
+        req(module_prompt())
+
+        moduleID_display <- tags$div(
+          tags$strong("Module ID:"),
+          textOutput(ns("module_id"), inline = TRUE)
+        )
+
+        all_content <- paste(
+          sapply(module_prompt(), function(item) {
+            item$content
+          }),
+          collapse = "\n\n---\n\n"
+        )
+
+        content_html <- HTML(markdown::markdownToHTML(
+          text = all_content,
+          fragment.only = TRUE
+        ))
+
+        tagList(
+          h3("LLM Prompt Used"),
+          moduleID_display,
+          br(),
+          content_html
+        )
+      })
+
+      output$module_id <- renderText({
+        req(annotation_result(), input$module_selector)
+        tryCatch(
+          input$module_selector,
+          error = function(e)
+            paste("Error details:", e$message)
+        )
+      })
+
+      observe({
+        if (is.null(annotation_result()) ||
+            length(annotation_result()) == 0) {
+          shinyjs::disable("download_llm_interpretation_result")
+        } else {
+          shinyjs::enable("download_llm_interpretation_result")
+        }
+        if (is.null(module_prompt()) ||
+            length(module_prompt()) == 0) {
+          shinyjs::disable("download_llm_interpretation_prompt")
+        } else {
+          shinyjs::enable("download_llm_interpretation_prompt")
+        }
+      })
+      # Download handler for all the annotation result of functional modules
+      output$download_llm_interpretation_result <-
+        shiny::downloadHandler(
+          filename = function() {
+            "functional_module_annotation_result.rda"
+          },
+          content = function(file) {
+            functional_module_annotation_result <-
+              annotation_result()
+            save(functional_module_annotation_result, file = file)
+          }
+        )
+      # Download handler for the prompt
+      output$download_llm_interpretation_prompt <- downloadHandler(
+        filename = function() {
+          "llm_interpretation_prompt.txt"
+        },
+        content = function(file) {
+          text_content <- paste(sapply(module_prompt, function(item) {
+            item$content
+          }), collapse = "\n\n---\n\n")
+
+          writeLines(text_content, file)
+        }
+      )
 
       #
       # # Define enriched_functional_module as a reactive value
@@ -536,25 +674,6 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
       #                                          fragment.only = TRUE))
       #   })
       #
-      # output$download_llm_interpretation_result <-
-      #   shiny::downloadHandler(
-      #     filename = function() {
-      #       "llm_interpretation_result.md"
-      #     },
-      #     content = function(file) {
-      #       writeLines(llm_interpretation_result(), file)
-      #     }
-      #   )
-      #
-      # observe({
-      #   if (is.null(llm_interpretation_result()) ||
-      #       length(llm_interpretation_result()) == 0) {
-      #     shinyjs::disable("download_llm_interpretation_result")
-      #   } else {
-      #     shinyjs::enable("download_llm_interpretation_result")
-      #   }
-      # })
-      #
       #
       # output$llm_enriched_functional_modules1 <-
       #   shiny::renderDataTable({
@@ -591,8 +710,6 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
       #
       #
 
-      ###temp
-      llm_interpretation_result <- reactiveVal(1)
       ###Go to result tab
       ####if there is not enriched_functional_module, show a warning message
       observeEvent(input$go2results, {
@@ -612,7 +729,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
         }
       })
 
-      return(llm_interpretation_result)
+      return(annotation_result)
     }
   )
 }

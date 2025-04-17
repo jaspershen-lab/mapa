@@ -24,36 +24,6 @@
 #' @return The generated text from the GPT model if the call is successful. If the call fails after the specified number
 #'         of retries, the function returns `NULL`.
 #'
-#' @examples
-#' # Example: Calling OpenAI's GPT API
-#' messages <- list(
-#'   list(role = "system", content = "You are a helpful assistant."),
-#'   list(role = "user", content = "What is the capital of France?")
-#' )
-#' api_key <- "your_openai_api_key"
-#' gpt_response <- gpt_api_call(
-#'   messages = messages,
-#'   api_key = api_key,
-#'   model = "gpt-4",
-#'   max_tokens = 50,
-#'   temperature = 0.5,
-#'   retry_attempts = 3,
-#'   api_provider = "openai"
-#' )
-#' print(gpt_response)
-#'
-#' # Example: Calling Gemini's GPT-like API
-#' gemini_response <- gpt_api_call(
-#'   messages = messages,
-#'   api_key = "your_gemini_api_key",
-#'   model = "gemini-model-v1",
-#'   max_tokens = 50,
-#'   temperature = 0.5,
-#'   retry_attempts = 3,
-#'   api_provider = "gemini"
-#' )
-#' print(gemini_response)
-#'
 #' @note Ensure you have a valid API key and the correct endpoint for your chosen provider. For Gemini, update the URL
 #'       in the code if necessary.
 #'
@@ -160,17 +130,6 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 #' @return A numeric vector representing the embedding for the input text. If the API call fails after retries,
 #'         the function returns `NULL`.
 #'
-#' @examples
-#' # Example usage (not recommended for direct access by users):
-#' chunk <- "This is a sample text to retrieve an embedding."
-#' api_key <- "your_openai_api_key"
-#' embedding <- get_embedding(
-#'   chunk = chunk,
-#'   api_key = api_key,
-#'   model_name = "text-embedding-3-small",
-#'   api_provider = "openai"
-#' )
-#' print(embedding)
 #'
 #' @note This function is for internal use only and supports retry logic for API failures. Ensure you have
 #'       valid API credentials and the provider's URL is correctly set.
@@ -235,11 +194,6 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
 #'
 #' @return This function does not return a value. It prints a success or failure message
 #'         to the console based on whether the directory was found and cleared.
-#'
-#'
-#' @examples
-#' # Example usage (not recommended for direct access by users):
-#' clear_output_dir("path/to/embedding_output")
 #'
 #' @note This function is designed for internal use to manage temporary or output files.
 #'       Ensure that the specified directory does not contain critical data before clearing.

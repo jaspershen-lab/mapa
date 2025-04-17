@@ -60,6 +60,16 @@ if (!require(extrafont)) {
   extrafont::loadfonts()
 }
 
+if (!require(future)) {
+  install.packages("future")
+  library(future)
+}
+
+if (!require(promises)) {
+  install.packages("promises")
+  library(promises)
+}
+
 # Define items ====
 menu_var <- tibble::tribble(
   ~ text, ~ tabName, ~ icon,

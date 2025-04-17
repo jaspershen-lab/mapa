@@ -23,11 +23,6 @@ a message indicating so.
 This function is designed for internal use to manage temporary or output files.
 Ensure that the specified directory does not contain critical data before clearing.
 }
-\examples{
-# Example usage (not recommended for direct access by users):
-clear_output_dir("path/to/embedding_output")
-
-}
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }
