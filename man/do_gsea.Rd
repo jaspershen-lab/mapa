@@ -2,12 +2,13 @@
 % Please edit documentation in R/9_do_gesa.R
 \name{do_gsea}
 \alias{do_gsea}
-\title{Perform Gene Set Enrichment Analysis (GSEA)}
+\title{Perform Gene Set Enrichment Analysis (GSEA) for multi-omics data}
 \usage{
 do_gsea(
   variable_info,
   order_by = "fc",
-  database = c("go", "kegg", "reactome"),
+  analysis_type = c("transc", "meta"),
+  database,
   save_to_local = FALSE,
   path = "result",
   OrgDb,
@@ -19,7 +20,7 @@ do_gsea(
   seed = FALSE,
   by = "fgsea",
   use_internal_data = FALSE,
-  ont = "ALL",
+  ont,
   pvalueCutoff = 0.05,
   pAdjustMethod = "BH",
   qvalueCutoff = 0.2,
@@ -30,94 +31,98 @@ do_gsea(
 )
 }
 \arguments{
-\item{variable_info}{A data frame containing variable information, including gene identifiers
-and associated statistics.}
+\item{variable_info}{A data.frame containing feature information with required identifiers:
+- For metabolomics: 'keggid' (KEGG compound IDs) and/or 'hmdbid' (HMDB IDs)
+- For transcriptomics: 'entrezid' (Entrez Gene IDs)}
 
-\item{order_by}{A character string specifying the column name in \code{variable_info} to order genes by.
-Default is \code{"fc"}.}
+\item{order_by}{Character specifying the column in variable_info to use for ranking features.
+Typically contains fold change values. Must be specified. Default is 'fc'.}
 
-\item{database}{A character vector specifying the databases to use for enrichment analysis.
-Options are \code{"go"}, \code{"kegg"}, and \code{"reactome"}.}
+\item{analysis_type}{Analysis type: "transc" for transcriptomics or "meta" for metabolomics.
+Mandatory parameter with no default.}
 
-\item{save_to_local}{Logical value indicating whether to save the results locally.
+\item{database}{Character vector specifying databases to use:
+- For "transc": c("go", "kegg", "reactome")
+- For "meta": c("kegg", "hmdb")}
+
+\item{save_to_local}{Logical indicating whether to save results to local files.
 Default is \code{FALSE}.}
 
-\item{path}{A character string specifying the directory path to save results if \code{save_to_local} is \code{TRUE}.
+\item{path}{Output directory path when save_to_local=TRUE.
 Default is \code{"result"}.}
 
-\item{OrgDb}{An \code{OrgDb} object for the organism of interest. Required if \code{"go"} is included in \code{database}.}
+\item{OrgDb}{Annotation database (e.g., org.Hs.eg.db). Required for transcriptomics GO analysis. Required if \code{"go"} is included in \code{database}.}
 
-\item{organism}{A character string specifying the organism code (e.g., \code{"hsa"} for human).
+\item{organism}{Organism code. Supported: "hsa" (human), "rno" (rat), "mmu" (mouse), etc.
 Default is \code{"hsa"}.}
 
-\item{keyType}{A character string specifying the type of gene identifiers used.
-Default is \code{"ENTREZID"}.}
+\item{keyType}{ID type for transcriptomics (default is \code{"ENTREZID"}).}
 
-\item{exponent}{Numeric value specifying the exponent in the GSEA algorithm.
-Default is \code{1}.}
+\item{exponent}{Weighting exponent for GSEA (default is \code{1}).}
 
-\item{eps}{Numeric value specifying the tolerance in the GSEA calculation.
-Default is \code{1e-10}.}
+\item{eps}{Numeric threshold for p-value adjustment (default is \code{1e-10}).}
 
-\item{verbose}{Logical value indicating whether to print messages during the analysis.
-Default is \code{TRUE}.}
+\item{verbose}{Logical controlling progress messages (default is \code{TRUE}).}
 
-\item{seed}{Logical value indicating whether to set a random seed for reproducibility.
-Default is \code{FALSE}.}
+\item{seed}{Logical/numeric for reproducibility (default is \code{FALSE}).}
 
-\item{by}{Character string specifying the method to combine p-values.
-Default is \code{"fgsea"}.}
+\item{by}{Algorithm selection (\code{"fgsea"} for fast implementation, default).}
 
-\item{use_internal_data}{Logical value indicating whether to use internal data for KEGG analysis.
-Default is \code{FALSE}.}
+\item{use_internal_data}{Logical to use KEGG internal data (default is \code{FALSE}).}
 
-\item{ont}{Character string specifying the ontology to use in GO analysis.
-Default is \code{"ALL"}.}
+\item{ont}{GO ontology type (\code{"BP"}, \code{"MF"}, or \code{"CC"}). Required for GO analysis.}
 
-\item{pvalueCutoff}{Numeric value specifying the p-value cutoff for significance.
-Default is \code{0.05}.}
+\item{pvalueCutoff}{Adjusted p-value cutoff (default is \code{0.05}).}
 
-\item{pAdjustMethod}{Character string specifying the method for p-value adjustment.
-Default is \code{"BH"}.}
+\item{pAdjustMethod}{P-value adjustment method (default is \code{"BH"}).}
 
-\item{qvalueCutoff}{Numeric value specifying the q-value cutoff for significance.
-Default is \code{0.2}.}
+\item{qvalueCutoff}{q-value cutoff (default is \code{0.2}).}
 
-\item{minGSSize}{Integer specifying the minimum size of gene sets to include in the analysis.
-Default is \code{10}.}
+\item{minGSSize}{Minimum gene set size (default is \code{10}).}
 
-\item{maxGSSize}{Integer specifying the maximum size of gene sets to include in the analysis.
-Default is \code{500}.}
+\item{maxGSSize}{Maximum gene set size (default is \code{500}).}
 
-\item{readable}{Logical value indicating whether to convert gene IDs to gene Symbols in the results.
-Default is \code{FALSE}.}
+\item{readable}{Logical for converting IDs to gene symbols (default is \code{FALSE}).}
 
-\item{...}{Additional arguments passed to the enrichment functions.}
+\item{...}{Additional parameters passed to internal functions.}
 }
 \value{
 An object of class \code{functional_module} containing the enrichment analysis results.
 }
 \description{
-This function performs Gene Set Enrichment Analysis using specified databases (GO, KEGG, Reactome)
-on provided variable information.
+This integrated function performs GSEA for both transcriptomics and metabolomics data:
+\itemize{
+\item \strong{Transcriptomics} (analysis_type = "transc"):
+Supports GO/KEGG/Reactome databases. Requires Entrez IDs and fold change values.
+
+\item \strong{Metabolomics} (analysis_type = "meta"):
+Supports KEGG/HMDB metabolic pathways. Requires KEGG IDs, HMDB IDs and fold change values.
+}
 }
 \examples{
 \dontrun{
-# Example usage:
-variable_info <- data.frame(
-  entrezid = c("1", "2", "3"),
-  uniprot = c("P12345", "Q67890", "A1B2C3"),
-  fc = c(2.5, -1.3, 0.8)
-)
-
+# Transcriptomics example
 library(org.Hs.eg.db)
-result <- do_gsea(
-  variable_info = variable_info,
-  order_by = "fc",
+data(gene_data) # Contains entrezid and fc columns
+result_transc <- do_gsea(
+  analysis_type = "transc",
+  variable_info = gene_data,
   database = c("go", "kegg"),
   OrgDb = org.Hs.eg.db,
   organism = "hsa"
 )
+
+# Metabolomics example
+data(metabo_data) # Contains keggid and fc columns
+result_meta <- do_gsea(
+  analysis_type = "meta",
+  variable_info = metabo_data,
+  database = "kegg",
+  organism = "hsa"
+)
+
+# Extract KEGG pathway results
+kegg_res <- result_meta@meta_gsea_kegg_res
 }
 
 }

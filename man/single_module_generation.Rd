@@ -9,7 +9,8 @@ single_module_generation(
   module_info,
   phenotype = NULL,
   model = "gpt-4o-mini-2024-07-18",
-  api_key
+  api_key,
+  output_prompt = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ single_module_generation(
 \item{model}{A string specifying the GPT model to use. Default is \code{"gpt-4o-mini-2024-07-18"}.}
 
 \item{api_key}{A string containing the API key required to access the AI API.}
+
+\item{output_prompt}{Logical. Whether to output prompt in final annotation result. Default is TRUE.}
 }
 \value{
 A list containing two elements: \code{module_name} (the generated biological module name)

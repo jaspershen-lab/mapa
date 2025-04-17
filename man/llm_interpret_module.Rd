@@ -10,7 +10,6 @@ llm_interpret_module(
   embedding_model = "text-embedding-3-small",
   api_key,
   embedding_output_dir,
-  local_corpus = FALSE,
   local_corpus_dir = NULL,
   phenotype = NULL,
   chunk_size = 5,
@@ -18,7 +17,8 @@ llm_interpret_module(
   retmax = 10,
   similarity_filter_num = 20,
   GPT_filter_num = 5,
-  orgdb = org.Hs.eg.db
+  orgdb = org.Hs.eg.db,
+  output_prompt = TRUE
 )
 }
 \arguments{
@@ -32,10 +32,7 @@ llm_interpret_module(
 
 \item{embedding_output_dir}{Character string. Directory where embedding results will be saved.}
 
-\item{local_corpus}{Logical. Whether to use local files. Default is FALSE.}
-
-\item{local_corpus_dir}{Character string. Directory containing local files provided by users.
-Required if local_corpus is TRUE.}
+\item{local_corpus_dir}{Character string. Directory containing local files provided by users. Default is NULL.}
 
 \item{phenotype}{Character string. Phenotype or disease to focus on. Default is NULL.}
 
@@ -50,6 +47,8 @@ Required if local_corpus is TRUE.}
 \item{GPT_filter_num}{Integer. Number of papers to filter using GPT. Default is 5.}
 
 \item{orgdb}{Object. Organism database for gene annotation, default is org.Hs.eg.db. Only used for gene enrichment results.}
+
+\item{output_prompt}{Logical. Whether to output prompt in final annotation result. Default is TRUE.}
 }
 \value{
 A list containing the final results with module names and study summaries.

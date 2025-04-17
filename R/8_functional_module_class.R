@@ -1,4 +1,4 @@
-#'An S4 class to represent enriched pathways
+#' An S4 class to represent enriched pathways
 #' @docType class
 #' @slot variable_info variable information contains marker information.
 #' @slot enrichment_go_result ANY Object storing GO enrichment results.
@@ -42,8 +42,8 @@ setValidity("functional_module", function(object) {
   ## For gene enrichment result
   if (!(
     is(object@enrichment_go_result, "enrichResult") ||
-    is(object@enrichment_go_result, "gseaResult") ||
-    is.null(object@enrichment_go_result)
+      is(object@enrichment_go_result, "gseaResult") ||
+      is.null(object@enrichment_go_result)
   )) {
     return(
       "The 'enrichment_go_result' slot must be an enrichResult, a gseaResult or a NULL."
@@ -51,8 +51,8 @@ setValidity("functional_module", function(object) {
   }
   if (!(
     is(object@enrichment_kegg_result, "enrichResult") ||
-    is(object@enrichment_kegg_result, "gseaResult") ||
-    is.null(object@enrichment_kegg_result)
+      is(object@enrichment_kegg_result, "gseaResult") ||
+      is.null(object@enrichment_kegg_result)
   )) {
     return(
       "The 'enrichment_kegg_result' slot must be an enrichResult, a gseaResult or a NULL."
@@ -60,8 +60,8 @@ setValidity("functional_module", function(object) {
   }
   if (!(
     is(object@enrichment_reactome_result, "enrichResult") ||
-    is(object@enrichment_reactome_result, "gseaResult") ||
-    is.null(object@enrichment_reactome_result)
+      is(object@enrichment_reactome_result, "gseaResult") ||
+      is.null(object@enrichment_reactome_result)
   )) {
     return(
       "The 'enrichment_reactome_result' slot must be an enrichResult, a gseaResult or a NULL."
@@ -71,7 +71,8 @@ setValidity("functional_module", function(object) {
   ## For metabolite enrichment result
   if (!(
     is(object@enrichment_hmdb_result, "enrich_result") ||
-    is.null(object@enrichment_hmdb_result)
+      is(object@enrichment_hmdb_result, "gseaResult") ||
+      is.null(object@enrichment_hmdb_result)
   )) {
     return(
       "The 'enrichment_hmdb_result' slot must be either an enrich_result or a NULL."
@@ -79,7 +80,8 @@ setValidity("functional_module", function(object) {
   }
   if (!(
     is(object@enrichment_metkegg_result, "enrich_result") ||
-    is.null(object@enrichment_metkegg_result)
+      is(object@enrichment_metkegg_result, "gseaResult") ||
+      is.null(object@enrichment_metkegg_result)
   )) {
     return(
       "The 'enrichment_metkegg_result' slot must be either an enrich_result or a NULL."
@@ -106,10 +108,10 @@ setMethod(
     parameter <-
       try(object@parameter, silent = TRUE)
 
-    ###pathway enrichment or gsea
+    ### pathway enrichment or gsea
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
-    } else{
+    } else {
       analysis_type <- "do_gsea"
     }
 
@@ -118,8 +120,10 @@ setMethod(
     cat(crayon::yellow(paste(rep("-", 20), collapse = ""), "\n"))
 
     message(crayon::green("-----------Variable information------------"))
-    message(crayon::green(nrow(object@variable_info)),
-            crayon::green(" features/markers in total"))
+    message(
+      crayon::green(nrow(object@variable_info)),
+      crayon::green(" features/markers in total")
+    )
 
 
     # p.adjust.cutoff <-
@@ -152,8 +156,8 @@ setMethod(
     message(crayon::green("-----------Enrichment results and modules of genes------------"))
     message(crayon::green("-----------GO------------"))
     if (is.null(enrichment_go_result)) {
-      message(crayon::green('No GO results'))
-    } else{
+      message(crayon::green("No GO results"))
+    } else {
       if (analysis_type == "enrich_pathway") {
         p.adjust.cutoff <- object@enrichment_go_result@pvalueCutoff
         message(
@@ -168,7 +172,7 @@ setMethod(
             p.adjust.cutoff
           )
         )
-      } else{
+      } else {
         p.adjust.cutoff <- object@enrichment_go_result@params$pvalueCutoff
         message(crayon::green(
           nrow(
@@ -182,8 +186,8 @@ setMethod(
     }
 
     if (length(object@merged_pathway_go) == 0) {
-      message(crayon::green('No GO modules'))
-    } else{
+      message(crayon::green("No GO modules"))
+    } else {
       message(crayon::green(
         length(object@merged_pathway_go$module_result$module),
         "GO modules"
@@ -192,8 +196,8 @@ setMethod(
 
     message(crayon::green("-----------KEGG------------"))
     if (is.null(enrichment_kegg_result)) {
-      message(crayon::green('No KEGG results'))
-    } else{
+      message(crayon::green("No KEGG results"))
+    } else {
       if (analysis_type == "enrich_pathway") {
         p.adjust.cutoff <- object@enrichment_kegg_result@pvalueCutoff
         message(
@@ -206,7 +210,7 @@ setMethod(
             p.adjust.cutoff
           )
         )
-      } else{
+      } else {
         p.adjust.cutoff <- object@enrichment_kegg_result@params$pvalueCutoff
         message(crayon::green(
           nrow(
@@ -220,8 +224,8 @@ setMethod(
     }
 
     if (length(object@merged_pathway_kegg) == 0) {
-      message(crayon::green('No KEGG modules'))
-    } else{
+      message(crayon::green("No KEGG modules"))
+    } else {
       message(crayon::green(
         length(object@merged_pathway_kegg$module_result$module),
         "KEGG modules"
@@ -230,8 +234,8 @@ setMethod(
 
     message(crayon::green("-----------Reactome------------"))
     if (is.null(enrichment_reactome_result)) {
-      message(crayon::green('No Reactome results'))
-    } else{
+      message(crayon::green("No Reactome results"))
+    } else {
       if (analysis_type == "enrich_pathway") {
         p.adjust.cutoff <- object@enrichment_reactome_result@pvalueCutoff
         message(
@@ -244,7 +248,7 @@ setMethod(
             p.adjust.cutoff
           )
         )
-      } else{
+      } else {
         p.adjust.cutoff <- object@enrichment_reactome_result@params$pvalueCutoff
         message(crayon::green(
           nrow(
@@ -258,8 +262,8 @@ setMethod(
     }
 
     if (length(object@merged_pathway_reactome) == 0) {
-      message(crayon::green('No Reactome modules'))
-    } else{
+      message(crayon::green("No Reactome modules"))
+    } else {
       message(crayon::green(
         length(object@merged_pathway_reactome$module_result$module),
         "Reactome modules"
@@ -270,13 +274,13 @@ setMethod(
     message(crayon::green("-----------Enrichment results and modules of metabolites------------"))
     message(crayon::green("-----------HMDB------------"))
     if (is.null(enrichment_hmdb_result)) {
-      message(crayon::green('No HMDB enrichment results'))
+      message(crayon::green("No HMDB enrichment results"))
     } else {
       enrichment_hmdb_result
     }
     if (length(object@merged_pathway_hmdb) == 0) {
-      message(crayon::green('No HMDB modules'))
-    } else{
+      message(crayon::green("No HMDB modules"))
+    } else {
       message(crayon::green(
         length(object@merged_pathway_hmdb$module_result$module),
         "HMDB modules"
@@ -285,13 +289,13 @@ setMethod(
 
     message(crayon::green("-----------KEGG Metabolite------------"))
     if (is.null(enrichment_metkegg_result)) {
-      message(crayon::green('No KEGG metabolite enrichment results'))
+      message(crayon::green("No KEGG metabolite enrichment results"))
     } else {
       enrichment_metkegg_result
     }
     if (length(object@merged_pathway_metkegg) == 0) {
-      message(crayon::green('No KEGG modules'))
-    } else{
+      message(crayon::green("No KEGG modules"))
+    } else {
       message(crayon::green(
         length(object@merged_pathway_metkegg$module_result$module),
         "KEGG modules"
@@ -300,8 +304,8 @@ setMethod(
 
     message(crayon::green("-----------Functional modules------------"))
     if (length(object@merged_module) == 0) {
-      message(crayon::green('No Functional modules'))
-    } else{
+      message(crayon::green("No Functional modules"))
+    } else {
       message(crayon::green(
         length(object@merged_module$functional_module_result$module),
         "Functional modules"
@@ -311,7 +315,7 @@ setMethod(
     cat(crayon::yellow(paste(rep("-", 20), collapse = ""), "\n"))
     cat(crayon::green("Processing information\n"))
     if (.hasSlot(object = object, name = "process_info") &
-        length(object@process_info) != 0) {
+      length(object@process_info) != 0) {
       process_info <- object@process_info
       cat(crayon::green(length(process_info), "processings in total\n"))
       if (length(process_info) > 5) {
@@ -327,19 +331,22 @@ setMethod(
             "Time" = process_info[[idx]]@time
           ) %>%
             print()
-        } else{
+        } else {
           data.frame(
-            "Package" = process_info[[idx]] %>% lapply(function(x)
-              x@pacakge_name) %>% unlist(),
-            "Function used" = process_info[[idx]] %>% lapply(function(x)
-              x@function_name) %>% unlist(),
-            "Time" = process_info[[idx]] %>% lapply(function(x)
-              as.character(x@time)) %>% unlist()
+            "Package" = process_info[[idx]] %>% lapply(function(x) {
+              x@pacakge_name
+            }) %>% unlist(),
+            "Function used" = process_info[[idx]] %>% lapply(function(x) {
+              x@function_name
+            }) %>% unlist(),
+            "Time" = process_info[[idx]] %>% lapply(function(x) {
+              as.character(x@time)
+            }) %>% unlist()
           ) %>%
             print()
         }
       }
-    } else{
+    } else {
       cat(crayon::red("There are no processing for your data.\n"))
     }
   }

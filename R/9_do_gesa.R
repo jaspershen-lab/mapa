@@ -1,18 +1,82 @@
+# following code: Yuchen's testing code
+#
+# library(metid)
+# library(metpath)
+# library(tidymass)
+#
+# load("/do_gsea_demoData/meta.rda")
+#
+# plot(log(meta_info$score, 2))
+#
+# gsea_pathways <- do_gsea(
+#   variable_info = meta_info,
+#   database = c("kegg", "hmdb"),
+#   order_by = "score",
+#   analysis_type = "meta",
+#   pvalueCutoff = 1,
+#   minGSSize = 0,
+#   maxGSSize = 1000
+# )
+#
+# meta_kegg_gsea_res <-
+#   as.data.frame(gsea_pathways@enrichment_metkegg_result@result)
+#
+# meta_hmdb_gsea_res <-
+#   as.data.frame(gsea_pathways@enrichment_hmdb_result@result)
+#
+#
+# ##### test: transcript gsea ######
+#
+# library(clusterProfiler)
+# library(org.Hs.eg.db)
+# library(ReactomePA)
+#
+# load("/do_gsea_demoData/transc.rda")
+#
+# plot(log(transc_info$score, 2))
+#
+# sum(is.na(log(transc_info$score, 2)))
+# sum(is.infinite(log(transc_info$score, 2)))
+#
+# gsea_pathways <-
+#   do_gsea(
+#     variable_info = transc_info,
+#     analysis_type = "transc",
+#     order_by = "score",
+#     OrgDb = org.Hs.eg.db,
+#     database = c("go", "kegg", "reactome"),
+#     ont = "ALL",
+#     pool = FALSE,
+#     pvalueCutoff = 1
+#   )
+#
+# transc_go_gsea_res <-
+#   as.data.frame(gsea_pathways@enrichment_go_result@result)
+#
+# transc_kegg_gsea_res <-
+#   as.data.frame(gsea_pathways@enrichment_kegg_result@result)
+#
+# transc_reactome_gsea_res <-
+#   as.data.frame(gsea_pathways@enrichment_reactome_result@result)
+
+# following code: Yifei's initial testing code
+#
+# library(r4projects)
 # setwd(r4projects::get_project_wd())
 # source("R/6_utils.R")
 # source("R/8_functional_module_class.R")
 # setwd("demo_data/")
-
+#
 # library(clusterProfiler)
 # library(org.Hs.eg.db)
 # library(ReactomePA)
 #
 # load("covid_data/covid_data.RData")
-
+#
 # variable_info <-
-#   covid_data %>%
-#   massdataset::activate_mass_dataset(what = "variable_info") %>%
-#   massdataset::extract_variable_info() #%>%
+#   covid_data |>
+#   massdataset::activate_mass_dataset(what = "variable_info") |>
+#   massdataset::extract_variable_info() #|>
 #   #dplyr::arrange(desc(fc))
 #
 # plot(log(variable_info$fc, 2))
@@ -45,53 +109,50 @@
 #
 # save(gsea_pathways, file = "covid_data/result/gsea_pathways")
 
-#' Perform Gene Set Enrichment Analysis (GSEA)
+#' Perform Gene Set Enrichment Analysis (GSEA) for multi-omics data
 #'
-#' This function performs Gene Set Enrichment Analysis using specified databases (GO, KEGG, Reactome)
-#' on provided variable information.
+#' @description
+#' This integrated function performs GSEA for both transcriptomics and metabolomics data:
+#' \itemize{
+#'   \item \strong{Transcriptomics} (analysis_type = "transc"):
+#'   Supports GO/KEGG/Reactome databases. Requires Entrez IDs and fold change values.
 #'
-#' @param variable_info A data frame containing variable information, including gene identifiers
-#'   and associated statistics.
-#' @param order_by A character string specifying the column name in `variable_info` to order genes by.
-#'   Default is `"fc"`.
-#' @param database A character vector specifying the databases to use for enrichment analysis.
-#'   Options are `"go"`, `"kegg"`, and `"reactome"`.
-#' @param save_to_local Logical value indicating whether to save the results locally.
-#'   Default is `FALSE`.
-#' @param path A character string specifying the directory path to save results if `save_to_local` is `TRUE`.
-#'   Default is `"result"`.
-#' @param OrgDb An `OrgDb` object for the organism of interest. Required if `"go"` is included in `database`.
-#' @param organism A character string specifying the organism code (e.g., `"hsa"` for human).
-#'   Default is `"hsa"`.
-#' @param keyType A character string specifying the type of gene identifiers used.
-#'   Default is `"ENTREZID"`.
-#' @param exponent Numeric value specifying the exponent in the GSEA algorithm.
-#'   Default is `1`.
-#' @param eps Numeric value specifying the tolerance in the GSEA calculation.
-#'   Default is `1e-10`.
-#' @param verbose Logical value indicating whether to print messages during the analysis.
-#'   Default is `TRUE`.
-#' @param seed Logical value indicating whether to set a random seed for reproducibility.
-#'   Default is `FALSE`.
-#' @param by Character string specifying the method to combine p-values.
-#'   Default is `"fgsea"`.
-#' @param use_internal_data Logical value indicating whether to use internal data for KEGG analysis.
-#'   Default is `FALSE`.
-#' @param ont Character string specifying the ontology to use in GO analysis.
-#'   Default is `"ALL"`.
-#' @param pvalueCutoff Numeric value specifying the p-value cutoff for significance.
-#'   Default is `0.05`.
-#' @param pAdjustMethod Character string specifying the method for p-value adjustment.
-#'   Default is `"BH"`.
-#' @param qvalueCutoff Numeric value specifying the q-value cutoff for significance.
-#'   Default is `0.2`.
-#' @param minGSSize Integer specifying the minimum size of gene sets to include in the analysis.
-#'   Default is `10`.
-#' @param maxGSSize Integer specifying the maximum size of gene sets to include in the analysis.
-#'   Default is `500`.
-#' @param readable Logical value indicating whether to convert gene IDs to gene Symbols in the results.
-#'   Default is `FALSE`.
-#' @param ... Additional arguments passed to the enrichment functions.
+#'   \item \strong{Metabolomics} (analysis_type = "meta"):
+#'   Supports KEGG/HMDB metabolic pathways. Requires KEGG IDs, HMDB IDs and fold change values.
+#' }
+#'
+#' @param variable_info A data.frame containing feature information with required identifiers:
+#'                     - For metabolomics: 'keggid' (KEGG compound IDs) and/or 'hmdbid' (HMDB IDs)
+#'                     - For transcriptomics: 'entrezid' (Entrez Gene IDs)
+#' @param order_by Character specifying the column in variable_info to use for ranking features.
+#'                Typically contains fold change values. Must be specified. Default is 'fc'.
+#' @param analysis_type Analysis type: "transc" for transcriptomics or "meta" for metabolomics.
+#'                     Mandatory parameter with no default.
+#' @param database Character vector specifying databases to use:
+#'                - For "transc": c("go", "kegg", "reactome")
+#'                - For "meta": c("kegg", "hmdb")
+#' @param save_to_local Logical indicating whether to save results to local files.
+#' Default is `FALSE`.
+#' @param path Output directory path when save_to_local=TRUE.
+#' Default is `"result"`.
+#' @param OrgDb Annotation database (e.g., org.Hs.eg.db). Required for transcriptomics GO analysis. Required if `"go"` is included in `database`.
+#' @param organism Organism code. Supported: "hsa" (human), "rno" (rat), "mmu" (mouse), etc.
+#'               Default is `"hsa"`.
+#' @param keyType ID type for transcriptomics (default is `"ENTREZID"`).
+#' @param exponent Weighting exponent for GSEA (default is `1`).
+#' @param eps Numeric threshold for p-value adjustment (default is `1e-10`).
+#' @param verbose Logical controlling progress messages (default is `TRUE`).
+#' @param seed Logical/numeric for reproducibility (default is `FALSE`).
+#' @param by Algorithm selection (`"fgsea"` for fast implementation, default).
+#' @param use_internal_data Logical to use KEGG internal data (default is `FALSE`).
+#' @param ont GO ontology type (`"BP"`, `"MF"`, or `"CC"`). Required for GO analysis.
+#' @param pvalueCutoff Adjusted p-value cutoff (default is `0.05`).
+#' @param pAdjustMethod P-value adjustment method (default is `"BH"`).
+#' @param qvalueCutoff q-value cutoff (default is `0.2`).
+#' @param minGSSize Minimum gene set size (default is `10`).
+#' @param maxGSSize Maximum gene set size (default is `500`).
+#' @param readable Logical for converting IDs to gene symbols (default is `FALSE`).
+#' @param ... Additional parameters passed to internal functions.
 #'
 #' @return An object of class `functional_module` containing the enrichment analysis results.
 #'
@@ -99,21 +160,28 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Example usage:
-#' variable_info <- data.frame(
-#'   entrezid = c("1", "2", "3"),
-#'   uniprot = c("P12345", "Q67890", "A1B2C3"),
-#'   fc = c(2.5, -1.3, 0.8)
-#' )
-#'
+#' # Transcriptomics example
 #' library(org.Hs.eg.db)
-#' result <- do_gsea(
-#'   variable_info = variable_info,
-#'   order_by = "fc",
+#' data(gene_data) # Contains entrezid and fc columns
+#' result_transc <- do_gsea(
+#'   analysis_type = "transc",
+#'   variable_info = gene_data,
 #'   database = c("go", "kegg"),
 #'   OrgDb = org.Hs.eg.db,
 #'   organism = "hsa"
 #' )
+#'
+#' # Metabolomics example
+#' data(metabo_data) # Contains keggid and fc columns
+#' result_meta <- do_gsea(
+#'   analysis_type = "meta",
+#'   variable_info = metabo_data,
+#'   database = "kegg",
+#'   organism = "hsa"
+#' )
+#'
+#' # Extract KEGG pathway results
+#' kegg_res <- result_meta@meta_gsea_kegg_res
 #' }
 #'
 #' @export
@@ -121,7 +189,8 @@
 do_gsea <-
   function(variable_info,
            order_by = "fc",
-           database = c("go", "kegg", "reactome"),
+           analysis_type = c("transc", "meta"),
+           database,
            save_to_local = FALSE,
            path = "result",
            OrgDb,
@@ -133,7 +202,7 @@ do_gsea <-
            seed = FALSE,
            by = "fgsea",
            use_internal_data = FALSE,
-           ont = "ALL",
+           ont,
            pvalueCutoff = 0.05,
            pAdjustMethod = "BH",
            qvalueCutoff = 0.2,
@@ -141,206 +210,616 @@ do_gsea <-
            maxGSSize = 500,
            readable = FALSE,
            ...) {
-    ###check the id of markers
-    if (readable) {
-      readable <- FALSE
-    }
-    if (missing(database)) {
-      stop("database is required")
-    }
+    ### complete this argument
+    analysis_type <- match.arg(analysis_type)
 
-    if (all(!database %in% c("go", "kegg", "reactome"))) {
-      stop("database should contains go, kegg, and reactome")
-    }
-
-    if (missing(order_by)) {
-      stop("order_by is required")
-    }
-
-    if (missing(variable_info)) {
-      stop("variable_info is required")
-    }
-
-    ###chang all the columns to low cases
-    colnames(variable_info) <- tolower(colnames(variable_info))
-
-    #####check variable_info
-    check_variable_info(variable_info = variable_info, query_type = "gene" ,order_by = order_by)
-
-    variable_info <-
-      variable_info %>%
-      dplyr::filter(!is.na(entrezid)) %>%
-      dplyr::group_by(entrezid) %>%
-      dplyr::mutate(p_adjust = min(p_value_adjust)) %>%
-      dplyr::ungroup() %>%
-      dplyr::distinct(entrezid, .keep_all = TRUE)
-    message("Filter variable_info to unique 'entrezid' entries with minimum adjusted p-values.")
-
-    gene_list <-
-      log(variable_info[[order_by]], 2)
-
-    names(gene_list) <-
-      variable_info$entrezid
-
-    ###go enrichment
-    if ("go" %in% database) {
-      message("GO database...")
-      if (missing(OrgDb)) {
-        stop("OrgDb is required")
+    ### check if type are clarified
+    if (!missing(analysis_type)) {
+      if (!analysis_type %in% c("transc", "meta")) {
+        stop("Invalid analysis_type detected. Choose 'transc' for transcriptomics gsea or 'meta' for metabolomics gsea.")
       }
-
-      gsea_go_result <-
-        clusterProfiler::gseGO(
-          geneList = sort(gene_list, decreasing = TRUE),
-          ont = ont,
-          OrgDb = OrgDb,
+      if (length(analysis_type) != 1) {
+        stop("Incorrect analysis_type input. Please choose one and only one from 'transc' or 'meta'.")
+      } else if (analysis_type == "transc") {
+        do_gsea_transc(
+          variable_info = variable_info,
+          order_by = order_by,
+          database = database,
+          save_to_local = save_to_local,
+          path = path,
+          OrgDb,
+          organism = organism,
           keyType = keyType,
           exponent = exponent,
-          minGSSize = minGSSize,
-          maxGSSize = maxGSSize,
           eps = eps,
-          pvalueCutoff = pvalueCutoff,
-          pAdjustMethod = pAdjustMethod,
           verbose = verbose,
           seed = seed,
-          by = by
-        )
-      gsea_go_result@result$Count <- purrr::map_int(gsea_go_result@result$core_enrichment,
-                                                   function(x) {
-                                                     length(stringr::str_split(x, pattern = "/")[[1]])
-                                                   })
-    } else{
-      gsea_go_result <- NULL
-    }
-
-    ###KEGG
-    if ("kegg" %in% database) {
-      message("kegg database...")
-
-      gsea_kegg_result <-
-        clusterProfiler::gseKEGG(
-          geneList = sort(gene_list, decreasing = TRUE),
-          organism = organism,
-          keyType = "kegg",
-          exponent = exponent,
-          minGSSize = minGSSize,
-          maxGSSize = maxGSSize,
-          eps = eps,
-          pvalueCutoff = pvalueCutoff,
-          pAdjustMethod = pAdjustMethod,
-          verbose = verbose,
+          by = by,
           use_internal_data = use_internal_data,
-          seed = seed,
-          by = by
-        )
-      gsea_kegg_result@result$Count <- purrr::map_int(gsea_kegg_result@result$core_enrichment,
-                                                   function(x) {
-                                                     length(stringr::str_split(x, pattern = "/")[[1]])
-                                                   })
-    } else{
-      gsea_kegg_result <- NULL
-    }
-
-    ###Reactome
-    if ("reactome" %in% database) {
-      ##change the organism name
-      organism2 <-
-        switch(
-          organism,
-          hsa = "human",
-          rno = "rat",
-          mmu = "mouse",
-          cel = "celegans",
-          sce = "yeast",
-          dre = "zebrafis",
-          dme = "fly",
-          mde = "fly"
-        )
-      message("Reactome database...")
-
-      gsea_reactome_result <-
-        ReactomePA::gsePathway(
-          geneList = sort(gene_list, decreasing = TRUE),
-          organism = organism2,
-          exponent = exponent,
-          minGSSize = minGSSize,
-          maxGSSize = maxGSSize,
-          eps = eps,
+          ont = ont,
           pvalueCutoff = pvalueCutoff,
           pAdjustMethod = pAdjustMethod,
+          qvalueCutoff = qvalueCutoff,
+          minGSSize = minGSSize,
+          maxGSSize = maxGSSize,
+          readable = readable,
+          ...
+        )
+      } else if (analysis_type == "meta") {
+        do_gsea_meta(
+          variable_info = variable_info,
+          order_by = order_by,
+          database = database,
+          save_to_local = save_to_local,
+          path = path,
+          organism = organism,
+          exponent = exponent,
+          eps = eps,
           verbose = verbose,
           seed = seed,
-          by = by
+          by = by,
+          use_internal_data = use_internal_data,
+          pvalueCutoff = pvalueCutoff,
+          pAdjustMethod = pAdjustMethod,
+          qvalueCutoff = qvalueCutoff,
+          minGSSize = minGSSize,
+          maxGSSize = maxGSSize,
+          readable = readable,
+          ...
         )
-      gsea_reactome_result@result$Count <- purrr::map_int(gsea_reactome_result@result$core_enrichment,
-                                                   function(x) {
-                                                     length(stringr::str_split(x, pattern = "/")[[1]])
-                                                     })
-    } else{
-      gsea_reactome_result <- NULL
+      }
+    } else {
+      stop("Please specify the type of omic data for GSEA analysis: use 'transc' for transcriptomics or 'meta' for metabolomics.")
     }
+  }
 
-    ####save results to local?
-    if (save_to_local) {
-      dir.create(path, recursive = TRUE, showWarnings = FALSE)
-      dir.create(file.path(path, "go"),
-                 showWarnings = FALSE,
-                 recursive = TRUE)
-      dir.create(file.path(path, "kegg"),
-                 showWarnings = FALSE,
-                 recursive = TRUE)
-      dir.create(file.path(path, "reactome"),
-                 showWarnings = FALSE,
-                 recursive = TRUE)
-      save(gsea_go_result, file = file.path(path, "go/gsea_go_result"))
-      save(gsea_kegg_result, file = file.path(path, "kegg/gsea_kegg_result"))
-      save(gsea_reactome_result,
-           file = file.path(path, "reactome/gsea_reactome_result"))
-    }
+do_gsea_transc <- function(variable_info = variable_info,
+                           order_by = order_by,
+                           database = database,
+                           save_to_local = save_to_local,
+                           path = path,
+                           OrgDb,
+                           organism = organism,
+                           keyType = "ENTREZID",
+                           exponent = exponent,
+                           eps = eps,
+                           verbose = verbose,
+                           seed = seed,
+                           by = by,
+                           use_internal_data = use_internal_data,
+                           ont = ont,
+                           pvalueCutoff = pvalueCutoff,
+                           pAdjustMethod = pAdjustMethod,
+                           qvalueCutoff = qvalueCutoff,
+                           minGSSize = minGSSize,
+                           maxGSSize = maxGSSize,
+                           readable = readable,
+                           ...) {
+  ### check the id of markers
+  if (readable) {
+    readable <- FALSE
+  }
 
-    parameter = new(
-      Class = "tidymass_parameter",
-      pacakge_name = "mapa",
-      function_name = "do_gsea()",
-      parameter = list(
-        order_by = order_by,
-        database = database,
-        save_to_local = save_to_local,
-        path = path,
-        organism = organism,
-        keyType = keyType,
-        exponent = exponent,
-        eps = eps,
-        verbose = verbose,
-        seed = seed,
-        by = by,
-        use_internal_data = use_internal_data,
-        ont = ont,
-        pvalueCutoff = pvalueCutoff,
-        pAdjustMethod = pAdjustMethod,
-        qvalueCutoff = qvalueCutoff,
-        minGSSize = minGSSize,
-        maxGSSize = maxGSSize,
-        readable = readable
-      ),
-      time = Sys.time()
+  if (missing(database)) {
+    stop("Please specify which database you intend to use.")
+  }
+
+  ### check valid db
+  valid_db <- c("go", "kegg", "reactome")
+  db_error_msg <- "Transcriptomics database options: go/kegg/reactome. You are welcome to select one or multiple of them."
+
+  if (any(!database %in% valid_db)) {
+    stop(paste("Invalid database for", analysis_type, ":", db_error_msg))
+  }
+
+  if (missing(order_by)) {
+    stop("order_by must be specified.")
+  }
+
+  if (missing(variable_info)) {
+    stop("variable_info must be specified.")
+  }
+
+  ### change all the columns to low cases
+  colnames(variable_info) <- tolower(colnames(variable_info))
+
+  ##### check variable_info
+  check_variable_info(
+    variable_info = variable_info,
+    query_type = "gene",
+    order_by = order_by
+  )
+
+  ### query cleaning
+  variable_info <-
+    variable_info |>
+    dplyr::filter(!is.na(entrezid)) |>
+    dplyr::group_by(entrezid) |>
+    dplyr::mutate(p_adjust = min(p_value_adjust)) |>
+    dplyr::ungroup() |>
+    dplyr::distinct(entrezid, .keep_all = TRUE)
+
+  message("Filter variable_info to unique 'entrezid' entries with minimum adjusted p-values.")
+
+  gene_list <-
+    log(variable_info[[order_by]], 2)
+
+  ### final to-enrich object: gene_list
+  names(gene_list) <-
+    variable_info$entrezid
+
+  gene_list <-
+    gene_list[is.finite(gene_list)]
+
+  ### go enrichment
+  if ("go" %in% database) {
+    message(
+      "\n",
+      "==========================\n",
+      "Now running GO database...\n",
+      "==========================\n"
     )
 
-    process_info <- list()
+    if (missing(OrgDb)) {
+      stop("OrgDb is required")
+    }
 
-    process_info$do_gsea <-
-      parameter
-
-    result <-
-      new(
-        "functional_module",
-        variable_info = variable_info,
-        enrichment_go_result = gsea_go_result,
-        enrichment_kegg_result = gsea_kegg_result,
-        enrichment_reactome_result = gsea_reactome_result,
-        process_info = process_info
+    gene_gsea_go_res <-
+      clusterProfiler::gseGO(
+        geneList = sort(gene_list, decreasing = TRUE),
+        ont = ont,
+        OrgDb = OrgDb,
+        keyType = keyType,
+        exponent = exponent,
+        minGSSize = minGSSize,
+        maxGSSize = maxGSSize,
+        eps = eps,
+        pvalueCutoff = pvalueCutoff,
+        pAdjustMethod = pAdjustMethod,
+        verbose = verbose,
+        seed = seed,
+        by = by
       )
 
-    message("Done.")
-    result
+    gene_gsea_go_res@result$count <-
+      purrr::map_int(
+        gene_gsea_go_res@result$core_enrichment,
+        function(x) {
+          length(stringr::str_split(x, pattern = "/")[[1]])
+        }
+      )
+  } else {
+    gene_gsea_go_res <- NULL
   }
+
+  ### KEGG
+  if ("kegg" %in% database) {
+    message(
+      "\n",
+      "============================\n",
+      "Now running KEGG database...\n",
+      "============================\n"
+    )
+
+    gene_gsea_kegg_res <-
+      clusterProfiler::gseKEGG(
+        geneList = sort(gene_list, decreasing = TRUE),
+        organism = organism,
+        keyType = "kegg",
+        exponent = exponent,
+        minGSSize = minGSSize,
+        maxGSSize = maxGSSize,
+        eps = eps,
+        pvalueCutoff = pvalueCutoff,
+        pAdjustMethod = pAdjustMethod,
+        verbose = verbose,
+        use_internal_data = use_internal_data,
+        seed = seed,
+        by = by
+      )
+
+    gene_gsea_kegg_res@result$count <-
+      purrr::map_int(
+        gene_gsea_kegg_res@result$core_enrichment,
+        function(x) {
+          length(stringr::str_split(x, pattern = "/")[[1]])
+        }
+      )
+  } else {
+    gene_gsea_kegg_res <- NULL
+  }
+
+  ### Reactome
+  if ("reactome" %in% database) {
+    ## change the organism name
+    organism2 <-
+      switch(organism,
+        hsa = "human",
+        rno = "rat",
+        mmu = "mouse",
+        cel = "celegans",
+        sce = "yeast",
+        dre = "zebrafis",
+        dme = "fly",
+        mde = "fly"
+      )
+
+    message(
+      "\n",
+      "================================\n",
+      "Now running Reactome database...\n",
+      "================================\n"
+    )
+
+
+    gene_gsea_reactome_res <-
+      ReactomePA::gsePathway(
+        geneList = sort(gene_list, decreasing = TRUE),
+        organism = organism2,
+        exponent = exponent,
+        minGSSize = minGSSize,
+        maxGSSize = maxGSSize,
+        eps = eps,
+        pvalueCutoff = pvalueCutoff,
+        pAdjustMethod = pAdjustMethod,
+        verbose = verbose,
+        seed = seed,
+        by = by
+      )
+
+    gene_gsea_reactome_res@result$count <-
+      purrr::map_int(
+        gene_gsea_reactome_res@result$core_enrichment,
+        function(x) {
+          length(stringr::str_split(x, pattern = "/")[[1]])
+        }
+      )
+  } else {
+    gene_gsea_reactome_res <- NULL
+  }
+
+  #### save results to local?
+  if (save_to_local) {
+    dir.create(path, recursive = TRUE, showWarnings = FALSE)
+    dir.create(file.path(path, "go"),
+      showWarnings = FALSE,
+      recursive = TRUE
+    )
+    dir.create(file.path(path, "kegg"),
+      showWarnings = FALSE,
+      recursive = TRUE
+    )
+    dir.create(file.path(path, "reactome"),
+      showWarnings = FALSE,
+      recursive = TRUE
+    )
+    save(gene_gsea_go_res, file = file.path(path, "go/gene_gsea_go_res"))
+    save(gene_gsea_kegg_res, file = file.path(path, "kegg/gene_gsea_kegg_res"))
+    save(gene_gsea_reactome_res,
+      file = file.path(path, "reactome/gene_gsea_reactome_res")
+    )
+  }
+
+  parameter <- new(
+    Class = "tidymass_parameter",
+    pacakge_name = "mapa",
+    function_name = "do_gsea()",
+    parameter = list(
+      variable_info = variable_info,
+      order_by = order_by,
+      database = database,
+      save_to_local = save_to_local,
+      path = path,
+      OrgDb,
+      organism = organism,
+      keyType = keyType,
+      exponent = exponent,
+      eps = eps,
+      verbose = verbose,
+      seed = seed,
+      by = by,
+      use_internal_data = use_internal_data,
+      ont = ont,
+      pvalueCutoff = pvalueCutoff,
+      pAdjustMethod = pAdjustMethod,
+      qvalueCutoff = qvalueCutoff,
+      minGSSize = minGSSize,
+      maxGSSize = maxGSSize,
+      readable = readable
+    ),
+    time = Sys.time()
+  )
+
+  process_info <- list()
+
+  process_info$do_gsea <-
+    parameter
+
+  result <-
+    new(
+      "functional_module",
+      variable_info = variable_info,
+      enrichment_go_result = gene_gsea_go_res,
+      enrichment_kegg_result = gene_gsea_kegg_res,
+      enrichment_reactome_result = gene_gsea_reactome_res,
+      process_info = process_info
+    )
+
+  message("Done.")
+  result
+}
+
+do_gsea_meta <- function(variable_info = variable_info,
+                         order_by = order_by,
+                         database = database,
+                         save_to_local = save_to_local,
+                         path = path,
+                         organism = organism,
+                         exponent = exponent,
+                         eps = eps,
+                         verbose = verbose,
+                         seed = seed,
+                         by = by,
+                         use_internal_data = use_internal_data,
+                         pvalueCutoff = pvalueCutoff,
+                         pAdjustMethod = pAdjustMethod,
+                         minGSSize = minGSSize,
+                         maxGSSize = maxGSSize,
+                         readable = readable,
+                         ...) {
+  ### check the id of markers
+  if (readable) {
+    readable <- FALSE
+  }
+
+  if (missing(database)) {
+    stop("Please specify which database you intend to use.")
+  }
+
+  ### check valid db
+  valid_db <- c("kegg", "hmdb")
+
+  db_error_msg <- "Metabolomics database options: kegg/hmdb. You can also select multiple of them."
+
+  if (any(!database %in% valid_db)) {
+    stop(paste("Invalid database for", analysis_type, ":", db_error_msg))
+  }
+
+  if (missing(order_by)) {
+    stop("order_by must be specified.")
+  }
+
+  if (missing(variable_info)) {
+    stop("variable_info cannot be empty.")
+  }
+
+  check_variable_info(
+    variable_info = variable_info,
+    query_type = "metabolite",
+    order_by = order_by
+  )
+
+  ### initialize
+  meta_gsea_kegg_res <- NULL
+  meta_gsea_hmdb_res <- NULL
+
+  get_kegg_pathway <- function() {
+    data("kegg_hsa_pathway", envir = environment())
+    message(
+      crayon::yellow(
+        "This database is downloaded in",
+        kegg_hsa_pathway@database_info$version
+      )
+    )
+    cat("\n")
+    return(kegg_hsa_pathway)
+  }
+
+  get_hmdb_pathway <- function() {
+    data("hmdb_pathway", envir = environment())
+    message(
+      crayon::yellow(
+        "This database is downloaded in",
+        hmdb_pathway@database_info$version
+      )
+    )
+    cat("\n")
+    return(hmdb_pathway)
+  }
+
+  if ("kegg" %in% database) {
+    message(
+      "\n",
+      "============================\n",
+      "Now running KEGG database...\n",
+      "============================\n"
+    )
+
+    # process variable_info
+    variable_info <- variable_info |>
+      dplyr::filter(!is.na(keggid))
+
+    # check KEGG ID format
+    if (!any(grepl("^C\\d{5}$", variable_info$keggid))) {
+      stop("All KEGG ID does not match compound format (e.g. C00001)")
+    } else {
+      # load KEGG pathways from metpath
+      kegg_hsa_pathway <-
+        get_kegg_pathway()
+
+      # Arrange database
+      kegg_ids <- sapply(kegg_hsa_pathway@compound_list, function(x) x$KEGG.ID)
+      kegg_pathways <- kegg_hsa_pathway@pathway_name
+      metabolite_strs <- sapply(kegg_ids, function(x) paste(x, collapse = ","))
+
+      term2metabolite_kegg <- data.frame(
+        pathway_name = kegg_pathways,
+        metabolite_ids = metabolite_strs,
+        stringsAsFactors = FALSE
+      )
+
+      term2metabolite_kegg <- term2metabolite_kegg |>
+        tidyr::separate_rows(metabolite_ids, sep = ",") |>
+        dplyr::mutate(metabolite_ids = trimws(metabolite_ids)) |>
+        dplyr::filter(!is.na(metabolite_ids) & metabolite_ids != "") |>
+        dplyr::distinct()
+
+      meta_list <- log(variable_info[[order_by]], 2)
+      names(meta_list) <- variable_info$keggid
+
+      meta_gsea_kegg_res <- clusterProfiler::GSEA(
+        geneList = sort(meta_list, decreasing = TRUE),
+        TERM2GENE = term2metabolite_kegg,
+        minGSSize = minGSSize,
+        maxGSSize = maxGSSize,
+        eps = eps,
+        pvalueCutoff = pvalueCutoff,
+        pAdjustMethod = pAdjustMethod,
+        verbose = verbose,
+        seed = seed,
+        by = by
+        # GSEA function in clusterProfiler
+        # does not have `qvalueCutoff` parameter
+      )
+
+      meta_gsea_kegg_res@result$count <-
+        purrr::map_int(
+          meta_gsea_kegg_res@result$core_enrichment,
+          function(x) {
+            length(stringr::str_split(x, pattern = "/")[[1]])
+          }
+        )
+
+      meta_gsea_kegg_res@result <-
+        subset(meta_gsea_kegg_res@result, select = -ID)
+      meta_gsea_kegg_res@result <-
+        meta_gsea_kegg_res@result |>
+        rename(pathway = Description)
+    }
+  }
+
+  if ("hmdb" %in% database) {
+    message(
+      "\n",
+      "============================\n",
+      "Now running HMDB database...\n",
+      "============================\n"
+    )
+
+    # process variable_info
+    variable_info <- variable_info |>
+      dplyr::filter(!is.na(hmdbid))
+
+    # check HMDB ID format
+    if (!any(grepl("^HMDB\\d{7}$", variable_info$hmdbid))) {
+      stop("All HMDB ID does not match compound format (e.g. HMDB0000001)")
+    } else {
+      # load HMDB pathways from metpath
+      hmdb_hsa_pathway <-
+        get_hmdb_pathway()
+
+      # Arrange database
+      hmdb_ids <- sapply(hmdb_hsa_pathway@compound_list, function(x) x$HMDB.ID)
+      hmdb_pathways <- hmdb_hsa_pathway@pathway_name
+      metabolite_strs <- sapply(hmdb_ids, function(x) paste(x, collapse = ","))
+
+      term2metabolite_hmdb <- data.frame(
+        pathway_name = hmdb_pathways,
+        metabolite_ids = metabolite_strs,
+        stringsAsFactors = FALSE
+      )
+
+      term2metabolite_hmdb <- term2metabolite_hmdb |>
+        tidyr::separate_rows(metabolite_ids, sep = ",") |>
+        dplyr::mutate(metabolite_ids = trimws(metabolite_ids)) |>
+        dplyr::filter(!is.na(metabolite_ids) & metabolite_ids != "") |>
+        dplyr::distinct()
+
+      meta_list <- log(variable_info[[order_by]], 2)
+      names(meta_list) <- variable_info$hmdbid
+
+      meta_gsea_hmdb_res <- clusterProfiler::GSEA(
+        geneList = sort(meta_list, decreasing = TRUE),
+        TERM2GENE = term2metabolite_hmdb,
+        exponent = exponent,
+        minGSSize = minGSSize,
+        maxGSSize = maxGSSize,
+        eps = eps,
+        pvalueCutoff = pvalueCutoff,
+        pAdjustMethod = pAdjustMethod,
+        verbose = verbose,
+        seed = seed,
+        by = by
+      )
+
+      meta_gsea_hmdb_res@result$count <-
+        purrr::map_int(
+          meta_gsea_hmdb_res@result$core_enrichment,
+          function(x) {
+            length(stringr::str_split(x, pattern = "/")[[1]])
+          }
+        )
+
+      meta_gsea_hmdb_res@result <-
+        subset(meta_gsea_hmdb_res@result, select = -ID)
+      meta_gsea_hmdb_res@result <-
+        meta_gsea_hmdb_res@result |>
+        rename(pathway = Description)
+    }
+  }
+
+  ### save results to local?
+  if (save_to_local) {
+    dir.create(file.path(path, "kegg"), showWarnings = FALSE)
+    dir.create(file.path(path, "hmdb"), showWarnings = FALSE)
+
+    save(meta_gsea_kegg_res,
+      file = file.path(path, "kegg/meta_gsea_kegg_res")
+    )
+
+    save(meta_gsea_hmdb_res,
+      file = file.path(path, "hmdb/meta_gsea_hmdb_res")
+    )
+  }
+
+  parameter <- new(
+    Class = "tidymass_parameter",
+    pacakge_name = "mapa",
+    function_name = "do_gsea()",
+    parameter = list(
+      variable_info = variable_info,
+      order_by = order_by,
+      database = database,
+      save_to_local = save_to_local,
+      path = path,
+      organism = organism,
+      exponent = exponent,
+      eps = eps,
+      verbose = verbose,
+      seed = seed,
+      by = by,
+      use_internal_data = use_internal_data,
+      pvalueCutoff = pvalueCutoff,
+      pAdjustMethod = pAdjustMethod,
+      minGSSize = minGSSize,
+      maxGSSize = maxGSSize,
+      readable = readable
+    ),
+    time = Sys.time()
+  )
+
+  process_info <- list()
+
+  process_info$do_gsea <- parameter
+
+  result <- new(
+    "functional_module",
+    variable_info = variable_info,
+    enrichment_metkegg_result = meta_gsea_kegg_res,
+    enrichment_hmdb_result = meta_gsea_hmdb_res,
+    process_info = process_info
+  )
+
+  message("Done.")
+  result
+}
