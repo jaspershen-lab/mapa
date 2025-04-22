@@ -304,14 +304,8 @@ do_gsea_transc <- function(variable_info = variable_info,
     stop("Please specify which database you intend to use.")
   }
 
-  ### check valid db
   valid_db <- c("go", "kegg", "reactome")
-  db_error_msg <- "Transcriptomics database options: go/kegg/reactome. You are welcome to select one or multiple of them."
-
-  if (any(!database %in% valid_db)) {
-    stop(paste("Invalid database for", analysis_type, ":", db_error_msg))
-  }
-
+  database <- match.arg(database, choices = valid_db, several.ok = TRUE)
   if (missing(order_by)) {
     stop("order_by must be specified.")
   }
@@ -575,15 +569,8 @@ do_gsea_meta <- function(variable_info = variable_info,
   if (missing(database)) {
     stop("Please specify which database you intend to use.")
   }
-
-  ### check valid db
   valid_db <- c("kegg", "hmdb")
-
-  db_error_msg <- "Metabolomics database options: kegg/hmdb. You can also select multiple of them."
-
-  if (any(!database %in% valid_db)) {
-    stop(paste("Invalid database for", analysis_type, ":", db_error_msg))
-  }
+  database <- match.arg(database, choices = valid_db, several.ok = TRUE)
 
   if (missing(order_by)) {
     stop("order_by must be specified.")
@@ -603,29 +590,29 @@ do_gsea_meta <- function(variable_info = variable_info,
   meta_gsea_kegg_res <- NULL
   meta_gsea_hmdb_res <- NULL
 
-  get_kegg_pathway <- function() {
-    data("kegg_hsa_pathway", envir = environment())
-    message(
-      crayon::yellow(
-        "This database is downloaded in",
-        kegg_hsa_pathway@database_info$version
-      )
-    )
-    cat("\n")
-    return(kegg_hsa_pathway)
-  }
-
-  get_hmdb_pathway <- function() {
-    data("hmdb_pathway", envir = environment())
-    message(
-      crayon::yellow(
-        "This database is downloaded in",
-        hmdb_pathway@database_info$version
-      )
-    )
-    cat("\n")
-    return(hmdb_pathway)
-  }
+  # get_kegg_pathway <- function() {
+  #   data("kegg_hsa_pathway", envir = environment())
+  #   message(
+  #     crayon::yellow(
+  #       "This database is downloaded in",
+  #       kegg_hsa_pathway@database_info$version
+  #     )
+  #   )
+  #   cat("\n")
+  #   return(kegg_hsa_pathway)
+  # }
+  #
+  # get_hmdb_pathway <- function() {
+  #   data("hmdb_pathway", envir = environment())
+  #   message(
+  #     crayon::yellow(
+  #       "This database is downloaded in",
+  #       hmdb_pathway@database_info$version
+  #     )
+  #   )
+  #   cat("\n")
+  #   return(hmdb_pathway)
+  # }
 
   if ("kegg" %in% database) {
     message(
@@ -646,7 +633,7 @@ do_gsea_meta <- function(variable_info = variable_info,
     } else {
       # load KEGG pathways from metpath
       kegg_hsa_pathway <-
-        get_kegg_pathway()
+        get_kegg_pathways()
 
       # Arrange database
       kegg_ids <- sapply(kegg_hsa_pathway@compound_list, function(x) x$KEGG.ID)
