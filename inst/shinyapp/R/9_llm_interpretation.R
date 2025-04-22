@@ -143,7 +143,7 @@ llm_interpretation_ui <- function(id) {
                          tabPanel(
                            title = "Interpretation results",
                            # uiOutput(ns("llm_interpretation_result")),
-                           uiOutput(ns("llm_module_annotation_details")),
+                           uiOutput(ns("module_details")),
                            # selectInput(
                            #   inputId = ns("module_selector"),
                            #   label = "Select Functional Module:",
@@ -196,6 +196,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
   moduleServer(
     id,
     function(input, output, session) {
+      ns <- session$ns
       ## Section1: Load enriched_functional_module.rda and navigate to specified directory ====
       observeEvent(
         input$upload_enriched_functional_module, {
@@ -309,12 +310,22 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
 
         library(future)
         library(promises)
+        library(mapa)
+
+        object <- enriched_functional_module()
+        llm_model <- input$llm_model
+        embedding_model <- input$embedding_model
+        api_key <- input$api_key
+        embedding_output_dir <- selected_dirs$embedding_output_dir
+        local_corpus_dir <- selected_dirs$local_corpus_dir
+        phenotype <- if(input$phenotype == "NULL") NULL else input$phenotype
+        years <- input$years
 
         # Show a modal with a spinner to indicate work is happening
         showModal(modalDialog(
           title = "Analysis in Progress",
           "The LLM interpretation is running in the background. Results will appear when ready.",
-          footer = NULL,
+          footer = modalButton("Close"),
           easyClose = FALSE,
           size = "m"
         ))
@@ -333,15 +344,16 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
         # Run the interpretation asynchronously
         promises::future_promise({
           # This code runs in a separate R process
-          llm_interpret_module(
-            object = enriched_functional_module(),
-            llm_model = input$llm_model,
-            embedding_model = input$embedding_model,
-            api_key = input$api_key,
-            embedding_output_dir = selected_dirs$embedding_output_dir,
-            local_corpus_dir = selected_dirs$local_corpus_dir,
-            phenotype = if(input$phenotype == "NULL") NULL else input$phenotype,
-            years = input$years
+          result <-
+            mapa::llm_interpret_module(
+            object = object,
+            llm_model = llm_model,
+            embedding_model = embedding_model,
+            api_key = api_key,
+            embedding_output_dir = embedding_output_dir,
+            local_corpus_dir = local_corpus_dir,
+            phenotype = phenotype,
+            years = years
           )
         },
         globals = TRUE) %...>%
@@ -350,42 +362,51 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
             # Store the results
             annotation_result(result)
 
-            ### Save prompt
-            module_prompt <- annotation_result()[[input$module_selector]]$generated_name$prompt
-            module_prompt(module_prompt)
+            # ### Save prompt
+            # module_prompt <- annotation_result()[[input$module_selector]]$generated_name$prompt
+            # module_prompt(module_prompt)
 
-            ### Save code
-            llm_interpretation_code <-
-              functional_module_annotation_code <-
-              sprintf(
-                "
-            functional_module_annotation <-
-              llm_interpret_module(
-                object              = enriched_functional_module(),
-                llm_model           = %s,
-                embedding_model     = %s,
-                api_key             = %s,
-                embedding_output_dir = %s,
-                local_corpus_dir    = %s,
-                phenotype           = %s,
-                years               = %s
-              )
-            ",
-                ## wrap character inputs in quotes:
-                paste0('"', input$llm_model, '"'),
-                paste0('"', input$embedding_model, '"'),
-                paste0('"', input$api_key, '"'),
-                paste0('"', selected_dirs$embedding_output_dir, '"'),
-                if (is.null(selected_dirs$local_corpus_dir)) NULL else (paste0('"', selected_dirs$local_corpus_dir, '"')),
-                paste0('"', input$phenotype, '"'),
-                input$years
-              )
-            llm_interpretation_code(llm_interpretation_code)
+            # ### Save code
+            # llm_interpretation_code <-
+            #   functional_module_annotation_code <-
+            #   sprintf(
+            #     "
+            # functional_module_annotation <-
+            #   llm_interpret_module(
+            #     object              = enriched_functional_module(),
+            #     llm_model           = %s,
+            #     embedding_model     = %s,
+            #     api_key             = %s,
+            #     embedding_output_dir = %s,
+            #     local_corpus_dir    = %s,
+            #     phenotype           = %s,
+            #     years               = %s
+            #   )
+            # ",
+            #     ## wrap character inputs in quotes:
+            #     paste0('"', input$llm_model, '"'),
+            #     paste0('"', input$embedding_model, '"'),
+            #     paste0('"', input$api_key, '"'),
+            #     paste0('"', selected_dirs$embedding_output_dir, '"'),
+            #     if (is.null(selected_dirs$local_corpus_dir)) NULL else (paste0('"', selected_dirs$local_corpus_dir, '"')),
+            #     paste0('"', input$phenotype, '"'),
+            #     input$years
+            #   )
+            # llm_interpretation_code(llm_interpretation_code)
 
             # Close the modal
-            removeModal()
+            # removeModal()
+            # session$onFlushed(function() {
+            #   # Close the modal first
+            #   removeModal()
+            #
+            #   # Then show success notification after a slight delay
+            #   later::later(function() {
+            #     showNotification("LLM interpretation completed successfully!", type = "message")
+            #   }, 300) # 300ms delay
+            # })
 
-            # Show success notification
+            # # Show success notification
             showNotification("LLM interpretation completed successfully!", type = "message")
           }) %...!%
           # This runs if the future encounters an error
@@ -428,6 +449,42 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           strong("Confidence Score:"),
           textOutput(ns("confidence_score"), container = span)
         )
+      })
+
+      observeEvent(annotation_result(), {
+        req(annotation_result(), input$module_selector)
+        ### Save code
+        llm_interpretation_code <-
+          functional_module_annotation_code <-
+          sprintf(
+            "
+            functional_module_annotation <-
+              llm_interpret_module(
+                object              = enriched_functional_module(),
+                llm_model           = %s,
+                embedding_model     = %s,
+                api_key             = %s,
+                embedding_output_dir = %s,
+                local_corpus_dir    = %s,
+                phenotype           = %s,
+                years               = %s
+              )
+            ",
+            ## wrap character inputs in quotes:
+            paste0('"', input$llm_model, '"'),
+            paste0('"', input$embedding_model, '"'),
+            paste0('"', input$api_key, '"'),
+            paste0('"', selected_dirs$embedding_output_dir, '"'),
+            if (is.null(selected_dirs$local_corpus_dir)) NULL else (paste0('"', selected_dirs$local_corpus_dir, '"')),
+            paste0('"', input$phenotype, '"'),
+            input$years
+          )
+        llm_interpretation_code(llm_interpretation_code)
+
+        ### Save prompt
+        if (input$module_selector %in% names(annotation_result())) {
+          module_prompt(annotation_result()[[input$module_selector]]$generated_name$prompt)
+        }
       })
 
       output$module_name <- renderText({

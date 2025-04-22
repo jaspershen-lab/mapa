@@ -126,6 +126,7 @@ preprocess_module <- function(df,
       # gene_conversion <- convert_gene_identifiers(query_vec, orgdb)
       # GeneSymbols_vec <- gene_conversion$GeneSymbols_vec
       # GeneNames_vec <- gene_conversion$GeneNames_vec
+
       suppressMessages(GeneSymbols_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first") %>% unname())
       suppressMessages(GeneNames_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "GENENAME", keytype = "ENSEMBL", multiVals = "first") %>% unname())
 
