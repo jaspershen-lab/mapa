@@ -17,11 +17,12 @@ enrich_pathway_ui <- function(id) {
                 column(4,
                        radioButtons(
                          ns("query_type"),
-                         "Query type",
+                         tags$h4("Query type"),
                          choices = c(
                            "Gene" = "gene",
                            "Metabolite" = "metabolite"
-                         )
+                         ),
+                         inline = TRUE
                        ),
 
                        ## Gene enrichment analysis panel ----
@@ -29,7 +30,7 @@ enrich_pathway_ui <- function(id) {
                          div(id = ns("gene_panel"),
                              radioButtons(
                                ns("analysis_type"),
-                               "Analysis type",
+                               tags$h4("Analysis type"),
                                choices = list(
                                  "Pathway enrichment analysis" = "enrich_pathway",
                                  "Gene set enrichment analysis" = "do_gsea"
@@ -39,7 +40,7 @@ enrich_pathway_ui <- function(id) {
                                div(id = ns("gsea_order_by_panel"),
                                    radioButtons(
                                      ns("order_by"),
-                                     "Order by",
+                                     tags$h4("Order by"),
                                      choices = c(
                                        "Fold change" = "fc",
                                        "Adjusted p value" = "p_value_adjust"
@@ -49,27 +50,111 @@ enrich_pathway_ui <- function(id) {
                              ),
                              checkboxGroupInput(
                                ns("pathway_database"),
-                               "Database",
+                               tags$h4("Database"),
                                choices = c(
                                  "GO" = "go",
                                  "KEGG" = "kegg",
                                  "Reactome" = "reactome"
                                ),
-                               selected = c("go", "kegg", "reactome")
+                               selected = NULL
                              ),
-                             selectInput(
-                               ns("organism"),
-                               "Organism",
-                               choices = list(
-                                 "Human" = "hsa",
-                                 "Rat" = "rno",
-                                 "Mouse" = "mmu",
-                                 "C. elegans" = "cel",
-                                 "Yeast" = "sce",
-                                 "Zebrafish" = "dre",
-                                 "Fruit fly" = "dme"),
-                               selected = "hsa"
+
+                             # GO specific parameters
+                             shinyjs::hidden(
+                               div(id = ns("go_panel"),
+                                   h4("GO Parameters"),
+                                   textInput(
+                                     ns("go_orgdb"),
+                                     "Organism Database",
+                                     value = "org.Hs.eg.db"
+                                   ),
+                                   helpText("Enter the name of an OrgDb package that is installed on your system.",
+                                            "Common examples: org.Hs.eg.db (Human), org.Mm.eg.db (Mouse), org.Rn.eg.db (Rat)",
+                                            "For the current list of OrgDb packages, visit: ",
+                                            tags$a(
+                                              href = "https://bioconductor.org/packages/release/BiocViews.html#___OrgDb",
+                                              "Bioconductor OrgDb packages",
+                                              target = "_blank"
+                                            )),
+                                   textInput(
+                                     ns("go_keytype"),
+                                     "GO Keytype",
+                                     value = "ENSEMBL"
+                                   ),
+                                   selectInput(
+                                     ns("go_ont"),
+                                     "GO Ontology",
+                                     choices = c(
+                                       "All" = "ALL",
+                                       "Biological Process" = "BP",
+                                       "Cellular Component" = "CC",
+                                       "Molecular Function" = "MF"
+                                     ),
+                                     selected = "ALL"
+                                   )
+                               )
                              ),
+
+                             # KEGG specific parameters
+                             shinyjs::hidden(
+                               div(id = ns("kegg_panel"),
+                                   h4("KEGG Parameters"),
+                                   textInput(
+                                     ns("kegg_organism"),
+                                     "KEGG Organism",
+                                     value = "NULL"
+                                   ),
+                                   helpText(
+                                     "The KEGG organism code is a three or four letter abbreviation.",
+                                     "Examples: 'hsa' (Human), 'mmu' (Mouse), 'rno' (Rat).",
+                                     "For a complete list of organism codes, visit: ",
+                                     tags$a(
+                                       href = "https://www.genome.jp/kegg/catalog/org_list.html",
+                                       "KEGG Organism Codes",
+                                       target = "_blank"
+                                     )
+                                   ),
+                                   selectInput(
+                                     ns("kegg_keytype"),
+                                     "KEGG Keytype",
+                                     choices = c(
+                                       "KEGG/Entrez" = "kegg",
+                                       "NCBI Gene ID" = "ncbi-geneid",
+                                       "NCBI Protein ID" = "ncbi-proteinid",
+                                       "UniProt" = "uniprot"
+                                     ),
+                                     selected = "uniprot"
+                                   ),
+                                   checkboxInput(
+                                     ns("use_internal_data"),
+                                     "Use internal database",
+                                     value = TRUE
+                                   )
+                               )
+                             ),
+
+                             # Reactome specific parameters
+                             shinyjs::hidden(
+                               div(id = ns("reactome_panel"),
+                                   h4("Reactome Parameters"),
+                                   selectInput(
+                                     ns("reactome_organism"),
+                                     "Reactome Organism",
+                                     choices = c(
+                                       "Human" = "human",
+                                       "Rat" = "rat",
+                                       "Mouse" = "mouse",
+                                       "C. elegans" = "celegans",
+                                       "Yeast" = "yeast",
+                                       "Zebrafish" = "zebrafish",
+                                       "Fruit fly" = "fly"
+                                     ),
+                                     selected = "human"
+                                   )
+                               )
+                             ),
+
+                             # Common parameters
                              numericInput(
                                ns("p_value_cutoff"),
                                "P-value cutoff",
@@ -81,6 +166,13 @@ enrich_pathway_ui <- function(id) {
                                "P-adjust method",
                                choices = c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"),
                                selected = "BH"),
+                             numericInput(
+                               ns("q_value_cutoff"),
+                               "Q-value cutoff",
+                               value = 0.2,
+                               min = 0,
+                               max = 1
+                             ),
                              sliderInput(
                                ns("gene_set_size"),
                                "Gene set size",
@@ -100,7 +192,7 @@ enrich_pathway_ui <- function(id) {
                                  "HMDB" = "hmdb",
                                  "KEGG" = "kegg"
                                ),
-                               selected = c("hmdb", "kegg")
+                               selected = NULL
                              ),
                              checkboxInput(
                                ns("use_internal_data"),
@@ -117,7 +209,7 @@ enrich_pathway_ui <- function(id) {
                                ns("p_adjust_method"),
                                "P-adjust method",
                                choices = c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr"),
-                               selected = "BH"),
+                               selected = "BH")
                          )
                        ),
 
@@ -247,6 +339,28 @@ enrich_pathway_server <- function(id, variable_info = NULL, tab_switch) {
         )
       })
 
+      # Toggle database-specific parameter panels
+      observe({
+        shinyjs::toggleElement(
+          id = "go_panel",
+          condition = "go" %in% input$pathway_database
+        )
+      })
+
+      observe({
+        shinyjs::toggleElement(
+          id = "kegg_panel",
+          condition = "kegg" %in% input$pathway_database
+        )
+      })
+
+      observe({
+        shinyjs::toggleElement(
+          id = "reactome_panel",
+          condition = "reactome" %in% input$pathway_database
+        )
+      })
+
       ## Perform metabolite enrichment analysis ----
       observe({
         shinyjs::toggleElement(
@@ -281,29 +395,61 @@ enrich_pathway_server <- function(id, variable_info = NULL, tab_switch) {
             withProgress(message = 'Analysis in progress...', {
               result <- tryCatch({
                 library(clusterProfiler)
-                library(org.Hs.eg.db)
                 library(ReactomePA)
 
                 if (input$analysis_type == "enrich_pathway") {
-                  enrich_pathway(
-                    variable_info(),
+                  # Extract common parameters
+                  common_params <- list(
+                    variable_info = variable_info(),
                     query_type = input$query_type,
                     database = input$pathway_database,
                     save_to_local = FALSE,
-                    path = "result",
-                    OrgDb = org.Hs.eg.db,
-                    organism = input$organism,
-                    keyType = "ENTREZID",
-                    use_internal_data = FALSE,
-                    ont = "ALL",
                     pvalueCutoff = input$p_value_cutoff,
                     pAdjustMethod = input$p_adjust_method,
-                    qvalueCutoff = 0.2,
-                    minGSSize = input$gene_set_size[1],
-                    maxGSSize = input$gene_set_size[2],
-                    readable = FALSE,
-                    pool = FALSE
+                    use_internal_data = input$use_internal_data
                   )
+
+                  # Add gene-specific parameters if query type is gene
+                  if (input$query_type == "gene") {
+                    common_params$qvalueCutoff <- input$q_value_cutoff
+                    # GO parameters
+                    if ("go" %in% input$pathway_database) {
+                      common_params$go.keytype <- input$go_keytype
+                      common_params$go.ont <- input$go_ont
+
+                      # Validate input format
+                      if (!grepl("^org\\.[A-Za-z]+\\..+\\.db$", input$go_orgdb)) {
+                        stop("Invalid OrgDb package name. Expected format: org.XX.eg.db")
+                      }
+                      # Check if the package is installed
+                      if (!requireNamespace(input$go_orgdb, quietly = TRUE)) {
+                        stop(paste("Package", input$go_orgdb, "is not installed. Please install it using BiocManager::install('", input$go_orgdb, "')"))
+                      }
+                      # Load the package
+                      requireNamespace(input$go_orgdb)
+                      # Get the OrgDb object
+                      org_db_obj <- get(input$go_orgdb)
+                      common_params$go.orgdb <- org_db_obj
+                    }
+
+                    # KEGG parameters
+                    if ("kegg" %in% input$pathway_database) {
+                      common_params$kegg.organism <- input$kegg_organism
+                      common_params$kegg.keytype <- input$kegg_keytype
+                    }
+
+                    # Reactome parameters
+                    if ("reactome" %in% input$pathway_database) {
+                      common_params$reactome.organism <- input$reactome_organism
+                    }
+
+                    # Gene set size parameters
+                    common_params$minGSSize <- input$gene_set_size[1]
+                    common_params$maxGSSize <- input$gene_set_size[2]
+                  }
+
+                  do.call(enrich_pathway, common_params)
+
                 } else if (input$analysis_type == "do_gsea") {
                   do_gsea(
                     variable_info(),
@@ -316,7 +462,7 @@ enrich_pathway_server <- function(id, variable_info = NULL, tab_switch) {
                     ont = "ALL",
                     pvalueCutoff = input$p_value_cutoff,
                     pAdjustMethod = input$p_adjust_method,
-                    qvalueCutoff = 0.2,
+                    qvalueCutoff = input$q_value_cutoff,
                     minGSSize = input$gene_set_size[1],
                     maxGSSize = input$gene_set_size[2],
                     readable = FALSE,
@@ -337,84 +483,137 @@ enrich_pathway_server <- function(id, variable_info = NULL, tab_switch) {
 
               # shinyjs::hide("loading")
 
-              ###save code
+              # Save code for reproducibility
               pathway_database <-
                 paste0("c(", paste(unlist(
                   lapply(paste(input$pathway_database), function(x)
                     paste0('"', x, '"'))
                 ),
                 collapse = ", "), ")")
-              enrich_pathways_code <-
-                if (input$analysis_type == "enrich_pathway") {
-                  if (input$query_type == "gene") {
-                    sprintf(
-                      '
-              enriched_pathways <-
-              enrich_pathway(
-              variable_info,
-              query_type = %s,
-              database = %s,
-              OrgDb = org.Hs.eg.db,
-              use_internal_data = FALSE,
-              organism = %s,
-              pvalueCutoff = %s,
-              pAdjustMethod = %s,
-              minGSSize = %s,
-              maxGSSize = %s)
-              ',
-                      input$query_type,
-                      pathway_database,
-                      paste0('"', input$organism, '"'),
-                      input$p_value_cutoff,
-                      paste0('"', input$p_adjust_method, '"'),
-                      input$gene_set_size[1],
-                      input$gene_set_size[2]
-                    )
-                  } else {
-                    sprintf(
-                      '
-              enriched_pathways <-
-              enrich_pathway(
-              variable_info,
-              query_type = %s,
-              database = %s,
-              use_internal_data = %s,
-              pvalueCutoff = %s,
-              pAdjustMethod = %s)
-              ',
-                      input$query_type,
-                      pathway_database,
-                      input$use_internal_data,
-                      input$p_value_cutoff,
-                      paste0('"', input$p_adjust_method, '"')
-                    )
-                  }
-                } else {
-                  sprintf(
-                    '
-              enriched_pathways <-
-              do_gsea(
-              variable_info,
-              order_by = %s,
-              database = %s,
-              OrgDb = org.Hs.eg.db,
-              organism = %s,
-              pvalueCutoff = %s,
-              pAdjustMethod = %s,
-              minGSSize = %s,
-              maxGSSize = %s)
-              ',
-                    input$order_by,
-                    pathway_database,
-                    paste0('"', input$organism, '"'),
-                    input$p_value_cutoff,
-                    paste0('"', input$p_adjust_method, '"'),
-                    input$gene_set_size[1],
-                    input$gene_set_size[2]
-                  )
-                }
 
-              enrich_pathways_code(enrich_pathways_code)
+              if (input$analysis_type == "enrich_pathway") {
+                if (input$query_type == "gene") {
+                  # Build parameter parts based on selected databases
+                  go_params <- ""
+                  if ("go" %in% input$pathway_database) {
+                    go_params <- sprintf(
+                    '
+                    go.orgdb = "%s",
+                    go.keytype = "%s",
+                    go.ont = "%s",
+                    go.universe = NULL,
+                    go.pool = FALSE,
+                    ',
+                    input$go_orgdb,
+                    input$go_keytype,
+                    input$go_ont
+                    )}
+
+                  kegg_params <- ""
+                  if ("kegg" %in% input$pathway_database) {
+                    kegg_params <- sprintf(
+                    '
+                    kegg.organism = "%s",
+                    kegg.keytype = "%s",
+                    use_internal_data = "%s",
+                    kegg.universe = NULL,
+                    ',
+                    input$kegg_organism,
+                    input$kegg_keytype,
+                    as.character(input$use_internal_data)
+                    )}
+
+                  reactome_params <- ""
+                  if ("reactome" %in% input$pathway_database) {
+                    reactome_params <- sprintf(
+                    '
+                    reactome.organism = "%s",
+                    reactome.universe = NULL,
+                    ',
+                    input$reactome_organism
+                    )}
+
+                  code <- sprintf(
+                  '
+                  enriched_pathways <-
+                    enrich_pathway(
+                      variable_info,
+                      query_type = "%s",
+                      database = %s,%s%s%s
+                      pvalueCutoff = %s,
+                      pAdjustMethod = "%s",
+                      qvalueCutoff = %s,
+                      minGSSize = %s,
+                      maxGSSize = %s,
+                      readable = FALSE,
+                      save_to_local = FALSE
+                    )',
+                  input$query_type,
+                  pathway_database,
+                  go_params,
+                  kegg_params,
+                  reactome_params,
+                  input$p_value_cutoff,
+                  input$p_adjust_method,
+                  input$q_value_cutoff,
+                  input$gene_set_size[1],
+                  input$gene_set_size[2]
+                  )
+
+                  enrich_pathways_code(code)
+
+                  } else { # Metabolite code
+                    code <- sprintf(
+                    '
+                    enriched_pathways <-
+                    enrich_pathway(
+                      variable_info,
+                      query_type = "%s",
+                      database = %s,
+                      use_internal_data = %s,
+                      pvalueCutoff = %s,
+                      pAdjustMethod = "%s"
+                    )
+                    ',
+                    input$query_type,
+                    pathway_database,
+                    as.character(input$use_internal_data),
+                    input$p_value_cutoff,
+                    input$p_adjust_method
+                    )
+                    enrich_pathways_code(code)
+                    }
+                } else { # GSEA code
+                  code <- sprintf(
+                  '
+                  enriched_pathways <-
+                  do_gsea(
+                    variable_info,
+                    order_by = "%s",
+                    database = %s,
+                    OrgDb = org.Hs.eg.db,
+                    organism = "%s",
+                    ont = "%s",
+                    pvalueCutoff = %s,
+                    pAdjustMethod = "%s",
+                    qvalueCutoff = %s,
+                    minGSSize = %s,
+                    maxGSSize = %s,
+                    readable = FALSE
+                  )
+                  ',
+                  input$order_by,
+                  pathway_database,
+                  input$kegg_organism,
+                  input$go_ont,
+                  input$p_value_cutoff,
+                  input$p_adjust_method,
+                  input$q_value_cutoff,
+                  input$gene_set_size[1],
+                  input$gene_set_size[2]
+                  )
+                  enrich_pathways_code(code)
+                  }
             })
           }
         }

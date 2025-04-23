@@ -63,7 +63,6 @@
 #     variable_info = variable_info,
 #     query_type = "metabolite",
 #     database = c("hmdb", "kegg"),
-#     use_internal_data = TRUE,
 #     save_to_local = FALSE,
 #     path = "result",
 #     pvalueCutoff = 0.05,
@@ -117,11 +116,12 @@
 #' @param reactome.universe Numeric vector, the background universe for Reactome enrichment.
 #'   If NULL (default), all genes in Reactome database will be used.
 #'
-#' @param use_internal_data Logical, whether to use internal database for KEGG and HMDB enrichment.
 #' @param pvalueCutoff Numeric, the p-value cutoff for enrichment.
 #' @param pAdjustMethod Character, the method for adjusting p-values.
 #'   See stats::p.adjust() for available methods ("BH", "bonferroni", etc.).
-#' @param qvalueCutoff Numeric, the q-value (adjusted p-value) cutoff for enrichment.
+#' @param qvalueCutoff Numeric, the q-value cutoff for enrichment. Default is 0.2.
+#'   q-values are specifically those adjusted p-values that incorporate an empirical estimate of
+#'   the fraction of true nulls, aiming for maximum power at a fixed FDR.
 #' @param minGSSize Numeric, the minimum gene set size for enrichment.
 #'   Sets with fewer genes than this will be excluded.
 #' @param maxGSSize Numeric, the maximum gene set size for enrichment.
@@ -191,7 +191,6 @@
 #'     variable_info = met_variable_info,
 #'     query_type = "metabolite",
 #'     database = c("hmdb", "kegg"),
-#'     use_internal_data = TRUE,
 #'     save_to_local = FALSE,
 #'     pvalueCutoff = 0.05,
 #'     pAdjustMethod = "BH"
@@ -219,7 +218,6 @@ enrich_pathway <-
            ## reactome input ID should be Entrez ID
            reactome.universe = NULL,
            # Common parameters
-           use_internal_data = FALSE,
            pvalueCutoff = 0.05,
            pAdjustMethod = "BH",
            qvalueCutoff = 0.2,
@@ -339,7 +337,7 @@ enrich_pathway <-
               qvalueCutoff = qvalueCutoff,
               minGSSize = minGSSize,
               maxGSSize = maxGSSize,
-              use_internal_data = use_internal_data
+              use_internal_data = FALSE
             )
           } else {
             clusterProfiler::enrichKEGG(
@@ -352,7 +350,7 @@ enrich_pathway <-
               universe = kegg.universe,
               minGSSize = minGSSize,
               maxGSSize = maxGSSize,
-              use_internal_data = use_internal_data
+              use_internal_data = FALSE
             )
           }
         }, error = function(e) {
@@ -399,7 +397,7 @@ enrich_pathway <-
     } else if (query_type == "metabolite") {
       #### Get HMDB and KEGG databases
       dbs <- tryCatch({
-        get_met_pathway_db(use_internal_data = use_internal_data)
+        get_met_pathway_db(use_internal_data = TRUE)
       }, error = function(e) {
         warning(paste("Failed to get metabolite pathway databases:", e$message))
         return(list(hmdb_pathway = NULL, kegg_pathway = NULL))
@@ -499,7 +497,6 @@ enrich_pathway <-
         reactome.organism = reactome.organism,
         reactome.keytype = "entrezid",
         reactome.universe = if(is.null(reactome.universe)) NULL else "provided",
-        use_internal_data = use_internal_data,
         pvalueCutoff = pvalueCutoff,
         pAdjustMethod = pAdjustMethod,
         qvalueCutoff = qvalueCutoff,

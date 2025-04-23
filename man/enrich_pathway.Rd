@@ -20,7 +20,6 @@ enrich_pathway(
   kegg.universe = NULL,
   reactome.organism = c("human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly"),
   reactome.universe = NULL,
-  use_internal_data = FALSE,
   pvalueCutoff = 0.05,
   pAdjustMethod = "BH",
   qvalueCutoff = 0.2,
@@ -87,14 +86,14 @@ Supported values: "human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fl
 \item{reactome.universe}{Numeric vector, the background universe for Reactome enrichment.
 If NULL (default), all genes in Reactome database will be used.}
 
-\item{use_internal_data}{Logical, whether to use internal database for KEGG and HMDB enrichment.}
-
 \item{pvalueCutoff}{Numeric, the p-value cutoff for enrichment.}
 
 \item{pAdjustMethod}{Character, the method for adjusting p-values.
 See stats::p.adjust() for available methods ("BH", "bonferroni", etc.).}
 
-\item{qvalueCutoff}{Numeric, the q-value (adjusted p-value) cutoff for enrichment.}
+\item{qvalueCutoff}{Numeric, the q-value cutoff for enrichment. Default is 0.2.
+q-values are specifically those adjusted p-values that incorporate an empirical estimate of
+the fraction of true nulls, aiming for maximum power at a fixed FDR.}
 
 \item{minGSSize}{Numeric, the minimum gene set size for enrichment.
 Sets with fewer genes than this will be excluded.}
@@ -170,7 +169,6 @@ met_enriched_pathways <-
     variable_info = met_variable_info,
     query_type = "metabolite",
     database = c("hmdb", "kegg"),
-    use_internal_data = TRUE,
     save_to_local = FALSE,
     pvalueCutoff = 0.05,
     pAdjustMethod = "BH"
