@@ -627,6 +627,12 @@ do_gsea_meta <- function(variable_info = variable_info,
       dplyr::filter(!is.na(keggid)) |>
       dplyr::distinct()
 
+    # check if keggid has duplicate values
+    if (any(duplicated(variable_info$keggid))) {
+      stop("Duplicate KEGG IDs detected in variable_info.\n",
+           "Please ensure that each KEGG ID is unique.")
+    }
+
     # check KEGG ID format
     if (!any(grepl("^C\\d{5}$", variable_info$keggid))) {
       stop("All KEGG ID does not match compound format (e.g. C00001)")
@@ -698,6 +704,12 @@ do_gsea_meta <- function(variable_info = variable_info,
     variable_info <- variable_info |>
       dplyr::filter(!is.na(hmdbid)) |>
       dplyr::distinct()
+
+    # check if keggid has duplicate values
+    if (any(duplicated(variable_info$hmdbid))) {
+      stop("Duplicate HMDB IDs detected in variable_info.\n",
+           "Please ensure that each HMDB ID is unique.")
+    }
 
     # check HMDB ID format
     if (!any(grepl("^HMDB\\d{7}$", variable_info$hmdbid))) {
