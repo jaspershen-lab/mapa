@@ -12,7 +12,7 @@
 #   variable_info = meta_info,
 #   database = c("kegg", "hmdb"),
 #   order_by = "score",
-#   analysis_type = "meta",
+#   omic_type = "meta",
 #   pvalueCutoff = 1,
 #   minGSSize = 0,
 #   maxGSSize = 1000
@@ -41,7 +41,7 @@
 # gsea_pathways <-
 #   do_gsea(
 #     variable_info = transc_info,
-#     analysis_type = "transc",
+#     omic_type = "transc",
 #     order_by = "score",
 #     OrgDb = org.Hs.eg.db,
 #     database = c("go", "kegg", "reactome"),
@@ -114,10 +114,10 @@
 #' @description
 #' This integrated function performs GSEA for both transcriptomics and metabolomics data:
 #' \itemize{
-#'   \item \strong{Transcriptomics} (analysis_type = "transc"):
+#'   \item \strong{Transcriptomics} (omic_type = "transc"):
 #'   Supports GO/KEGG/Reactome databases. Requires Entrez IDs and fold change values.
 #'
-#'   \item \strong{Metabolomics} (analysis_type = "meta"):
+#'   \item \strong{Metabolomics} (omic_type = "meta"):
 #'   Supports KEGG/HMDB metabolic pathways. Requires KEGG IDs, HMDB IDs and fold change values.
 #' }
 #'
@@ -126,7 +126,7 @@
 #'                     - For transcriptomics: 'entrezid' (Entrez Gene IDs)
 #' @param order_by Character specifying the column in variable_info to use for ranking features.
 #'                Typically contains fold change values. Must be specified. Default is 'fc'.
-#' @param analysis_type Analysis type: "transc" for transcriptomics or "meta" for metabolomics.
+#' @param omic_type Analysis type: "transc" for transcriptomics or "meta" for metabolomics.
 #'                     Mandatory parameter with no default.
 #' @param database Character vector specifying databases to use:
 #'                - For "transc": c("go", "kegg", "reactome")
@@ -164,7 +164,7 @@
 #' library(org.Hs.eg.db)
 #' data(gene_data) # Contains entrezid and fc columns
 #' result_transc <- do_gsea(
-#'   analysis_type = "transc",
+#'   omic_type = "transc",
 #'   variable_info = gene_data,
 #'   database = c("go", "kegg"),
 #'   OrgDb = org.Hs.eg.db,
@@ -174,7 +174,7 @@
 #' # Metabolomics example
 #' data(metabo_data) # Contains keggid and fc columns
 #' result_meta <- do_gsea(
-#'   analysis_type = "meta",
+#'   omic_type = "meta",
 #'   variable_info = metabo_data,
 #'   database = "kegg",
 #'   organism = "hsa"
@@ -189,7 +189,7 @@
 do_gsea <-
   function(variable_info,
            order_by = "fc",
-           analysis_type = c("transc", "meta"),
+           omic_type = c("transc", "meta"),
            database,
            save_to_local = FALSE,
            path = "result",
@@ -211,16 +211,16 @@ do_gsea <-
            readable = FALSE,
            ...) {
     ### complete this argument
-    analysis_type <- match.arg(analysis_type)
+    omic_type <- match.arg(omic_type)
 
     ### check if type are clarified
-    if (!missing(analysis_type)) {
-      if (!analysis_type %in% c("transc", "meta")) {
-        stop("Invalid analysis_type detected. Choose 'transc' for transcriptomics gsea or 'meta' for metabolomics gsea.")
+    if (!missing(omic_type)) {
+      if (!omic_type %in% c("transc", "meta")) {
+        stop("Invalid omic_type detected. Choose 'transc' for transcriptomics gsea or 'meta' for metabolomics gsea.")
       }
-      if (length(analysis_type) != 1) {
-        stop("Incorrect analysis_type input. Please choose one and only one from 'transc' or 'meta'.")
-      } else if (analysis_type == "transc") {
+      if (length(omic_type) != 1) {
+        stop("Incorrect omic_type input. Please choose one and only one from 'transc' or 'meta'.")
+      } else if (omic_type == "transc") {
         do_gsea_transc(
           variable_info = variable_info,
           order_by = order_by,
@@ -245,7 +245,7 @@ do_gsea <-
           readable = readable,
           ...
         )
-      } else if (analysis_type == "meta") {
+      } else if (omic_type == "meta") {
         do_gsea_meta(
           variable_info = variable_info,
           order_by = order_by,
