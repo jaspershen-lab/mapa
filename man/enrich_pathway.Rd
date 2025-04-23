@@ -10,106 +10,175 @@ enrich_pathway(
   database = c("go", "kegg", "reactome", "hmdb"),
   save_to_local = FALSE,
   path = "result",
-  OrgDb,
-  organism = "hsa",
-  keyType = "ENTREZID",
+  go.orgdb = NULL,
+  go.keytype = "ENSEMBL",
+  go.ont = "ALL",
+  go.universe = NULL,
+  go.pool = FALSE,
+  kegg.organism = "hsa",
+  kegg.keytype = "uniprot",
+  kegg.universe = NULL,
+  reactome.organism = c("human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly"),
+  reactome.universe = NULL,
   use_internal_data = FALSE,
-  ont = "ALL",
   pvalueCutoff = 0.05,
   pAdjustMethod = "BH",
-  universe_go = NULL,
-  universe_kegg = NULL,
-  universe_reactome = NULL,
   qvalueCutoff = 0.2,
   minGSSize = 10,
   maxGSSize = 500,
   readable = FALSE,
-  pool = FALSE,
   ...
 )
 }
 \arguments{
-\item{variable_info}{A data.frame containing relevant gene information or
-an object that has a specific method for \code{enrich_pathway}.}
+\item{variable_info}{A data.frame containing biological entity information for enrichment.
+For gene-based queries, it should contain columns like 'ensembl', 'uniprot', and 'entrezid'.
+For metabolite-based queries, it should contain columns like 'hmdbid' and 'keggid'.}
 
-\item{query_type}{Character, the category of biological entity to query ("gene", "metabolite").}
+\item{query_type}{Character, the category of biological entity to query. Must be one of:
+\itemize{
+\item "gene": for gene/protein-based enrichment
+\item "metabolite": for metabolite-based enrichment
+}}
 
-\item{database}{Character vector, specify which database(s) to use for enrichment ('go', 'kegg', 'reactome', 'hmdb').}
+\item{database}{Character vector, specify which database(s) to use for enrichment:
+\itemize{
+\item For genes: 'go', 'kegg', 'reactome'
+\item For metabolites: 'hmdb', 'kegg'
+}}
 
 \item{save_to_local}{Logical, if TRUE the results will be saved to local disk.}
 
 \item{path}{Character, the directory where to save the results if save_to_local is TRUE.}
 
-\item{OrgDb}{Object, the OrgDb object required for GO enrichment.}
+\item{go.orgdb}{Object, the OrgDb object required for GO enrichment (e.g., org.Hs.eg.db).
+See Bioconductor OrgDb packages for available organisms.}
 
-\item{organism}{Character, the organism code.}
+\item{go.keytype}{Character, the key type to be used for GO enrichment. Default is "ENSEMBL".
+See available keytypes in your OrgDb with \code{keytypes(OrgDb)}.}
 
-\item{keyType}{Character, the type of key to be used.}
+\item{go.ont}{Character, the GO ontology to be used:
+\itemize{
+\item "ALL": all ontologies (default)
+\item "BP": biological process
+\item "CC": cellular component
+\item "MF": molecular function
+See clusterProfiler::enrichGO() for details.
+}}
+
+\item{go.universe}{Numeric vector, the background universe for GO enrichment.
+If NULL (default), all genes in the OrgDb will be used.}
+
+\item{go.pool}{Logical, if ont='ALL', whether pool 3 GO sub-ontologies.}
+
+\item{kegg.organism}{Character, the organism code (e.g., "hsa" for human) required for KEGG enrichment.
+See 'https://www.genome.jp/kegg/catalog/org_list.html' for supported organism codes.}
+
+\item{kegg.keytype}{Character, the type of key to be used for KEGG. Default is "uniprot".
+One of "kegg", "ncbi-geneid", "ncbi-proteinid", or "uniprot".
+Note: 'kegg' ID is typically entrezgene ID for eukaryotes and Locus ID for prokaryotes.}
+
+\item{kegg.universe}{Numeric vector, the background universe for KEGG enrichment.
+If NULL (default), all genes in KEGG database will be used.}
+
+\item{reactome.organism}{Character, the organism name for Reactome (e.g., "human").
+Supported values: "human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly".}
+
+\item{reactome.universe}{Numeric vector, the background universe for Reactome enrichment.
+If NULL (default), all genes in Reactome database will be used.}
 
 \item{use_internal_data}{Logical, whether to use internal database for KEGG and HMDB enrichment.}
 
-\item{ont}{Character, the ontology to be used for GO enrichment ('ALL', 'BP', 'CC', 'MF').}
-
 \item{pvalueCutoff}{Numeric, the p-value cutoff for enrichment.}
 
-\item{pAdjustMethod}{Character, the method for adjusting p-values.}
+\item{pAdjustMethod}{Character, the method for adjusting p-values.
+See stats::p.adjust() for available methods ("BH", "bonferroni", etc.).}
 
-\item{universe_go}{Numeric vector, the universe for GO enrichment.}
+\item{qvalueCutoff}{Numeric, the q-value (adjusted p-value) cutoff for enrichment.}
 
-\item{universe_kegg}{Numeric vector, the universe for KEGG enrichment.}
+\item{minGSSize}{Numeric, the minimum gene set size for enrichment.
+Sets with fewer genes than this will be excluded.}
 
-\item{universe_reactome}{Numeric vector, the universe for Reactome enrichment.}
+\item{maxGSSize}{Numeric, the maximum gene set size for enrichment.
+Sets with more genes than this will be excluded.}
 
-\item{qvalueCutoff}{Numeric, the q-value cutoff for enrichment.}
+\item{readable}{Logical, whether to make the gene identifiers in results more human-readable.
+See clusterProfiler documentation for details.}
 
-\item{minGSSize}{Numeric, the minimum gene set size for enrichment.}
-
-\item{maxGSSize}{Numeric, the maximum gene set size for enrichment.}
-
-\item{readable}{Logical, whether to make the results more human-readable.}
-
-\item{pool}{Logical, whether to use clusterProfiler's pooling feature.}
-
-\item{...}{Additional arguments passed to the underlying methods.}
+\item{...}{Additional arguments passed to the underlying enrichment functions:
+clusterProfiler::enrichGO(), clusterProfiler::enrichKEGG(),
+ReactomePA::enrichPathway(), metpath::enrich_hmdb(), or metpath::enrich_kegg().}
 }
 \value{
-An object containing the enrichment results and parameters.
+An object of class "functional_module" containing:
+\itemize{
+\item variable_info: The input variable information
+\item enrichment_go_result: GO enrichment results (for gene queries)
+\item enrichment_kegg_result: KEGG enrichment results (for gene queries)
+\item enrichment_reactome_result: Reactome enrichment results (for gene queries)
+\item enrichment_hmdb_result: HMDB enrichment results (for metabolite queries)
+\item enrichment_metkegg_result: KEGG enrichment results (for metabolite queries)
+\item process_info: Parameters and processing information
+}
 }
 \description{
-Performs pathway enrichment analysis using multiple databases (GO, KEGG, Reactome, HMDB). This
-function acts as a generic interface that dispatches to specific methods based on the type of query: gene-based or metabolite-based.
-For gene queries, GO, KEGG, and Reactome enrichment are performed;
-for metabolite queries, HMDB and KEGG enrichment are performed.
+Performs comprehensive pathway enrichment analysis using multiple databases (GO, KEGG, Reactome, HMDB).
+This function serves as a unified interface that dispatches to specific methods based on the query type:
+\itemize{
+\item For gene queries: GO, KEGG, and Reactome enrichment
+\item For metabolite queries: HMDB and KEGG enrichment
+}
+}
+\note{
+\itemize{
+\item For more details on GO and KEGG enrichment parameters, see ?clusterProfiler::enrichGO and ?clusterProfiler::enrichKEGG
+\item For Reactome enrichment parameters, see ?ReactomePA::enrichPathway
+\item For metabolite enrichment parameters, see ?metpath::enrich_hmdb and ?metpath::enrich_kegg
+}
 }
 \examples{
 \dontrun{
-data(demo_data)
-
-variable_info <-
-  demo_data \%>\%
-  massdataset::activate_mass_dataset(what = "variable_info") \%>\%
-  dplyr::filter(fdr < 0.05 & score > 0) \%>\%
-  massdataset::extract_variable_info()
-require(org.Hs.eg.db)
+# Gene-based enrichment
 enriched_pathways <-
   enrich_pathway(
     variable_info = variable_info,
+    query_type = "gene",
     save_to_local = FALSE,
-    path = "result",
-    OrgDb = org.Hs.eg.db,
-    organism = "hsa",
+    go.orgdb = org.Hs.eg.db,
+    go.keytype = "ENSEMBL",
+    kegg.organism = "hsa",
+    kegg.keytype = "uniprot",
+    reactome.organism = "human",
     database = c("kegg", "reactome"),
-    ont = "ALL",
     pvalueCutoff = 0.05,
     pAdjustMethod = "BH",
     qvalueCutoff = 0.2,
     minGSSize = 10,
     maxGSSize = 500,
-    readable = FALSE,
-    pool = FALSE
+    readable = FALSE
   )
-  }
+
+# Metabolite-based enrichment
+# Prepare metabolite IDs
+data("query_id_hmdb", package = "metpath")
+data("query_id_kegg", package = "metpath")
+met_variable_info <- data.frame("hmdbid" = query_id_hmdb, "keggid" = query_id_kegg)
+
+# Perform metabolite pathway enrichment
+met_enriched_pathways <-
+  enrich_pathway(
+    variable_info = met_variable_info,
+    query_type = "metabolite",
+    database = c("hmdb", "kegg"),
+    use_internal_data = TRUE,
+    save_to_local = FALSE,
+    pvalueCutoff = 0.05,
+    pAdjustMethod = "BH"
+  )
+}
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
+
+Yifei Ge \email{yifeii.ge@outlook.com}
 }
