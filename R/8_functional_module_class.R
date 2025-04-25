@@ -12,6 +12,7 @@
 #' @slot merged_pathway_hmdb list List containing merged HMDB pathway information for metabolite enrichment result.
 #' @slot merged_pathway_metkegg list List containing merged KEGG pathway information for metabolite enrichment result.
 #' @slot merged_module list List containing merged modules.
+#' @slot llm_module_interpretation list List containing LLM interpretation results for functional modules.
 #' @slot process_info list List containing information about the processes.
 #'
 #' @exportClass functional_module
@@ -31,6 +32,7 @@ setClass(
     merged_pathway_hmdb = "list",
     merged_pathway_metkegg = "list",
     merged_module = "list",
+    llm_module_interpretation = "list",
     process_info = "list"
   )
 )
@@ -272,7 +274,7 @@ setMethod(
     if (is.null(enrichment_hmdb_result)) {
       message(crayon::green('No HMDB enrichment results'))
     } else {
-      enrichment_hmdb_result
+      print(enrichment_hmdb_result)
     }
     if (length(object@merged_pathway_hmdb) == 0) {
       message(crayon::green('No HMDB modules'))
@@ -287,7 +289,7 @@ setMethod(
     if (is.null(enrichment_metkegg_result)) {
       message(crayon::green('No KEGG metabolite enrichment results'))
     } else {
-      enrichment_metkegg_result
+      print(enrichment_metkegg_result)
     }
     if (length(object@merged_pathway_metkegg) == 0) {
       message(crayon::green('No KEGG modules'))
@@ -305,6 +307,16 @@ setMethod(
       message(crayon::green(
         length(object@merged_module$functional_module_result$module),
         "Functional modules"
+      ))
+    }
+
+    message(crayon::green("-----------LLM module interpretation------------"))
+    if (length(object@llm_module_interpretation) == 0) {
+      message(crayon::green('No LLM module interpretation results'))
+    } else{
+      message(crayon::green(
+        length(object@llm_module_interpretation),
+        "LLM interpreted modules"
       ))
     }
 

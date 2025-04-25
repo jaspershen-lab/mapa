@@ -6,7 +6,7 @@
 # source('R/17_llm_module_output_generation.R')
 
 # Metabolite
-# functional_module_annotation <-
+# llm_interpreted_enriched_functional_module <-
 #   llm_interpret_module(
 #     object = enriched_functional_module,
 #     llm_model = "gpt-4o-mini-2024-07-18",
@@ -164,5 +164,47 @@ llm_interpret_module <- function(object,
                                          api_key = api_key,
                                          output_prompt = output_prompt)
 
-  return(final_result)
+  # 8. Store the final result in the object's llm_module_interpretation slot
+  object@llm_module_interpretation <- final_result
+
+  # 9. Update graph_data and functional_module result according to llm interpretation
+  llm_module_name_df <- data.frame()
+  for (i in 1:length(object@llm_module_interpretation)){
+    module <- names(object@llm_module_interpretation[i])
+    llm_module_name <- object@llm_module_interpretation[[i]]$generated_name$module_name
+    llm_module_name_df[i, 1] <- module
+    llm_module_name_df[i, 2] <- llm_module_name
+  }
+  colnames(llm_module_name_df) <- c("module", "llm_module_name")
+  object@merged_module$functional_module_result <-
+    object@merged_module$functional_module_result |>
+    dplyr::left_join(llm_module_name_df, by = "module")
+
+  # 9. Create a process_info entry for this operation using the tidymass_parameter class
+  parameter = new(
+    Class = "tidymass_parameter",
+    pacakge_name = "mapa",
+    function_name = "llm_interpret_module()",
+    parameter = list(
+      llm_model = llm_model,
+      embedding_model = embedding_model,
+      phenotype = phenotype,
+      years = years,
+      retmax = retmax,
+      similarity_filter_num = similarity_filter_num,
+      output_prompt = output_prompt,
+      local_corpus = local_corpus
+    ),
+    time = Sys.time()
+  )
+
+  # 10. Add process_info entry to the object
+  process_info <- slot(object, "process_info")
+  process_info$llm_interpret_module <- parameter
+  slot(object, "process_info") <- process_info
+
+  message("Done")
+
+  # 11. Return the updated object
+  return(object)
 }

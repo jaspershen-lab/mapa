@@ -34,6 +34,8 @@ An S4 class to represent enriched pathways
 
 \item{\code{merged_module}}{list List containing merged modules.}
 
+\item{\code{llm_module_interpretation}}{list List containing LLM interpretation results for functional modules.}
+
 \item{\code{process_info}}{list List containing information about the processes.}
 }}
 

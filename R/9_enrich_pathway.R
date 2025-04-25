@@ -22,10 +22,10 @@
 #     database = c("go", "kegg", "reactome"),
 #     save_to_local = FALSE,
 #     go.orgdb = org.Hs.eg.db,
-#     go.keytype = "ENSEMBL",
+#     go.keytype = "ENTREZID",
 #     go.ont = "ALL",
 #     kegg.organism = "hsa",
-#     kegg.keytype = "uniprot",
+#     kegg.keytype = "kegg",
 #     reactome.organism = "human",
 #     pvalueCutoff = 0.05,
 #     pAdjustMethod = "BH",
@@ -60,11 +60,10 @@
 #
 # enriched_pathways <-
 #   enrich_pathway(
-#     variable_info = variable_info,
+#     variable_info = variable_info_up,
 #     query_type = "metabolite",
 #     database = c("hmdb", "kegg"),
 #     save_to_local = FALSE,
-#     path = "result",
 #     pvalueCutoff = 0.05,
 #     pAdjustMethod = "BH"
 #   )
