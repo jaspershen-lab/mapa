@@ -17,7 +17,7 @@ upload_data_ui <- function(id) {
         column(4,
                fileInput(
                  ns("variable_info"),
-                 "Choose marker information",
+                 tags$h4("Choose marker information"),
                  accept = c(
                    "text/csv",
                    "text/comma-separated-values,text/plain",
@@ -36,7 +36,7 @@ upload_data_ui <- function(id) {
                  div(id = ns("example_panel"),
                      radioButtons(
                        ns("example_choice"),
-                       "Example dataset",
+                       tags$h4("Example dataset"),
                        choices = c(
                          "Pathway Enrichment Example" = "example_enrich_pathway",
                          "GSEA Example" = "example_gsea"
@@ -47,7 +47,7 @@ upload_data_ui <- function(id) {
 
                radioButtons(
                  ns("id_type"),
-                 "ID type",
+                 tags$h4("Input ID type"),
                  choices = list(
                    "ENSEMBL" = "ensembl",
                    "UniProt" = "uniprot",
@@ -55,6 +55,20 @@ upload_data_ui <- function(id) {
                  ),
                  selected = "ensembl"
                ),
+
+               textInput(
+                 ns("orgdb"),
+                 tags$h4("Organism Database"),
+                 value = "org.Hs.eg.db"
+               ),
+               helpText("Enter the name of an OrgDb package that is installed on your system.",
+                        "Common examples: org.Hs.eg.db (Human), org.Mm.eg.db (Mouse), org.Rn.eg.db (Rat)",
+                        "For the current list of OrgDb packages, visit: ",
+                        tags$a(
+                          href = "https://bioconductor.org/packages/release/BiocViews.html#___OrgDb",
+                          "Bioconductor OrgDb packages",
+                          target = "_blank"
+                        )),
 
                actionButton(
                  ns("map_id"),
@@ -180,7 +194,7 @@ upload_data_server <- function(id, tab_switch) {
 
       ## ID conversion ====
       observeEvent(input$map_id, {
-        req(variable_info())
+        req(variable_info(), input$orgdb)
         variable_info_old <- variable_info()
 
         conversion_params <- switch(input$id_type,
@@ -198,13 +212,26 @@ upload_data_server <- function(id, tab_switch) {
                                     )
         )
 
+        # Validate input format
+        if (!grepl("^org\\.[A-Za-z]+\\..+\\.db$", input$orgdb)) {
+          stop("Invalid OrgDb package name. Expected format: org.XX.eg.db")
+        }
+        # Check if the package is installed
+        if (!requireNamespace(input$orgdb, quietly = TRUE)) {
+          stop(paste("Package", input$orgdb, "is not installed. Please install it using", paste0("BiocManager::install('", input$orgdb, "')")))
+        }
+        # Load the package
+        requireNamespace(input$orgdb)
+        # Get the OrgDb object
+        org_db_obj <- get(input$orgdb)
+
         tryCatch({
           # Process data conversion
           converted_data <- id_conversion(
             data = variable_info_old,
             from_id_type = conversion_params$from_id_type,
             to_id_type = conversion_params$to_id_type,
-            orgDb = org.Hs.eg.db
+            orgDb = org_db_obj
           )
         }, error = function(e) {
           showModal(modalDialog(

@@ -7,10 +7,10 @@ id_conversion <- function(data, from_id_type, to_id_type, orgDb) {
     BiocManager::install("clusterProfiler")
     library(clusterProfiler)
   }
-  if (!require(org.Hs.eg.db)) {
-    BiocManager::install("org.Hs.eg.db", force = TRUE)
-    library(org.Hs.eg.db)
-  }
+  # if (!require(org.Hs.eg.db)) {
+  #   BiocManager::install("org.Hs.eg.db", force = TRUE)
+  #   library(org.Hs.eg.db)
+  # }
 
   # Perform ID conversion
   converted <- clusterProfiler::bitr(

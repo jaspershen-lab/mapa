@@ -91,7 +91,7 @@
 #'
 #' @param go.orgdb Object, the OrgDb object required for GO enrichment (e.g., org.Hs.eg.db).
 #'   See Bioconductor OrgDb packages for available organisms.
-#' @param go.keytype Character, the key type to be used for GO enrichment. Default is "ENSEMBL".
+#' @param go.keytype Character, the key type to be used for GO enrichment. Default is "ENTREZID".
 #'   See available keytypes in your OrgDb with `keytypes(OrgDb)`.
 #' @param go.ont Character, the GO ontology to be used:
 #'   - "ALL": all ontologies (default)
@@ -105,7 +105,7 @@
 #'
 #' @param kegg.organism Character, the organism code (e.g., "hsa" for human) required for KEGG enrichment.
 #'   See 'https://www.genome.jp/kegg/catalog/org_list.html' for supported organism codes.
-#' @param kegg.keytype Character, the type of key to be used for KEGG. Default is "uniprot".
+#' @param kegg.keytype Character, the type of key to be used for KEGG. Default is "kegg".
 #'   One of "kegg", "ncbi-geneid", "ncbi-proteinid", or "uniprot".
 #'   Note: 'kegg' ID is typically entrezgene ID for eukaryotes and Locus ID for prokaryotes.
 #' @param kegg.universe Numeric vector, the background universe for KEGG enrichment.
@@ -205,13 +205,13 @@ enrich_pathway <-
            path = "result",
            # GO-specific parameters
            go.orgdb = NULL,
-           go.keytype = "ENSEMBL",
+           go.keytype = "ENTREZID",
            go.ont = "ALL",
            go.universe = NULL,
            go.pool = FALSE,
            # KEGG-specific parameters
            kegg.organism = "hsa",
-           kegg.keytype = "uniprot",
+           kegg.keytype = "kegg",
            kegg.universe = NULL,
            # Reactome-specific parameters
            reactome.organism = c("human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly"),

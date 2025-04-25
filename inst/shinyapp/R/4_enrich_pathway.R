@@ -79,7 +79,7 @@ enrich_pathway_ui <- function(id) {
                                    textInput(
                                      ns("go_keytype"),
                                      "GO Keytype",
-                                     value = "ENSEMBL"
+                                     value = "ENTREZID"
                                    ),
                                    selectInput(
                                      ns("go_ont"),
@@ -123,12 +123,7 @@ enrich_pathway_ui <- function(id) {
                                        "NCBI Protein ID" = "ncbi-proteinid",
                                        "UniProt" = "uniprot"
                                      ),
-                                     selected = "uniprot"
-                                   ),
-                                   checkboxInput(
-                                     ns("use_internal_data"),
-                                     "Use internal database",
-                                     value = TRUE
+                                     selected = "kegg"
                                    )
                                )
                              ),
@@ -194,11 +189,11 @@ enrich_pathway_ui <- function(id) {
                                ),
                                selected = NULL
                              ),
-                             checkboxInput(
-                               ns("use_internal_data"),
-                               "Use internal database",
-                               value = TRUE
-                             ),
+                             # checkboxInput(
+                             #   ns("use_internal_data"),
+                             #   "Use internal database",
+                             #   value = TRUE
+                             # ),
                              numericInput(
                                ns("p_value_cutoff"),
                                "P-value cutoff",
@@ -405,8 +400,7 @@ enrich_pathway_server <- function(id, variable_info = NULL, tab_switch) {
                     database = input$pathway_database,
                     save_to_local = FALSE,
                     pvalueCutoff = input$p_value_cutoff,
-                    pAdjustMethod = input$p_adjust_method,
-                    use_internal_data = input$use_internal_data
+                    pAdjustMethod = input$p_adjust_method
                   )
 
                   # Add gene-specific parameters if query type is gene
@@ -515,12 +509,10 @@ enrich_pathway_server <- function(id, variable_info = NULL, tab_switch) {
                     '
                     kegg.organism = "%s",
                     kegg.keytype = "%s",
-                    use_internal_data = "%s",
                     kegg.universe = NULL,
                     ',
                     input$kegg_organism,
-                    input$kegg_keytype,
-                    as.character(input$use_internal_data)
+                    input$kegg_keytype
                     )}
 
                   reactome_params <- ""
@@ -570,14 +562,12 @@ enrich_pathway_server <- function(id, variable_info = NULL, tab_switch) {
                       variable_info,
                       query_type = "%s",
                       database = %s,
-                      use_internal_data = %s,
                       pvalueCutoff = %s,
                       pAdjustMethod = "%s"
                     )
                     ',
                     input$query_type,
                     pathway_database,
-                    as.character(input$use_internal_data),
                     input$p_value_cutoff,
                     input$p_adjust_method
                     )
