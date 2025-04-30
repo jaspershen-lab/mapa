@@ -165,7 +165,7 @@ plot_pathway_bar(object = enriched_functional_module,
 
 # Check the individual module
 
-```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+```{r,eval=FALSE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 plot <-
   plot_module_info(
     object = enriched_functional_module,
@@ -194,7 +194,7 @@ plot_module_info(object = enriched_functional_module,
 
 # The whole similary network
 
-```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+```{r,eval=FALSE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 
 plot_similarity_network(
   object = enriched_functional_module,
@@ -239,7 +239,7 @@ plot_similarity_network(
 
 # Relationship network for functional modules/modules/pathways/molecules
 
-```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+```{r,eval=FALSE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 object <-
   enriched_functional_module
 object@merged_module$functional_module_result <-

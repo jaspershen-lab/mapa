@@ -98,9 +98,10 @@
 #                    level = "module",
 #                    module_id = "kegg_Module_2")
 # plot <-
-#   plot_module_info(object = enriched_functional_module,
+#   plot_module_info(object = object,
 #                    level = "functional_module",
-#                    module_id = "Functional_module_1")
+#                    module_id = "Functional_module_4",
+#                    llm_text = TRUE)
 #
 # plot[[1]]
 # plot[[2]]
@@ -117,8 +118,20 @@
 #' @param database A character string specifying the source database, either "go", "kegg", "reactome", or "hmdb".
 #' @param database_color A named vector specifying colors for each database. Default colors are provided.
 #' @param module_id A single identifier specifying the module of interest.
-#' @param translation Logical, whether to use translated descriptions (requires prior use of 'translate_language' function).
+#' @param llm_text Logical. Whether to use LLM-generated module names in the visualization. Default is FALSE.
+#'
 #' @return A list containing three ggplot objects: network plot (`network`), bar plot (`barplot`), and word cloud (`wordcloud`).
+#'
+#' @import ggplot2
+#' @import tidygraph
+#' @import dplyr
+#' @importFrom ggraph ggraph geom_edge_link geom_node_point geom_node_text theme_graph create_layout
+#' @importFrom igraph gorder vertex_attr
+#' @importFrom tidyr expand
+#' @importFrom stringr str_wrap str_replace_all str_split
+#' @importFrom plyr dlply
+#' @importFrom purrr map
+#' @importFrom ggwordcloud geom_text_wordcloud
 #'
 #' @export
 #' @author Xiaotao Shen <shenxt1990@outlook.com>
@@ -145,7 +158,9 @@ plot_module_info <-
                HMDB = "#7998ad"
              ),
            module_id,
-           translation = FALSE) {
+           llm_text = FALSE
+           # translation = FALSE
+           ) {
     level <-
       match.arg(level)
     sim_method <- object@process_info$merge_pathways@function_name
@@ -176,11 +191,11 @@ plot_module_info <-
       }
     }
 
-    if(translation){
-      # if(all(names(object@process_info) != "translate_language")){
-      #   stop("Please use the 'translate_language' function to translate first.")
-      # }
-    }
+    # if(translation){
+    #   # if(all(names(object@process_info) != "translate_language")){
+    #   #   stop("Please use the 'translate_language' function to translate first.")
+    #   # }
+    # }
 
     ### Collect data ====
     if (level == "module") {
@@ -204,18 +219,18 @@ plot_module_info <-
               object@merged_pathway_go$result_with_module%>%
               dplyr::mutate(database = "GO")
 
-            if(translation){
-              result_with_module <-
-                result_with_module %>%
-                dplyr::select(-Description) %>%
-                dplyr::rename(Description = Description_trans)
-              graph_data <-
-                graph_data %>%
-                tidygraph::activate(what = "nodes") %>%
-                dplyr::select(-Description) %>%
-                dplyr::left_join(result_with_module[,c("node", "Description")],
-                                 by = "node")
-            }
+            # if(translation){
+            #   result_with_module <-
+            #     result_with_module %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::rename(Description = Description_trans)
+            #   graph_data <-
+            #     graph_data %>%
+            #     tidygraph::activate(what = "nodes") %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::left_join(result_with_module[,c("node", "Description")],
+            #                      by = "node")
+            # }
 
           }
         }
@@ -235,18 +250,18 @@ plot_module_info <-
               object@merged_pathway_kegg$result_with_module %>%
               dplyr::mutate(database = "KEGG")
 
-            if(translation){
-              result_with_module <-
-                result_with_module %>%
-                dplyr::select(-Description) %>%
-                dplyr::rename(Description = Description_trans)
-              graph_data <-
-                graph_data %>%
-                tidygraph::activate(what = "nodes") %>%
-                dplyr::select(-Description) %>%
-                dplyr::left_join(result_with_module[,c("node", "Description")],
-                                 by = "node")
-            }
+            # if(translation){
+            #   result_with_module <-
+            #     result_with_module %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::rename(Description = Description_trans)
+            #   graph_data <-
+            #     graph_data %>%
+            #     tidygraph::activate(what = "nodes") %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::left_join(result_with_module[,c("node", "Description")],
+            #                      by = "node")
+            # }
 
           }
         }
@@ -266,18 +281,18 @@ plot_module_info <-
               object@merged_pathway_reactome$result_with_module %>%
               dplyr::mutate(database = "Reactome")
 
-            if(translation){
-              result_with_module <-
-                result_with_module %>%
-                dplyr::select(-Description) %>%
-                dplyr::rename(Description = Description_trans)
-              graph_data <-
-                graph_data %>%
-                tidygraph::activate(what = "nodes") %>%
-                dplyr::select(-Description) %>%
-                dplyr::left_join(result_with_module[,c("node", "Description")],
-                                 by = "node")
-            }
+            # if(translation){
+            #   result_with_module <-
+            #     result_with_module %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::rename(Description = Description_trans)
+            #   graph_data <-
+            #     graph_data %>%
+            #     tidygraph::activate(what = "nodes") %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::left_join(result_with_module[,c("node", "Description")],
+            #                      by = "node")
+            # }
 
           }
         }
@@ -302,18 +317,18 @@ plot_module_info <-
               dplyr::rename(Count = mapped_number) %>%
               dplyr::mutate(database = "HMDB")
 
-            if(translation){
-              result_with_module <-
-                result_with_module %>%
-                dplyr::select(-Description) %>%
-                dplyr::rename(Description = Description_trans)
-              graph_data <-
-                graph_data %>%
-                tidygraph::activate(what = "nodes") %>%
-                dplyr::select(-Description) %>%
-                dplyr::left_join(result_with_module[,c("node", "Description")],
-                                 by = "node")
-            }
+            # if(translation){
+            #   result_with_module <-
+            #     result_with_module %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::rename(Description = Description_trans)
+            #   graph_data <-
+            #     graph_data %>%
+            #     tidygraph::activate(what = "nodes") %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::left_join(result_with_module[,c("node", "Description")],
+            #                      by = "node")
+            # }
 
           }
         }
@@ -337,18 +352,18 @@ plot_module_info <-
               dplyr::rename(Count = mapped_number) %>%
               dplyr::mutate(database = "KEGG")
 
-            if(translation){
-              result_with_module <-
-                result_with_module %>%
-                dplyr::select(-Description) %>%
-                dplyr::rename(Description = Description_trans)
-              graph_data <-
-                graph_data %>%
-                tidygraph::activate(what = "nodes") %>%
-                dplyr::select(-Description) %>%
-                dplyr::left_join(result_with_module[,c("node", "Description")],
-                                 by = "node")
-            }
+            # if(translation){
+            #   result_with_module <-
+            #     result_with_module %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::rename(Description = Description_trans)
+            #   graph_data <-
+            #     graph_data %>%
+            #     tidygraph::activate(what = "nodes") %>%
+            #     dplyr::select(-Description) %>%
+            #     dplyr::left_join(result_with_module[,c("node", "Description")],
+            #                      by = "node")
+            # }
 
           }
         }
@@ -370,26 +385,26 @@ plot_module_info <-
         result_with_module <-
           object@merged_module$result_with_module
 
-        if(translation){
-          # result_with_module <-
-          #   result_with_module %>%
-          #   dplyr::select(-module_annotation) %>%
-          #   dplyr::rename(module_annotation = module_annotation_trans)
-          #
-          # graph_data <-
-          #   graph_data %>%
-          #   tidygraph::activate(what = "nodes") %>%
-          #   dplyr::select(-module_annotation)
-          #
-          # module_annotation <-
-          #   result_with_module$module_annotation[match(igraph::vertex_attr(graph_data)$node,
-          #                                              result_with_module$node)]
-          #
-          # graph_data <-
-          #   graph_data %>%
-          #   tidygraph::activate(what = "nodes") %>%
-          #   dplyr::mutate(module_annotation = module_annotation)
-        }
+        # if(translation){
+        #   result_with_module <-
+        #     result_with_module %>%
+        #     dplyr::select(-module_annotation) %>%
+        #     dplyr::rename(module_annotation = module_annotation_trans)
+        #
+        #   graph_data <-
+        #     graph_data %>%
+        #     tidygraph::activate(what = "nodes") %>%
+        #     dplyr::select(-module_annotation)
+        #
+        #   module_annotation <-
+        #     result_with_module$module_annotation[match(igraph::vertex_attr(graph_data)$node,
+        #                                                result_with_module$node)]
+        #
+        #   graph_data <-
+        #     graph_data %>%
+        #     tidygraph::activate(what = "nodes") %>%
+        #     dplyr::mutate(module_annotation = module_annotation)
+        # }
       }
     }
 
@@ -428,10 +443,16 @@ plot_module_info <-
     }
 
     ### network ====
+    graph_data <-
+      graph_data |>
+      tidygraph::activate(what = "nodes") |>
+      dplyr::mutate(p_adj = if (query_type == "metabolite") p_value_adjust else p.adjust) |>
+      dplyr::rename(Count = mapped_number)
+
+    lay <- ggraph::create_layout(graph_data, layout = "fr")
+
     plot1 <-
-      graph_data %>%
-      ggraph::ggraph(layout = 'fr',
-                     circular = FALSE) +
+      ggraph::ggraph(lay) +
       ggraph::geom_edge_link(
         aes(width = sim),
         color = "black",
@@ -439,7 +460,7 @@ plot_module_info <-
         show.legend = TRUE
       ) +
       ggraph::geom_node_point(
-        aes(fill = if(analysis_type == "enrich_pathway") -log(p.adjust, 10) else NES,
+        aes(fill = if(analysis_type == "enrich_pathway") -log(p_adj, 10) else NES,
             size = Count),
         shape = 21,
         alpha = 1,
@@ -482,24 +503,45 @@ plot_module_info <-
     }
 
     if (level == "functional_module") {
-      if (sim_method == "get_bioembedsim()") {
+      if (llm_text) {
+        node_tbl  <- as_tibble(lay)
+        centroids <- node_tbl |>
+          summarise(cx = mean(x), cy = mean(y)) |>
+          dplyr::mutate(module = node_tbl$module[1])
+        module_name_df <- object@merged_module$functional_module_result |> dplyr::select(module, llm_module_name)
+        centroids <- centroids |> dplyr::left_join(module_name_df, by = "module")
+
         plot1 <-
           plot1 +
-          ggraph::geom_node_text(aes(x = x,
-                                     y = y,
-                                     label = stringr::str_wrap(Description, width = 30)),
-                                 check_overlap = TRUE,
-                                 size = 3,
-                                 repel = TRUE)  # Use repel to avoid overlapping
+          ggraph::geom_node_text(
+            data = centroids,
+            aes(x = cx,
+                y = cy,
+                label = stringr::str_wrap(llm_module_name, 30)),
+            check_overlap = TRUE,
+            size = 3,
+            repel = TRUE
+          )
       } else {
-        plot1 <-
-          plot1 +
-          ggraph::geom_node_text(aes(x = x,
-                                     y = y,
-                                     label = stringr::str_wrap(module_annotation, width = 30)),
-                                 check_overlap = TRUE,
-                                 size = 3,
-                                 repel = TRUE)  # Use repel to avoid overlapping
+        if (sim_method == "get_bioembedsim()") {
+          plot1 <-
+            plot1 +
+            ggraph::geom_node_text(aes(x = x,
+                                       y = y,
+                                       label = stringr::str_wrap(Description, width = 30)),
+                                   check_overlap = TRUE,
+                                   size = 3,
+                                   repel = TRUE)  # Use repel to avoid overlapping
+        } else {
+          plot1 <-
+            plot1 +
+            ggraph::geom_node_text(aes(x = x,
+                                       y = y,
+                                       label = stringr::str_wrap(module_annotation, width = 30)),
+                                   check_overlap = TRUE,
+                                   size = 3,
+                                   repel = TRUE)  # Use repel to avoid overlapping
+        }
       }
     }
 
@@ -550,7 +592,14 @@ plot_module_info <-
           dplyr::rename(Description = module_annotation) %>%
           dplyr::mutate(Description = factor(Description, levels = Description))
       } else {
-        temp_data <- temp_data %>%
+        temp_data <-
+          temp_data |>
+          # dplyr::rename(Description = if ("describtion" %in% colnames(temp_data)) describtion) |>
+          dplyr::rename_with(
+            ~ "Description",
+            .cols = "describtion",
+            .if_present = TRUE
+          ) |>
           dplyr::mutate(Description = factor(Description, levels = Description))
       }
     }
@@ -593,42 +642,42 @@ plot_module_info <-
       ggtitle(plot_title)
 
     ###wordcloud ====
-    temp_data <-
-      result_with_module %>%
-      dplyr::filter(module == module_id) %>%
-      dplyr::mutate(value = if(analysis_type == "enrich_pathway")
-        -log(as.numeric(p.adjust, 10))
-        else abs(as.numeric(NES))) %>%
-      dplyr::mutate(text_field = if(query_type == "gene") Description else pathway_name) %>%
-      dplyr::select(text_field, value) %>%
-      dplyr::mutate(text_field = stringr::str_replace_all(text_field, ",", "")) %>%
-      plyr::dlply(.variables = .(text_field)) %>%
-      purrr::map(function(x) {
-        data.frame(word = stringr::str_split(x$text_field, " ")[[1]],
-                   value = x$value)
-      }) %>%
-      do.call(rbind, .) %>%
-      as.data.frame() %>%
-      plyr::dlply(.variables = .(word)) %>%
-      purrr::map(function(x) {
-        x$value <- sum(x$value)
-        x %>%
-          dplyr::distinct(word, .keep_all = TRUE)
-      }) %>%
-      do.call(rbind, .) %>%
-      as.data.frame() %>%
-      dplyr::filter(!word %in% remove_words)
+      temp_data <-
+        result_with_module %>%
+        dplyr::filter(module == module_id) %>%
+        dplyr::mutate(value = if(analysis_type == "enrich_pathway")
+          -log(as.numeric(p.adjust, 10))
+          else abs(as.numeric(NES))) %>%
+        dplyr::mutate(text_field = if(query_type == "gene") Description else pathway_name) %>%
+        dplyr::select(text_field, value) %>%
+        dplyr::mutate(text_field = stringr::str_replace_all(text_field, ",", "")) %>%
+        plyr::dlply(.variables = .(text_field)) %>%
+        purrr::map(function(x) {
+          data.frame(word = stringr::str_split(x$text_field, " ")[[1]],
+                     value = x$value)
+        }) %>%
+        do.call(rbind, .) %>%
+        as.data.frame() %>%
+        plyr::dlply(.variables = .(word)) %>%
+        purrr::map(function(x) {
+          x$value <- sum(x$value)
+          x %>%
+            dplyr::distinct(word, .keep_all = TRUE)
+        }) %>%
+        do.call(rbind, .) %>%
+        as.data.frame() %>%
+        dplyr::filter(!word %in% remove_words)
 
-    plot3 <-
-      suppressWarnings(
-        ggplot(data = temp_data,
-               aes(label = word, size = value)) +
-          ggwordcloud::geom_text_wordcloud() +
-          scale_radius(range = c(5, 15), limits = c(0, NA)) +
-          theme_minimal() +
-          theme(plot.title = element_text(hjust = 0.5)) +
-          ggtitle(plot_title)
-      )
+      plot3 <-
+        suppressWarnings(
+          ggplot(data = temp_data,
+                 aes(label = word, size = value)) +
+            ggwordcloud::geom_text_wordcloud() +
+            scale_radius(range = c(5, 15), limits = c(0, NA)) +
+            theme_minimal() +
+            theme(plot.title = element_text(hjust = 0.5)) +
+            ggtitle(plot_title)
+        )
 
     list(network = plot1,
          barplot = plot2,
