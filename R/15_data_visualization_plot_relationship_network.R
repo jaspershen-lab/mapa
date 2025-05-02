@@ -15,12 +15,14 @@
 #   gsea_enriched_functional_module
 # object <- enriched_functional_module_met
 #
+# object <- llm_interpreted_enriched_functional_module
 # object@merged_module$functional_module_result <-
 #   head(object@merged_module$functional_module_result, 2)
 #
 #
 # {
 #   include_functional_modules = TRUE
+#   llm_text = TRUE
 #   include_modules = FALSE
 #   include_pathways = TRUE
 #   include_molecules = TRUE
@@ -49,6 +51,7 @@
 #
 # plot_relationship_network(
 #   object = object,
+#   llm_text = llm_text,
 #   include_functional_modules = include_functional_modules,
 #   include_modules = include_modules,
 #   include_pathways = include_pathways,
@@ -69,51 +72,55 @@
 #   functional_module_position_limits = functional_module_position_limits,
 #   module_position_limits = module_position_limits,
 #   pathway_position_limits = pathway_position_limits,
-#   molecule_position_limits = molecule_position_limits,
-#   translation = FALSE
+#   molecule_position_limits = molecule_position_limits
 # )
 
 
-#' Plot Relationship Network
+#' Plot a multilevel relationship network
 #'
-#' This function plots a relationship network that includes functional modules,
-#' modules, pathways, and molecules.
+#' `plot_relationship_network()` builds a tidygraph/ggplot representation of the
+#' relationships among *functional modules (→ modules) → pathways → molecules*
+#' stored in a **functional_module** object.
 #'
-#' @param object An object of class "functional_module".
-#' @param include_functional_modules Logical; include functional modules in the plot?
-#' @param include_modules Logical; include modules in the plot?
-#' @param include_pathways Logical; include pathways in the plot?
-#' @param include_molecules Logical; include molecules in the plot?
-#' @param functional_module_color Character; color for functional modules.
-#' @param module_color Character; color for modules.
-#' @param pathway_color Character; color for pathways.
-#' @param molecule_color Character; color for molecules.
-#' @param functional_module_text Logical; include functional module text labels?
-#' @param module_text Logical; include module text labels?
-#' @param pathway_text Logical; include pathway text labels?
-#' @param molecule_text Logical; include molecule text labels?
-#' @param functional_module_text_size Numeric; size of functional module text labels.
-#' @param module_text_size Numeric; size of module text labels.
-#' @param pathway_text_size Numeric; size of pathway text labels.
-#' @param molecule_text_size Numeric; size of molecule text labels.
-#' @param circular_plot Logical; make the plot circular?
-#' @param functional_module_arrange_position Logical; should the position of functional modules be arranged?
-#' @param module_arrange_position Logical; should the position of modules be arranged?
-#' @param pathway_arrange_position Logical; should the position of pathways be arranged?
-#' @param molecule_arrange_position Logical; should the position of molecules be arranged?
-#' @param functional_module_position_limits Numeric vector; limits for functional module positions.
-#' @param module_position_limits Numeric vector; limits for module positions.
-#' @param pathway_position_limits Numeric vector; limits for pathway positions.
-#' @param molecule_position_limits Numeric vector; limits for molecule positions.
-#' @param translation translation or not.
+#' @inheritParams create_relation_network
+#' @param functional_module_color,module_color,pathway_color,molecule_color
+#'   Hex fill colours for the four node classes.
+#' @param functional_module_text,module_text,pathway_text,molecule_text
+#'   Logical; draw text labels for the corresponding class?
+#' @param functional_module_text_size,module_text_size,pathway_text_size,
+#'   molecule_text_size Numeric; text‐label size (pts) for each class.
+#' @param circular_plot  If `TRUE`, lay nodes out on concentric circles instead
+#'   of four horizontal tracks.
+#' @param functional_module_arrange_position,module_arrange_position,
+#'   pathway_arrange_position,molecule_arrange_position Logical; evenly space
+#'   the x position of nodes in each class between the limits given in the
+#'   matching `*_position_limits`.
+#' @param functional_module_position_limits,module_position_limits,
+#'   pathway_position_limits,molecule_position_limits Numeric length-2 vectors
+#'   (`[0,1]`) giving the left/right fraction of the x-axis used by each track.
 #'
-#' @return A ggplot object representing the relationship network.
+#' @return A **ggplot** object.
 #'
 #' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
+#' @seealso [`create_relation_network()`]
 #'
+#' @examples
+#' # After merge_pathways() and merge_modules():
+#' plot_relationship_network(my_fmod,
+#'                           llm_text      = TRUE,
+#'                           include_modules = FALSE,
+#'                           molecule_text   = TRUE)
+#'
+#' @import ggplot2
+#' @import dplyr
+#' @importFrom stringr str_split
+#' @importFrom ggraph ggraph geom_edge_diagonal geom_node_point geom_node_text
+#'   create_layout scale_edge_color_manual theme_graph node_angle
+#' @importFrom tidygraph tbl_graph
+#' @importFrom igraph V bipartite_mapping
 #' @export
-
 
 plot_relationship_network <-
   function(object,
@@ -126,6 +133,7 @@ plot_relationship_network <-
            pathway_color = "#197EC0FF",
            molecule_color = "#3B4992FF",
            functional_module_text = TRUE,
+           llm_text = FALSE,
            module_text = FALSE,
            pathway_text = TRUE,
            molecule_text = FALSE,
@@ -141,15 +149,15 @@ plot_relationship_network <-
            functional_module_position_limits = c(0, 1),
            module_position_limits = c(0, 1),
            pathway_position_limits = c(0, 1),
-           molecule_position_limits = c(0, 1),
-           translation = FALSE) {
+           molecule_position_limits = c(0, 1)
+           ) {
     ###at least two classes of nodes
 
-    if(translation){
-      # if(all(names(object@process_info) != "translate_language")){
-      #   stop("Please use the 'translate_language' function to translate first.")
-      # }
-    }
+    # if(translation){
+    #   # if(all(names(object@process_info) != "translate_language")){
+    #   #   stop("Please use the 'translate_language' function to translate first.")
+    #   # }
+    # }
 
     if (sum(
       c(
@@ -212,11 +220,11 @@ plot_relationship_network <-
     total_graph <-
       create_relation_network(
         object = object,
+        llm_text = llm_text,
         include_functional_modules = include_functional_modules,
         include_modules = include_modules,
         include_pathways = include_pathways,
-        include_molecules = include_molecules,
-        translation = translation
+        include_molecules = include_molecules
       )
 
     g <- total_graph
@@ -448,41 +456,53 @@ plot_relationship_network <-
     plot
   }
 
-
-
-#' Create a Relationship Network
+#' Build a relationship network from a *functional_module* object
 #'
-#' This function constructs a network of relationships between different biological entities.
-#' The network can include functional modules, modules, pathways, and molecules.
+#' `create_relation_network()` converts the hierarchical links among functional
+#' modules, modules, pathways, and molecules in a **functional_module** object
+#' into a *tidygraph*.
+#' **Internal helper** for [plot_relationship_network()]; not intended for
+#' direct use by package users.
 #'
-#' @param object An object of class `functional_module` containing the functional module data.
-#' @param include_functional_modules Logical; whether to include functional modules in the network. Defaults to TRUE.
-#' @param include_modules Logical; whether to include modules in the network. Defaults to TRUE.
-#' @param include_pathways Logical; whether to include pathways in the network. Defaults to TRUE.
-#' @param include_molecules Logical; whether to include molecules in the network. Defaults to TRUE.
-#' @param translation translation or not.
-#' @return A list containing `edge_data` and `node_data` data frames.
-#'   - `edge_data` is a data frame containing the relationships between nodes, including their classes.
-#'   - `node_data` is a data frame containing information about each node, such as annotation and class.
+#' @param object  A **functional_module** S4 object that has already been
+#'   processed by `merge_pathways()` and `merge_modules()`.
+#' @param llm_text  Use the `llm_module_name` (GPT annotation) column instead of
+#'   `module_annotation` for functional-module labels?
+#' @param include_functional_modules,include_modules,include_pathways,
+#'   include_molecules Logical; include the corresponding node class (at least
+#'   two must be `TRUE`).
 #'
+#' @return A **tbl_graph** whose node tibble contains `node`, `annotation`,
+#'   `Count`, `class`, and whose edge tibble contains `from`, `to`, `class`
+#'   (e.g. `"Module-Pathway"`).
 #'
 #' @author Xiaotao Shen \email{shenxt1990@outlook.com}
-#' @export
+#'
+#' @examples
+#' \dontrun{
+#' g <- create_relation_network(my_fmod, include_modules = FALSE)
+#' }
+#'
+#' @import dplyr
+#' @importFrom stringr str_split
+#' @importFrom tidygraph tbl_graph
+#' @keywords internal
 
 create_relation_network <-
   function(object,
+           llm_text = FALSE,
            include_functional_modules = TRUE,
            include_modules = TRUE,
            include_pathways = TRUE,
-           include_molecules = TRUE,
-           translation = FALSE) {
+           include_molecules = TRUE
+           ) {
     ###at least two classes of nodes
 
-    if(translation){
-      # if(all(names(object@process_info) != "translate_language")){
-      #   stop("Please use the 'translate_language' function to translate first.")
-      # }
-    }
+    # if(translation){
+    #   # if(all(names(object@process_info) != "translate_language")){
+    #   #   stop("Please use the 'translate_language' function to translate first.")
+    #   # }
+    # }
 
     if (sum(
       c(
@@ -549,27 +569,42 @@ create_relation_network <-
         }
       )
 
-    if(translation){
-      # object@merged_module$functional_module_result <-
-      #   object@merged_module$functional_module_result %>%
-      #   dplyr::select(-module_annotation) %>%
-      #   dplyr::rename(module_annotation = module_annotation_trans)
+    # if(translation){
+    #   # object@merged_module$functional_module_result <-
+    #   #   object@merged_module$functional_module_result %>%
+    #   #   dplyr::select(-module_annotation) %>%
+    #   #   dplyr::rename(module_annotation = module_annotation_trans)
+    # }
+
+    if (llm_text) {
+      node_data1 <-
+        tryCatch(
+          object@merged_module$functional_module_result |>
+            dplyr::select(node = module,
+                          annotation = llm_module_name,
+                          p.adjust,
+                          Count) |>
+            dplyr::mutate(Count = as.numeric(Count),
+                          class = "Functional_module"),
+          error = function(e) {
+            NULL
+          }
+        )
+    } else {
+      node_data1 <-
+        tryCatch(
+          object@merged_module$functional_module_result |>
+            dplyr::select(node = module,
+                          annotation = module_annotation,
+                          p.adjust,
+                          Count) |>
+            dplyr::mutate(Count = as.numeric(Count),
+                          class = "Functional_module"),
+          error = function(e) {
+            NULL
+          }
+        )
     }
-
-    node_data1 <-
-      tryCatch(
-        object@merged_module$functional_module_result %>%
-          dplyr::select(node = module,
-                        annotation = module_annotation,
-                        p.adjust,
-                        Count) %>%
-          dplyr::mutate(Count = as.numeric(Count),
-                        class = "Functional_module"),
-        error = function(e) {
-          NULL
-        }
-      )
-
 
     ## 2. module vs pathway ====
     edge_data2 <-
@@ -590,12 +625,12 @@ create_relation_network <-
         }
       )
 
-    if(translation){
-      # object@merged_module$result_with_module <-
-      #   object@merged_module$result_with_module %>%
-      #   dplyr::select(-module_annotation) %>%
-      #   dplyr::rename(module_annotation = module_annotation_trans)
-    }
+    # if(translation){
+    #   # object@merged_module$result_with_module <-
+    #   #   object@merged_module$result_with_module %>%
+    #   #   dplyr::select(-module_annotation) %>%
+    #   #   dplyr::rename(module_annotation = module_annotation_trans)
+    # }
 
     node_data2 <-
       tryCatch(
@@ -667,12 +702,12 @@ create_relation_network <-
       }
     }
 
-    if(translation){
-      # object@enrichment_go_result@result <-
-      #   object@enrichment_go_result@result %>%
-      #   dplyr::select(-Description) %>%
-      #   dplyr::rename(Description = Description_trans)
-    }
+    # if(translation){
+    #   # object@enrichment_go_result@result <-
+    #   #   object@enrichment_go_result@result %>%
+    #   #   dplyr::select(-Description) %>%
+    #   #   dplyr::rename(Description = Description_trans)
+    # }
 
     node_data3_go <-
       tryCatch(
@@ -744,12 +779,12 @@ create_relation_network <-
           dplyr::filter(from %in% edge_data2$to)
       }
     }
-    if(translation){
-      # object@enrichment_kegg_result@result <-
-      #   object@enrichment_kegg_result@result %>%
-      #   dplyr::select(-Description) %>%
-      #   dplyr::rename(Description = Description_trans)
-    }
+    # if(translation){
+    #   # object@enrichment_kegg_result@result <-
+    #   #   object@enrichment_kegg_result@result %>%
+    #   #   dplyr::select(-Description) %>%
+    #   #   dplyr::rename(Description = Description_trans)
+    # }
     node_data3_kegg <-
       tryCatch(
         expr = {object@enrichment_kegg_result@result %>%
@@ -817,12 +852,12 @@ create_relation_network <-
           dplyr::filter(from %in% edge_data2$to)
       }
     }
-    if(translation){
-      # object@enrichment_reactome_result@result <-
-      #   object@enrichment_reactome_result@result %>%
-      #   dplyr::select(-Description) %>%
-      #   dplyr::rename(Description = Description_trans)
-    }
+    # if(translation){
+    #   # object@enrichment_reactome_result@result <-
+    #   #   object@enrichment_reactome_result@result %>%
+    #   #   dplyr::select(-Description) %>%
+    #   #   dplyr::rename(Description = Description_trans)
+    # }
     node_data3_reactome <-
       tryCatch(
         expr = {object@enrichment_reactome_result@result %>%

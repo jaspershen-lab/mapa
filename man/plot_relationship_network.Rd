@@ -3,7 +3,7 @@
 %   R/15_data_visualization_plot_relationship_network.R
 \name{plot_relationship_network}
 \alias{plot_relationship_network}
-\title{Plot Relationship Network}
+\title{Plot a multilevel relationship network}
 \usage{
 plot_relationship_network(
   object,
@@ -16,6 +16,7 @@ plot_relationship_network(
   pathway_color = "#197EC0FF",
   molecule_color = "#3B4992FF",
   functional_module_text = TRUE,
+  llm_text = FALSE,
   module_text = FALSE,
   pathway_text = TRUE,
   molecule_text = FALSE,
@@ -31,72 +32,56 @@ plot_relationship_network(
   functional_module_position_limits = c(0, 1),
   module_position_limits = c(0, 1),
   pathway_position_limits = c(0, 1),
-  molecule_position_limits = c(0, 1),
-  translation = FALSE
+  molecule_position_limits = c(0, 1)
 )
 }
 \arguments{
-\item{object}{An object of class "functional_module".}
+\item{object}{A \strong{functional_module} S4 object that has already been
+processed by \code{merge_pathways()} and \code{merge_modules()}.}
 
-\item{include_functional_modules}{Logical; include functional modules in the plot?}
+\item{include_functional_modules, include_modules, include_pathways}{include_molecules Logical; include the corresponding node class (at least
+two must be \code{TRUE}).}
 
-\item{include_modules}{Logical; include modules in the plot?}
+\item{functional_module_color, module_color, pathway_color, molecule_color}{Hex fill colours for the four node classes.}
 
-\item{include_pathways}{Logical; include pathways in the plot?}
+\item{functional_module_text, module_text, pathway_text, molecule_text}{Logical; draw text labels for the corresponding class?}
 
-\item{include_molecules}{Logical; include molecules in the plot?}
+\item{llm_text}{Use the \code{llm_module_name} (GPT annotation) column instead of
+\code{module_annotation} for functional-module labels?}
 
-\item{functional_module_color}{Character; color for functional modules.}
+\item{functional_module_text_size, module_text_size, pathway_text_size, }{molecule_text_size Numeric; text‐label size (pts) for each class.}
 
-\item{module_color}{Character; color for modules.}
+\item{circular_plot}{If \code{TRUE}, lay nodes out on concentric circles instead
+of four horizontal tracks.}
 
-\item{pathway_color}{Character; color for pathways.}
+\item{functional_module_arrange_position, module_arrange_position, }{pathway_arrange_position,molecule_arrange_position Logical; evenly space
+the x position of nodes in each class between the limits given in the
+matching \verb{*_position_limits}.}
 
-\item{molecule_color}{Character; color for molecules.}
-
-\item{functional_module_text}{Logical; include functional module text labels?}
-
-\item{module_text}{Logical; include module text labels?}
-
-\item{pathway_text}{Logical; include pathway text labels?}
-
-\item{molecule_text}{Logical; include molecule text labels?}
-
-\item{functional_module_text_size}{Numeric; size of functional module text labels.}
-
-\item{module_text_size}{Numeric; size of module text labels.}
-
-\item{pathway_text_size}{Numeric; size of pathway text labels.}
-
-\item{molecule_text_size}{Numeric; size of molecule text labels.}
-
-\item{circular_plot}{Logical; make the plot circular?}
-
-\item{functional_module_arrange_position}{Logical; should the position of functional modules be arranged?}
-
-\item{module_arrange_position}{Logical; should the position of modules be arranged?}
-
-\item{pathway_arrange_position}{Logical; should the position of pathways be arranged?}
-
-\item{molecule_arrange_position}{Logical; should the position of molecules be arranged?}
-
-\item{functional_module_position_limits}{Numeric vector; limits for functional module positions.}
-
-\item{module_position_limits}{Numeric vector; limits for module positions.}
-
-\item{pathway_position_limits}{Numeric vector; limits for pathway positions.}
-
-\item{molecule_position_limits}{Numeric vector; limits for molecule positions.}
-
-\item{translation}{translation or not.}
+\item{functional_module_position_limits, module_position_limits, }{pathway_position_limits,molecule_position_limits Numeric length-2 vectors
+(\verb{[0,1]}) giving the left/right fraction of the x-axis used by each track.}
 }
 \value{
-A ggplot object representing the relationship network.
+A \strong{ggplot} object.
 }
 \description{
-This function plots a relationship network that includes functional modules,
-modules, pathways, and molecules.
+\code{plot_relationship_network()} builds a tidygraph/ggplot representation of the
+relationships among \emph{functional modules (→ modules) → pathways → molecules}
+stored in a \strong{functional_module} object.
+}
+\examples{
+# After merge_pathways() and merge_modules():
+plot_relationship_network(my_fmod,
+                          llm_text      = TRUE,
+                          include_modules = FALSE,
+                          molecule_text   = TRUE)
+
+}
+\seealso{
+\code{\link[=create_relation_network]{create_relation_network()}}
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
+
+Yifei Ge \email{yifeii.ge@outlook.com}
 }

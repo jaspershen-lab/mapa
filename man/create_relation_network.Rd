@@ -3,41 +3,46 @@
 %   R/15_data_visualization_plot_relationship_network.R
 \name{create_relation_network}
 \alias{create_relation_network}
-\title{Create a Relationship Network}
+\title{Build a relationship network from a \emph{functional_module} object}
 \usage{
 create_relation_network(
   object,
+  llm_text = FALSE,
   include_functional_modules = TRUE,
   include_modules = TRUE,
   include_pathways = TRUE,
-  include_molecules = TRUE,
-  translation = FALSE
+  include_molecules = TRUE
 )
 }
 \arguments{
-\item{object}{An object of class \code{functional_module} containing the functional module data.}
+\item{object}{A \strong{functional_module} S4 object that has already been
+processed by \code{merge_pathways()} and \code{merge_modules()}.}
 
-\item{include_functional_modules}{Logical; whether to include functional modules in the network. Defaults to TRUE.}
+\item{llm_text}{Use the \code{llm_module_name} (GPT annotation) column instead of
+\code{module_annotation} for functional-module labels?}
 
-\item{include_modules}{Logical; whether to include modules in the network. Defaults to TRUE.}
-
-\item{include_pathways}{Logical; whether to include pathways in the network. Defaults to TRUE.}
-
-\item{include_molecules}{Logical; whether to include molecules in the network. Defaults to TRUE.}
-
-\item{translation}{translation or not.}
+\item{include_functional_modules, include_modules, include_pathways, }{include_molecules Logical; include the corresponding node class (at least
+two must be \code{TRUE}).}
 }
 \value{
-A list containing \code{edge_data} and \code{node_data} data frames.
-\itemize{
-\item \code{edge_data} is a data frame containing the relationships between nodes, including their classes.
-\item \code{node_data} is a data frame containing information about each node, such as annotation and class.
-}
+A \strong{tbl_graph} whose node tibble contains \code{node}, \code{annotation},
+\code{Count}, \code{class}, and whose edge tibble contains \code{from}, \code{to}, \code{class}
+(e.g. \code{"Module-Pathway"}).
 }
 \description{
-This function constructs a network of relationships between different biological entities.
-The network can include functional modules, modules, pathways, and molecules.
+\code{create_relation_network()} converts the hierarchical links among functional
+modules, modules, pathways, and molecules in a \strong{functional_module} object
+into a \emph{tidygraph}.
+\strong{Internal helper} for \code{\link[=plot_relationship_network]{plot_relationship_network()}}; not intended for
+direct use by package users.
+}
+\examples{
+\dontrun{
+g <- create_relation_network(my_fmod, include_modules = FALSE)
+}
+
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
 }
+\keyword{internal}
