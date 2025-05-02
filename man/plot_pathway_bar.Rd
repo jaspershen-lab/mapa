@@ -2,15 +2,15 @@
 % Please edit documentation in R/12_data_visualization_plot_pathway_bar.R
 \name{plot_pathway_bar}
 \alias{plot_pathway_bar}
-\title{Plot Enriched Pathway/Module Bar Chart}
+\title{Plot enrichment results as a horizontal bar chart}
 \usage{
 plot_pathway_bar(
   object,
   top_n = 10,
   x_axis_name = NULL,
   y_label_width = 50,
-  translation = FALSE,
   level = c("pathway", "module", "functional_module"),
+  llm_text = FALSE,
   line_type = c("straight", "meteor"),
   p.adjust.cutoff = 0.05,
   count.cutoff = 5,
@@ -20,96 +20,67 @@ plot_pathway_bar(
 )
 }
 \arguments{
-\item{object}{An object of class "functional_module" containing the enrichment results and other relevant data.}
+\item{object}{A \strong{functional_module} object containing enrichment and merge
+information.}
 
-\item{top_n}{An integer specifying the top N pathways to display. Default is 10.}
+\item{top_n}{Number of top items to display (default \code{10}).}
 
-\item{x_axis_name}{A character string indicating the metric to use for the x-axis.
-For gene ORA, options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values),
-\code{"RichFactor"}, or \code{"FoldEnrichment"}.
-For metabolite enrichment, this parameter should be \code{"qscore"}.
-For GSEA results, this parameter should be \code{"NES"}.}
+\item{x_axis_name}{Metric for the x-axis (see Description).  Ignored for
+GSEA (always \code{"NES"}).}
 
-\item{y_label_width}{An integer specifying the width of the Y-axis labels for text wrapping. Default is 50.}
+\item{y_label_width}{Maximum character width before y-axis labels are
+wrapped (default \code{50}).}
 
-\item{translation}{Logical indicating whether to use translated descriptions. If TRUE,
-the function will use the translated descriptions from the \code{translate_language} function. Default is FALSE.}
+\item{level}{One of \code{"pathway"}, \code{"module"}, or \code{"functional_module"}.}
 
-\item{level}{A character string specifying the level of analysis.
-One of "pathway", "module", or "functional_module". Default is "pathway".
-For biotext embedding results, only "pathway" or "functional_module" can be used.}
+\item{llm_text}{Use GPT-generated labels (\code{llm_module_name}) instead of
+\code{module_annotation} at \emph{functional_module} level?  (Logical)}
 
-\item{line_type}{A character string specifying the type of line to use for the bar chart.
-One of "straight" or "meteor". Default is "straight".}
+\item{line_type}{\code{"straight"} or \code{"meteor"}.}
 
-\item{p.adjust.cutoff}{A numeric value for the FDR adjusted P-value cutoff. Default is 0.05.}
+\item{p.adjust.cutoff}{FDR threshold used to filter results (default \code{0.05}).}
 
-\item{count.cutoff}{A numeric value for the minimum count of genes/metabolites to include. Default is 5.}
+\item{count.cutoff}{Minimum gene/metabolite count to keep (default \code{5}).}
 
-\item{database_color}{A named vector containing the colors for different databases.
-Default colors are provided for GO, KEGG, Reactome, and HMDB.}
+\item{database_color}{Named vector mapping databases to fill colours.}
 
-\item{database}{A character vector indicating which databases to include in the plot.
-For gene enrichment analysis, valid options are \code{"go"}, \code{"kegg"}, and/or \code{"reactome"}.
-For metabolite enrichment analysis, valid options are \code{"hmdb"} and/or \code{"kegg"}.
-Default includes all databases.}
+\item{database}{Character vector of databases to include; values are
+case-insensitive versions of \code{"go"}, \code{"kegg"}, \code{"reactome"}, \code{"hmdb"}.}
 }
 \value{
-A ggplot object representing the enrichment bar chart.
+A \strong{ggplot} object.
 }
 \description{
-This function generates a bar chart to visualize enriched pathways, modules, or functional modules.
-The bars are colored according to the database of origin (GO, KEGG, Reactome, or HMDB).
-Different metrics are displayed on the x-axis depending on the type of enrichment analysis
-(ORA or GSEA) and the query type (gene or metabolite).
+\code{plot_pathway_bar()} visualises the \emph{top N} enriched items at any chosen
+level—\strong{pathway}, \strong{module}, or \strong{functional module}—as a horizontal bar
+chart.  Bars are coloured by the originating database (GO, KEGG, Reactome,
+HMDB) and scaled by gene/metabolite count.  The x-axis metric adapts to the
+analysis type:
+}
+\details{
+\itemize{
+\item \strong{Over-representation analysis (ORA)}
+\emph{Genes}: choose one of \code{"qscore"} (−log\if{html}{\out{<sub>}}10\if{html}{\out{</sub>}} FDR), \code{"RichFactor"},
+or \code{"FoldEnrichment"};
+\emph{Metabolites}: \code{"qscore"} only.
+\item \strong{GSEA} results always use \code{"NES"}.
+}
 }
 \examples{
 \dontrun{
 data("enriched_functional_module", package = "mapa")
-# Basic pathway plot
-plot_pathway_bar(
-  object = enriched_functional_module,
-  top_n = 10,
-  y_label_width = 30,
-  level = "pathway"
-)
+## Basic pathway-level bar chart
+plot_pathway_bar(enriched_functional_module, level = "pathway", top_n = 15)
 
-# Using meteor line type
-plot_pathway_bar(
-  object = enriched_functional_module,
-  top_n = 10,
-  y_label_width = 30,
-  level = "pathway",
-  line_type = "meteor"
-)
-
-# Module level plot
-plot_pathway_bar(
-  enriched_functional_module,
-  top_n = 10,
-  level = "module"
-)
-
-# Functional module plot with custom p-value cutoff
-plot_pathway_bar(
-  enriched_functional_module,
-  top_n = 10,
-  level = "functional_module",
-  p.adjust.cutoff = 0.05
-)
-
-# Specifying x-axis metric for gene enrichment
-plot_pathway_bar(
-  enriched_functional_module,
-  top_n = 10,
-  x_axis_name = "RichFactor",
-  level = "pathway"
-)
+## GSEA results, meteor style
+plot_pathway_bar(enriched_functional_module,
+                 level      = "pathway",
+                 line_type  = "meteor")
 }
 
 }
 \author{
-Xiaotao Shen \email{shenxt1990@outlook.com}
+Xiaotao Shen, \email{shenxt1990@outlook.com}
 
-Yifei Ge \email{yifeii.ge@outlook.com}
+Yifei Ge, \email{yifeii.ge@outlook.com}
 }

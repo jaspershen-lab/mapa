@@ -58,7 +58,6 @@
 #   top_n = 10,
 #   y_label_width = 30,
 #   level = "pathway",
-#   translation = FALSE,
 #   line_type = "straight"
 # )
 #
@@ -105,102 +104,71 @@
 #                  count.cutoff = 5,
 #                  database = c("hmdb", "kegg"))
 
-# plot_pathway_bar(object = enriched_functional_modules,
+# plot_pathway_bar(object = llm_interpreted_enriched_functional_module,
 #                  top_n = 5,
 #                  x_axis_name = "qscore",
 #                  level = "functional_module",
+#                  llm_text = TRUE,
 #                  line_type = "straight",
 #                  p.adjust.cutoff = 0.05,
 #                  count.cutoff = 5,
 #                  database = c("hmdb", "kegg"))
 
-#' Plot Enriched Pathway/Module Bar Chart
+#' Plot enrichment results as a horizontal bar chart
 #'
-#' This function generates a bar chart to visualize enriched pathways, modules, or functional modules.
-#' The bars are colored according to the database of origin (GO, KEGG, Reactome, or HMDB).
-#' Different metrics are displayed on the x-axis depending on the type of enrichment analysis
-#' (ORA or GSEA) and the query type (gene or metabolite).
+#' `plot_pathway_bar()` visualises the *top N* enriched items at any chosen
+#' level—**pathway**, **module**, or **functional module**—as a horizontal bar
+#' chart.  Bars are coloured by the originating database (GO, KEGG, Reactome,
+#' HMDB) and scaled by gene/metabolite count.  The x-axis metric adapts to the
+#' analysis type:
 #'
-#' @param object An object of class "functional_module" containing the enrichment results and other relevant data.
-#' @param top_n An integer specifying the top N pathways to display. Default is 10.
-#' @param x_axis_name A character string indicating the metric to use for the x-axis.
-#'   For gene ORA, options include \code{"qscore"} (i.e. \eqn{-\log10} of the FDR-adjusted p-values),
-#'   \code{"RichFactor"}, or \code{"FoldEnrichment"}.
-#'   For metabolite enrichment, this parameter should be \code{"qscore"}.
-#'   For GSEA results, this parameter should be \code{"NES"}.
-#' @param y_label_width An integer specifying the width of the Y-axis labels for text wrapping. Default is 50.
-#' @param translation Logical indicating whether to use translated descriptions. If TRUE,
-#'   the function will use the translated descriptions from the `translate_language` function. Default is FALSE.
-#' @param level A character string specifying the level of analysis.
-#'   One of "pathway", "module", or "functional_module". Default is "pathway".
-#'   For biotext embedding results, only "pathway" or "functional_module" can be used.
-#' @param line_type A character string specifying the type of line to use for the bar chart.
-#'   One of "straight" or "meteor". Default is "straight".
-#' @param p.adjust.cutoff A numeric value for the FDR adjusted P-value cutoff. Default is 0.05.
-#' @param count.cutoff A numeric value for the minimum count of genes/metabolites to include. Default is 5.
-#' @param database_color A named vector containing the colors for different databases.
-#'   Default colors are provided for GO, KEGG, Reactome, and HMDB.
-#' @param database A character vector indicating which databases to include in the plot.
-#'   For gene enrichment analysis, valid options are \code{"go"}, \code{"kegg"}, and/or \code{"reactome"}.
-#'   For metabolite enrichment analysis, valid options are \code{"hmdb"} and/or \code{"kegg"}.
-#'   Default includes all databases.
+#' * **Over-representation analysis (ORA)**
+#'   *Genes*: choose one of `"qscore"` (−log<sub>10</sub> FDR), `"RichFactor"`,
+#'   or `"FoldEnrichment"`;
+#'   *Metabolites*: `"qscore"` only.
+#' * **GSEA** results always use `"NES"`.
 #'
-#' @return A ggplot object representing the enrichment bar chart.
 #'
-#' @import ggplot2
-#' @importFrom ggforce geom_link
-#' @importFrom dplyr mutate filter select rename full_join arrange
-#' @importFrom stringr str_wrap str_split str_detect
-#' @importFrom purrr map map_chr
-#' @importFrom methods is
+#' @param object  A **functional_module** object containing enrichment and merge
+#'   information.
+#' @param top_n  Number of top items to display (default `10`).
+#' @param x_axis_name  Metric for the x-axis (see Description).  Ignored for
+#'   GSEA (always `"NES"`).
+#' @param y_label_width  Maximum character width before y-axis labels are
+#'   wrapped (default `50`).
+#' @param level  One of `"pathway"`, `"module"`, or `"functional_module"`.
+#' @param llm_text  Use GPT-generated labels (`llm_module_name`) instead of
+#'   `module_annotation` at *functional_module* level?  (Logical)
+#' @param line_type  `"straight"` or `"meteor"`.
+#' @param p.adjust.cutoff  FDR threshold used to filter results (default `0.05`).
+#' @param count.cutoff  Minimum gene/metabolite count to keep (default `5`).
+#' @param database_color  Named vector mapping databases to fill colours.
+#' @param database  Character vector of databases to include; values are
+#'   case-insensitive versions of `"go"`, `"kegg"`, `"reactome"`, `"hmdb"`.
 #'
-#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
-#' @author Yifei Ge \email{yifeii.ge@outlook.com}
+#' @return A **ggplot** object.
+#'
+#' @author Xiaotao Shen, \email{shenxt1990@outlook.com}
+#' @author Yifei Ge, \email{yifeii.ge@outlook.com}
 #'
 #' @examples
 #' \dontrun{
 #' data("enriched_functional_module", package = "mapa")
-#' # Basic pathway plot
-#' plot_pathway_bar(
-#'   object = enriched_functional_module,
-#'   top_n = 10,
-#'   y_label_width = 30,
-#'   level = "pathway"
-#' )
+#' ## Basic pathway-level bar chart
+#' plot_pathway_bar(enriched_functional_module, level = "pathway", top_n = 15)
 #'
-#' # Using meteor line type
-#' plot_pathway_bar(
-#'   object = enriched_functional_module,
-#'   top_n = 10,
-#'   y_label_width = 30,
-#'   level = "pathway",
-#'   line_type = "meteor"
-#' )
-#'
-#' # Module level plot
-#' plot_pathway_bar(
-#'   enriched_functional_module,
-#'   top_n = 10,
-#'   level = "module"
-#' )
-#'
-#' # Functional module plot with custom p-value cutoff
-#' plot_pathway_bar(
-#'   enriched_functional_module,
-#'   top_n = 10,
-#'   level = "functional_module",
-#'   p.adjust.cutoff = 0.05
-#' )
-#'
-#' # Specifying x-axis metric for gene enrichment
-#' plot_pathway_bar(
-#'   enriched_functional_module,
-#'   top_n = 10,
-#'   x_axis_name = "RichFactor",
-#'   level = "pathway"
-#' )
+#' ## GSEA results, meteor style
+#' plot_pathway_bar(enriched_functional_module,
+#'                  level      = "pathway",
+#'                  line_type  = "meteor")
 #' }
 #'
+#' @import ggplot2
+#' @import ggforce
+#' @import dplyr
+#' @importFrom stringr str_wrap str_split str_detect
+#' @importFrom purrr map map_chr
+#' @importFrom methods is
 #' @export
 
 plot_pathway_bar <-
@@ -208,8 +176,8 @@ plot_pathway_bar <-
            top_n = 10,
            x_axis_name = NULL,
            y_label_width = 50,
-           translation = FALSE,
            level = c("pathway", "module", "functional_module"),
+           llm_text = FALSE,
            line_type = c("straight", "meteor"),
            p.adjust.cutoff = 0.05,
            count.cutoff = 5,
@@ -249,66 +217,66 @@ plot_pathway_bar <-
       x_axis_name <- "NES"
     }
 
-    if (translation) {
+    # if (translation) {
     #   if (all(names(object@process_info) != "translate_language")) {
     #     stop("Please use the 'translate_language' function to translate first.")
     #   } else{
     #     if (length(object@enrichment_go_result) > 0) {
     #       object@enrichment_go_result@result <-
-    #         object@enrichment_go_result@result %>%
-    #         dplyr::select(-Description) %>%
+    #         object@enrichment_go_result@result |>
+    #         dplyr::select(-Description) |>
     #         dplyr::rename(Description = Description_trans)
     #     }
     #
     #
     #     if (length(object@enrichment_kegg_result) > 0) {
     #       object@enrichment_kegg_result@result <-
-    #         object@enrichment_kegg_result@result %>%
-    #         dplyr::select(-Description) %>%
+    #         object@enrichment_kegg_result@result |>
+    #         dplyr::select(-Description) |>
     #         dplyr::rename(Description = Description_trans)
     #     }
     #
     #     if (length(object@enrichment_reactome_result) > 0) {
     #       object@enrichment_reactome_result@result <-
-    #         object@enrichment_reactome_result@result %>%
-    #         dplyr::select(-Description) %>%
+    #         object@enrichment_reactome_result@result |>
+    #         dplyr::select(-Description) |>
     #         dplyr::rename(Description = Description_trans)
     #     }
     #
     #
     #     if (length(object@merged_pathway_go) > 0) {
     #       object@merged_pathway_go$module_result <-
-    #         object@merged_pathway_go$module_result %>%
-    #         dplyr::select(-c(Description, module_annotation)) %>%
+    #         object@merged_pathway_go$module_result |>
+    #         dplyr::select(-c(Description, module_annotation)) |>
     #         dplyr::rename(Description = Description_trans,
     #                       module_annotation = module_annotation_trans)
     #     }
     #
     #     if (length(object@merged_pathway_kegg) > 0) {
     #       object@merged_pathway_kegg$module_result <-
-    #         object@merged_pathway_kegg$module_result %>%
-    #         dplyr::select(-c(Description, module_annotation)) %>%
+    #         object@merged_pathway_kegg$module_result |>
+    #         dplyr::select(-c(Description, module_annotation)) |>
     #         dplyr::rename(Description = Description_trans,
     #                       module_annotation = module_annotation_trans)
     #     }
     #
     #     if (length(object@merged_pathway_reactome) > 0) {
     #       object@merged_pathway_reactome$module_result <-
-    #         object@merged_pathway_reactome$module_result %>%
-    #         dplyr::select(-c(Description, module_annotation)) %>%
+    #         object@merged_pathway_reactome$module_result |>
+    #         dplyr::select(-c(Description, module_annotation)) |>
     #         dplyr::rename(Description = Description_trans,
     #                       module_annotation = module_annotation_trans)
     #     }
     #
     #     if (length(object@merged_module) > 0) {
     #       object@merged_module$functional_module_result <-
-    #         object@merged_module$functional_module_result %>%
-    #         dplyr::select(-c(Description, module_annotation)) %>%
+    #         object@merged_module$functional_module_result |>
+    #         dplyr::select(-c(Description, module_annotation)) |>
     #         dplyr::rename(Description = Description_trans,
     #                       module_annotation = module_annotation_trans)
     #     }
     #   }
-    }
+    # }
 
     if (!is(object, "functional_module")) {
       stop("object must be functional_module class")
@@ -319,7 +287,7 @@ plot_pathway_bar <-
       if (query_type == "gene") {
         enrichment_go_result <-
           tryCatch(
-            object@enrichment_go_result@result %>%
+            object@enrichment_go_result@result |>
               dplyr::mutate(class = "GO"),
             error = function(e) {
               NULL
@@ -327,7 +295,7 @@ plot_pathway_bar <-
           )
         enrichment_kegg_result <-
           tryCatch(
-            object@enrichment_kegg_result@result %>%
+            object@enrichment_kegg_result@result |>
               dplyr::mutate(class = "KEGG"),
             error = function(e) {
               NULL
@@ -335,7 +303,7 @@ plot_pathway_bar <-
           )
         enrichment_reactome_result <-
           tryCatch(
-            object@enrichment_reactome_result@result %>%
+            object@enrichment_reactome_result@result |>
               dplyr::mutate(class = "Reactome"),
             error = function(e) {
               NULL
@@ -356,11 +324,11 @@ plot_pathway_bar <-
                   enrichment_reactome_result,
                   category = NA,
                   subcategory = NA
-                ) %>%
+                ) |>
                 dplyr::select(category, subcategory, dplyr::everything())
 
               enrichment_kegg_result <-
-                enrichment_kegg_result %>%
+                enrichment_kegg_result |>
                 dplyr::select(category, subcategory, dplyr::everything())
             }
           }
@@ -375,7 +343,7 @@ plot_pathway_bar <-
         } else{
           if (!is.null(enrichment_go_result)) {
             temp_data <-
-              enrichment_go_result %>%
+              enrichment_go_result |>
               dplyr::full_join(temp_data, by = intersect(colnames(.), colnames(temp_data)))
 
             if (analysis_type == "do_gsea") {
@@ -387,7 +355,7 @@ plot_pathway_bar <-
             }
 
             temp_data <-
-              temp_data %>%
+              temp_data |>
               dplyr::filter(p.adjust < p.adjust.cutoff &
                               Count > count.cutoff)
           }
@@ -395,7 +363,7 @@ plot_pathway_bar <-
       } else if (query_type == "metabolite") {
         enrichment_hmdb_result <-
           tryCatch(
-            object@enrichment_hmdb_result@result %>%
+            object@enrichment_hmdb_result@result |>
               dplyr::mutate(class = "HMDB"),
             error = function(e) {
               NULL
@@ -404,7 +372,7 @@ plot_pathway_bar <-
 
         enrichment_metkegg_result <-
           tryCatch(
-            object@enrichment_metkegg_result@result %>%
+            object@enrichment_metkegg_result@result |>
               dplyr::mutate(class = "KEGG"),
             error = function(e) {
               NULL
@@ -423,7 +391,7 @@ plot_pathway_bar <-
         colnames(temp_data)[10] <- "Count"
 
         temp_data <-
-          temp_data %>%
+          temp_data |>
           dplyr::filter(p.adjust < p.adjust.cutoff &
                           Count > count.cutoff)
       }
@@ -438,7 +406,7 @@ plot_pathway_bar <-
         } else{
           module_result_go <-
             tryCatch(
-              object@merged_pathway_go$module_result %>%
+              object@merged_pathway_go$module_result |>
                 dplyr::mutate(class = "GO"),
               error = function(e) {
                 NULL
@@ -446,7 +414,7 @@ plot_pathway_bar <-
             )
           module_result_kegg <-
             tryCatch(
-              object@merged_pathway_kegg$module_result %>%
+              object@merged_pathway_kegg$module_result |>
                 dplyr::mutate(class = "KEGG"),
               error = function(e) {
                 NULL
@@ -455,7 +423,7 @@ plot_pathway_bar <-
 
           module_result_reactome <-
             tryCatch(
-              object@merged_pathway_reactome$module_result %>%
+              object@merged_pathway_reactome$module_result |>
                 dplyr::mutate(class = "Reactome"),
               error = function(e) {
                 NULL
@@ -468,11 +436,11 @@ plot_pathway_bar <-
                 module_result_reactome <-
                   data.frame(module_result_reactome,
                              category = NA,
-                             subcategory = NA) %>%
+                             subcategory = NA) |>
                   dplyr::select(category, subcategory, dplyr::everything())
 
                 module_result_kegg <-
-                  module_result_kegg %>%
+                  module_result_kegg |>
                   dplyr::select(category, subcategory, dplyr::everything())
               }
             }
@@ -487,16 +455,16 @@ plot_pathway_bar <-
           } else{
             if (!is.null(module_result_go)) {
               temp_data <-
-                temp_data %>%
+                temp_data |>
                 dplyr::full_join(module_result_go, by = intersect(colnames(.), colnames(module_result_go)))
             }
           }
 
           temp_data <-
-            temp_data %>%
+            temp_data |>
             dplyr::filter(p.adjust < p.adjust.cutoff &
-                            Count > count.cutoff) %>%
-            dplyr::select(-Description) %>%
+                            Count > count.cutoff) |>
+            dplyr::select(-Description) |>
             dplyr::rename(Description = module_annotation)
         }
       } else if (query_type == "metabolite") {
@@ -506,7 +474,7 @@ plot_pathway_bar <-
         } else {
           module_result_hmdb <-
             tryCatch(
-              object@merged_pathway_hmdb$module_result%>%
+              object@merged_pathway_hmdb$module_result|>
                 dplyr::mutate(class = "HMDB"),
               error = function(e) {
                 NULL
@@ -514,7 +482,7 @@ plot_pathway_bar <-
             )
           module_result_metkegg <-
             tryCatch(
-              object@merged_pathway_metkegg$module_result %>%
+              object@merged_pathway_metkegg$module_result |>
                 dplyr::mutate(class = "KEGG"),
               error = function(e) {
                 NULL
@@ -525,10 +493,10 @@ plot_pathway_bar <-
             rbind(module_result_hmdb, module_result_metkegg)
 
           temp_data <-
-            temp_data %>%
+            temp_data |>
             dplyr::filter(p.adjust < p.adjust.cutoff &
-                            Count > count.cutoff) %>%
-            dplyr::select(-Description) %>%
+                            Count > count.cutoff) |>
+            dplyr::select(-Description) |>
             dplyr::rename(Description = module_annotation)
         }
       }
@@ -549,44 +517,87 @@ plot_pathway_bar <-
         object@merged_module$functional_module_result
 
       if (any(colnames(functional_module_result) == "module_content")) {
-        temp_data <-
-          functional_module_result %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff &
-                          Count > count.cutoff) %>%
-          dplyr::select(-Description) %>%
-          dplyr::rename(Description = module_annotation) %>%
-          dplyr::mutate(
-            class = purrr::map(module_content, \(x) {
-              modules <- stringr::str_split(x, ";")[[1]]
-              dbs <- unique(dplyr::case_when(
-                stringr::str_detect(modules, "^go_Module") ~ "GO",
-                stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
-                stringr::str_detect(modules, "^reactome_Module") ~ "Reactome",
-                stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB"
-              ))
-              paste(dbs, collapse = "/")
-            })
-          )
+        if (llm_text) {
+          temp_data <-
+            functional_module_result |>
+            dplyr::filter(p.adjust < p.adjust.cutoff &
+                            Count > count.cutoff) |>
+            dplyr::select(-Description) |>
+            dplyr::rename(Description = llm_module_name) |>
+            dplyr::mutate(
+              class = purrr::map(module_content, \(x) {
+                modules <- stringr::str_split(x, ";")[[1]]
+                dbs <- unique(dplyr::case_when(
+                  stringr::str_detect(modules, "^go_Module") ~ "GO",
+                  stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
+                  stringr::str_detect(modules, "^reactome_Module") ~ "Reactome",
+                  stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB"
+                ))
+                paste(dbs, collapse = "/")
+              })
+            )
+        } else {
+          temp_data <-
+            functional_module_result |>
+            dplyr::filter(p.adjust < p.adjust.cutoff &
+                            Count > count.cutoff) |>
+            dplyr::select(-Description) |>
+            dplyr::rename(Description = module_annotation) |>
+            dplyr::mutate(
+              class = purrr::map(module_content, \(x) {
+                modules <- stringr::str_split(x, ";")[[1]]
+                dbs <- unique(dplyr::case_when(
+                  stringr::str_detect(modules, "^go_Module") ~ "GO",
+                  stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
+                  stringr::str_detect(modules, "^reactome_Module") ~ "Reactome",
+                  stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB"
+                ))
+                paste(dbs, collapse = "/")
+              })
+            )
+        }
+
       } else {
-        ## For biotext emebdding result, the ndoe is the module_content
-        temp_data <-
-          functional_module_result %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff &
-                          Count > count.cutoff) %>%
-          dplyr::select(-Description) %>%
-          dplyr::rename(Description = module_annotation) %>%
-          dplyr::mutate(
-            class = purrr::map(node, \(x) {
-              modules <- stringr::str_split(x, ";")[[1]]
-              dbs <- unique(dplyr::case_when(
-                stringr::str_detect(modules, "GO") ~ "GO",
-                stringr::str_detect(modules, "hsa") ~ "KEGG",
-                stringr::str_detect(modules, "R-HSA") ~ "Reactome",
-                stringr::str_detect(modules, "SMP") ~ "HMDB"
-              ))
-              paste(dbs, collapse = "/")
-            })
-          )
+        ## For biotext emebdding result, the node is the module_content
+        if (llm_text) {
+          temp_data <-
+            functional_module_result |>
+            dplyr::filter(p.adjust < p.adjust.cutoff &
+                            Count > count.cutoff) |>
+            dplyr::select(-Description) |>
+            dplyr::rename(Description = llm_module_name) |>
+            dplyr::mutate(
+              class = purrr::map(node, \(x) {
+                modules <- stringr::str_split(x, ";")[[1]]
+                dbs <- unique(dplyr::case_when(
+                  stringr::str_detect(modules, "GO") ~ "GO",
+                  stringr::str_detect(modules, "hsa") ~ "KEGG",
+                  stringr::str_detect(modules, "R-HSA") ~ "Reactome",
+                  stringr::str_detect(modules, "SMP") ~ "HMDB"
+                ))
+                paste(dbs, collapse = "/")
+              })
+            )
+        } else {
+          temp_data <-
+            functional_module_result |>
+            dplyr::filter(p.adjust < p.adjust.cutoff &
+                            Count > count.cutoff) |>
+            dplyr::select(-Description) |>
+            dplyr::rename(Description = module_annotation) |>
+            dplyr::mutate(
+              class = purrr::map(node, \(x) {
+                modules <- stringr::str_split(x, ";")[[1]]
+                dbs <- unique(dplyr::case_when(
+                  stringr::str_detect(modules, "GO") ~ "GO",
+                  stringr::str_detect(modules, "hsa") ~ "KEGG",
+                  stringr::str_detect(modules, "R-HSA") ~ "Reactome",
+                  stringr::str_detect(modules, "SMP") ~ "HMDB"
+                ))
+                paste(dbs, collapse = "/")
+              })
+            )
+        }
       }
 
     }
@@ -599,13 +610,13 @@ plot_pathway_bar <-
     database2[database2 == "reactome"] <- "Reactome"
     database2[database2 == "hmdb"] <- "HMDB"
 
-    ### Select the representative pathway (min adjusted p value) in the module to plot the barplot
+    ### Select the database of the representative pathway (min adjusted p value) in the module to color the module
     if (level == "functional_module") {
       temp_data <-
-        temp_data %>%
+        temp_data |>
         dplyr::filter(sapply(stringr::str_split(class, "/"), function(x) {
           all(x %in% database2)
-        })) %>%
+        })) |>
         dplyr::mutate(
           class = purrr::map(class, \(x) {
             dbs <- stringr::str_split(x, "/")[[1]]
@@ -615,7 +626,7 @@ plot_pathway_bar <-
 
     } else {
       temp_data <-
-        temp_data %>%
+        temp_data |>
         dplyr::filter(class %in% database2)
     }
 
@@ -623,12 +634,12 @@ plot_pathway_bar <-
     if (nrow(temp_data) == 0) {
       warning("No suitable pathways or modules are available")
       return(
-        temp_data %>%
-          dplyr::arrange(p.adjust) %>%
-          head(top_n) %>%
-          dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
-          dplyr::arrange(log.p) %>%
-          dplyr::mutate(Description = factor(Description, levels = Description)) %>%
+        temp_data |>
+          dplyr::arrange(p.adjust) |>
+          head(top_n) |>
+          dplyr::mutate(log.p = -log(p.adjust, 10)) |>
+          dplyr::arrange(log.p) |>
+          dplyr::mutate(Description = factor(Description, levels = Description)) |>
           ggplot(aes(log.p, Description)) +
           scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
           geom_segment(
@@ -658,23 +669,23 @@ plot_pathway_bar <-
     if (analysis_type == "enrich_pathway") {
       if (query_type == "gene") {
         temp_data <-
-          temp_data %>%
-          dplyr::mutate(qscore = -log(p.adjust, 10)) %>%
-          dplyr::arrange(.data[[x_axis_name]]) %>%
+          temp_data |>
+          dplyr::mutate(qscore = -log(p.adjust, 10)) |>
+          dplyr::arrange(.data[[x_axis_name]]) |>
           tail(top_n)
 
         temp_data[[x_axis_name]] <- as.numeric(temp_data[[x_axis_name]])
       } else if (query_type == "metabolite") {
         temp_data <-
-          temp_data %>%
-          dplyr::mutate(qscore = -log(p.adjust, 10)) %>%
-          dplyr::arrange(dplyr::desc(qscore)) %>%
+          temp_data |>
+          dplyr::mutate(qscore = -log(p.adjust, 10)) |>
+          dplyr::arrange(dplyr::desc(qscore)) |>
           head(top_n)
       }
     } else{
       temp_data <-
-        temp_data %>%
-        dplyr::arrange(dplyr::desc(abs(NES))) %>%
+        temp_data |>
+        dplyr::arrange(dplyr::desc(abs(NES))) |>
         head(top_n)
       temp_data$NES <- as.numeric(temp_data$NES)
     }
@@ -769,7 +780,7 @@ plot4pathway_enrichment <-
           plot <-
             ggplot(data = temp_data,
                    aes(x = temp_data$qscore,
-                       y = reorder(temp_data$pathway_name, temp_data$qscore, decreasing = FALSE))) +
+                       y = reorder(temp_data$Description, temp_data$qscore, decreasing = FALSE))) +
             scale_y_discrete(
               labels = function(x)
                 stringr::str_wrap(x, width = y_label_width)
@@ -781,9 +792,9 @@ plot4pathway_enrichment <-
             geom_segment(
               aes(
                 x = 0,
-                y = temp_data$pathway_name,
+                y = temp_data$Description,
                 xend = temp_data$qscore,
-                yend = temp_data$pathway_name,
+                yend = temp_data$Description,
                 color = temp_data$class
               ),
               show.legend = FALSE
@@ -813,10 +824,10 @@ plot4pathway_enrichment <-
 
       if (analysis_type == "do_gsea") {
         plot <-
-          temp_data %>%
-          dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
-          dplyr::arrange(NES) %>%
-          dplyr::mutate(Description = factor(Description, levels = Description)) %>%
+          temp_data |>
+          dplyr::mutate(log.p = -log(p.adjust, 10)) |>
+          dplyr::arrange(NES) |>
+          dplyr::mutate(Description = factor(Description, levels = Description)) |>
           ggplot(aes(NES, Description)) +
           scale_y_discrete(
             labels = function(x)
@@ -933,7 +944,7 @@ plot4pathway_enrichment <-
           plot <-
             ggplot(data = temp_data,
                    aes(x = temp_data$qscore,
-                       y = reorder(temp_data$pathway_name, temp_data$qscore, decreasing = FALSE))) +
+                       y = reorder(temp_data$Description, temp_data$qscore, decreasing = FALSE))) +
             scale_y_discrete(
               labels = function(x)
                 stringr::str_wrap(x, width = y_label_width)
@@ -953,9 +964,9 @@ plot4pathway_enrichment <-
             ggforce::geom_link(
               aes(
                 x = 0,
-                y = temp_data$pathway_name,
+                y = temp_data$Description,
                 xend = temp_data$qscore,
-                yend = temp_data$pathway_name,
+                yend = temp_data$Description,
                 alpha = after_stat(index),
                 size = after_stat(index),
                 color = class
@@ -972,7 +983,7 @@ plot4pathway_enrichment <-
             geom_text(
               aes(
                 x = temp_data$qscore,
-                y = temp_data$pathway_name,
+                y = temp_data$Description,
                 label = paste("Gene number:", temp_data$Count)
               ),
               size = 2.5,
@@ -1001,10 +1012,10 @@ plot4pathway_enrichment <-
 
       if (analysis_type == "do_gsea") {
         plot <-
-          temp_data %>%
-          dplyr::mutate(log.p = -log(p.adjust, 10)) %>%
-          dplyr::arrange(NES) %>%
-          dplyr::mutate(Description = factor(Description, levels = Description)) %>%
+          temp_data |>
+          dplyr::mutate(log.p = -log(p.adjust, 10)) |>
+          dplyr::arrange(NES) |>
+          dplyr::mutate(Description = factor(Description, levels = Description)) |>
           ggplot(aes(NES, Description)) +
           scale_y_discrete(
             labels = function(x)
