@@ -30,9 +30,10 @@ are displayed.}
 
 \item{module_id}{Optional character or numeric vector of specific module IDs to include in the plot.}
 
-\item{llm_text}{Logical indicating whether to display LLM-generated module names when available.}
+\item{llm_text}{Logical indicating whether to display LLM-generated module names (one per module) when available.}
 
-\item{text}{Logical indicating whether to display module annotations (one per module).}
+\item{text}{Logical indicating whether to display module names (one per module), i.e., the name of
+the pathway with the minimum adjusted p value.}
 
 \item{text_all}{Logical indicating whether to display text annotations for all nodes (overrides the default
 behavior of showing only one annotation per module).}

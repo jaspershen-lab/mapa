@@ -43,35 +43,47 @@ data_visualization_ui <- function(id) {
                            )
                          ),
                          fluidRow(
-                           ### level selection panel for gene ----
-                           shinyjs::hidden(
-                             div(
-                               id = ns("level_panel_for_gene"),
-                               column(4,
-                                      selectInput(
-                                        inputId = ns("barplot_level_gene"),
-                                        label = "Level",
-                                        choices = c(
-                                          "FM" = "functional_module",
-                                          "Module" = "module",
-                                          "Pathway" = "pathway"),
-                                        selected = "functional_module")
-                               )
-                             )
-                           ),
-                           ### level selection panel for metabolite ----
-                           shinyjs::hidden(
-                             div(
-                               id = ns("level_panel_for_metabolite"),
-                               column(4,
-                                      selectInput(
-                                        inputId = ns("barplot_level_metabolite"),
-                                        label = "Level",
-                                        choices = c("Pathway" = "pathway")
-                                      )
-                                      )
-                             )
-                           ),
+                           column(6,
+                                  selectInput(
+                                    ns("barplot_level"),
+                                    "Level",
+                                    choices = c(
+                                      "FM" = "functional_module",
+                                      "Module" = "module",
+                                      "Pathway" = "pathway"),
+                                    selected = "pathway")
+                           )
+                         ),
+                         fluidRow(
+                           # ### level selection panel for gene ----
+                           # shinyjs::hidden(
+                           #   div(
+                           #     id = ns("level_panel_for_gene"),
+                           #     column(4,
+                           #            selectInput(
+                           #              inputId = ns("barplot_level_gene"),
+                           #              label = "Level",
+                           #              choices = c(
+                           #                "FM" = "functional_module",
+                           #                "Module" = "module",
+                           #                "Pathway" = "pathway"),
+                           #              selected = "functional_module")
+                           #     )
+                           #   )
+                           # ),
+                           # ### level selection panel for metabolite ----
+                           # shinyjs::hidden(
+                           #   div(
+                           #     id = ns("level_panel_for_metabolite"),
+                           #     column(4,
+                           #            selectInput(
+                           #              inputId = ns("barplot_level_metabolite"),
+                           #              label = "Level",
+                           #              choices = c("Pathway" = "pathway")
+                           #            )
+                           #            )
+                           #   )
+                           # ),
 
                            column(4,
                                   numericInput(
@@ -88,6 +100,17 @@ data_visualization_ui <- function(id) {
                                     choices = c(
                                       "Straight" = "straight",
                                       "Meteor" = "meteor"))
+                           ),
+                           # column(4,
+                           #        checkboxInput(ns("barplot_llm_text"), "LLM text", FALSE)
+                           # ),
+                           column(
+                             4,
+                             tags$div(
+                               style = "display: flex; flex-direction: column;",
+                               tags$label("LLM text", `for` = ns("barplot_llm_text")),
+                               checkboxInput(ns("barplot_llm_text"), "", FALSE)
+                             )
                            )
                          ),
                          fluidRow(
@@ -245,7 +268,7 @@ data_visualization_ui <- function(id) {
                          fluidRow(
                            column(12,
                                   actionButton(
-                                    ns("go2llm_interpretation_1"),
+                                    ns("go2results_1"),
                                     "Next",
                                     class = "btn-primary",
                                     style = "background-color: #d83428; color: white;"),
@@ -279,7 +302,8 @@ data_visualization_ui <- function(id) {
                                     choices = c("GO" = "go",
                                                 "KEGG" = "kegg",
                                                 "Reactome" = "reactome"),
-                                    selected = "go")
+                                    selected = "go",
+                                    multiple = TRUE)
                            ),
                            column(6,
                                   numericInput(
@@ -307,6 +331,9 @@ data_visualization_ui <- function(id) {
                            # ),
                            column(4,
                                   checkboxInput(ns("module_similarity_network_text"), "Text", FALSE)
+                           ),
+                           column(4,
+                                  checkboxInput(ns("module_similarity_network_llm_text"), "LLM text", FALSE)
                            ),
                            column(4,
                                   checkboxInput(ns("module_similarity_network_text_all"), "Text all", FALSE)
@@ -342,7 +369,7 @@ data_visualization_ui <- function(id) {
                          fluidRow(
                            column(12,
                                   actionButton(
-                                    ns("go2llm_interpretation_2"),
+                                    ns("go2results_2"),
                                     "Next",
                                     class = "btn-primary",
                                     style = "background-color: #d83428; color: white;"
@@ -377,7 +404,8 @@ data_visualization_ui <- function(id) {
                                     choices = c(
                                       "FM" = "functional_module",
                                       "Module" = "module"),
-                                    selected = "functional_module")
+                                    selected = "functional_module"
+                                    )
                            ),
                            column(6,
                                   selectInput(
@@ -386,7 +414,8 @@ data_visualization_ui <- function(id) {
                                     choices = c("GO" = "go",
                                                 "KEGG" = "kegg",
                                                 "Reactome" = "reactome"),
-                                    selected = "go")
+                                    selected = "go",
+                                    multiple = TRUE)
                            )
                          ),
                          fluidRow(
@@ -395,7 +424,18 @@ data_visualization_ui <- function(id) {
                                     ns("module_information_module_id"),
                                     "Module ID",
                                     choices = NULL)
-                           )#,
+                           ),
+                           column(
+                             4,
+                             tags$div(
+                               style = "display: flex; flex-direction: column;",
+                               tags$label("LLM text", `for` = ns("module_information_llm_text")),
+                               checkboxInput(ns("module_information_llm_text"), "", FALSE)
+                             )
+                           )
+                           # column(4,
+                           #        checkboxInput(ns("module_information_llm_text"), "LLM text", FALSE)
+                           # )
                            # column(5,
                            #        checkboxInput("module_information_translation",
                            #                      "Translation", FALSE)
@@ -431,7 +471,7 @@ data_visualization_ui <- function(id) {
                            column(12,
                                   shinyjs::useShinyjs(),
                                   actionButton(
-                                    ns("go2llm_interpretation_3"),
+                                    ns("go2results_3"),
                                     "Next",
                                     class = "btn-primary",
                                     style = "background-color: #d83428; color: white;"),
@@ -460,14 +500,17 @@ data_visualization_ui <- function(id) {
                   column(4,
                          br(),
                          fluidRow(
-                           column(5,
+                           column(4,
                                   checkboxInput(ns("relationship_network_circular_plot"),
                                                 "Circular layout", FALSE)
                            ),
-                           column(3,
+                           column(4,
                                   checkboxInput(ns("relationship_network_filter"),
                                                 "Filter", FALSE)
-                           )#,
+                           ),
+                           column(4,
+                                  checkboxInput(ns("relationship_network_llm_text"), "LLM text", FALSE)
+                           )
                            # column(4,
                            #        checkboxInput(ns("relationship_network_translation"),
                            #                      "Translation", FALSE)
@@ -691,7 +734,7 @@ data_visualization_ui <- function(id) {
                          fluidRow(
                            column(12,
                                   actionButton(
-                                    ns("go2llm_interpretation_4"),
+                                    ns("go2results_4"),
                                     "Next",
                                     class = "btn-primary",
                                     style = "background-color: #d83428; color: white;"),
@@ -776,6 +819,18 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
           "x_axis_name",
           choices = all_choices
         )
+        # Module similarity network
+        updateSelectInput(
+          session,
+          "module_similarity_network_database",
+          choices = levels(factor(enriched_functional_module()@merged_module$result_with_module$database))
+        )
+        # Module information
+        updateSelectInput(
+          session,
+          "module_information_database",
+          choices = levels(factor(enriched_functional_module()@merged_module$result_with_module$database))
+        )
       })
 
       observeEvent(input$upload_enriched_functional_module, {
@@ -810,10 +865,23 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
         } else if (query_type() == "metabolite") {
           all_choices <- c("qscore")
         }
+        # barplot x_axis
         updateSelectInput(
           session,
           "x_axis_name",
           choices = all_choices
+        )
+        # Module similarity network
+        updateSelectInput(
+          session,
+          "module_similarity_network_database",
+          choices = levels(factor(enriched_functional_module()@merged_module$result_with_module$database))
+        )
+        # Module information
+        updateSelectInput(
+          session,
+          "module_information_database",
+          choices = levels(factor(enriched_functional_module()@merged_module$result_with_module$database))
         )
       })
 
@@ -850,6 +918,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                     p.adjust.cutoff = input$barplot_p_adjust_cutoff,
                     count.cutoff = input$barplot_count_cutoff,
                     level = input$barplot_level,
+                    llm_text = input$barplot_llm_text,
                     database = input$barplot_database,
                     line_type = input$line_type,
                     database_color = c(
@@ -869,6 +938,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                     p.adjust.cutoff = input$barplot_p_adjust_cutoff,
                     count.cutoff = input$barplot_count_cutoff,
                     level = input$barplot_level,
+                    llm_text = input$barplot_llm_text,
                     database = input$barplot_database,
                     line_type = input$line_type,
                     database_color = c(
@@ -936,6 +1006,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             p.adjust.cutoff = %s,
             count.cutoff = %s,
             level = %s,
+            llm_text = %s,
             database = %s,
             line_type = %s,
             database_color = %s)
@@ -946,6 +1017,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
               input$barplot_p_adjust_cutoff,
               input$barplot_count_cutoff,
               paste0('"', input$barplot_level, '"'),
+              input$barplot_llm_text,
               barplot_database,
               paste0('"', input$line_type, '"'),
               data_color
@@ -1058,6 +1130,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                   database = input$module_similarity_network_database,
                   degree_cutoff = input$module_similarity_network_degree_cutoff,
                   text = input$module_similarity_network_text,
+                  llm_text = input$module_similarity_network_llm_text,
                   text_all = input$module_similarity_network_text_all
                   # translation = input$module_similarity_network_translation
                 ),
@@ -1088,12 +1161,14 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             database = %s,
             degree_cutoff = %s,
             text = %s,
+            llm_text = %s,
             text_all = %s)
             ',
               paste0('"', input$module_similarity_network_level, '"'),
               paste0('"', input$module_similarity_network_database, '"'),
               input$module_similarity_network_degree_cutoff,
               input$module_similarity_network_text,
+              input$module_similarity_network_llm_text,
               input$module_similarity_network_text_all
             )
 
@@ -1227,6 +1302,30 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                 module_information_module_id(module_information_module_id)
               }
             }
+
+            # metabolite module information ========
+            ####database is go
+            if (input$module_information_database == "go") {
+              if (length(enriched_functional_module()@merged_pathway_go) > 0) {
+                module_information_module_id <-
+                  unique(
+                    enriched_functional_module()@merged_pathway_go$module_result$module
+                  )
+                module_information_module_id(module_information_module_id)
+              }
+            }
+
+            ####database is kegg
+            if (input$module_information_database == "kegg") {
+              if (length(enriched_functional_module()@merged_pathway_kegg) > 0) {
+                module_information_module_id <-
+                  unique(
+                    enriched_functional_module()@merged_pathway_kegg$module_result$module
+                  )
+                module_information_module_id(module_information_module_id)
+              }
+            }
+
           }
 
           updateSelectInput(
@@ -1282,6 +1381,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                   plot_module_info(
                     object = enriched_functional_module(),
                     level = input$module_information_level,
+                    llm_text = input$module_information_llm_text,
                     database = input$module_information_database,
                     module_id = input$module_information_module_id
                     # translation = input$module_information_translation
@@ -1329,10 +1429,12 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             plot_module_info(
             object = enriched_functional_module,
             level = %s,
+            llm_text = %s,
             database = %s,
             module_id = %s)
             ',
                 paste0('"', input$module_information_level, '"'),
+                input$module_information_llm_text,
                 paste0('"', input$module_information_database, '"'),
                 paste0('"', input$module_information_module_id, '"')
               )
@@ -1543,6 +1645,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                   include_pathways = input$relationship_network_include_pathways,
                   include_molecules = input$relationship_network_include_molecules,
                   functional_module_text = input$relationship_network_functional_module_text,
+                  llm_text = input$relationship_network_llm_text,
                   module_text = input$relationship_network_module_text,
                   pathway_text = input$relationship_network_pathway_text,
                   molecule_text = input$relationship_network_molecule_text,
@@ -1665,6 +1768,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             include_pathways = %s,
             include_molecules = %s,
             functional_module_text = %s,
+            llm_text = %s,
             module_text = %s,
             pathway_text = %s,
             molecule_text = %s,
@@ -1687,6 +1791,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
               input$relationship_network_include_pathways,
               input$relationship_network_include_molecules,
               input$relationship_network_functional_module_text,
+              input$relationship_network_llm_text,
               input$relationship_network_module_text,
               input$relationship_network_pathway_text,
               input$relationship_network_molecule_text,
@@ -1784,9 +1889,9 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
       })
 
 
-      ## Go to llm intepretation tab
+      ## Go to results tab
       ####if there is not enriched_functional_module, show a warning message
-      observeEvent(input$go2llm_interpretation_1, {
+      observeEvent(input$go2results_1, {
         # Check if enriched_functional_module is available
         if (is.null(enriched_functional_module()) ||
             length(enriched_functional_module()) == 0) {
@@ -1799,11 +1904,11 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             )
           )
         } else {
-          tab_switch("llm_interpretation")
+          tab_switch("results")
         }
       })
 
-      observeEvent(input$go2llm_interpretation_2, {
+      observeEvent(input$go2results_2, {
         # Check if enriched_functional_module is available
         if (is.null(enriched_functional_module()) ||
             length(enriched_functional_module()) == 0) {
@@ -1816,11 +1921,11 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             )
           )
         } else {
-          tab_switch("llm_interpretation")
+          tab_switch("results")
         }
       })
 
-      observeEvent(input$go2llm_interpretation_3, {
+      observeEvent(input$go2results_3, {
         # Check if enriched_functional_module is available
         if (is.null(enriched_functional_module()) ||
             length(enriched_functional_module()) == 0) {
@@ -1833,11 +1938,11 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             )
           )
         } else {
-          tab_switch("llm_interpretation")
+          tab_switch("results")
         }
       })
 
-      observeEvent(input$go2llm_interpretation_4, {
+      observeEvent(input$go2results_4, {
         # Check if enriched_functional_module is available
         if (is.null(enriched_functional_module()) ||
             length(enriched_functional_module()) == 0) {
@@ -1850,7 +1955,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             )
           )
         } else {
-          tab_switch("llm_interpretation")
+          tab_switch("results")
         }
       })
     }

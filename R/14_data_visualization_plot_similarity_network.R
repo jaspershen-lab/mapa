@@ -30,7 +30,6 @@
 #   level = "functional_module",
 #   degree_cutoff = 0,
 #   llm_text = TRUE,
-#   text = FALSE,
 #   text_all = FALSE
 # )
 #
@@ -72,8 +71,9 @@
 #' @param degree_cutoff Numeric value for filtering nodes; only nodes with module_content_number > degree_cutoff
 #'   are displayed.
 #' @param module_id Optional character or numeric vector of specific module IDs to include in the plot.
-#' @param text Logical indicating whether to display module annotations (one per module).
-#' @param llm_text Logical indicating whether to display LLM-generated module names when available.
+#' @param text Logical indicating whether to display module names (one per module), i.e., the name of
+#'   the pathway with the minimum adjusted p value.
+#' @param llm_text Logical indicating whether to display LLM-generated module names (one per module) when available.
 #' @param text_all Logical indicating whether to display text annotations for all nodes (overrides the default
 #'   behavior of showing only one annotation per module).
 #'
@@ -460,7 +460,15 @@ plot_similarity_network <-
         legend.background = element_rect(fill = "transparent", color = NA)
       )
 
-    if (llm_text && level == "functional_module") {
+    if (text_all) {
+      plot <-
+        plot +
+        ggraph::geom_node_text(aes(x = x,
+                                   y = y,
+                                   label = label),
+                               size = 3,
+                               repel = TRUE)
+    } else if (llm_text && level == "functional_module") {
       node_tbl  <- as_tibble(lay)
       centroids <- node_tbl |>
         group_by(module) |>
@@ -479,29 +487,18 @@ plot_similarity_network <-
           size = 3,
           repel = TRUE
         )
+    } else if (text) {
+      plot <-
+        plot +
+        ggraph::geom_node_text(aes(
+          x = x,
+          y = y,
+          label = ifelse(label %in% cluster_label_module, label, NA)
+        ),
+        size = 3,
+        repel = TRUE)
     }
 
-    if (text) {
-      if (text_all) {
-        plot <-
-          plot +
-          ggraph::geom_node_text(aes(x = x,
-                                     y = y,
-                                     label = label),
-                                 size = 3,
-                                 repel = TRUE)
-      } else{
-        plot <-
-          plot +
-          ggraph::geom_node_text(aes(
-            x = x,
-            y = y,
-            label = ifelse(label %in% cluster_label_module, label, NA)
-          ),
-          size = 3,
-          repel = TRUE)
-      }
-    }
     plot
   }
 

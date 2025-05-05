@@ -40,7 +40,7 @@ merge_modules_ui <- function(id) {
                            style = "background-color: #d83428; color: white;"),
 
                          actionButton(
-                           ns("go2translation"),
+                           ns("go2llm_interpretation"),
                            "Next",
                            class = "btn-primary",
                            style = "background-color: #d83428; color: white;"),
@@ -369,9 +369,9 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
       })
 
 
-      ### Go to data visualization tab
+      ### Go to llm interpretation tab
       ####if there is not enriched_functional_module, show a warning message
-      observeEvent(input$go2translation, {
+      observeEvent(input$go2llm_interpretation, {
         # Check if enriched_functional_module is available
         if (is.null(enriched_functional_module()) ||
             length(enriched_functional_module()) == 0) {
@@ -384,7 +384,7 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
             )
           )
         } else {
-          tab_switch("data_visualization")
+          tab_switch("llm_interpretation")
         }
       })
 

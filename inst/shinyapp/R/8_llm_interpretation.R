@@ -28,6 +28,27 @@ llm_interpretation_ui <- function(id) {
                            )
                     )
                   ),
+                  fluidRow(
+                    column(12,
+                           fileInput(
+                             inputId = ns("upload_interpretation_result"),
+                             label   = tags$span(
+                               "Upload interpretation result (.rda)",
+                               shinyBS::bsButton(ns("upload_interpretation_result_info"),
+                                                 label = "", icon = icon("info"),
+                                                 style = "info", size = "extra-small")
+                             ),
+                             accept = ".rda"
+                           ),
+                           bsPopover(
+                             id        = ns("upload_interpretation_result_info"),
+                             title     = "",
+                             content   = "Drop a previously saved result with LLM interpretation (.rda) here to inspect it without re-running the LLM.",
+                             placement = "right", trigger = "hover",
+                             options   = list(container = "body")
+                           )
+                    ),
+                  ),
                   # br(),
                   fluidRow(
                     column(
@@ -124,7 +145,7 @@ llm_interpretation_ui <- function(id) {
                   ),
 
                   actionButton(
-                    ns("go2results"),
+                    ns("go2data_visualization"),
                     "Next",
                     class = "btn-primary",
                     style = "background-color: #d83428; color: white;"
@@ -224,6 +245,34 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           }
       })
 
+      ## Display interpreted result ---------------------------------------------------------------------------
+      observeEvent(input$upload_interpretation_result, {
+        req(input$upload_interpretation_result$datapath)
+
+        tmp <- new.env()
+        load(input$upload_interpretation_result$datapath, envir = tmp)
+
+        # The .rda created by mapa::llm_interpret_module() should contain exactly
+        # ONE object (a named list of modules).  Guard against user mistakes:
+        if (length(ls(tmp)) == 1) {
+          interpreted_functional_module <- get(ls(tmp), envir = tmp)
+          annotation_result(interpreted_functional_module@llm_module_interpretation)
+          llm_interpreted_functional_module(interpreted_functional_module)
+
+          showNotification("Interpretation result loaded successfully!",
+                           type = "message")
+        } else {
+          showModal(modalDialog(
+            title   = "Error",
+            "The uploaded .rda must contain exactly one object
+       (what `mapa::llm_interpret_module()` saves).",
+            easyClose = TRUE,
+            footer    = modalButton("Close")
+          ))
+        }
+      })
+      ##---------------------------------------------------------------------------
+
       ### Set up shinyFiles directory selection
       volumes <- shinyFiles::getVolumes()
       ### Define reactive values to store the selected directories
@@ -299,6 +348,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
 
       ## Define annotation result as reactive values
       annotation_result <- reactiveVal()
+      llm_interpreted_functional_module <- reactiveVal()
       llm_interpretation_code <- reactiveVal()
       module_prompt <- reactiveVal()
 
@@ -360,51 +410,8 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           # This runs when the future completes successfully
           (function(result) {
             # Store the results
-            annotation_result(result)
-
-            # ### Save prompt
-            # module_prompt <- annotation_result()[[input$module_selector]]$generated_name$prompt
-            # module_prompt(module_prompt)
-
-            # ### Save code
-            # llm_interpretation_code <-
-            #   functional_module_annotation_code <-
-            #   sprintf(
-            #     "
-            # functional_module_annotation <-
-            #   llm_interpret_module(
-            #     object              = enriched_functional_module(),
-            #     llm_model           = %s,
-            #     embedding_model     = %s,
-            #     api_key             = %s,
-            #     embedding_output_dir = %s,
-            #     local_corpus_dir    = %s,
-            #     phenotype           = %s,
-            #     years               = %s
-            #   )
-            # ",
-            #     ## wrap character inputs in quotes:
-            #     paste0('"', input$llm_model, '"'),
-            #     paste0('"', input$embedding_model, '"'),
-            #     paste0('"', input$api_key, '"'),
-            #     paste0('"', selected_dirs$embedding_output_dir, '"'),
-            #     if (is.null(selected_dirs$local_corpus_dir)) NULL else (paste0('"', selected_dirs$local_corpus_dir, '"')),
-            #     paste0('"', input$phenotype, '"'),
-            #     input$years
-            #   )
-            # llm_interpretation_code(llm_interpretation_code)
-
-            # Close the modal
-            # removeModal()
-            # session$onFlushed(function() {
-            #   # Close the modal first
-            #   removeModal()
-            #
-            #   # Then show success notification after a slight delay
-            #   later::later(function() {
-            #     showNotification("LLM interpretation completed successfully!", type = "message")
-            #   }, 300) # 300ms delay
-            # })
+            llm_interpreted_functional_module(result)
+            annotation_result(result@llm_module_interpretation)
 
             # # Show success notification
             showNotification("LLM interpretation completed successfully!", type = "message")
@@ -451,16 +458,30 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
         )
       })
 
+      observeEvent(                          # fire when either changes
+        list(annotation_result(), input$module_selector),
+        {
+          req(annotation_result(), input$module_selector)
+
+          if (input$module_selector %in% names(annotation_result())) {
+            module_prompt(
+              annotation_result()[[input$module_selector]]$generated_name$prompt
+            )
+          }
+        },
+        ignoreInit = TRUE                    # skip the very first (empty) run
+      )
+
       observeEvent(annotation_result(), {
-        req(annotation_result(), input$module_selector)
+        req(annotation_result())
         ### Save code
-        llm_interpretation_code <-
+        interpretation_code <-
           functional_module_annotation_code <-
           sprintf(
             "
             functional_module_annotation <-
               llm_interpret_module(
-                object              = enriched_functional_module(),
+                object              = enriched_functional_module,
                 llm_model           = %s,
                 embedding_model     = %s,
                 api_key             = %s,
@@ -479,12 +500,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
             paste0('"', input$phenotype, '"'),
             input$years
           )
-        llm_interpretation_code(llm_interpretation_code)
-
-        ### Save prompt
-        if (input$module_selector %in% names(annotation_result())) {
-          module_prompt(annotation_result()[[input$module_selector]]$generated_name$prompt)
-        }
+        llm_interpretation_code(interpretation_code)
       })
 
       output$module_name <- renderText({
@@ -601,16 +617,17 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           shinyjs::enable("download_llm_interpretation_prompt")
         }
       })
-      # Download handler for all the annotation result of functional modules
+
+      # Download handler for llm interpreted functional modules
       output$download_llm_interpretation_result <-
         shiny::downloadHandler(
           filename = function() {
-            "functional_module_annotation_result.rda"
+            "llm_interpreted_functional_module.rda"
           },
           content = function(file) {
-            functional_module_annotation_result <-
-              annotation_result()
-            save(functional_module_annotation_result, file = file)
+            llm_interpreted_functional_module <-
+              llm_interpreted_functional_module()
+            save(llm_interpreted_functional_module, file = file)
           }
         )
       # Download handler for the prompt
@@ -619,15 +636,19 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           "llm_interpretation_prompt.txt"
         },
         content = function(file) {
-          text_content <- paste(sapply(module_prompt, function(item) {
-            item$content
-          }), collapse = "\n\n---\n\n")
+          req(module_prompt())
 
-          writeLines(text_content, file)
+          if (is.list(module_prompt())) {
+            text_content <- paste(
+              vapply(module_prompt(), function(item) item$content, character(1)),
+              collapse = "\n\n---\n\n"
+            )
+          }
+
+          writeLines(text_content, file, useBytes = TRUE)
         }
       )
 
-      #
       # # Define enriched_functional_module as a reactive value
       # llm_interpretation_result <- reactiveVal("")
       #
@@ -767,12 +788,13 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
       #
       #
 
-      ###Go to result tab
+      ###Go to go2data_visualization tab
       ####if there is not enriched_functional_module, show a warning message
-      observeEvent(input$go2results, {
+      observeEvent(input$go2data_visualization, {
         # Check if enriched_functional_module is available
-        if (is.null(enriched_functional_module()) ||
-            length(enriched_functional_module()) == 0) {
+        if ((is.null(enriched_functional_module()) ||
+            length(enriched_functional_module()) == 0) &&
+            is.null(llm_interpreted_functional_module())) {
           showModal(
             modalDialog(
               title = "Warning",
@@ -782,11 +804,20 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
             )
           )
         } else {
-          tab_switch("results")
+          # User never pressed “Submit” in this tab
+          if (is.null(llm_interpreted_functional_module()) ||
+              length(llm_interpreted_functional_module()) == 0) {
+
+            llm_interpreted_functional_module(
+              enriched_functional_module()
+            )
+          }
+
+          tab_switch("data_visualization")
         }
       })
 
-      return(annotation_result)
+      return(llm_interpreted_functional_module)
     }
   )
 }

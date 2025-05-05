@@ -309,7 +309,8 @@ merge_pathways_ui <- function(id) {
                 )
               )
             )
-          ))
+          )
+          )
 }
 
 

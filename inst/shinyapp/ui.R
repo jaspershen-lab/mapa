@@ -70,38 +70,16 @@ if (!require(promises)) {
   library(promises)
 }
 
-# Define items ====
-menu_var <- tibble::tribble(
-  ~ text, ~ tabName, ~ icon,
-  "Introduction", "introduction", "info-circle",
-  "Totorial", "tutorial", "book",
-  "Upload Data", "upload_data", "upload",
-  "Enrich Pathways", "enrich_pathways", "cogs",
-  "Merge Pathways", "merge_pathways", "cogs",
-  "Merge Modules", "merge_modules", "cogs",
-  # "Translation", "translation", "globe",
-  "Data Visualization", "data_visualization", "chart-line",
-  "LLM Interpretation", "llm_interpretation", "brain",
-  "Results and Report", "results", "clipboard-list"
-)
-
-menu_items <- purrr::pmap(
-  menu_var,
-  function(text, tabName, icon) {
-    menuItem(
-      text = text,
-      tabName = tabName,
-      icon = icon(icon)
-    )
-  }
-)
+if (!require(htmltools)) {
+  install.packages("htmltools")
+  library(htmltools)
+}
 
 intro_html_content <- readLines("inst/shinyapp/files/introduction.html")
 intro_cleaned_content <- grep("<(/?(html|head|body))>", intro_html_content, invert = TRUE, value = TRUE)
 
 tutorial_html_content <- readLines("inst/shinyapp/files/tutorials.html")
 tutorial_cleaned_content <- grep("<(/?(html|head|body))>", tutorial_html_content, invert = TRUE, value = TRUE)
-
 
 # Define UI ====
 ui <- dashboardPage(
@@ -111,15 +89,70 @@ ui <- dashboardPage(
 
   ## sidebar of the app ====
   dashboardSidebar(
-    do.call(sidebarMenu, c(
-      list(id = "tabs"),
-      menu_items)
+    sidebarMenu(
+      id = "tabs",
+      menuItem(text = "Introduction", tabName = "introduction", icon = icon("info-circle")),
+      menuItem(text = "Tutorial", tabName = "tutorial", icon = icon("book")),
+      menuItem(text = "Upload Data", tabName = "upload_data", icon = icon("upload")),
+      menuItem(text = "Enrich Pathways", tabName = "enrich_pathways", icon = icon("cogs")),
+      menuItem(text = "Pathway Clustering", tabName = NULL, icon = icon("sitemap"),
+               menuItem(text = HTML("Method1:<br>Overlap / semantic → Modules"), tabName = NULL,
+                        menuSubItem(text = "Step1: Merge Pathways", tabName = "merge_pathways", icon = NULL),
+                        menuSubItem(text = "Step2: Merge Modules", tabName = "merge_modules", icon = NULL)
+                        ),
+               menuItem(text = HTML("Method2:<br>Embed → Modules"), tabName = "embed_cluster_pathways")
+      ),
+      menuItem(text = "LLM Interpretation", tabName = "llm_interpretation", icon = icon("brain")),
+      menuItem(text = "Data Visualization", tabName = "data_visualization", icon = icon("chart-line")),
+      menuItem(text = "Results & Report", tabName = "results", icon = icon("clipboard-list"))
     )
   ),
 
   ## dashboard body code ====
   dashboardBody(
     shinyjs::useShinyjs(),
+
+    tags$script(HTML("
+      // Custom function to toggle sidebar
+      function toggleSidebar() {
+        var sidebarElement = $('.main-sidebar');
+        var bodyElement = $('.content-wrapper');
+
+        if (sidebarElement.css('display') === 'none') {
+          sidebarElement.show();
+          bodyElement.css('margin-left', '230px');
+        } else {
+          sidebarElement.hide();
+          bodyElement.css('margin-left', '0px');
+        }
+      }
+
+      // Override the default sidebar toggle behavior
+      $(document).ready(function() {
+        $('.sidebar-toggle').on('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleSidebar();
+        });
+
+        // Fix for submenu toggle functionality
+        $('.treeview > a').on('click', function(e) {
+          e.preventDefault();
+          $(this).parent().toggleClass('active');
+          $(this).parent().children('.treeview-menu').slideToggle('fast');
+        });
+      });
+    ")),
+
+    # Add CSS to make sidebar wider
+    tags$head(
+      tags$style(HTML("
+      .main-sidebar {
+        width: 250px !important;
+      }
+    "))
+    ),
+
     div(
       id = "loading",
       hidden = TRUE,
@@ -145,6 +178,7 @@ ui <- dashboardPage(
     "
       )
     ),
+
   ### tabitems ====
     tabItems(
       #### 1. Introduction tab ====
@@ -157,8 +191,9 @@ ui <- dashboardPage(
                         )
                 )
               )),
+
      #### 2. Tutorial tab ====
-      tabItem(tabName = "tutorial",
+     tabItem(tabName = "tutorial",
               fluidPage(
                 titlePanel("Tutorials of MAPA"),
                 fluidRow(
@@ -167,28 +202,33 @@ ui <- dashboardPage(
                          )
                 )
               )),
+
      #### 3. Upload data tab ====
-      upload_data_ui("upload_data_tab"),
+     upload_data_ui("upload_data_tab"),
 
      #### 4. Enrich pathways tab ====
-      enrich_pathway_ui("enrich_pathway_tab"),
+     enrich_pathway_ui("enrich_pathway_tab"),
 
-     #### 5. Merge pathways tab ====
-      merge_pathways_ui("merge_pathways_tab"),
+     #### 5-6. Pathway clustering tab ===
+     #### 5a. Merge pathways tab ====
+     merge_pathways_ui("merge_pathways_tab"),
 
-     #### 6. Merge modules tab ====
-      merge_modules_ui("merge_modules_tab"),
+     #### 6a. Merge modules tab ====
+     merge_modules_ui("merge_modules_tab"),
+
+     #### 5-6b. Embed and cluster pathways tab =====
+     embed_cluster_pathways_ui("embed_cluster_pathways_tab"),
 
      #### 7. Translation tab ====
 
-     #### 8. Data visualization tab ====
-      data_visualization_ui("data_visualization_tab"),
+     #### 8. LLM Interpretation tab ====
+     llm_interpretation_ui("llm_interpretation_tab"),
 
-     #### 9. LLM Interpretation tab ====
-      llm_interpretation_ui("llm_interpretation_tab"),
+     #### 9. Data visualization tab ====
+     data_visualization_ui("data_visualization_tab"),
 
      #### 10. Result and report tab =====
-      results_ui("results_tab")
+     results_ui("results_tab")
     ),
 
   ### footer ====
