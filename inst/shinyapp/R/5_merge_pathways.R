@@ -16,126 +16,220 @@ merge_pathways_ui <- function(id) {
             fluidPage(
               fluidRow(
                 column(4,
-                       h4("GO Network"),
                        fluidRow(
-                         column(6,
-                                numericInput(
-                                  ns("p.adjust.cutoff.go"),
-                                  "P-adjust cutoff",
-                                  value = 0.05,
-                                  min = 0,
-                                  max = 0.5)
-                         ),
-                         column(6,
-                                numericInput(
-                                  ns("count.cutoff.go"),
-                                  "Gene count cutoff",
-                                  value = 5,
-                                  min = 0,
-                                  max = 1000
-                                )
-                         )
-                       ),
-                       fluidRow(
-                         column(6,
-                                selectInput(
-                                  ns("measure.method.go"),
-                                  "Similarity method",
-                                  choices = c("Sim_XGraSM_2013", "Sim_Wang_2007", "Sim_Lin_1998",
-                                              "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006",
-                                              "Sim_SimIC_2010", "Sim_EISI_2015", "Sim_AIC_2014",
-                                              "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018",
-                                              "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998",
-                                              "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012",
-                                              "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012",
-                                              "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003",
-                                              "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010",
-                                              "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard",
-                                              "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor"),
-                                  selected = "Sim_XGraSM_2013"
-                                )
-                         ),
-                         column(6,
-                                numericInput(
-                                  ns("sim.cutoff.go"),
-                                  "Similarity cutoff",
-                                  value = 0.5,
-                                  min = 0,
-                                  max = 1)
+                         column(8,
+                                fileInput(inputId = ns("upload_enriched_pathways"),
+                                          label = tags$span("Upload Enrichment Analysis Result"),
+                                          accept = ".rda")
                          )
                        ),
 
-                       h4("KEGG Network"),
-                       fluidRow(
-                         column(6,
-                                numericInput(
-                                  ns("p.adjust.cutoff.kegg"),
-                                  "P-adjust cutoff",
-                                  value = 0.05,
-                                  min = 0,
-                                  max = 0.5)
-                         ),
-                         column(6,
-                                numericInput(
-                                  ns("count.cutoff.kegg"),
-                                  "Gene count cutoff",
-                                  value = 5,
-                                  min = 0,
-                                  max = 1000)
-                         )
-                       ),
-                       fluidRow(
-                         column(6,
-                                selectInput(
-                                  ns("measure.method.kegg"),
-                                  "Similarity method",
-                                  choices = c("jaccard", "dice", "overlap", "kappa"),
-                                  selected = "jaccard")
-                         ),
-                         column(6,
-                                numericInput(
-                                  ns("sim.cutoff.kegg"),
-                                  "Similarity cutoff",
-                                  value = 0.5,
-                                  min = 0,
-                                  max = 1)
+                       ### Query metabolite parameter panel ----
+                       shinyjs::hidden(
+                         div(
+                           id = ns("parameter_panel_metabolite"),
+                           h4("HMDB Network"),
+                           fluidRow(
+                             column(6,
+                                    numericInput(
+                                      ns("p.adjust.cutoff.hmdb"),
+                                      "P-adjust cutoff",
+                                      value = 0.05,
+                                      min = 0,
+                                      max = 0.5)
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("count.cutoff.hmdb"),
+                                      "Metabolite count cutoff",
+                                      value = 5,
+                                      min = 0,
+                                      max = 1000)
+                             )
+                           ),
+                           fluidRow(
+                             column(6,
+                                    selectInput(
+                                      ns("measure.method.hmdb"),
+                                      "Similarity method",
+                                      choices = c("jaccard", "dice", "overlap", "kappa"),
+                                      selected = "jaccard")
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("sim.cutoff.hmdb"),
+                                      "Similarity cutoff",
+                                      value = 0.5,
+                                      min = 0,
+                                      max = 1)
+                             )
+                           ),
+
+                           h4("KEGG Network"),
+                           fluidRow(
+                             column(6,
+                                    numericInput(
+                                      ns("p.adjust.cutoff.metkegg"),
+                                      "P-adjust cutoff",
+                                      value = 0.05,
+                                      min = 0,
+                                      max = 0.5)
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("count.cutoff.metkegg"),
+                                      "Metabolite count cutoff",
+                                      value = 5,
+                                      min = 0,
+                                      max = 1000)
+                             )
+                           ),
+                           fluidRow(
+                             column(6,
+                                    selectInput(
+                                      ns("measure.method.metkegg"),
+                                      "Similarity method",
+                                      choices = c("jaccard", "dice", "overlap", "kappa"),
+                                      selected = "jaccard")
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("sim.cutoff.metkegg"),
+                                      "Similarity cutoff",
+                                      value = 0.5,
+                                      min = 0,
+                                      max = 1)
+                             )
+                           )
                          )
                        ),
 
-                       h4("Reactome Network"),
-                       fluidRow(
-                         column(6,
-                                numericInput(
-                                  ns("p.adjust.cutoff.reactome"),
-                                  "P-adjust cutoff",
-                                  value = 0.05,
-                                  min = 0,
-                                  max = 0.5)
-                         ),
-                         column(6,
-                                numericInput(
-                                  ns("count.cutoff.reactome"),
-                                  "Gene count cutoff",
-                                  value = 5,
-                                  min = 0,
-                                  max = 1000)
-                         )
-                       ),
-                       fluidRow(
-                         column(6,
-                                selectInput(
-                                  ns("measure.method.reactome"),
-                                  "Similarity method",
-                                  choices = c("jaccard", "dice", "overlap", "kappa"),
-                                  selected = "jaccard")
-                         ),
-                         column(6,
-                                numericInput(
-                                  ns("sim.cutoff.reactome"),
-                                  "Similarity cutoff",
-                                  value = 0.5,
-                                  min = 0,
-                                  max = 1)
+                       ### Query gene parameter panel ----
+                       shinyjs::hidden(
+                         div(
+                           id = ns("parameter_panel_gene"),
+                           h4("GO Network"),
+                           fluidRow(
+                             column(6,
+                                    numericInput(
+                                      ns("p.adjust.cutoff.go"),
+                                      "P-adjust cutoff",
+                                      value = 0.05,
+                                      min = 0,
+                                      max = 0.5)
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("count.cutoff.go"),
+                                      "Gene count cutoff",
+                                      value = 5,
+                                      min = 0,
+                                      max = 1000
+                                    )
+                             )
+                           ),
+                           fluidRow(
+                             column(6,
+                                    selectInput(
+                                      ns("measure.method.go"),
+                                      "Similarity method",
+                                      choices = c("Sim_XGraSM_2013", "Sim_Wang_2007", "Sim_Lin_1998",
+                                                  "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006",
+                                                  "Sim_SimIC_2010", "Sim_EISI_2015", "Sim_AIC_2014",
+                                                  "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018",
+                                                  "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998",
+                                                  "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012",
+                                                  "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012",
+                                                  "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003",
+                                                  "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010",
+                                                  "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard",
+                                                  "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor"),
+                                      selected = "Sim_XGraSM_2013"
+                                    )
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("sim.cutoff.go"),
+                                      "Similarity cutoff",
+                                      value = 0.5,
+                                      min = 0,
+                                      max = 1)
+                             )
+                           ),
+
+                           h4("KEGG Network"),
+                           fluidRow(
+                             column(6,
+                                    numericInput(
+                                      ns("p.adjust.cutoff.kegg"),
+                                      "P-adjust cutoff",
+                                      value = 0.05,
+                                      min = 0,
+                                      max = 0.5)
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("count.cutoff.kegg"),
+                                      "Gene count cutoff",
+                                      value = 5,
+                                      min = 0,
+                                      max = 1000)
+                             )
+                           ),
+                           fluidRow(
+                             column(6,
+                                    selectInput(
+                                      ns("measure.method.kegg"),
+                                      "Similarity method",
+                                      choices = c("jaccard", "dice", "overlap", "kappa"),
+                                      selected = "jaccard")
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("sim.cutoff.kegg"),
+                                      "Similarity cutoff",
+                                      value = 0.5,
+                                      min = 0,
+                                      max = 1)
+                             )
+                           ),
+
+                           h4("Reactome Network"),
+                           fluidRow(
+                             column(6,
+                                    numericInput(
+                                      ns("p.adjust.cutoff.reactome"),
+                                      "P-adjust cutoff",
+                                      value = 0.05,
+                                      min = 0,
+                                      max = 0.5)
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("count.cutoff.reactome"),
+                                      "Gene count cutoff",
+                                      value = 5,
+                                      min = 0,
+                                      max = 1000)
+                             )
+                           ),
+                           fluidRow(
+                             column(6,
+                                    selectInput(
+                                      ns("measure.method.reactome"),
+                                      "Similarity method",
+                                      choices = c("jaccard", "dice", "overlap", "kappa"),
+                                      selected = "jaccard")
+                             ),
+                             column(6,
+                                    numericInput(
+                                      ns("sim.cutoff.reactome"),
+                                      "Similarity cutoff",
+                                      value = 0.5,
+                                      min = 0,
+                                      max = 1)
+                             )
+                           )
                          )
                        ),
 
@@ -163,120 +257,220 @@ merge_pathways_ui <- function(id) {
                 column(8,
                        tabsetPanel(
                          tabPanel("Table",
-                                  tabsetPanel(
-                                    tabPanel(
-                                      title = "GO",
-                                      shiny::dataTableOutput(ns("merged_pathway_go")),
-                                      br(),
-                                      shinyjs::useShinyjs(),
-                                      downloadButton(ns("download_merged_pathway_go"),
-                                                     "Download",
-                                                     class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;")
-                                    ),
-                                    tabPanel(
-                                      title = "KEGG",
-                                      shiny::dataTableOutput(ns("merged_pathway_kegg")),
-                                      br(),
-                                      shinyjs::useShinyjs(),
-                                      downloadButton(ns("download_merged_pathway_kegg"),
-                                                     "Download",
-                                                     class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;")
-                                    ),
-                                    tabPanel(
-                                      title = "Reactome",
-                                      shiny::dataTableOutput(ns("merged_pathway_reactome")),
-                                      br(),
-                                      shinyjs::useShinyjs(),
-                                      downloadButton(ns("download_merged_pathway_reactome"),
-                                                     "Download",
-                                                     class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;")
+                                  shinyjs::hidden(
+                                    div(
+                                      id = ns("table_panel_gene"),
+                                      tabsetPanel(
+                                        tabPanel(
+                                          title = "GO",
+                                          shiny::dataTableOutput(ns("merged_pathway_go")),
+                                          br(),
+                                          shinyjs::useShinyjs(),
+                                          downloadButton(ns("download_merged_pathway_go"),
+                                                         "Download",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                        ),
+                                        tabPanel(
+                                          title = "KEGG",
+                                          shiny::dataTableOutput(ns("merged_pathway_kegg")),
+                                          br(),
+                                          shinyjs::useShinyjs(),
+                                          downloadButton(ns("download_merged_pathway_kegg"),
+                                                         "Download",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                        ),
+                                        tabPanel(
+                                          title = "Reactome",
+                                          shiny::dataTableOutput(ns("merged_pathway_reactome")),
+                                          br(),
+                                          shinyjs::useShinyjs(),
+                                          downloadButton(ns("download_merged_pathway_reactome"),
+                                                         "Download",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                        )
+                                      )
                                     )
-                                  )),
+                                  ),
+                                  shinyjs::hidden(
+                                    div(
+                                      id = ns("table_panel_metabolite"),
+                                      tabsetPanel(
+                                        tabPanel(
+                                          title = "HMDB",
+                                          shiny::dataTableOutput(ns("merged_pathway_hmdb")),
+                                          br(),
+                                          shinyjs::useShinyjs(),
+                                          downloadButton(ns("download_merged_pathway_hmdb"),
+                                                         "Download",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                        ),
+                                        tabPanel(
+                                          title = "KEGG",
+                                          shiny::dataTableOutput(ns("merged_pathway_metkegg")),
+                                          br(),
+                                          shinyjs::useShinyjs(),
+                                          downloadButton(ns("download_merged_pathway_metkegg"),
+                                                         "Download",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                        )
+                                      )
+                                    )
+                                  )
+                                  ),
                          tabPanel(
                            title = "Data visualization",
-                           tabsetPanel(
-                             tabPanel(
-                               title = "GO",
-                               shiny::plotOutput(ns("enirched_module_go_plot")),
-                               br(),
-                               fluidRow(
-                                 column(3,
-                                        actionButton(ns("generate_enirched_module_plot_go"),
-                                                     "Generate plot",
-                                                     class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;")
+                           shinyjs::hidden(
+                             div(
+                               id = ns("plot_panel_gene"),
+                               tabsetPanel(
+                                 tabPanel(
+                                   title = "GO",
+                                   shiny::plotOutput(ns("enirched_module_go_plot")),
+                                   br(),
+                                   fluidRow(
+                                     column(3,
+                                            actionButton(ns("generate_enirched_module_plot_go"),
+                                                         "Generate plot",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_go"), "Text", FALSE)
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_all_go"), "Text all", FALSE)
+                                     ),
+                                     column(3,
+                                            numericInput(
+                                              ns("enirched_module_plot_degree_cutoff_go"),
+                                              "Degree cutoff",
+                                              value = 0,
+                                              min = 0,
+                                              max = 1000)
+                                     )
+                                   )
                                  ),
-                                 column(3,
-                                        checkboxInput(ns("enirched_module_plot_text_go"), "Text", FALSE)
+                                 tabPanel(
+                                   title = "KEGG",
+                                   shiny::plotOutput(ns("enirched_module_kegg_plot")),
+                                   br(),
+                                   fluidRow(
+                                     column(3,
+                                            actionButton(ns("generate_enirched_module_plot_kegg"),
+                                                         "Generate plot",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_kegg"), "Text", FALSE)
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_all_kegg"), "Text all", FALSE)
+                                     ),
+                                     column(3,
+                                            numericInput(
+                                              ns("enirched_module_plot_degree_cutoff_kegg"),
+                                              "Degree cutoff",
+                                              value = 0,
+                                              min = 0,
+                                              max = 1000
+                                            )
+                                     )
+                                   )
                                  ),
-                                 column(3,
-                                        checkboxInput(ns("enirched_module_plot_text_all_go"), "Text all", FALSE)
-                                 ),
-                                 column(3,
-                                        numericInput(
-                                          ns("enirched_module_plot_degree_cutoff_go"),
-                                          "Degree cutoff",
-                                          value = 0,
-                                          min = 0,
-                                          max = 1000)
+                                 tabPanel(
+                                   title = "Reactome",
+                                   shiny::plotOutput(ns("enirched_module_reactome_plot")),
+                                   br(),
+                                   fluidRow(
+                                     column(3,
+                                            actionButton(ns("generate_enirched_module_plot_reactome"),
+                                                         "Generate plot",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_reactome"), "Text", FALSE)
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_all_reactome"), "Text all", FALSE)
+                                     ),
+                                     column(3,
+                                            numericInput(
+                                              ns("enirched_module_plot_degree_cutoff_reactome"),
+                                              "Degree cutoff",
+                                              value = 0,
+                                              min = 0,
+                                              max = 1000)
+                                     )
+                                   )
                                  )
                                )
-                             ),
-                             tabPanel(
-                               title = "KEGG",
-                               shiny::plotOutput(ns("enirched_module_kegg_plot")),
-                               br(),
-                               fluidRow(
-                                 column(3,
-                                        actionButton(ns("generate_enirched_module_plot_kegg"),
-                                                     "Generate plot",
-                                                     class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;")
+                             )
+                           ),
+                           shinyjs::hidden(
+                             div(
+                               id = ns("plot_panel_metabolite"),
+                               tabsetPanel(
+                                 tabPanel(
+                                   title = "HMDB",
+                                   shiny::plotOutput(ns("enirched_module_hmdb_plot")),
+                                   br(),
+                                   fluidRow(
+                                     column(3,
+                                            actionButton(ns("generate_enirched_module_plot_hmdb"),
+                                                         "Generate plot",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_hmdb"), "Text", FALSE)
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_all_hmdb"), "Text all", FALSE)
+                                     ),
+                                     column(3,
+                                            numericInput(
+                                              ns("enirched_module_plot_degree_cutoff_hmdb"),
+                                              "Degree cutoff",
+                                              value = 0,
+                                              min = 0,
+                                              max = 1000)
+                                     )
+                                   )
                                  ),
-                                 column(3,
-                                        checkboxInput(ns("enirched_module_plot_text_kegg"), "Text", FALSE)
-                                 ),
-                                 column(3,
-                                        checkboxInput(ns("enirched_module_plot_text_all_kegg"), "Text all", FALSE)
-                                 ),
-                                 column(3,
-                                        numericInput(
-                                          ns("enirched_module_plot_degree_cutoff_kegg"),
-                                          "Degree cutoff",
-                                          value = 0,
-                                          min = 0,
-                                          max = 1000
-                                        )
-                                 )
-                               )
-                             ),
-                             tabPanel(
-                               title = "Reactome",
-                               shiny::plotOutput(ns("enirched_module_reactome_plot")),
-                               br(),
-                               fluidRow(
-                                 column(3,
-                                        actionButton(ns("generate_enirched_module_plot_reactome"),
-                                                     "Generate plot",
-                                                     class = "btn-primary",
-                                                     style = "background-color: #d83428; color: white;")
-                                 ),
-                                 column(3,
-                                        checkboxInput(ns("enirched_module_plot_text_reactome"), "Text", FALSE)
-                                 ),
-                                 column(3,
-                                        checkboxInput(ns("enirched_module_plot_text_all_reactome"), "Text all", FALSE)
-                                 ),
-                                 column(3,
-                                        numericInput(
-                                          ns("enirched_module_plot_degree_cutoff_reactome"),
-                                          "Degree cutoff",
-                                          value = 0,
-                                          min = 0,
-                                          max = 1000)
+                                 tabPanel(
+                                   title = "KEGG",
+                                   shiny::plotOutput(ns("enirched_module_metkegg_plot")),
+                                   br(),
+                                   fluidRow(
+                                     column(3,
+                                            actionButton(ns("generate_enirched_module_plot_metkegg"),
+                                                         "Generate plot",
+                                                         class = "btn-primary",
+                                                         style = "background-color: #d83428; color: white;")
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_metkegg"), "Text", FALSE)
+                                     ),
+                                     column(3,
+                                            checkboxInput(ns("enirched_module_plot_text_all_metkegg"), "Text all", FALSE)
+                                     ),
+                                     column(3,
+                                            numericInput(
+                                              ns("enirched_module_plot_degree_cutoff_metkegg"),
+                                              "Degree cutoff",
+                                              value = 0,
+                                              min = 0,
+                                              max = 1000
+                                            )
+                                     )
+                                   )
                                  )
                                )
                              )
@@ -333,6 +527,68 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
   moduleServer(
     id,
     function(input, output, session) {
+
+      observeEvent(input$upload_enriched_pathways, {
+        if (!is.null(input$upload_enriched_pathways$datapath)) {
+          message("Loading data")
+          tempEnv <- new.env()
+          load(input$upload_enriched_pathways$datapath,
+               envir = tempEnv)
+
+          names <- ls(tempEnv)
+
+          if (length(names) == 1) {
+            enriched_pathways(get(names[1], envir = tempEnv))
+          } else {
+            message("The .rda file does not contain exactly one object.")
+            showModal(
+              modalDialog(
+                title = "Error",
+                "The uploaded file should contain exactly one object.",
+                easyClose = TRUE,
+                footer = modalButton("Close")
+              )
+            )
+          }
+        }
+      })
+
+      query_type <- reactive({
+        req(enriched_pathways())
+        enriched_pathways()@process_info$enrich_pathway@parameter$query_type
+      })
+
+      observe({
+        req(query_type())
+        ## For gene
+        shinyjs::toggleElement(
+          id = "parameter_panel_gene",
+          condition = query_type() == "gene"
+        )
+        shinyjs::toggleElement(
+          id = "table_panel_gene",
+          condition = query_type() == "gene"
+        )
+        shinyjs::toggleElement(
+          id = "plot_panel_gene",
+          condition = query_type() == "gene"
+        )
+
+        ## For metabolite
+        shinyjs::toggleElement(
+          id = "parameter_panel_metabolite",
+          condition = query_type() == "metabolite"
+        )
+        shinyjs::toggleElement(
+          id = "table_panel_metabolite",
+          condition = query_type() == "metabolite"
+        )
+        shinyjs::toggleElement(
+          id = "plot_panel_metabolite",
+          condition = query_type() == "metabolite"
+        )
+      })
+
       ## Define enriched_modules as a reactive value
       enriched_modules <-
         reactiveVal()
@@ -365,15 +621,23 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
                   p.adjust.cutoff.go = input$p.adjust.cutoff.go,
                   p.adjust.cutoff.kegg = input$p.adjust.cutoff.kegg,
                   p.adjust.cutoff.reactome = input$p.adjust.cutoff.reactome,
+                  p.adjust.cutoff.hmdb = input$p.adjust.cutoff.hmdb,
+                  p.adjust.cutoff.metkegg = input$p.adjust.cutoff.metkegg,
                   count.cutoff.go = input$count.cutoff.go,
                   count.cutoff.kegg = input$count.cutoff.kegg,
                   count.cutoff.reactome = input$count.cutoff.reactome,
+                  count.cutoff.hmdb = input$count.cutoff.hmdb,
+                  count.cutoff.metkegg = input$count.cutoff.metkegg,
                   sim.cutoff.go = input$sim.cutoff.go,
                   sim.cutoff.kegg = input$sim.cutoff.kegg,
                   sim.cutoff.reactome = input$sim.cutoff.reactome,
+                  sim.cutoff.hmdb = input$sim.cutoff.hmdb,
+                  sim.cutoff.metkegg = input$sim.cutoff.metkegg,
                   measure.method.go = input$measure.method.go,
                   measure.method.kegg = input$measure.method.kegg,
                   measure.method.reactome = input$measure.method.reactome,
+                  measure.method.hmdb = input$measure.method.hmdb,
+                  measure.method.metkegg = input$measure.method.metkegg,
                   path = "result",
                   save_to_local = FALSE
                 )
@@ -392,26 +656,28 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
 
           # shinyjs::hide("loading")
 
-          ## save code ====
-          merge_pathways_code <-
-            sprintf(
+          ## Save code ====
+          if (query_type() == "gene") {
+
+            merge_pathways_code_str <- sprintf(
               '
-                  enriched_modules <-
-                  merge_pathways(
-                  object = enriched_pathways,
-                  p.adjust.cutoff.go = %s,
+              enriched_modules <-
+                merge_pathways(
+                  object               = enriched_pathways,
+                  p.adjust.cutoff.go   = %s,
                   p.adjust.cutoff.kegg = %s,
                   p.adjust.cutoff.reactome = %s,
-                  count.cutoff.go = %s,
-                  count.cutoff.kegg = %s,
+                  count.cutoff.go      = %s,
+                  count.cutoff.kegg    = %s,
                   count.cutoff.reactome = %s,
-                  sim.cutoff.go = %s,
-                  sim.cutoff.kegg = %s,
-                  sim.cutoff.reactome = %s,
-                  measure.method.go = %s,
-                  measure.method.kegg = %s,
-                  measure.method.reactome = %s)
-                  ',
+                  sim.cutoff.go        = %s,
+                  sim.cutoff.kegg      = %s,
+                  sim.cutoff.reactome  = %s,
+                  measure.method.go    = %s,
+                  measure.method.kegg  = %s,
+                  measure.method.reactome = %s
+                  )
+              ',
               input$p.adjust.cutoff.go,
               input$p.adjust.cutoff.kegg,
               input$p.adjust.cutoff.reactome,
@@ -426,13 +692,42 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
               paste0('"', input$measure.method.reactome, '"')
             )
 
-          merge_pathways_code(merge_pathways_code)
+          } else if (query_type() == "metabolite") {
+
+            merge_pathways_code_str <- sprintf(
+              '
+              enriched_modules <-
+                merge_pathways(
+                object                  = enriched_pathways,
+                p.adjust.cutoff.hmdb    = %s,
+                p.adjust.cutoff.metkegg = %s,
+                count.cutoff.hmdb       = %s,
+                count.cutoff.metkegg    = %s,
+                sim.cutoff.hmdb         = %s,
+                sim.cutoff.metkegg      = %s,
+                measure.method.hmdb     = %s,
+                measure.method.metkegg  = %s
+                )
+              ',
+              input$p.adjust.cutoff.hmdb,
+              input$p.adjust.cutoff.metkegg,
+              input$count.cutoff.hmdb,
+              input$count.cutoff.metkegg,
+              input$sim.cutoff.hmdb,
+              input$sim.cutoff.metkegg,
+              paste0('"', input$measure.method.hmdb, '"'),
+              paste0('"', input$measure.method.metkegg, '"')
+            )
+
+          }
+
+          merge_pathways_code(merge_pathways_code_str)
         }
       })
 
+      ## Show object =====
       output$enriched_modules_object <-
         renderText({
-          req(enriched_modules())
           enriched_modules <- enriched_modules()
           captured_output1 <- capture.output(enriched_modules,
                                              type = "message")
@@ -444,6 +739,7 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
           paste(captured_output, collapse = "\n")
         })
 
+      ## Show table ====
       output$merged_pathway_go <-
         shiny::renderDataTable({
           req(tryCatch(
@@ -477,7 +773,29 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
         options = list(pageLength = 10,
                        scrollX = TRUE))
 
-      ### download results
+      ### For metabolite
+      output$merged_pathway_hmdb <-
+        shiny::renderDataTable({
+          req(tryCatch(
+            enriched_modules()@merged_pathway_hmdb$module_result,
+            error = function(e)
+              NULL
+          ))
+        },
+        options = list(pageLength = 10,
+                       scrollX = TRUE))
+      output$merged_pathway_metkegg <-
+        shiny::renderDataTable({
+          req(tryCatch(
+            enriched_modules()@merged_pathway_metkegg$module_result,
+            error = function(e)
+              NULL
+          ))
+        },
+        options = list(pageLength = 10,
+                       scrollX = TRUE))
+
+      ## Download results ====
       output$download_merged_pathway_go <-
         shiny::downloadHandler(
           filename = function() {
@@ -490,23 +808,23 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
           }
         )
 
-      # observe({
-      #   if (is.null(enriched_modules()) ||
-      #       length(enriched_modules()) == 0) {
-      #     shinyjs::disable("download_merged_pathway_go")
-      #   } else {
-      #     if (length(enriched_modules()@merged_pathway_go) == 0) {
-      #       shinyjs::disable("download_merged_pathway_go")
-      #     } else{
-      #       shinyjs::enable("download_merged_pathway_go")
-      #     }
-      #   }
-      # })
-
       observe({
-        shinyjs::toggleState(
-          id = "download_merged_pathway_go",
-          condition = !(is.null(enriched_modules()) || length(enriched_modules()) == 0 || length(enriched_modules()@merged_pathway_go) == 0)
+        tryCatch(
+          expr = {
+            if (is.null(enriched_modules()) ||
+                length(enriched_modules()) == 0) {
+              shinyjs::disable("download_merged_pathway_go")
+            } else {
+              if (length(enriched_modules()@merged_pathway_go) == 0) {
+                shinyjs::disable("download_merged_pathway_go")
+              } else{
+                shinyjs::enable("download_merged_pathway_go")
+              }
+            }
+          },
+          error = function(e) {
+            shinyjs::disable("download_merged_pathway_go")
+          }
         )
       })
 
@@ -523,16 +841,23 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
         )
 
       observe({
-        if (is.null(enriched_modules()) ||
-            length(enriched_modules()) == 0) {
-          shinyjs::disable("download_merged_pathway_kegg")
-        } else {
-          if (length(enriched_modules()@merged_pathway_kegg) == 0) {
+        tryCatch(
+          expr = {
+            if (is.null(enriched_modules()) ||
+                length(enriched_modules()) == 0) {
+              shinyjs::disable("download_merged_pathway_kegg")
+            } else {
+              if (length(enriched_modules()@merged_pathway_kegg) == 0) {
+                shinyjs::disable("download_merged_pathway_kegg")
+              } else{
+                shinyjs::enable("download_merged_pathway_kegg")
+              }
+            }
+          },
+          error = function(e) {
             shinyjs::disable("download_merged_pathway_kegg")
-          } else{
-            shinyjs::enable("download_merged_pathway_kegg")
           }
-        }
+        )
       })
 
       output$download_merged_pathway_reactome <-
@@ -548,16 +873,87 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
         )
 
       observe({
-        if (is.null(enriched_modules()) ||
-            length(enriched_modules()) == 0) {
-          shinyjs::disable("download_merged_pathway_reactome")
-        } else {
-          if (length(enriched_modules()@merged_pathway_reactome) == 0) {
+        tryCatch(
+          expr = {
+            if (is.null(enriched_modules()) ||
+                length(enriched_modules()) == 0) {
+              shinyjs::disable("download_merged_pathway_reactome")
+            } else {
+              if (length(enriched_modules()@merged_pathway_reactome) == 0) {
+                shinyjs::disable("download_merged_pathway_reactome")
+              } else{
+                shinyjs::enable("download_merged_pathway_reactome")
+              }
+            }
+          },
+          error = function(e) {
             shinyjs::disable("download_merged_pathway_reactome")
-          } else{
-            shinyjs::enable("download_merged_pathway_reactome")
           }
-        }
+        )
+      })
+
+      output$download_merged_pathway_hmdb <-
+        shiny::downloadHandler(
+          filename = function() {
+            "merged_pathway_hmdb.csv"
+          },
+          content = function(file) {
+            write.csv(enriched_modules()@merged_pathway_hmdb$module_result,
+                      file,
+                      row.names = FALSE)
+          }
+        )
+
+      observe({
+        tryCatch(
+          expr = {
+            if (is.null(enriched_modules()) ||
+                length(enriched_modules()) == 0) {
+              shinyjs::disable("download_merged_pathway_hmdb")
+            } else {
+              if (length(enriched_modules()@merged_pathway_hmdb) == 0) {
+                shinyjs::disable("download_merged_pathway_hmdb")
+              } else{
+                shinyjs::enable("download_merged_pathway_hmdb")
+              }
+            }
+          },
+          error = function(e) {
+            shinyjs::disable("download_merged_pathway_hmdb")
+          }
+        )
+      })
+
+      output$download_merged_pathway_metkegg <-
+        shiny::downloadHandler(
+          filename = function() {
+            "merged_pathway_metkegg.csv"
+          },
+          content = function(file) {
+            write.csv(enriched_modules()@merged_pathway_metkegg$module_result,
+                      file,
+                      row.names = FALSE)
+          }
+        )
+
+      observe({
+        tryCatch(
+          expr = {
+            if (is.null(enriched_modules()) ||
+                length(enriched_modules()) == 0) {
+              shinyjs::disable("download_merged_pathway_metkegg")
+            } else {
+              if (length(enriched_modules()@merged_pathway_metkegg) == 0) {
+                shinyjs::disable("download_merged_pathway_metkegg")
+              } else{
+                shinyjs::enable("download_merged_pathway_metkegg")
+              }
+            }
+          },
+          error = function(e) {
+            shinyjs::disable("download_merged_pathway_metkegg")
+          }
+        )
       })
 
 
@@ -567,9 +963,8 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
             "enriched_modules.rda"
           },
           content = function(file) {
-            enriched_modules <-
-              enriched_modules()
-            save(enriched_modules, file = file)
+            em <- enriched_modules()
+            save(em, file = file)
           }
         )
 
@@ -582,7 +977,7 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
         }
       })
 
-      ###### data visualization
+      ## Data visualization ====
       # GO Plot generation logic
       enirched_module_go_plot <-
         reactiveVal()
@@ -753,6 +1148,121 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
               NULL
           ))
         })
+
+      # hmdb Plot generation logic
+      enirched_module_hmdb_plot <-
+        reactiveVal()
+      observeEvent(input$generate_enirched_module_plot_hmdb, {
+        # Check if enriched_modules is available
+        if (is.null(enriched_modules()) ||
+            length(enriched_modules()) == 0) {
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "No enriched modules data available. Please 'Merge pathways' first.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else {
+          # shinyjs::show("loading")
+
+          withProgress(message = 'Analysis in progress...', {
+            tryCatch(
+              plot <-
+                plot_similarity_network(
+                  object = enriched_modules(),
+                  level = "module",
+                  database = "hmdb",
+                  degree_cutoff = input$enirched_module_plot_degree_cutoff_hmdb,
+                  text = input$enirched_module_plot_text_hmdb,
+                  text_all = input$enirched_module_plot_text_all_hmdb
+                ),
+              error = function(e) {
+                showModal(
+                  modalDialog(
+                    title = "Error",
+                    "Please check your input parameters.",
+                    easyClose = TRUE,
+                    footer = modalButton("Close")
+                  )
+                )
+              }
+            )
+          })
+
+          enirched_module_hmdb_plot(plot)
+
+          # shinyjs::hide("loading")
+        }
+      })
+
+      output$enirched_module_hmdb_plot <-
+        shiny::renderPlot({
+          req(tryCatch(
+            enirched_module_hmdb_plot(),
+            error = function(e)
+              NULL
+          ))
+        })
+
+      # metabolite KEGG Plot generation logic
+      enirched_module_metkegg_plot <-
+        reactiveVal()
+      observeEvent(input$generate_enirched_module_plot_metkegg, {
+        # Check if enriched_modules is available
+        if (is.null(enriched_modules()) ||
+            length(enriched_modules()) == 0) {
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "No enriched modules data available. Please 'Merge pathways' first.",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else {
+          # shinyjs::show("loading")
+
+          withProgress(message = 'Analysis in progress...', {
+            tryCatch(
+              plot <-
+                plot_similarity_network(
+                  object = enriched_modules(),
+                  level = "module",
+                  database = "kegg",
+                  degree_cutoff = input$enirched_module_plot_degree_cutoff_metkegg,
+                  text = input$enirched_module_plot_text_metkegg,
+                  text_all = input$enirched_module_plot_text_all_metkegg
+                ),
+              error = function(e) {
+                showModal(
+                  modalDialog(
+                    title = "Error",
+                    "Please check your input parameters.",
+                    easyClose = TRUE,
+                    footer = modalButton("Close")
+                  )
+                )
+              }
+            )
+          })
+
+          enirched_module_metkegg_plot(plot)
+
+          # shinyjs::hide("loading")
+        }
+      })
+
+      output$enirched_module_metkegg_plot <-
+        shiny::renderPlot({
+          req(tryCatch(
+            enirched_module_metkegg_plot(),
+            error = function(e)
+              NULL
+          ))
+        })
+
 
       ####show code
       observeEvent(input$show_merge_pathways_code, {

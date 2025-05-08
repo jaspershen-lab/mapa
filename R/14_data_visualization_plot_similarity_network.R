@@ -51,10 +51,11 @@
 #
 # metabolite
 # plot_similarity_network(
-#   object = enriched_functional_modules,
+#   object = em,
 #   level = "module",
 #   degree_cutoff = 0,
-#   database = c("kegg")
+#   database = c("hmdb"),
+#   module_id = "hmdb_Module_2"
 # )
 
 #' Plot Similarity Network
@@ -257,7 +258,10 @@ plot_similarity_network <-
                      geom_blank())
           } else{
             graph_data <-
-              object@merged_pathway_hmdb$graph_data
+              object@merged_pathway_hmdb$graph_data |>
+              tidygraph::activate(what = "nodes") |>
+              dplyr::rename(p_adj = p.adjust)
+
             result_with_module <-
               object@merged_pathway_hmdb$result_with_module
 
@@ -285,7 +289,10 @@ plot_similarity_network <-
                      geom_blank())
           } else{
             graph_data <-
-              object@merged_pathway_metkegg$graph_data
+              object@merged_pathway_metkegg$graph_data |>
+              tidygraph::activate(what = "nodes") |>
+              dplyr::rename(p_adj = p.adjust)
+
             result_with_module <-
               object@merged_pathway_metkegg$result_with_module
 
@@ -305,7 +312,6 @@ plot_similarity_network <-
         }
       }
     }
-
 
     if (level == "functional_module") {
       if (all(names(object@process_info) != "merge_modules")) {
@@ -329,7 +335,7 @@ plot_similarity_network <-
           graph_data <-
             graph_data |>
             tidygraph::activate(what = "nodes") |>
-            dplyr::rename(p.adj = p_value_adjust) |>
+            dplyr::rename(p_adj = p_value_adjust) |>
             dplyr::rename(Count = mapped_number)
 
           if ("module_content_number.y" %in% col_name_node) {
@@ -370,8 +376,8 @@ plot_similarity_network <-
       graph_data |>
       tidygraph::activate(what = "nodes") |>
       dplyr::filter(module_content_number > degree_cutoff) |>
-      dplyr::mutate(label = if (query_type == "gene") Description else pathway_name) |>
-      dplyr::mutate(p_adj = p.adj)
+      dplyr::mutate(label = if (query_type == "gene") Description else pathway_name) #|>
+      # dplyr::mutate(p_adj = p.adj)
 
     if (igraph::gorder(graph_data) == 0) {
       warning("No functional modules have degree > ", degree_cutoff)

@@ -145,8 +145,6 @@
 #     sim.cutoff.metkegg = 0
 #   )
 
-
-
 #' This function merges enrichment analysis results from different databases (GO, KEGG, and Reactome) into a single object respectively. The function takes an object of class "functional_module" and set up various parameters to compute and filter term similarity scores.
 #'
 #' @param object An object of class "functional_module", typically a result from enrich_pathway function.
