@@ -6,6 +6,7 @@
 \usage{
 merge_pathways(
   object,
+  database = NULL,
   p.adjust.cutoff.go = 0.05,
   p.adjust.cutoff.kegg = 0.05,
   p.adjust.cutoff.reactome = 0.05,
@@ -32,6 +33,7 @@ merge_pathways(
     "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice", "Sim_Overlap",
     "Sim_Ancestor"),
   control.method.go = list(),
+  go.orgdb = NULL,
   measure.method.kegg = c("jaccard", "dice", "overlap", "kappa"),
   measure.method.reactome = c("jaccard", "dice", "overlap", "kappa"),
   measure.method.hmdb = c("jaccard", "dice", "overlap", "kappa"),
@@ -42,6 +44,12 @@ merge_pathways(
 }
 \arguments{
 \item{object}{An object of class "functional_module", typically a result from enrich_pathway function.}
+
+\item{database}{Character vector, specify which database(s) to use for merging pathways.
+\itemize{
+\item For genes: 'go', 'kegg', 'reactome'
+\item For metabolites: 'hmdb', 'kegg'
+}}
 
 \item{p.adjust.cutoff.go}{Adjusted p-value cutoff for GO database. Default is 0.05.}
 
@@ -76,6 +84,8 @@ merge_pathways(
 \item{measure.method.go}{A character vector specifying the term semantic similarity measure method for GO terms. Default is \code{"Sim_XGraSM_2013"}. See \code{simona::term_sim()} for available measures.}
 
 \item{control.method.go}{a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
+
+\item{go.orgdb}{An optional organism-specific database for GO annotations, required when database includes "go".}
 
 \item{measure.method.kegg}{A character vector specifying the similarity measure method for KEGG. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
 

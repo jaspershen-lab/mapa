@@ -129,6 +129,7 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
       enriched_functional_module <- reactiveVal()
       merge_modules_code <- reactiveVal()
 
+      ### merge modules ====
       observeEvent(input$submit_merge_modules, {
         # Check if enriched_modules is available
         if (is.null(enriched_modules()) ||
@@ -232,19 +233,26 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
         )
 
       observe({
-        if (is.null(enriched_functional_module()) ||
-            length(enriched_functional_module()) == 0) {
-          shinyjs::disable("download_enriched_functional_modules")
-        } else {
-          if (length(enriched_functional_module()@merged_module) == 0) {
+        tryCatch(
+          expr = {
+            if (is.null(enriched_functional_module()) ||
+                length(enriched_functional_module()) == 0) {
+              shinyjs::disable("download_enriched_functional_modules")
+            } else {
+              if (length(enriched_functional_module()@merged_module) == 0) {
+                shinyjs::disable("download_enriched_functional_modules")
+              } else {
+                shinyjs::enable("download_enriched_functional_modules")
+              }
+            }
+          },
+          error = function(e) {
             shinyjs::disable("download_enriched_functional_modules")
-          } else{
-            shinyjs::enable("download_enriched_functional_modules")
           }
-        }
+        )
       })
 
-      ######data visualization
+      ### data visualization ====
       ###define enirched_functional_module_plot
       enirched_functional_module_plot <-
         reactiveVal()

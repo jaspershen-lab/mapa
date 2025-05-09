@@ -569,29 +569,37 @@ check_variable_info <-
   }
 
 
-
-
-#' GO Similarity Measurement
+#' Calculate similarity among Gene Ontology (GO) terms
 #'
-#' This function allows for the computation of semantic similarity among Gene Ontology (GO) terms.
+#' @description
+#' Internal function that computes similarity between GO terms from enrichment results.
+#' This function processes GO terms by ontology category (BP, MF, CC) and calculates pairwise similarities.
 #'
-#' @param result A data frame containing GO term IDs and ontologies.
-#' @param sim.cutoff A numeric value for the similarity cutoff (default: 0).
+#' @param result A data frame containing GO term IDs in column 'ID' and ontologies in column 'ONTOLOGY'.
+#' @param go.orgdb An organism-specific database for GO annotations (default: NULL).
+#' @param sim.cutoff A numeric value for the similarity cutoff (default: 0). Only term pairs with
+#'                  similarity greater than this value will be returned.
 #' @param measure.method A character vector specifying the semantic similarity
-#' measure methods for GO terms. Default is `"Sim_XGraSM_2013"`. See `simona::all_term_sim_methods()` for available measures.
-#' @param control.method a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
+#'                      measure method for GO terms. Default is `"Sim_XGraSM_2013"`.
+#'                      See `simona::all_term_sim_methods()` for available measures.
+#' @param control.method A list of parameters passed to the specified measure method for GO term semantic similarity.
+#'                      For details, see https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
 #'
-#' @return A data frame containing pairs of GO terms and their similarity values.
-#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
-#' @examples
-#' \dontrun{
-#' # Assuming `result` is your data frame containing GO term IDs and ontologies.
-#' similarity_matrix <- get_go_result_sim(result = result)
-#' }
-#' @export
+#' @return A data frame containing pairs of GO terms (name1, name2) and their similarity values (sim).
+#'         Also includes an attribute "obsolete_terms" listing any obsolete GO terms encountered.
+#'
+#' @importFrom tibble rownames_to_column
+#' @importFrom tidyr pivot_longer
+#' @importFrom dplyr filter
+#'
+#' @keywords internal
+#'
+#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 
 get_go_result_sim <-
   function(result,
+           go.orgdb = NULL,
            sim.cutoff = 0,
            measure.method = "Sim_XGraSM_2013",
            control.method = list()) {
@@ -615,6 +623,7 @@ get_go_result_sim <-
     bp_sim_matrix <-
       GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "BP"],
                              ont = "BP",
+                             go.orgdb = go.orgdb,
                              measure = measure.method,
                              control.method = control.method)
     bp_obsolete_terms <- attr(bp_sim_matrix, "obsolete_terms")
@@ -642,6 +651,7 @@ get_go_result_sim <-
     mf_sim_matrix <-
       GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "MF"],
                              ont = "MF",
+                             go.orgdb = go.orgdb,
                              measure = measure.method,
                              control.method = control.method)
     mf_obsolete_terms <- attr(mf_sim_matrix, "obsolete_terms")
@@ -669,6 +679,7 @@ get_go_result_sim <-
     cc_sim_matrix <-
       GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "CC"],
                              ont = "CC",
+                             go.orgdb = go.orgdb,
                              measure = measure.method,
                              control.method = control.method)
     cc_obsolete_terms <- attr(cc_sim_matrix, "obsolete_terms")
@@ -701,38 +712,67 @@ get_go_result_sim <-
     sim_matrix
   }
 
-
-#' Compute Semantic Similarity Between GO Terms
+#' Compute Similarity Between GO Terms for each subontology
 #'
-#' This function computes the semantic similarity between Gene Ontology (GO) terms using a specified similarity measure. For more information about the methods, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
+#' Computes pair-wise semantic similarity scores for a set of Gene Ontology
+#' (GO) terms with one of the similarity measures provided by **simona**.
+#' The underlying ontology DAG and information‐content (IC) values are
+#' constructed from the specified *OrgDb* annotation package and **cached** in a
+#' hidden environment so repeated calls with the same settings are fast.
 #'
-#' @note This function was adapted from GO_similarity() in the simplifyEnrichment package (version 2.0.0) by Zuguang Gu.
+#' For a detailed explanation of the available similarity metrics and their
+#' tunable parameters, see the simona vignette:
+#' <https://jokergoo.github.io/simona/articles/v05_term_similarity.html>.
 #'
-#' @references Gu Z, Huebschmann D (2021). “simplifyEnrichment: an R/Bioconductor package for Clustering and Visualizing Functional Enrichment Results.” Genomics, Proteomics & Bioinformatics. doi:10.1016/j.gpb.2022.04.008.
+#' @note This helper is adapted from `GO_similarity()` in the
+#'   **simplifyEnrichment** package (v2.0.0) by Zuguang Gu.
 #'
-#' @source Source code download link: https://www.bioconductor.org/packages/release/bioc/src/contrib/simplifyEnrichment_2.0.0.tar.gz
+#' @references
+#'   Gu Z, Huebschmann D (2021) *simplifyEnrichment: an R/Bioconductor package
+#'   for Clustering and Visualizing Functional Enrichment Results.*
+#'   *Genomics, Proteomics & Bioinformatics.*
+#'   doi:10.1016/j.gpb.2022.04.008
 #'
-#' @param go_id A character vector of GO term IDs.
-#' @param ont A character string specifying the ontology.
-#' @param db A character string specifying the annotation database to use. Default is `"org.Hs.eg.db"`.
-#' @param measure A character string specifying the semantic similarity measure to use. Default is `"Sim_XGraSM_2013"`. See `simona::all_term_sim_methods()` for available measures.
-#' @param control.method a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
+#'   Source code:
+#'   <https://www.bioconductor.org/packages/release/bioc/src/contrib/simplifyEnrichment_2.0.0.tar.gz>
 #'
-#' @return A numeric matrix containing the pairwise semantic similarity scores between the provided GO terms.
+#' @param go_id          Character vector of GO term identifiers
+#' @param ont            Character string specifying the ontology namespace:
+#'                       `"BP"`, `"MF"`, or `"CC"`.
+#' @param go.orgdb       Character string naming the *OrgDb* annotation package
+#'                       used to derive gene–GO mappings.
+#' @param measure        Character string giving the similarity measure to use.
+#'                       Default is `"Sim_XGraSM_2013"`.  See
+#'                       `simona::all_term_sim_methods()` for the full list.
+#' @param control.method Named list of additional arguments passed to the
+#'                       selected `measure`.  See the simona documentation for
+#'                       details.
+#'
+#' @return A numeric matrix of pair-wise similarity scores with three
+#'   attributes:
+#'   \describe{
+#'     \item{`"measure"`}{the similarity method used}
+#'     \item{`"ontology"`}{the ontology namespace (`"GO:BP"`, `"GO:MF"`, or
+#'                         `"GO:CC"`)}
+#'     \item{`"obsolete_terms"`}{character vector of input GO terms that were
+#'                               absent from the database and therefore
+#'                               omitted}
+#'   }
 #'
 #' @keywords internal
+#' @noRd
 
 env <- new.env()
 
 GO_similarity_internal = function(go_id,
                                   ont = NULL,
-                                  db = "org.Hs.eg.db",
+                                  go.orgdb = NULL,
                                   measure = "Sim_XGraSM_2013",
                                   control.method = list()) {
 
-  hash <- digest::digest(list(ont = ont, db = db))
+  hash <- digest::digest(list(ont = ont, db = go.orgdb))
   if(is.null(env$go[[hash]])) {
-    dag <- simona::create_ontology_DAG_from_GO_db(namespace = ont, org_db = db, relations = c("part_of", "regulates"))
+    dag <- simona::create_ontology_DAG_from_GO_db(namespace = ont, org_db = go.orgdb, relations = c("part_of", "regulates"))
 
     ic <- simona::term_IC(dag, method = "IC_annotation")
     all_go_id <- names(ic[!is.na(ic)])

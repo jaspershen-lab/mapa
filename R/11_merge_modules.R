@@ -41,7 +41,7 @@
 # For metabolite
 # object <- merged_pathways
 # enriched_functional_module_met <- merge_modules(
-#   object = object,
+#   object = em,
 #   sim.cutoff = 0,
 #   measure_method = "jaccard"
 # )
@@ -67,7 +67,9 @@
 #' before using this function.
 #'
 #' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #' @export
+
 merge_modules <-
   function(object,
            sim.cutoff = 0.5,
@@ -763,7 +765,7 @@ identify_functional_modules <-
           as.numeric(functional_module_result$NES)
       }
     } else if (query_type == "metabolite") {
-      if ("enrich_pathway" %in% names(object@process_info)) {
+      if (analysis_type == "enrich_pathway") {
         result_with_module <-
           result_with_module %>%
           dplyr::select(-c(all_id, all_number, mapped_number, mapped_percentage))

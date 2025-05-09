@@ -20,9 +20,9 @@
 #
 # plot_similarity_network(
 #   object = enriched_functional_module,
-#   level = "module",
-#   database = "go",
-#   degree_cutoff = 10
+#   level = "functional_module",
+#   database = c("go", "kegg", "reactome"),
+#   degree_cutoff = 5
 # )
 #
 # plot_similarity_network(
@@ -56,6 +56,11 @@
 #   degree_cutoff = 0,
 #   database = c("hmdb"),
 #   module_id = "hmdb_Module_2"
+# )
+# plot_similarity_network(
+#   object = enriched_functional_module,
+#   level = "functional_module",
+#   degree_cutoff = 0
 # )
 
 #' Plot Similarity Network
@@ -330,7 +335,10 @@ plot_similarity_network <-
                  geom_blank())
       } else{
         graph_data <-
-          object@merged_module$graph_data
+          object@merged_module$graph_data|>
+          tidygraph::activate(what = "nodes") |>
+          dplyr::rename(p_adj = p.adjust)
+
         if (query_type == "metabolite") {
           col_name_node <-
             graph_data |>
@@ -341,8 +349,9 @@ plot_similarity_network <-
           graph_data <-
             graph_data |>
             tidygraph::activate(what = "nodes") |>
-            dplyr::rename(p_adj = p_value_adjust) |>
-            dplyr::rename(Count = mapped_number)
+            # dplyr::rename(p_adj = p_value_adjust) |>
+            dplyr::select(-Count) |>
+            dplyr::mutate(Count = as.numeric(mapped_number))
 
           if ("module_content_number.y" %in% col_name_node) {
             graph_data <-

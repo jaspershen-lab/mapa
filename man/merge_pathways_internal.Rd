@@ -8,6 +8,7 @@ merge_pathways_internal(
   query_type = c("gene", "metabolite"),
   pathway_result,
   analysis_type = c("enrich_pathway", "do_gsea"),
+  go.orgdb = NULL,
   p.adjust.cutoff = 0.05,
   count.cutoff = 5,
   database = c("go", "kegg", "reactome", "hmdb"),
@@ -19,45 +20,45 @@ merge_pathways_internal(
 )
 }
 \arguments{
-\item{query_type}{Character, the category of biological entity to query ("gene", "metabolite") for merging pathway enrichment result.}
+\item{query_type}{Character, the category of biological entity to query: either "gene" or "metabolite".}
 
-\item{pathway_result}{A required object containing results from the \code{enrich_pathway} function.}
+\item{pathway_result}{A required object containing results from the \code{enrich_pathway} or \code{do_gsea} function.}
 
-\item{analysis_type}{Character, type of analysis to perform: either \code{"enrich_pathway"} or \code{"do_gsea"}.}
+\item{analysis_type}{Character, type of analysis performed: either "enrich_pathway" or "do_gsea".}
 
-\item{p.adjust.cutoff}{Numeric, p-adjusted value cutoff for filtering enriched pathways.}
+\item{go.orgdb}{An optional organism-specific database for GO annotations, required when database="go".}
 
-\item{count.cutoff}{Numeric, count cutoff for filtering enriched pathways.}
+\item{p.adjust.cutoff}{Numeric, p-adjusted value cutoff for filtering enriched pathways (default: 0.05).}
 
-\item{database}{Character vector, the database from which the enrichment results were obtained ('go', 'kegg', 'reactome', 'hmdb').}
+\item{count.cutoff}{Numeric, count cutoff for filtering enriched pathways (default: 5).}
 
-\item{sim.cutoff}{Numeric, similarity cutoff for clustering pathways.}
+\item{database}{Character, the database from which the enrichment results were obtained:
+one of 'go', 'kegg', 'reactome', or 'hmdb'.}
+
+\item{sim.cutoff}{Numeric, similarity cutoff for clustering pathways (default: 0.5).}
 
 \item{measure.method}{Character, method for calculating term similarity.
-Default is \code{"Sim_XGraSM_2013"}. See \code{simona::all_term_sim_methods()} for available measures.}
+See \code{simona::all_term_sim_methods()} for available measures.}
 
-\item{control.method.go}{a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
+\item{control.method.go}{A list of parameters passing to the specified measure method for GO term semantic
+similarity. For details, see https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
 
-\item{path}{Character, directory to save intermediate and final results.}
+\item{path}{Character, directory to save intermediate and final results (default: "result").}
 
-\item{save_to_local}{Logical, if TRUE the results will be saved to local disk.}
+\item{save_to_local}{Logical, if TRUE the results will be saved to local disk (default: FALSE).}
 }
 \value{
-A list containing \code{graph_data}, \code{module_result}, and \code{result_with_module}.
+A list containing \code{graph_data}, \code{module_result}, and \code{result_with_module}, or NULL if no
+pathways meet the filtering criteria.
 }
 \description{
-This function merges pathway enrichment results obtained through various databases (GO, KEGG, Reactome).
-It applies similarity measures to find closely related pathways and categorizes them into modules.
-}
-\examples{
-\dontrun{
-# Load pathway results obtained through `enrich_pathway` function
-pathway_results <- load_pathway_results("path/to/results")
-
-# Merge pathways and find modules
-merged_results <- merge_pathways_internal(pathway_result = pathway_results)
-}
+Internal function that merges pathway enrichment results obtained through various databases
+(GO, KEGG, Reactome, HMDB). It applies similarity measures to find closely related pathways
+and categorizes them into modules.
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
+
+Yifei Ge \email{yifeii.ge@outlook.com}
 }
+\keyword{internal}

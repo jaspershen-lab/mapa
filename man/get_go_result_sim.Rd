@@ -2,37 +2,42 @@
 % Please edit documentation in R/6_utils.R
 \name{get_go_result_sim}
 \alias{get_go_result_sim}
-\title{GO Similarity Measurement}
+\title{Calculate similarity among Gene Ontology (GO) terms}
 \usage{
 get_go_result_sim(
   result,
+  go.orgdb = NULL,
   sim.cutoff = 0,
   measure.method = "Sim_XGraSM_2013",
   control.method = list()
 )
 }
 \arguments{
-\item{result}{A data frame containing GO term IDs and ontologies.}
+\item{result}{A data frame containing GO term IDs in column 'ID' and ontologies in column 'ONTOLOGY'.}
 
-\item{sim.cutoff}{A numeric value for the similarity cutoff (default: 0).}
+\item{go.orgdb}{An organism-specific database for GO annotations (default: NULL).}
+
+\item{sim.cutoff}{A numeric value for the similarity cutoff (default: 0). Only term pairs with
+similarity greater than this value will be returned.}
 
 \item{measure.method}{A character vector specifying the semantic similarity
-measure methods for GO terms. Default is \code{"Sim_XGraSM_2013"}. See \code{simona::all_term_sim_methods()} for available measures.}
+measure method for GO terms. Default is \code{"Sim_XGraSM_2013"}.
+See \code{simona::all_term_sim_methods()} for available measures.}
 
-\item{control.method}{a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
+\item{control.method}{A list of parameters passed to the specified measure method for GO term semantic similarity.
+For details, see https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
 }
 \value{
-A data frame containing pairs of GO terms and their similarity values.
+A data frame containing pairs of GO terms (name1, name2) and their similarity values (sim).
+Also includes an attribute "obsolete_terms" listing any obsolete GO terms encountered.
 }
 \description{
-This function allows for the computation of semantic similarity among Gene Ontology (GO) terms.
-}
-\examples{
-\dontrun{
-# Assuming `result` is your data frame containing GO term IDs and ontologies.
-similarity_matrix <- get_go_result_sim(result = result)
-}
+Internal function that computes similarity between GO terms from enrichment results.
+This function processes GO terms by ontology category (BP, MF, CC) and calculates pairwise similarities.
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
+
+Yifei Ge \email{yifeii.ge@outlook.com}
 }
+\keyword{internal}

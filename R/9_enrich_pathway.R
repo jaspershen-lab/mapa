@@ -238,9 +238,7 @@ enrich_pathway <-
     if (missing(database)) {
       stop("database is required")
     }
-    if (all(!database %in% c("go", "kegg", "reactome", "hmdb"))) {
-      stop("database should contain go, kegg, reactome and/or hmdb")
-    }
+    database <- match.arg(database, several.ok = TRUE)
 
     #####check variable_info
     check_variable_info(variable_info = variable_info, query_type = query_type)

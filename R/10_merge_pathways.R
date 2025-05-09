@@ -39,6 +39,8 @@
 # enriched_modules <-
 #   merge_pathways(
 #     object = enriched_pathways,
+#     database = c("go", "kegg"),
+#     go.orgdb = org.Hs.eg.db,
 #     p.adjust.cutoff.go = 0.05,
 #     p.adjust.cutoff.kegg = 0.05,
 #     p.adjust.cutoff.reactome = 0.05,
@@ -59,6 +61,7 @@
 #   merge_pathways(
 #    object = enriched_pathways,
 #    p.adjust.cutoff.go = 0.05,
+#    go.orgdb = org.Hs.eg.db,
 #    p.adjust.cutoff.kegg = 0.05,
 #    p.adjust.cutoff.reactome = 0.05,
 #    count.cutoff.go = 5,
@@ -80,9 +83,6 @@
 #   )
 #
 # save(enriched_modules, file = "result/enriched_modules")
-#
-#
-#
 
 # ##GSEA analysis results
 # setwd(r4projects::get_project_wd())
@@ -140,7 +140,8 @@
 # object <- enriched_pathways
 # merged_pathways <-
 #   merge_pathways(
-#     object = object,
+#     object = enriched_pathways,
+#     database = c("hmdb"),
 #     sim.cutoff.hmdb = 0,
 #     sim.cutoff.metkegg = 0
 #   )
@@ -148,6 +149,9 @@
 #' This function merges enrichment analysis results from different databases (GO, KEGG, and Reactome) into a single object respectively. The function takes an object of class "functional_module" and set up various parameters to compute and filter term similarity scores.
 #'
 #' @param object An object of class "functional_module", typically a result from enrich_pathway function.
+#' @param database Character vector, specify which database(s) to use for merging pathways.
+#'   - For genes: 'go', 'kegg', 'reactome'
+#'   - For metabolites: 'hmdb', 'kegg'
 #' @param p.adjust.cutoff.go Adjusted p-value cutoff for GO database. Default is 0.05.
 #' @param p.adjust.cutoff.kegg Adjusted p-value cutoff for KEGG database. Default is 0.05.
 #' @param p.adjust.cutoff.reactome Adjusted p-value cutoff for Reactome database. Default is 0.05.
@@ -165,6 +169,7 @@
 #' @param sim.cutoff.metkegg Similarity cutoff for KEGG database when interpreting metabolite enrichment result. Default is 0.5.
 #' @param measure.method.go A character vector specifying the term semantic similarity measure method for GO terms. Default is `"Sim_XGraSM_2013"`. See `simona::term_sim()` for available measures.
 #' @param control.method.go a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
+#' @param go.orgdb An optional organism-specific database for GO annotations, required when database includes "go".
 #' @param measure.method.kegg A character vector specifying the similarity measure method for KEGG. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #' @param measure.method.reactome A character vector specifying the similarity measure method for Reactome. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #' @param measure.method.hmdb A character vector specifying the similarity measure method for HMDB when interpreting metabolite enrichment result. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
@@ -180,6 +185,7 @@
 
 merge_pathways <-
   function(object,
+           database = NULL,
            p.adjust.cutoff.go = 0.05,
            p.adjust.cutoff.kegg = 0.05,
            p.adjust.cutoff.reactome = 0.05,
@@ -197,6 +203,7 @@ merge_pathways <-
            sim.cutoff.metkegg = 0.5,
            measure.method.go = c("Sim_XGraSM_2013", "Sim_Wang_2007", "Sim_Lin_1998", "Sim_Resnik_1999", "Sim_FaITH_2010", "Sim_Relevance_2006", "Sim_SimIC_2010", "Sim_EISI_2015", "Sim_AIC_2014", "Sim_Zhang_2006", "Sim_universal", "Sim_GOGO_2018", "Sim_Rada_1989", "Sim_Resnik_edge_2005", "Sim_Leocock_1998", "Sim_WP_1994", "Sim_Slimani_2006", "Sim_Shenoy_2012", "Sim_Pekar_2002", "Sim_Stojanovic_2001", "Sim_Wang_edge_2012", "Sim_Zhong_2002", "Sim_AlMubaid_2006", "Sim_Li_2003", "Sim_RSS_2013", "Sim_HRSS_2013", "Sim_Shen_2010", "Sim_SSDD_2013", "Sim_Jiang_1997", "Sim_Kappa", "Sim_Jaccard", "Sim_Dice",  "Sim_Overlap", "Sim_Ancestor"),
            control.method.go = list(),
+           go.orgdb = NULL,
            measure.method.kegg = c("jaccard", "dice", "overlap", "kappa"),
            measure.method.reactome = c("jaccard", "dice", "overlap", "kappa"),
            measure.method.hmdb = c("jaccard", "dice", "overlap", "kappa"),
@@ -206,22 +213,37 @@ merge_pathways <-
 
     query_type <- object@process_info$enrich_pathway@parameter$query_type
 
+    if (missing(database)) {
+      stop("database is required")
+    }
+    database <- match.arg(database, choices = c("go", "kegg", "reactome", "hmdb"), several.ok = TRUE)
+
     ## Check input parameter for different query type
     if (query_type == "gene") {
-      measure.method.go <-
-        match.arg(measure.method.go)
+      if ("go" %in% database) {
+        measure.method.go <-
+          match.arg(measure.method.go)
+      }
 
-      measure.method.kegg <-
-        match.arg(measure.method.kegg)
+      if ("kegg" %in% database) {
+        measure.method.kegg <-
+          match.arg(measure.method.kegg)
+      }
 
-      measure.method.reactome <-
-        match.arg(measure.method.reactome)
+      if ("reactome" %in% database) {
+        measure.method.reactome <-
+          match.arg(measure.method.reactome)
+      }
     } else if (query_type == "metabolite") {
-      measure.method.hmdb <-
-        match.arg(measure.method.hmdb)
+      if ("hmdb" %in% database) {
+        measure.method.hmdb <-
+          match.arg(measure.method.hmdb)
+      }
 
-      measure.method.metkegg <-
-        match.arg(measure.method.metkegg)
+      if ("kegg" %in% database) {
+        measure.method.metkegg <-
+          match.arg(measure.method.metkegg)
+      }
     }
 
     if (missing(object)) {
@@ -245,99 +267,120 @@ merge_pathways <-
     # Merge pathway
     ###GO database
     if (query_type == "gene") {
-      message(rep("-", 20))
-      message("GO database...")
-    }
-    merged_pathway_go <-
-      merge_pathways_internal(
-        query_type = query_type,
-        pathway_result = object@enrichment_go_result,
-        analysis_type = analysis_type,
-        p.adjust.cutoff = p.adjust.cutoff.go,
-        count.cutoff = count.cutoff.go,
-        database = "go",
-        sim.cutoff = sim.cutoff.go,
-        measure.method = measure.method.go,
-        control.method.go = control.method.go,
-        path = path,
-        save_to_local = save_to_local
-      )
+      merged_pathway_hmdb <- NULL
+      merged_pathway_metkegg <- NULL
 
-    ###KEGG database
-    if (query_type == "gene") {
-      message(rep("-", 20))
-      message("KEGG database...")
-    }
-    merged_pathway_kegg <-
-      merge_pathways_internal(
-        query_type = query_type,
-        pathway_result = object@enrichment_kegg_result,
-        analysis_type = analysis_type,
-        p.adjust.cutoff = p.adjust.cutoff.kegg,
-        count.cutoff = count.cutoff.kegg,
-        database = "kegg",
-        sim.cutoff = sim.cutoff.kegg,
-        measure.method = measure.method.kegg,
-        path = path,
-        save_to_local = save_to_local
-      )
+      if ("go" %in% database) {
+        message(rep("-", 20))
+        message("GO database...")
 
-    ###Reactome database
-    if (query_type == "gene") {
-      message(rep("-", 20))
-      message("Reactome database...")
-    }
-    merged_pathway_reactome <-
-      merge_pathways_internal(
-        query_type = query_type,
-        pathway_result = object@enrichment_reactome_result,
-        analysis_type = analysis_type,
-        p.adjust.cutoff = p.adjust.cutoff.reactome,
-        count.cutoff = count.cutoff.reactome,
-        database = "reactome",
-        sim.cutoff = sim.cutoff.reactome,
-        measure.method = measure.method.reactome,
-        path = path,
-        save_to_local = save_to_local
-      )
+        merged_pathway_go <-
+          merge_pathways_internal(
+            query_type = query_type,
+            pathway_result = object@enrichment_go_result,
+            analysis_type = analysis_type,
+            go.orgdb = go.orgdb,
+            p.adjust.cutoff = p.adjust.cutoff.go,
+            count.cutoff = count.cutoff.go,
+            database = "go",
+            sim.cutoff = sim.cutoff.go,
+            measure.method = measure.method.go,
+            control.method.go = control.method.go,
+            path = path,
+            save_to_local = save_to_local
+          )
+      } else {
+        merged_pathway_go <- NULL
+      }
 
-    ###HMDB database
-    if (query_type == "metabolite") {
-      message(rep("-", 20))
-      message("HMDB database...")
-    }
-    merged_pathway_hmdb <-
-      merge_pathways_internal(
-        query_type = query_type,
-        pathway_result = object@enrichment_hmdb_result,
-        analysis_type = analysis_type,
-        p.adjust.cutoff = p.adjust.cutoff.hmdb,
-        count.cutoff = count.cutoff.hmdb,
-        database = "hmdb",
-        sim.cutoff = sim.cutoff.hmdb,
-        measure.method = measure.method.hmdb,
-        path = path,
-        save_to_local = save_to_local
-      )
+      if ("kegg" %in% database) {
+        message(rep("-", 20))
+        message("KEGG database...")
 
-    ###KEGG database for metabolite
-    if (query_type == "metabolite") {
-      message(rep("-", 20))
-      message("KEGG database...")
+        merged_pathway_kegg <-
+          merge_pathways_internal(
+            query_type = query_type,
+            pathway_result = object@enrichment_kegg_result,
+            analysis_type = analysis_type,
+            p.adjust.cutoff = p.adjust.cutoff.kegg,
+            count.cutoff = count.cutoff.kegg,
+            database = "kegg",
+            sim.cutoff = sim.cutoff.kegg,
+            measure.method = measure.method.kegg,
+            path = path,
+            save_to_local = save_to_local
+          )
+      } else {
+        merged_pathway_kegg <- NULL
+      }
+
+      if ("reactome" %in% database) {
+        message(rep("-", 20))
+        message("Reactome database...")
+
+        merged_pathway_reactome <-
+          merge_pathways_internal(
+            query_type = query_type,
+            pathway_result = object@enrichment_reactome_result,
+            analysis_type = analysis_type,
+            p.adjust.cutoff = p.adjust.cutoff.reactome,
+            count.cutoff = count.cutoff.reactome,
+            database = "reactome",
+            sim.cutoff = sim.cutoff.reactome,
+            measure.method = measure.method.reactome,
+            path = path,
+            save_to_local = save_to_local
+          )
+      } else {
+        merged_pathway_reactome <- NULL
+      }
+    } else if (query_type == "metabolite") {
+      merged_pathway_go <- NULL
+      merged_pathway_kegg <- NULL
+      merged_pathway_reactome <- NULL
+
+      if ("hmdb" %in% database) {
+        message(rep("-", 20))
+        message("HMDB database...")
+
+        merged_pathway_hmdb <-
+          merge_pathways_internal(
+            query_type = query_type,
+            pathway_result = object@enrichment_hmdb_result,
+            analysis_type = analysis_type,
+            p.adjust.cutoff = p.adjust.cutoff.hmdb,
+            count.cutoff = count.cutoff.hmdb,
+            database = "hmdb",
+            sim.cutoff = sim.cutoff.hmdb,
+            measure.method = measure.method.hmdb,
+            path = path,
+            save_to_local = save_to_local
+          )
+      } else {
+        merged_pathway_hmdb <- NULL
+      }
+
+      if ("kegg" %in% database) {
+        message(rep("-", 20))
+        message("KEGG database...")
+
+        merged_pathway_metkegg <-
+          merge_pathways_internal(
+            query_type = query_type,
+            pathway_result = object@enrichment_metkegg_result,
+            analysis_type = analysis_type,
+            p.adjust.cutoff = p.adjust.cutoff.metkegg,
+            count.cutoff = count.cutoff.metkegg,
+            database = "kegg",
+            sim.cutoff = sim.cutoff.metkegg,
+            measure.method = measure.method.metkegg,
+            path = path,
+            save_to_local = save_to_local
+          )
+      } else {
+        merged_pathway_metkegg <- NULL
+      }
     }
-    merged_pathway_metkegg <-
-      merge_pathways_internal(
-        query_type = query_type,
-        pathway_result = object@enrichment_metkegg_result,
-        analysis_type = analysis_type,
-        p.adjust.cutoff = p.adjust.cutoff.metkegg,
-        count.cutoff = count.cutoff.metkegg,
-        database = "kegg",
-        sim.cutoff = sim.cutoff.metkegg,
-        measure.method = measure.method.metkegg,
-        path = path,
-        save_to_local = save_to_local
-      )
 
     if (is.null(merged_pathway_go)) {
       merged_pathway_go <- list()
@@ -378,6 +421,7 @@ merge_pathways <-
         pacakge_name = "mapa",
         function_name = "merge_pathways()",
         parameter = list(
+          database = database,
           p.adjust.cutoff.go = p.adjust.cutoff.go,
           p.adjust.cutoff.kegg = p.adjust.cutoff.kegg,
           p.adjust.cutoff.reactome = p.adjust.cutoff.reactome,
@@ -399,6 +443,7 @@ merge_pathways <-
         pacakge_name = "mapa",
         function_name = "merge_pathways()",
         parameter = list(
+          database = database,
           p.adjust.cutoff.hmdb = p.adjust.cutoff.hmdb,
           p.adjust.cutoff.metkegg = p.adjust.cutoff.metkegg,
           count.cutoff.hmdb = count.cutoff.hmdb,
@@ -426,44 +471,46 @@ merge_pathways <-
     object
   }
 
-
-
-
 #' Merge Pathway Enrichment Results Internally
 #'
-#' This function merges pathway enrichment results obtained through various databases (GO, KEGG, Reactome).
-#' It applies similarity measures to find closely related pathways and categorizes them into modules.
+#' @description
+#' Internal function that merges pathway enrichment results obtained through various databases
+#' (GO, KEGG, Reactome, HMDB). It applies similarity measures to find closely related pathways
+#' and categorizes them into modules.
 #'
-#' @param query_type Character, the category of biological entity to query ("gene", "metabolite") for merging pathway enrichment result.
-#' @param pathway_result A required object containing results from the `enrich_pathway` function.
-#' @param analysis_type Character, type of analysis to perform: either `"enrich_pathway"` or `"do_gsea"`.
-#' @param p.adjust.cutoff Numeric, p-adjusted value cutoff for filtering enriched pathways.
-#' @param count.cutoff Numeric, count cutoff for filtering enriched pathways.
-#' @param database Character vector, the database from which the enrichment results were obtained ('go', 'kegg', 'reactome', 'hmdb').
-#' @param sim.cutoff Numeric, similarity cutoff for clustering pathways.
+#' @param query_type Character, the category of biological entity to query: either "gene" or "metabolite".
+#' @param pathway_result A required object containing results from the `enrich_pathway` or `do_gsea` function.
+#' @param analysis_type Character, type of analysis performed: either "enrich_pathway" or "do_gsea".
+#' @param go.orgdb An optional organism-specific database for GO annotations, required when database="go".
+#' @param p.adjust.cutoff Numeric, p-adjusted value cutoff for filtering enriched pathways (default: 0.05).
+#' @param count.cutoff Numeric, count cutoff for filtering enriched pathways (default: 5).
+#' @param database Character, the database from which the enrichment results were obtained:
+#'                one of 'go', 'kegg', 'reactome', or 'hmdb'.
+#' @param sim.cutoff Numeric, similarity cutoff for clustering pathways (default: 0.5).
 #' @param measure.method Character, method for calculating term similarity.
-#' Default is `"Sim_XGraSM_2013"`. See `simona::all_term_sim_methods()` for available measures.
-#' @param control.method.go a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
-#' @param path Character, directory to save intermediate and final results.
-#' @param save_to_local Logical, if TRUE the results will be saved to local disk.
+#'                       See `simona::all_term_sim_methods()` for available measures.
+#' @param control.method.go A list of parameters passing to the specified measure method for GO term semantic
+#'                         similarity. For details, see https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
+#' @param path Character, directory to save intermediate and final results (default: "result").
+#' @param save_to_local Logical, if TRUE the results will be saved to local disk (default: FALSE).
 #'
-#' @return A list containing `graph_data`, `module_result`, and `result_with_module`.
+#' @return A list containing `graph_data`, `module_result`, and `result_with_module`, or NULL if no
+#'         pathways meet the filtering criteria.
 #'
-#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
+#' @importFrom dplyr filter arrange rename
+#' @importFrom tibble rownames_to_column
+#' @importFrom tidyr pivot_longer
 #'
-#' @examples
-#' \dontrun{
-#' # Load pathway results obtained through `enrich_pathway` function
-#' pathway_results <- load_pathway_results("path/to/results")
+#' @keywords internal
 #'
-#' # Merge pathways and find modules
-#' merged_results <- merge_pathways_internal(pathway_result = pathway_results)
-#'}
+#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 
 merge_pathways_internal <-
   function(query_type = c("gene", "metabolite"),
            pathway_result,
            analysis_type = c("enrich_pathway", "do_gsea"),
+           go.orgdb = NULL,
            p.adjust.cutoff = 0.05,
            count.cutoff = 5,
            database = c("go", "kegg", "reactome", "hmdb"),
@@ -476,6 +523,10 @@ merge_pathways_internal <-
     query_type <- match.arg(query_type)
     analysis_type <- match.arg(analysis_type)
     database <- match.arg(database)
+    if (database == "go" && missing(go.orgdb)) {
+      stop("Please provide the OrgDb object to merge GO terms.")
+    }
+
     path <- file.path(path, database)
 
     if (missing(pathway_result)) {
@@ -548,6 +599,7 @@ merge_pathways_internal <-
             get_go_result_sim(
               # result = dplyr::filter(result, ONTOLOGY != "CC"),
               result = result,
+              go.orgdb = go.orgdb,
               sim.cutoff = sim.cutoff,
               measure.method = measure.method,
               control.method = control.method.go),

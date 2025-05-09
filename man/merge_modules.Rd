@@ -39,4 +39,6 @@ merge_modules(variable_info = my_var_info, object = my_object)
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
+
+Yifei Ge \email{yifeii.ge@outlook.com}
 }
