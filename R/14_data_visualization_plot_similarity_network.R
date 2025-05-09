@@ -9,12 +9,12 @@
 #   enriched_functional_module
 #
 # plot_similarity_network(
-#   object = enriched_functional_module,
+#   object = em,
 #   level = "module",
-#   database = "go",
-#   degree_cutoff = 10
+#   database = "reactome",
+#   degree_cutoff = 0
 # )
-#
+
 # library(showtext)
 # showtext_auto(enable = TRUE)
 #
@@ -175,7 +175,9 @@ plot_similarity_network <-
                      geom_blank())
           } else{
             graph_data <-
-              object@merged_pathway_go$graph_data
+              object@merged_pathway_go$graph_data|>
+              tidygraph::activate(what = "nodes") |>
+              dplyr::rename(p_adj = p.adjust)
             result_with_module <-
               object@merged_pathway_go$result_with_module
 
@@ -203,7 +205,9 @@ plot_similarity_network <-
                      geom_blank())
           } else{
             graph_data <-
-              object@merged_pathway_kegg$graph_data
+              object@merged_pathway_kegg$graph_data|>
+              tidygraph::activate(what = "nodes") |>
+              dplyr::rename(p_adj = p.adjust)
             result_with_module <-
               object@merged_pathway_kegg$result_with_module
 
@@ -230,7 +234,9 @@ plot_similarity_network <-
                      geom_blank())
           } else{
             graph_data <-
-              object@merged_pathway_reactome$graph_data
+              object@merged_pathway_reactome$graph_data|>
+              tidygraph::activate(what = "nodes") |>
+              dplyr::rename(p_adj = p.adjust)
             result_with_module <-
               object@merged_pathway_reactome$result_with_module
 
