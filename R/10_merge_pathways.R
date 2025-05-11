@@ -169,7 +169,7 @@
 #' @param sim.cutoff.metkegg Similarity cutoff for KEGG database when interpreting metabolite enrichment result. Default is 0.5.
 #' @param measure.method.go A character vector specifying the term semantic similarity measure method for GO terms. Default is `"Sim_XGraSM_2013"`. See `simona::term_sim()` for available measures.
 #' @param control.method.go a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.
-#' @param go.orgdb An optional organism-specific database for GO annotations, required when database includes "go".
+#' @param go.orgdb OrgDb object or character string naming the *OrgDb* annotation package used to derive gene–GO mappings, required when database includes "go".
 #' @param measure.method.kegg A character vector specifying the similarity measure method for KEGG. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #' @param measure.method.reactome A character vector specifying the similarity measure method for Reactome. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
 #' @param measure.method.hmdb A character vector specifying the similarity measure method for HMDB when interpreting metabolite enrichment result. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".
@@ -179,7 +179,9 @@
 #'
 #' @return An object of class "functional_module" with slots for merged pathways from each database.
 #'
-#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
+#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
+#'
 #' @export
 #'
 
@@ -213,10 +215,12 @@ merge_pathways <-
 
     query_type <- object@process_info$enrich_pathway@parameter$query_type
 
-    if (missing(database)) {
-      stop("database is required")
+    if (query_type == "gene" && missing(database)) {
+      stop("Please specify databases to merge pathways.")
+      database <- match.arg(database, choices = c("go", "kegg", "reactome", "hmdb"), several.ok = TRUE)
+    } else if (query_type == "metabolite") {
+      database <- c("hmdb", "kegg")
     }
-    database <- match.arg(database, choices = c("go", "kegg", "reactome", "hmdb"), several.ok = TRUE)
 
     ## Check input parameter for different query type
     if (query_type == "gene") {

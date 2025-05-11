@@ -108,7 +108,59 @@ merge_pathways_ui <- function(id) {
                        shinyjs::hidden(
                          div(
                            id = ns("parameter_panel_gene"),
+
+                           checkboxGroupInput(
+                             ns("cluster_module_database"),
+                             tags$h4("Database"),
+                             choices = c(
+                               "GO" = "go",
+                               "KEGG" = "kegg",
+                               "Reactome" = "reactome"
+                             ),
+                             selected = NULL
+                           )
+                         )
+                       ),
+
+                       shinyjs::hidden(
+                         div(
+                           id = ns("gene_go_network_panel"),
+
                            h4("GO Network"),
+
+                           selectInput(
+                             ns("go_orgdb"),
+                             label = tags$span(
+                               "Organism Database",
+                               shinyBS::bsButton(
+                                 ns("go_orgdb_info"),
+                                 label = "",
+                                 icon = icon("info"),
+                                 style = "info",
+                                 size = "extra_small"
+                               )
+                             ),
+                             choices = c(
+                               "Human (org.Hs.eg.db)" = "org.Hs.eg.db",
+                               "Mouse (org.Mm.eg.db)" = "org.Mm.eg.db",
+                               "Rat (org.Rn.eg.db)" = "org.Rn.eg.db",
+                               "Zebrafish (org.Dr.eg.db)" = "org.Dr.eg.db",
+                               "Fly (org.Dm.eg.db)" = "org.Dm.eg.db",
+                               "Worm (org.Ce.eg.db)" = "org.Ce.eg.db",
+                               "Yeast (org.Sc.sgd.db)" = "org.Sc.sgd.db",
+                               "E. coli (org.EcK12.eg.db)" = "org.EcK12.eg.db"
+                             ),
+                             selected = "org.Hs.eg.db"
+                           ),
+                           shinyBS::bsPopover(
+                             id = ns("go_orgdb_info"),
+                             title = "Organism Database",
+                             content = "OrgDb object or character string naming the OrgDb annotation package used to derive gene–GO mappings, required when database includes \"go\".",
+                             placement = "right",
+                             trigger = "hover",
+                             options = list(container = "body")
+                           ),
+
                            fluidRow(
                              column(6,
                                     numericInput(
@@ -155,7 +207,13 @@ merge_pathways_ui <- function(id) {
                                       min = 0,
                                       max = 1)
                              )
-                           ),
+                           )
+                         )
+                       ),
+
+                       shinyjs::hidden(
+                         div(
+                           id = ns("gene_kegg_network_panel"),
 
                            h4("KEGG Network"),
                            fluidRow(
@@ -192,7 +250,13 @@ merge_pathways_ui <- function(id) {
                                       min = 0,
                                       max = 1)
                              )
-                           ),
+                           )
+                         )
+                       ),
+
+                       shinyjs::hidden(
+                         div(
+                           id = ns("gene_reactome_network_panel"),
 
                            h4("Reactome Network"),
                            fluidRow(
@@ -589,6 +653,25 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
         )
       })
 
+      observe({
+        req(input$cluster_module_database)
+
+        # Define database-panel pairs
+        db_panels <- list(
+          "go" = "gene_go_network_panel",
+          "kegg" = "gene_kegg_network_panel",
+          "reactome" = "gene_reactome_network_panel"
+        )
+
+        # Loop through each database-panel pair and toggle accordingly
+        for (db in names(db_panels)) {
+          shinyjs::toggleElement(
+            id = db_panels[[db]],
+            condition = db %in% input$cluster_module_database
+          )
+        }
+      })
+
       ## Define enriched_modules as a reactive value
       enriched_modules <-
         reactiveVal()
@@ -596,28 +679,48 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
       merge_pathways_code <-
         reactiveVal()
 
-      observeEvent(input$submit_merge_pathways, {
-        if (is.null(enriched_pathways()) ||
-            length(enriched_pathways()) == 0) {
-          showModal(
-            modalDialog(
-              title = "Warning",
-              "No enriched pathways data available. Please 'Enrich pathways' first.",
-              easyClose = TRUE,
-              footer = modalButton("Close")
+      observeEvent(
+        input$submit_merge_pathways,
+        {
+          if (is.null(enriched_pathways()) || length(enriched_pathways()) == 0) {
+            showModal(
+              modalDialog(
+                title = "Warning",
+                "No enriched pathways data available. Please 'Enrich pathways' first.",
+                easyClose = TRUE,
+                footer = modalButton("Close")
+              )
             )
-          )
-        } else {
+          } else {
           # shinyjs::show("loading")
 
           withProgress(message = 'Analysis in progress...', {
             tryCatch({
               library(clusterProfiler)
-              library(org.Hs.eg.db)
               library(ReactomePA)
+
+              if (!is.null(input$go_orgdb)) {
+                # Validate input format
+                if (!grepl("^org\\.[A-Za-z]+\\..+\\.db$", input$go_orgdb)) {
+                  stop("Invalid OrgDb package name. Expected format: org.XX.eg.db")
+                }
+                # Check if the package is installed
+                if (!requireNamespace(input$go_orgdb, quietly = TRUE)) {
+                  stop(paste("Package", input$go_orgdb, "is not installed. Please install it using BiocManager::install('", input$go_orgdb, "')"))
+                }
+                # Load the package
+                requireNamespace(input$go_orgdb)
+                # Get the OrgDb object
+                org_db_obj <- get(input$go_orgdb)
+              } else {
+                org_db_obj <- NULL
+              }
+
               result <-
                 merge_pathways(
                   object = enriched_pathways(),
+                  database = input$cluster_module_database,
+                  go.orgdb = org_db_obj,
                   p.adjust.cutoff.go = input$p.adjust.cutoff.go,
                   p.adjust.cutoff.kegg = input$p.adjust.cutoff.kegg,
                   p.adjust.cutoff.reactome = input$p.adjust.cutoff.reactome,
@@ -659,37 +762,68 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
           ## Save code ====
           if (query_type() == "gene") {
 
+            go_params <- ""
+            if ("go" %in% input$cluster_module_database) {
+              go_params <- sprintf(
+                '
+                    p.adjust.cutoff.go   = %s,
+                    count.cutoff.go      = %s,
+                    sim.cutoff.go      = %s,
+                    measure.method.go    = %s,
+                    go.orgdb = %s,
+                    ',
+                input$p.adjust.cutoff.go,
+                input$count.cutoff.go,
+                input$sim.cutoff.go,
+                paste0('"', input$measure.method.go, '"'),
+                input$go_orgdb
+              )}
+
+            kegg_params <- ""
+            if ("kegg" %in% input$cluster_module_database) {
+              kegg_params <- sprintf(
+                '
+                    p.adjust.cutoff.kegg   = %s,
+                    count.cutoff.kegg      = %s,
+                    sim.cutoff.kegg      = %s,
+                    measure.method.kegg    = %s,
+                    ',
+                input$p.adjust.cutoff.kegg,
+                input$count.cutoff.kegg,
+                input$sim.cutoff.kegg,
+                paste0('"', input$measure.method.kegg, '"')
+              )}
+
+            reactome_params <- ""
+            if ("reactome" %in% input$cluster_module_database) {
+              reactome_params <- sprintf(
+                '
+                    p.adjust.cutoff.reactome   = %s,
+                    count.cutoff.reactome      = %s,
+                    sim.cutoff.reactome      = %s,
+                    measure.method.reactome    = %s,
+                    ',
+                input$p.adjust.cutoff.reactome,
+                input$count.cutoff.reactome,
+                input$sim.cutoff.reactome,
+                paste0('"', input$measure.method.reactome, '"')
+              )}
+
+            db_vector <- paste0('c("', paste(input$cluster_module_database, collapse = '", "'), '")')
+
             merge_pathways_code_str <- sprintf(
               '
               enriched_modules <-
                 merge_pathways(
                   object               = enriched_pathways,
-                  p.adjust.cutoff.go   = %s,
-                  p.adjust.cutoff.kegg = %s,
-                  p.adjust.cutoff.reactome = %s,
-                  count.cutoff.go      = %s,
-                  count.cutoff.kegg    = %s,
-                  count.cutoff.reactome = %s,
-                  sim.cutoff.go        = %s,
-                  sim.cutoff.kegg      = %s,
-                  sim.cutoff.reactome  = %s,
-                  measure.method.go    = %s,
-                  measure.method.kegg  = %s,
-                  measure.method.reactome = %s
+                  database = %s,%s%s%s
+                  save_to_local = FALSE
                   )
               ',
-              input$p.adjust.cutoff.go,
-              input$p.adjust.cutoff.kegg,
-              input$p.adjust.cutoff.reactome,
-              input$count.cutoff.go,
-              input$count.cutoff.kegg,
-              input$count.cutoff.reactome,
-              input$sim.cutoff.go,
-              input$sim.cutoff.kegg,
-              input$sim.cutoff.reactome,
-              paste0('"', input$measure.method.go, '"'),
-              paste0('"', input$measure.method.kegg, '"'),
-              paste0('"', input$measure.method.reactome, '"')
+              db_vector,
+              go_params,
+              kegg_params,
+              reactome_params
             )
 
           } else if (query_type() == "metabolite") {
@@ -699,6 +833,7 @@ merge_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
               enriched_modules <-
                 merge_pathways(
                 object                  = enriched_pathways,
+                database = c("hmdb", "kegg"),
                 p.adjust.cutoff.hmdb    = %s,
                 p.adjust.cutoff.metkegg = %s,
                 count.cutoff.hmdb       = %s,

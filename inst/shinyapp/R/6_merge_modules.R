@@ -118,7 +118,6 @@ merge_modules_ui <- function(id) {
 #' @import shiny
 #' @importFrom shinyjs toggleState useShinyjs
 #' @importFrom clusterProfiler merge_modules
-#' @importFrom org.Hs.eg.db org.Hs.eg.db
 #' @noRd
 
 merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
@@ -147,7 +146,6 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
           withProgress(message = 'Analysis in progress...', {
             tryCatch({
               library(clusterProfiler)
-              library(org.Hs.eg.db)
               library(ReactomePA)
 
               result <-

@@ -85,7 +85,7 @@ merge_pathways(
 
 \item{control.method.go}{a list of parameters passing to specified measure method for GO term semantic similarity. For details about how to set this parameter, please go to https://jokergoo.github.io/simona/articles/v05_term_similarity.html.}
 
-\item{go.orgdb}{An optional organism-specific database for GO annotations, required when database includes "go".}
+\item{go.orgdb}{OrgDb object or character string naming the \emph{OrgDb} annotation package used to derive gene–GO mappings, required when database includes "go".}
 
 \item{measure.method.kegg}{A character vector specifying the similarity measure method for KEGG. Choices are "jaccard", "dice", "overlap", "kappa". Default is "jaccard".}
 
@@ -107,4 +107,6 @@ This function merges enrichment analysis results from different databases (GO, K
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
+
+Yifei Ge \email{yifeii.ge@outlook.com}
 }

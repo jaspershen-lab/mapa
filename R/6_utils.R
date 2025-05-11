@@ -739,7 +739,7 @@ get_go_result_sim <-
 #' @param go_id          Character vector of GO term identifiers
 #' @param ont            Character string specifying the ontology namespace:
 #'                       `"BP"`, `"MF"`, or `"CC"`.
-#' @param go.orgdb       Character string naming the *OrgDb* annotation package
+#' @param go.orgdb       OrgDb object or character string naming the *OrgDb* annotation package
 #'                       used to derive gene–GO mappings.
 #' @param measure        Character string giving the similarity measure to use.
 #'                       Default is `"Sim_XGraSM_2013"`.  See
