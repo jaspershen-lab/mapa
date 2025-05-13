@@ -432,7 +432,7 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
 
         shinyjs::toggleElement(
           id = "hclust.method_panel",
-          condition = input$cluster_method == "Hierarchical"
+          condition = input$cluster_method == "hierarchical"
         )
       })
 

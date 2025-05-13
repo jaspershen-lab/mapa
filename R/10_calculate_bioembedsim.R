@@ -215,7 +215,7 @@ get_bioembedsim <-
             dplyr::filter(p_adjust < p.adjust.cutoff.kegg) %>%
             dplyr::filter(Count > count.cutoff.kegg) %>%
             dplyr::pull(ID) %>%
-            get_kegg_info(include_gene_name = include_gene_name)
+            get_kegg_pathway_info(include_gene_name = include_gene_name)
           all_text_info <- c(all_text_info, kegg_info)
         }
       }
@@ -229,7 +229,7 @@ get_bioembedsim <-
             dplyr::filter(p_adjust < p.adjust.cutoff.reactome) %>%
             dplyr::filter(Count > count.cutoff.reactome) %>%
             dplyr::pull(ID) %>%
-            get_reactome_info(include_gene_name = include_gene_name)
+            get_reactome_pathway_info(include_gene_name = include_gene_name)
           all_text_info <- c(all_text_info, reactome_info)
         }
       }
@@ -454,7 +454,7 @@ quickgo_api <- function(go_ids) {
 }
 
 ## 1.2 Extract KEGG info (pathway_id, name, definition(description), PMID) ====
-get_kegg_info <- function(kegg_ids, include_gene_name = FALSE){
+get_kegg_pathway_info <- function(kegg_ids, include_gene_name = FALSE){
   chunk_size <- 10
   chunks <- split(kegg_ids, ceiling(seq_along(kegg_ids) / chunk_size))
   kegg_info <- list()
@@ -568,7 +568,7 @@ get_kegg_info <- function(kegg_ids, include_gene_name = FALSE){
 }
 
 ## 1.3 Extract Reactome info (pathway_id, name, definition, PMID) ====
-get_reactome_info <- function(reactome_ids, include_gene_name = FALSE) {
+get_reactome_pathway_info <- function(reactome_ids, include_gene_name = FALSE) {
   #### Initialize gene-related variables
   reactome2egs <- NULL
   eg2genename <- NULL
