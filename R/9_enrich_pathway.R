@@ -309,6 +309,10 @@ enrich_pathway <-
           warning(paste("GO enrichment failed:", e$message))
           return(NULL)
         })
+
+        if (!is.null(enrichment_go_result)) {
+          data.table::setnames(enrichment_go_result@result, "p.adjust", "p_adjust")
+        }
       }
 
       ###KEGG
@@ -354,6 +358,10 @@ enrich_pathway <-
           warning(paste("KEGG enrichment failed:", e$message))
           return(NULL)
         })
+
+        if (!is.null(enrichment_kegg_result)) {
+          data.table::setnames(enrichment_kegg_result@result, "p.adjust", "p_adjust")
+        }
       }
 
       ###Reactome
@@ -390,6 +398,10 @@ enrich_pathway <-
           warning(paste("Reactome enrichment failed:", e$message))
           return(NULL)
         })
+
+        if (!is.null(enrichment_reactome_result)) {
+          data.table::setnames(enrichment_reactome_result@result, "p.adjust", "p_adjust")
+        }
       }
     } else if (query_type == "metabolite") {
       #### Get HMDB and KEGG databases
@@ -418,6 +430,10 @@ enrich_pathway <-
           warning(paste("HMDB enrichment failed:", e$message))
           return(NULL)
         })
+
+        if (!is.null(enrichment_hmdb_result)) {
+          data.table::setnames(enrichment_hmdb_result@result, "p_value_adjust", "p_adjust")
+        }
       }
 
       #### KEGG pathway enrichment
@@ -437,6 +453,10 @@ enrich_pathway <-
           warning(paste("Metabolite KEGG enrichment failed:", e$message))
           return(NULL)
         })
+
+        if (!is.null(enrichment_metkegg_result)) {
+          data.table::setnames(enrichment_metkegg_result@result, "p_value_adjust", "p_adjust")
+        }
       }
     }
 

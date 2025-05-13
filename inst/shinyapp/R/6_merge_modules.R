@@ -83,7 +83,7 @@ merge_modules_ui <- function(id) {
                                ),
                                column(3,
                                       numericInput(
-                                        ns("enirched_functional_moduleplot__degree_cutoff"),
+                                        ns("enirched_functional_module_plot_degree_cutoff"),
                                         "Degree cutoff",
                                         value = 0,
                                         min = 0,
@@ -188,6 +188,31 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
         }
       })
 
+      ####show code
+      observeEvent(input$show_merge_modules_code, {
+        if (is.null(merge_modules_code()) ||
+            length(merge_modules_code()) == 0) {
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "No available code",
+              easyClose = TRUE,
+              footer = modalButton("Close")
+            )
+          )
+        } else{
+          code_content <-
+            merge_modules_code()
+          code_content <-
+            paste(code_content, collapse = "\n")
+          showModal(modalDialog(
+            title = "Code",
+            tags$pre(code_content),
+            easyClose = TRUE,
+            footer = modalButton("Close")
+          ))
+        }
+      })
 
       output$enriched_functional_module_object <-
         renderText({
@@ -230,22 +255,36 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
           }
         )
 
+      output$download_enriched_functional_module_object <-
+        shiny::downloadHandler(
+          filename = function() {
+            "enriched_functional_module.rda"
+          },
+          content = function(file) {
+            save(enriched_functional_module(), file = file)
+          }
+        )
+
       observe({
         tryCatch(
           expr = {
             if (is.null(enriched_functional_module()) ||
                 length(enriched_functional_module()) == 0) {
               shinyjs::disable("download_enriched_functional_modules")
+              shinyjs::disable("download_enriched_functional_module_object")
             } else {
               if (length(enriched_functional_module()@merged_module) == 0) {
                 shinyjs::disable("download_enriched_functional_modules")
+                shinyjs::disable("download_enriched_functional_module_object")
               } else {
                 shinyjs::enable("download_enriched_functional_modules")
+                shinyjs::disable("download_enriched_functional_module_object")
               }
             }
           },
           error = function(e) {
             shinyjs::disable("download_enriched_functional_modules")
+            shinyjs::disable("download_enriched_functional_module_object")
           }
         )
       })
@@ -274,7 +313,7 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
                 plot_similarity_network(
                   object = enriched_functional_module(),
                   level = "functional_module",
-                  degree_cutoff = input$enirched_functional_moduleplot__degree_cutoff,
+                  degree_cutoff = input$enirched_functional_module_plot_degree_cutoff,
                   text = input$enirched_functional_module_plot_text,
                   text_all = input$enirched_functional_module_plot_text_all
                 ),
@@ -304,75 +343,6 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
               NULL
           ))
         })
-
-
-      output$download_enriched_functional_module_object <-
-        shiny::downloadHandler(
-          filename = function() {
-            "enriched_functional_module.rda"
-          },
-          content = function(file) {
-            save(enriched_functional_module(), file = file)
-          }
-        )
-
-      observe({
-        if (is.null(enriched_functional_module()) ||
-            length(enriched_functional_module()) == 0) {
-          shinyjs::disable("download_enriched_functional_module_object")
-        } else {
-          shinyjs::enable("download_enriched_functional_module_object")
-        }
-      })
-
-
-      output$download_enriched_functional_module_object <-
-        shiny::downloadHandler(
-          filename = function() {
-            "enriched_functional_module.rda"
-          },
-          content = function(file) {
-            enriched_functional_module <-
-              enriched_functional_module()
-            save(enriched_functional_module, file = file)
-          }
-        )
-
-      observe({
-        if (is.null(enriched_functional_module()) ||
-            length(enriched_functional_module()) == 0) {
-          shinyjs::disable("download_enriched_functional_module_object")
-        } else {
-          shinyjs::enable("download_enriched_functional_module_object")
-        }
-      })
-
-
-      ####show code
-      observeEvent(input$show_merge_modules_code, {
-        if (is.null(merge_modules_code()) ||
-            length(merge_modules_code()) == 0) {
-          showModal(
-            modalDialog(
-              title = "Warning",
-              "No available code",
-              easyClose = TRUE,
-              footer = modalButton("Close")
-            )
-          )
-        } else{
-          code_content <-
-            merge_modules_code()
-          code_content <-
-            paste(code_content, collapse = "\n")
-          showModal(modalDialog(
-            title = "Code",
-            tags$pre(code_content),
-            easyClose = TRUE,
-            footer = modalButton("Close")
-          ))
-        }
-      })
 
 
       ### Go to llm interpretation tab

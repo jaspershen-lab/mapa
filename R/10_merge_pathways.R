@@ -39,7 +39,7 @@
 # enriched_modules <-
 #   merge_pathways(
 #     object = enriched_pathways,
-#     database = c("go", "kegg"),
+#     database = c("go", "kegg", "reactome"),
 #     go.orgdb = org.Hs.eg.db,
 #     p.adjust.cutoff.go = 0.05,
 #     p.adjust.cutoff.kegg = 0.05,
@@ -141,7 +141,7 @@
 # merged_pathways <-
 #   merge_pathways(
 #     object = enriched_pathways,
-#     database = c("hmdb"),
+#     database = c("hmdb", "kegg"),
 #     sim.cutoff.hmdb = 0,
 #     sim.cutoff.metkegg = 0
 #   )
@@ -561,14 +561,14 @@ merge_pathways_internal <-
       if (is(pathway_result, "enrichResult")) {
         result <-
           pathway_result@result %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff) %>%
+          dplyr::filter(p_adjust < p.adjust.cutoff) %>%
           dplyr::filter(Count > count.cutoff) %>%
-          dplyr::arrange(p.adjust)
+          dplyr::arrange(p_adjust)
       } else{
         result <-
           pathway_result@result %>%
-          dplyr::filter(p.adjust < p.adjust.cutoff) %>%
-          dplyr::arrange(p.adjust)
+          dplyr::filter(p_adjust < p.adjust.cutoff) %>%
+          dplyr::arrange(p_adjust)
         ## TO DO: Add filter for the count of core_enrichment based on the parameter count.cutoff
         # result$Count <- purrr::map_int(pathway_result@result$core_enrichment,
         #                                function(x) {
@@ -578,10 +578,9 @@ merge_pathways_internal <-
     } else if (query_type == "metabolite") {
       result <-
         pathway_result@result %>%
-        dplyr::rename(p.adjust = p_value_adjust) %>%
-        dplyr::filter(p.adjust < p.adjust.cutoff) %>%
+        dplyr::filter(p_adjust < p.adjust.cutoff) %>%
         dplyr::filter(mapped_number > count.cutoff) %>%
-        dplyr::arrange(p.adjust)
+        dplyr::arrange(p_adjust)
     }
 
 
@@ -735,7 +734,7 @@ merge_pathways_internal <-
 #' @param sim_matrix A data frame containing the similarity matrix with columns `name1`, `name2`, and `sim` representing the similarity between entities.
 #' @param query_type Character, the category of biological entity to query ("gene", "metabolite") for merging pathway enrichment result.
 #' @param analysis_type Character. Type of analysis to perform: either `"enrich_pathway"` or `"do_gsea"`. Default is `"enrich_pathway"`.
-#' @param result A data frame containing the enrichment analysis results, including columns like `ID`, `Description`, `p.adjust`, and other relevant data.
+#' @param result A data frame containing the enrichment analysis results, including columns like `ID`, `Description`, `p_adjust`, and other relevant data.
 #' @param database Character. The database from which the enrichment results were obtained (`go`, `kegg`, `reactome`, `hmdb`).
 #' @param sim.cutoff Numeric. The similarity cutoff value used to filter the edges in the similarity matrix. Default is `0.5`.
 #' @param save_to_local Logical. Whether to save the resulting data to local files. Default is `TRUE`.
@@ -758,7 +757,7 @@ merge_pathways_internal <-
 #' )
 #' result <- data.frame(
 #'   ID = c("P1", "P2", "P3"),
-#'   p.adjust = c(0.01, 0.05, 0.03),
+#'   p_adjust = c(0.01, 0.05, 0.03),
 #'   Description = c("Pathway 1", "Pathway 2", "Pathway 3")
 #' )
 #' modules <- identify_modules(
@@ -844,13 +843,13 @@ identify_modules <-
         igraph::vertex_attr(graph_data) %>%
         do.call(cbind, .) %>%
         as.data.frame() %>%
-        dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
-        dplyr::arrange(module, p.adjust)
+        dplyr::mutate(p_adjust = as.numeric(p_adjust)) %>%
+        dplyr::arrange(module, p_adjust)
 
       if (database == "go") {
         result_with_module <-
           result_with_module %>%
-          dplyr::arrange(ONTOLOGY, module, p.adjust)
+          dplyr::arrange(ONTOLOGY, module, p_adjust)
       }
 
       ###add module content number
@@ -880,7 +879,7 @@ identify_modules <-
 
             x =
               x %>%
-              dplyr::arrange(p.adjust)
+              dplyr::arrange(p_adjust)
 
             x$node <-
               paste(x$node, collapse = ";")
@@ -892,7 +891,7 @@ identify_modules <-
               paste(x$BgRatio, collapse = ";")
 
             x$pvalue <- min(as.numeric(x$pvalue))
-            x$p.adjust <- min(as.numeric(x$p.adjust))
+            x$p_adjust <- min(as.numeric(x$p_adjust))
             x$qvalue <- min(as.numeric(x$qvalue))
             x$geneID =
               x$geneID %>%
@@ -918,13 +917,13 @@ identify_modules <-
             Description, ";"
           ), `[`, 1))) %>%
           dplyr::mutate(
-            p.adjust = as.numeric(p.adjust),
+            pvalue = as.numeric(pvalue),
             Count = as.numeric(Count),
-            p.adjust = as.numeric(p.adjust),
+            p_adjust = as.numeric(p_adjust),
             qvalue = as.numeric(qvalue),
             degree = as.numeric(degree)
           ) %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::select(module_annotation, everything())
       } else{
         module_result <-
@@ -948,7 +947,7 @@ identify_modules <-
               paste(x$Description, collapse = ";")
 
             x$pvalue <- as.numeric(x$pvalue)[1]
-            x$p.adjust <- as.numeric(x$p.adjust)[1]
+            x$p_adjust <- as.numeric(x$p_adjust)[1]
             x$qvalue <- as.numeric(x$qvalue)[1]
 
             x$setSize <- as.numeric(x$setSize)[1]
@@ -976,7 +975,7 @@ identify_modules <-
             Description, ";"
           ), `[`, 1))) %>%
           dplyr::mutate(
-            p.adjust = as.numeric(p.adjust),
+            p_adjust = as.numeric(p_adjust),
             NES = as.numeric(NES),
             qvalue = as.numeric(qvalue),
             degree = as.numeric(degree)
@@ -1004,8 +1003,8 @@ identify_modules <-
         igraph::vertex_attr(graph_data) %>%
         do.call(cbind, .) %>%
         as.data.frame() %>%
-        dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
-        dplyr::arrange(module, p.adjust)
+        dplyr::mutate(p_adjust = as.numeric(p_adjust)) %>%
+        dplyr::arrange(module, p_adjust)
 
       ###add module content number
       module_content_number <-
@@ -1044,7 +1043,7 @@ identify_modules <-
 
             x =
               x %>%
-              dplyr::arrange(p.adjust)
+              dplyr::arrange(p_adjust)
 
             x$node <-
               paste(x$node, collapse = ";")
@@ -1053,7 +1052,7 @@ identify_modules <-
               paste(x$pathway_name, collapse = ";")
 
             x$p_value <- min(as.numeric(x$p_value))
-            x$p.adjust <- min(as.numeric(x$p.adjust))
+            x$p_adjust <- min(as.numeric(x$p_adjust))
 
             x$mapped_id =
               x$mapped_id %>%
@@ -1079,12 +1078,12 @@ identify_modules <-
             Description, ";"
           ), `[`, 1))) %>%
           dplyr::mutate(
-            p.adjust = as.numeric(p.adjust),
+            p_adjust = as.numeric(p_adjust),
             Count = as.numeric(Count),
             p_value = as.numeric(p_value),
             degree = as.numeric(degree)
           ) %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::select(module_annotation, everything())
       } else{
         module_result <-
@@ -1108,7 +1107,7 @@ identify_modules <-
               paste(x$Description, collapse = ";")
 
             x$pvalue <- as.numeric(x$pvalue)[1]
-            x$p.adjust <- as.numeric(x$p.adjust)[1]
+            x$p_adjust <- as.numeric(x$p_adjust)[1]
             x$qvalue <- as.numeric(x$qvalue)[1]
 
             x$setSize <- as.numeric(x$setSize)[1]
@@ -1136,7 +1135,7 @@ identify_modules <-
             Description, ";"
           ), `[`, 1))) %>%
           dplyr::mutate(
-            p.adjust = as.numeric(p.adjust),
+            p_adjust = as.numeric(p_adjust),
             NES = as.numeric(NES),
             qvalue = as.numeric(qvalue),
             degree = as.numeric(degree)

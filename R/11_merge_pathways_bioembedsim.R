@@ -16,8 +16,9 @@
 # object <- openai_sim_matrix_met
 # enriched_functional_module <-
 #   merge_pathways_bioembedsim(
-#     object = object,
+#     object = openai_sim_matrix_met,
 #     cluster_method = "girvan newman",
+#     hclust.method = "complete",
 #     sim.cutoff = 0.5
 #   )
 
@@ -133,7 +134,7 @@ merge_pathways_bioembedsim <-
         result <-
           object$enriched_pathway@enrichment_go_result@result %>%
           dplyr::select(-ONTOLOGY) %>%
-          dplyr::filter(p.adjust < parameters$p.adjust.cutoff.go) %>%
+          dplyr::filter(p_adjust < parameters$p.adjust.cutoff.go) %>%
           dplyr::filter(Count > parameters$count.cutoff.go) %>%
           dplyr::mutate(database = "GO") %>%
           rbind(result)
@@ -143,7 +144,7 @@ merge_pathways_bioembedsim <-
         result <-
           object$enriched_pathway@enrichment_kegg_result@result %>%
           dplyr::select(-c(category, subcategory)) %>%
-          dplyr::filter(p.adjust < parameters$p.adjust.cutoff.kegg) %>%
+          dplyr::filter(p_adjust < parameters$p.adjust.cutoff.kegg) %>%
           dplyr::filter(Count > parameters$count.cutoff.kegg) %>%
           dplyr::mutate(database = "KEGG") %>%
           rbind(result)
@@ -152,7 +153,7 @@ merge_pathways_bioembedsim <-
       if (!is.null(object$enriched_pathway@enrichment_reactome_result)) {
         result <-
           object$enriched_pathway@enrichment_reactome_result@result %>%
-          dplyr::filter(p.adjust < parameters$p.adjust.cutoff.reactome) %>%
+          dplyr::filter(p_adjust < parameters$p.adjust.cutoff.reactome) %>%
           dplyr::filter(Count > parameters$count.cutoff.reactome) %>%
           dplyr::mutate(database = "Reactome") %>%
           rbind(result)
@@ -164,7 +165,7 @@ merge_pathways_bioembedsim <-
       if (!is.null(object$enriched_pathway@enrichment_hmdb_result)) {
         result <-
           object$enriched_pathway@enrichment_hmdb_result@result %>%
-          dplyr::filter(p_value_adjust < parameters$p.adjust.cutoff.hmdb) %>%
+          dplyr::filter(p_adjust < parameters$p.adjust.cutoff.hmdb) %>%
           dplyr::filter(mapped_number > parameters$count.cutoff.hmdb) %>%
           dplyr::mutate(database = "HMDB") %>%
           rbind(result)
@@ -173,7 +174,7 @@ merge_pathways_bioembedsim <-
       if (!is.null(object$enriched_pathway@enrichment_metkegg_result)) {
         result <-
           object$enriched_pathway@enrichment_metkegg_result@result %>%
-          dplyr::filter(p_value_adjust < parameters$p.adjust.cutoff.metkegg) %>%
+          dplyr::filter(p_adjust < parameters$p.adjust.cutoff.metkegg) %>%
           dplyr::filter(mapped_number > parameters$count.cutoff.metkegg) %>%
           dplyr::mutate(database = "KEGG") %>%
           rbind(result)
@@ -245,15 +246,12 @@ merge_pathways_bioembedsim <-
       # Process based on which column exists
       {
         df <- .
-        if("p.adjust" %in% names(df)) {
-          df$p.adjust <- as.numeric(as.character(df$p.adjust))
-        } else if("p_value_adjust" %in% names(df)) {
-          df$p.adjust <- as.numeric(as.character(df$p_value_adjust))
-          df$p_value_adjust <- NULL  # Remove original column
+        if("p_adjust" %in% names(df)) {
+          df$p_adjust <- as.numeric(as.character(df$p_adjust))
         }
         df
       } %>%
-      dplyr::arrange(module, p.adjust)
+      dplyr::arrange(module, p_adjust)
 
     ### Add module content number
     module_content_number <-
@@ -297,7 +295,7 @@ merge_pathways_bioembedsim <-
 
             x =
               x %>%
-              dplyr::arrange(p.adjust)
+              dplyr::arrange(p_adjust)
 
             x$node <-
               paste(x$node, collapse = ";")
@@ -309,7 +307,7 @@ merge_pathways_bioembedsim <-
               paste(x$BgRatio, collapse = ";")
 
             x$pvalue <- min(as.numeric(x$pvalue))
-            x$p.adjust <- min(as.numeric(x$p.adjust))
+            x$p_adjust <- min(as.numeric(x$p_adjust))
             x$qvalue <- min(as.numeric(x$qvalue))
             x$geneID <-
               x$geneID %>%
@@ -339,11 +337,11 @@ merge_pathways_bioembedsim <-
           dplyr::mutate(
             pvalue = as.numeric(pvalue),
             Count = as.numeric(Count),
-            p.adjust = as.numeric(p.adjust),
+            p_adjust = as.numeric(p_adjust),
             qvalue = as.numeric(qvalue),
             degree = as.numeric(degree)
           ) %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::select(module_annotation, everything())
       } else{
         functional_module_result <-
@@ -376,7 +374,7 @@ merge_pathways_bioembedsim <-
               paste(x$Description, collapse = ";")
 
             x$pvalue <- as.numeric(x$pvalue)[1]
-            x$p.adjust <- as.numeric(x$p.adjust)[1]
+            x$p_adjust <- as.numeric(x$p_adjust)[1]
             x$qvalue <- as.numeric(x$qvalue)[1]
 
             x$setSize <- as.numeric(x$setSize)[1]
@@ -415,7 +413,7 @@ merge_pathways_bioembedsim <-
             Description, ";"
           ), `[`, 1))) %>%
           dplyr::mutate(
-            p.adjust = as.numeric(p.adjust),
+            p_adjust = as.numeric(p_adjust),
             NES = as.numeric(NES),
             qvalue = as.numeric(qvalue),
             degree = as.numeric(degree)
@@ -464,7 +462,7 @@ merge_pathways_bioembedsim <-
 
             x =
               x %>%
-              dplyr::arrange(p.adjust)
+              dplyr::arrange(p_adjust)
 
             x$node <-
               paste(x$node, collapse = ";")
@@ -473,7 +471,7 @@ merge_pathways_bioembedsim <-
               paste(x$pathway_name, collapse = ";")
 
             x$p_value <- min(as.numeric(x$p_value))
-            x$p.adjust <- min(as.numeric(x$p.adjust))
+            x$p_adjust <- min(as.numeric(x$p_adjust))
 
             x$mapped_id =
               x$mapped_id %>%
@@ -501,12 +499,12 @@ merge_pathways_bioembedsim <-
             Description, ";"
           ), `[`, 1))) %>%
           dplyr::mutate(
-            p.adjust = as.numeric(p.adjust),
+            p_adjust = as.numeric(p_adjust),
             Count = as.numeric(Count),
             p_value = as.numeric(p_value),
             degree = as.numeric(degree)
           ) %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::select(module_annotation, everything())
       }
     }
@@ -575,6 +573,7 @@ merge_pathways_bioembedsim <-
 ## Internal functions to get clustering results
 merge_by_binary_cut <- function(sim_matrix,
                                 sim.cutoff) {
+  requireNamespace("flexclust", quietly = TRUE)
   clusters <- simplifyEnrichment::binary_cut(mat = sim_matrix, cutoff = sim.cutoff)
   cluster_result <-
     data.frame(node = rownames(sim_matrix),

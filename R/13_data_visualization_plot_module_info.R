@@ -2,33 +2,16 @@
 # setwd("demo_data/")
 # load("enriched_functional_module.rda")
 #
-# object <-
-#   enriched_functional_module
-#
-# enriched_functional_module@merged_pathway_go$module_result$module[1]
-# library(showtext)
-# showtext_auto(enable = TRUE)
-# plot <-
-#   plot_module_info(
-#     object = enriched_functional_module,
-#     level = "module",
-#     database = "go",
-#     module_id = "go_Module_4",
-#     translation = FALSE
-#   )
-#
-# plot[[1]]
-# plot[[2]]
-# plot[[3]]
-#
 # table(enriched_functional_module@merged_pathway_kegg$result_with_module$module)
 #
 # plot <-
 #   plot_module_info(
 #     object = enriched_functional_module,
-#     level = "module",
-#     database = "kegg",
-#     module_id = "kegg_Module_15"
+#     # level = "module",
+#     # database = "kegg",
+#     # module_id = "kegg_Module_1"
+#     level = "functional_module",
+#     module_id = "Functional_module_10"
 #   )
 #
 # plot[[1]]
@@ -57,7 +40,7 @@
 # plot <-
 #   plot_module_info(object = enriched_functional_module,
 #                    level = "functional_module",
-#                    module_id = "Functional_module_4")
+#                    module_id = "Functional_module_6")
 #
 # plot[[1]]
 # plot[[2]]
@@ -93,15 +76,18 @@
 
 # For metabolite
 # plot <-
-#   plot_module_info(object = enriched_functional_modules,
+#   plot_module_info(object = enriched_functional_module_met,
 #                    database = c("kegg"),
 #                    level = "module",
-#                    module_id = "kegg_Module_2")
+#                    # level = "functional_module",
+#                    module_id = "kegg_Module_2"#,
+#                    # module_id = "Functional_module_1"
+#                    )
 # plot <-
-#   plot_module_info(object = object,
+#   plot_module_info(object = enriched_functional_module,
 #                    level = "functional_module",
 #                    module_id = "Functional_module_4",
-#                    llm_text = TRUE)
+#                    llm_text = FALSE)
 #
 # plot[[1]]
 # plot[[2]]
@@ -382,6 +368,18 @@ plot_module_info <-
       } else{
         graph_data <-
           object@merged_module$graph_data
+
+        node_data <-
+          graph_data |>
+          tidygraph::activate(what = "nodes") |>
+          as_tibble()
+        if (!("Count" %in% colnames(node_data))) {
+          graph_data <-
+            graph_data |>
+            tidygraph::activate(what = "nodes") |>
+            dplyr::rename(Count = mapped_number)
+        }
+
         result_with_module <-
           object@merged_module$result_with_module
 
@@ -443,11 +441,10 @@ plot_module_info <-
     }
 
     ### network ====
-    graph_data <-
-      graph_data |>
-      tidygraph::activate(what = "nodes") |>
-      dplyr::mutate(p_adj = if (query_type == "metabolite") p_value_adjust else p.adjust) |>
-      dplyr::rename(Count = mapped_number)
+    # graph_data <-
+    #   graph_data |>
+    #   tidygraph::activate(what = "nodes") |>
+    #   dplyr::rename(Count = mapped_number)
 
     lay <- ggraph::create_layout(graph_data, layout = "fr")
 
@@ -460,7 +457,7 @@ plot_module_info <-
         show.legend = TRUE
       ) +
       ggraph::geom_node_point(
-        aes(fill = if(analysis_type == "enrich_pathway") -log(p_adj, 10) else NES,
+        aes(fill = if(analysis_type == "enrich_pathway") -log(p_adjust, 10) else NES,
             size = Count),
         shape = 21,
         alpha = 1,
@@ -528,7 +525,7 @@ plot_module_info <-
             plot1 +
             ggraph::geom_node_text(aes(x = x,
                                        y = y,
-                                       label = stringr::str_wrap(Description, width = 30)),
+                                       label = stringr::str_wrap(if (query_type == "metabolite") pathway_name else Description, width = 30)),
                                    check_overlap = TRUE,
                                    size = 3,
                                    repel = TRUE)  # Use repel to avoid overlapping
@@ -554,7 +551,7 @@ plot_module_info <-
 
       if(analysis_type == "enrich_pathway") {
         temp_data <- temp_data %>%
-          dplyr::mutate(log.p = -log(as.numeric(p.adjust, 10))) %>%
+          dplyr::mutate(log.p = -log(as.numeric(p_adjust, 10))) %>%
           dplyr::arrange(log.p)
       } else {
         temp_data <- temp_data %>%
@@ -578,7 +575,7 @@ plot_module_info <-
 
       if(analysis_type == "enrich_pathway") {
         temp_data <- temp_data %>%
-          dplyr::mutate(log.p = -log(as.numeric(p.adjust, 10))) %>%
+          dplyr::mutate(log.p = -log(as.numeric(p_adjust, 10))) %>%
           dplyr::arrange(log.p)
       } else {
         temp_data <- temp_data %>%
@@ -592,15 +589,16 @@ plot_module_info <-
           dplyr::rename(Description = module_annotation) %>%
           dplyr::mutate(Description = factor(Description, levels = Description))
       } else {
-        temp_data <-
-          temp_data |>
-          # dplyr::rename(Description = if ("describtion" %in% colnames(temp_data)) describtion) |>
-          dplyr::rename_with(
-            ~ "Description",
-            .cols = "describtion",
-            .if_present = TRUE
-          ) |>
-          dplyr::mutate(Description = factor(Description, levels = Description))
+        if ("describtion" %in% colnames(temp_data)) {
+          temp_data <-
+            temp_data |>
+            dplyr::rename(Description = describtion) |>
+            dplyr::mutate(Description = factor(Description, levels = Description))
+        } else {
+          temp_data <-
+            temp_data |>
+            dplyr::mutate(Description = factor(Description, levels = Description))
+        }
       }
     }
 
@@ -646,7 +644,7 @@ plot_module_info <-
         result_with_module %>%
         dplyr::filter(module == module_id) %>%
         dplyr::mutate(value = if(analysis_type == "enrich_pathway")
-          -log(as.numeric(p.adjust, 10))
+          -log(as.numeric(p_adjust, 10))
           else abs(as.numeric(NES))) %>%
         dplyr::mutate(text_field = if(query_type == "gene") Description else pathway_name) %>%
         dplyr::select(text_field, value) %>%

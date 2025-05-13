@@ -22,7 +22,7 @@ identify_modules(
 
 \item{analysis_type}{Character. Type of analysis to perform: either \code{"enrich_pathway"} or \code{"do_gsea"}. Default is \code{"enrich_pathway"}.}
 
-\item{result}{A data frame containing the enrichment analysis results, including columns like \code{ID}, \code{Description}, \code{p.adjust}, and other relevant data.}
+\item{result}{A data frame containing the enrichment analysis results, including columns like \code{ID}, \code{Description}, \code{p_adjust}, and other relevant data.}
 
 \item{database}{Character. The database from which the enrichment results were obtained (\code{go}, \code{kegg}, \code{reactome}, \code{hmdb}).}
 
@@ -53,7 +53,7 @@ sim_matrix <- data.frame(
 )
 result <- data.frame(
   ID = c("P1", "P2", "P3"),
-  p.adjust = c(0.01, 0.05, 0.03),
+  p_adjust = c(0.01, 0.05, 0.03),
   Description = c("Pathway 1", "Pathway 2", "Pathway 3")
 )
 modules <- identify_modules(

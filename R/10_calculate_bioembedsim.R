@@ -198,7 +198,7 @@ get_bioembedsim <-
         } else {
           go_info <-
             object@enrichment_go_result@result %>%
-            dplyr::filter(p.adjust < p.adjust.cutoff.go) %>%
+            dplyr::filter(p_adjust < p.adjust.cutoff.go) %>%
             dplyr::filter(Count > count.cutoff.go) %>%
             dplyr::pull(ID) %>%
             get_go_info(include_gene_name = include_gene_name)
@@ -212,7 +212,7 @@ get_bioembedsim <-
         } else {
           kegg_info <-
             object@enrichment_kegg_result@result %>%
-            dplyr::filter(p.adjust < p.adjust.cutoff.kegg) %>%
+            dplyr::filter(p_adjust < p.adjust.cutoff.kegg) %>%
             dplyr::filter(Count > count.cutoff.kegg) %>%
             dplyr::pull(ID) %>%
             get_kegg_info(include_gene_name = include_gene_name)
@@ -226,7 +226,7 @@ get_bioembedsim <-
         } else {
           reactome_info <-
             object@enrichment_reactome_result@result %>%
-            dplyr::filter(p.adjust < p.adjust.cutoff.reactome) %>%
+            dplyr::filter(p_adjust < p.adjust.cutoff.reactome) %>%
             dplyr::filter(Count > count.cutoff.reactome) %>%
             dplyr::pull(ID) %>%
             get_reactome_info(include_gene_name = include_gene_name)
@@ -241,7 +241,7 @@ get_bioembedsim <-
           metkegg_info <- list()
           metkegg_enrichment_result <-
             object@enrichment_metkegg_result@result %>%
-            dplyr::filter(p_value_adjust < p.adjust.cutoff.metkegg) %>%
+            dplyr::filter(p_adjust < p.adjust.cutoff.metkegg) %>%
             dplyr::filter(mapped_number > count.cutoff.metkegg)
           for (i in 1:nrow(metkegg_enrichment_result)) {
             entry <- metkegg_enrichment_result[i,]
@@ -263,7 +263,7 @@ get_bioembedsim <-
           hmdb_info <- list()
           hmdb_enrichment_result <-
             object@enrichment_hmdb_result@result %>%
-            dplyr::filter(p_value_adjust < p.adjust.cutoff.hmdb) %>%
+            dplyr::filter(p_adjust < p.adjust.cutoff.hmdb) %>%
             dplyr::filter(mapped_number > count.cutoff.hmdb)
           for (i in 1:nrow(hmdb_enrichment_result)) {
             entry <- hmdb_enrichment_result[i,]

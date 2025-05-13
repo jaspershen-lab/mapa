@@ -9,7 +9,7 @@
 #   enriched_functional_module
 #
 # plot_similarity_network(
-#   object = em,
+#   object = enriched_functional_module,
 #   level = "module",
 #   database = "reactome",
 #   degree_cutoff = 0
@@ -21,7 +21,7 @@
 # plot_similarity_network(
 #   object = enriched_functional_module,
 #   level = "functional_module",
-#   database = c("go", "kegg", "reactome"),
+#   # database = c("go", "kegg", "reactome"),
 #   degree_cutoff = 5
 # )
 #
@@ -51,11 +51,11 @@
 #
 # metabolite
 # plot_similarity_network(
-#   object = em,
+#   object = enriched_functional_module_met,
 #   level = "module",
 #   degree_cutoff = 0,
 #   database = c("hmdb"),
-#   module_id = "hmdb_Module_2"
+#   module_id = "hmdb_Module_1"
 # )
 # plot_similarity_network(
 #   object = enriched_functional_module,
@@ -181,8 +181,7 @@ plot_similarity_network <-
           } else{
             graph_data <-
               object@merged_pathway_go$graph_data|>
-              tidygraph::activate(what = "nodes") |>
-              dplyr::rename(p_adj = p.adjust)
+              tidygraph::activate(what = "nodes")
             result_with_module <-
               object@merged_pathway_go$result_with_module
 
@@ -211,8 +210,7 @@ plot_similarity_network <-
           } else{
             graph_data <-
               object@merged_pathway_kegg$graph_data|>
-              tidygraph::activate(what = "nodes") |>
-              dplyr::rename(p_adj = p.adjust)
+              tidygraph::activate(what = "nodes")
             result_with_module <-
               object@merged_pathway_kegg$result_with_module
 
@@ -240,8 +238,7 @@ plot_similarity_network <-
           } else{
             graph_data <-
               object@merged_pathway_reactome$graph_data|>
-              tidygraph::activate(what = "nodes") |>
-              dplyr::rename(p_adj = p.adjust)
+              tidygraph::activate(what = "nodes")
             result_with_module <-
               object@merged_pathway_reactome$result_with_module
 
@@ -270,8 +267,7 @@ plot_similarity_network <-
           } else{
             graph_data <-
               object@merged_pathway_hmdb$graph_data |>
-              tidygraph::activate(what = "nodes") |>
-              dplyr::rename(p_adj = p.adjust)
+              tidygraph::activate(what = "nodes")
 
             result_with_module <-
               object@merged_pathway_hmdb$result_with_module
@@ -301,8 +297,7 @@ plot_similarity_network <-
           } else{
             graph_data <-
               object@merged_pathway_metkegg$graph_data |>
-              tidygraph::activate(what = "nodes") |>
-              dplyr::rename(p_adj = p.adjust)
+              tidygraph::activate(what = "nodes")
 
             result_with_module <-
               object@merged_pathway_metkegg$result_with_module
@@ -336,8 +331,7 @@ plot_similarity_network <-
       } else{
         graph_data <-
           object@merged_module$graph_data|>
-          tidygraph::activate(what = "nodes") |>
-          dplyr::rename(p_adj = p.adjust)
+          tidygraph::activate(what = "nodes")
 
         if (query_type == "metabolite") {
           col_name_node <-
@@ -346,12 +340,18 @@ plot_similarity_network <-
             as_tibble() |>
             colnames()
 
-          graph_data <-
-            graph_data |>
-            tidygraph::activate(what = "nodes") |>
-            # dplyr::rename(p_adj = p_value_adjust) |>
-            dplyr::select(-Count) |>
-            dplyr::mutate(Count = as.numeric(mapped_number))
+          if ("Count" %in% col_name_node) {
+            graph_data <-
+              graph_data |>
+              tidygraph::activate(what = "nodes") |>
+              dplyr::select(-Count) |>
+              dplyr::mutate(Count = as.numeric(mapped_number))
+          } else {
+            graph_data <-
+              graph_data |>
+              tidygraph::activate(what = "nodes") |>
+              dplyr::mutate(Count = as.numeric(mapped_number))
+          }
 
           if ("module_content_number.y" %in% col_name_node) {
             graph_data <-
@@ -391,8 +391,7 @@ plot_similarity_network <-
       graph_data |>
       tidygraph::activate(what = "nodes") |>
       dplyr::filter(module_content_number > degree_cutoff) |>
-      dplyr::mutate(label = if (query_type == "gene") Description else pathway_name) #|>
-      # dplyr::mutate(p_adj = p.adj)
+      dplyr::mutate(label = if (query_type == "gene") Description else pathway_name)
 
     if (igraph::gorder(graph_data) == 0) {
       warning("No functional modules have degree > ", degree_cutoff)
@@ -424,7 +423,7 @@ plot_similarity_network <-
           if (analysis_type == "enrich_pathway") {
             df |>
               dplyr::group_by(module) |>
-              dplyr::arrange(p_adj, desc(Count), .by_group = TRUE) |>
+              dplyr::arrange(p_adjust, desc(Count), .by_group = TRUE) |>
               dplyr::slice_head(n = 1) |>
               dplyr::pull(label)
           } else {
@@ -464,7 +463,7 @@ plot_similarity_network <-
       ) +
       ggraph::geom_node_point(
         aes(fill = module,
-            size = if(analysis_type == "enrich_pathway") -log(p_adj, 10) else abs(NES)),
+            size = if(analysis_type == "enrich_pathway") -log(p_adjust, 10) else abs(NES)),
         shape = 21,
         alpha = 1,
         show.legend = TRUE

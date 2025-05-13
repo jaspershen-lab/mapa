@@ -41,7 +41,7 @@
 # For metabolite
 # object <- merged_pathways
 # enriched_functional_module_met <- merge_modules(
-#   object = em,
+#   object = merged_pathways,
 #   sim.cutoff = 0,
 #   measure_method = "jaccard"
 # )
@@ -108,7 +108,7 @@ merge_modules <-
         module_result_go <-
           object@merged_pathway_go$module_result %>%
           # dplyr::filter(ONTOLOGY != "CC") %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::mutate(database = "GO") %>%
           dplyr::select(
             module_annotation,
@@ -120,7 +120,7 @@ merge_modules <-
             zScore,
             pvalue,
             qvalue,
-            p.adjust,
+            p_adjust,
             Count,
             database,
             geneID,
@@ -140,7 +140,7 @@ merge_modules <-
             Description,
             pvalue,
             qvalue,
-            p.adjust,
+            p_adjust,
             Count,
             setSize,
             enrichmentScore,
@@ -162,7 +162,7 @@ merge_modules <-
       if (analysis_type == "enrich_pathway") {
         module_result_kegg <-
           object@merged_pathway_kegg$module_result %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::mutate(database = "KEGG") %>%
           dplyr::select(
             module_annotation,
@@ -174,7 +174,7 @@ merge_modules <-
             zScore,
             pvalue,
             qvalue,
-            p.adjust,
+            p_adjust,
             Count,
             database,
             geneID,
@@ -193,7 +193,7 @@ merge_modules <-
             Description,
             pvalue,
             qvalue,
-            p.adjust,
+            p_adjust,
             Count,
             setSize,
             enrichmentScore,
@@ -215,7 +215,7 @@ merge_modules <-
       if (analysis_type == "enrich_pathway") {
         module_result_reactome <-
           object@merged_pathway_reactome$module_result %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::mutate(database = "Reactome") %>%
           dplyr::select(
             module_annotation,
@@ -227,7 +227,7 @@ merge_modules <-
             zScore,
             pvalue,
             qvalue,
-            p.adjust,
+            p_adjust,
             Count,
             database,
             geneID,
@@ -246,7 +246,7 @@ merge_modules <-
             Description,
             pvalue,
             qvalue,
-            p.adjust,
+            p_adjust,
             Count,
             setSize,
             enrichmentScore,
@@ -267,7 +267,7 @@ merge_modules <-
       if (analysis_type == "enrich_pathway") {
         module_result_hmdb <-
           object@merged_pathway_hmdb$module_result %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::mutate(database = "HMDB") %>%
           dplyr::filter(!is.na(module_annotation))
       } else{
@@ -281,7 +281,7 @@ merge_modules <-
             Description,
             pvalue,
             qvalue,
-            p.adjust,
+            p_adjust,
             Count,
             setSize,
             enrichmentScore,
@@ -302,7 +302,7 @@ merge_modules <-
       if (analysis_type == "enrich_pathway") {
         module_result_metkegg <-
           object@merged_pathway_metkegg$module_result %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::mutate(database = "KEGG") %>%
           dplyr::filter(!is.na(module_annotation))
       } else{
@@ -316,7 +316,7 @@ merge_modules <-
             Description,
             pvalue,
             qvalue,
-            p.adjust,
+            p_adjust,
             Count,
             setSize,
             enrichmentScore,
@@ -456,7 +456,7 @@ merge_modules <-
 #'   )
 #' node_data <-
 #'   data.frame(module = c("M1", "M2", "M3"),
-#'              p.adjust = c(0.01, 0.05, 0.03))
+#'              p_adjust = c(0.01, 0.05, 0.03))
 #' result <-
 #'   identify_functional_modules(sim_matrix,
 #'                               node_data,
@@ -538,8 +538,8 @@ identify_functional_modules <-
       igraph::vertex_attr(graph_data) %>%
       do.call(cbind, .) %>%
       as.data.frame() %>%
-      dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
-      dplyr::arrange(module, p.adjust)
+      dplyr::mutate(p_adjust = as.numeric(p_adjust)) %>%
+      dplyr::arrange(module, p_adjust)
 
     ##add module content number
     module_content_number <-
@@ -594,7 +594,7 @@ identify_functional_modules <-
 
             x =
               x %>%
-              dplyr::arrange(p.adjust)
+              dplyr::arrange(p_adjust)
 
             x$module_content <-
               paste(x$node, collapse = ";")
@@ -606,7 +606,7 @@ identify_functional_modules <-
               paste(x$BgRatio, collapse = ";")
 
             x$pvalue <- min(as.numeric(x$pvalue))
-            x$p.adjust <- min(as.numeric(x$p.adjust))
+            x$p_adjust <- min(as.numeric(x$p_adjust))
             x$qvalue <- min(as.numeric(x$qvalue))
             x$geneID =
               x$geneID %>%
@@ -635,8 +635,8 @@ identify_functional_modules <-
           dplyr::mutate(module_annotation = ifelse(module == "Other", Description, sapply(strsplit(
             Description, ";"
           ), `[`, 1))) %>%
-          dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::mutate(p_adjust = as.numeric(p_adjust)) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::select(module_annotation, everything())
 
         functional_module_result$module_annotation <-
@@ -687,7 +687,7 @@ identify_functional_modules <-
 
             x <-
               x %>%
-              dplyr::arrange(p.adjust)
+              dplyr::arrange(p_adjust)
 
             x$module_content <-
               paste(x$node, collapse = ";")
@@ -696,7 +696,7 @@ identify_functional_modules <-
               paste(x$Description, collapse = ";")
 
             x$pvalue <- as.numeric(x$pvalue)[1]
-            x$p.adjust <- as.numeric(x$p.adjust)[1]
+            x$p_adjust <- as.numeric(x$p_adjust)[1]
             x$qvalue <- as.numeric(x$qvalue)[1]
 
 
@@ -736,8 +736,8 @@ identify_functional_modules <-
           dplyr::mutate(module_annotation = ifelse(module == "Other", Description, sapply(strsplit(
             Description, ";"
           ), `[`, 1))) %>%
-          dplyr::mutate(p.adjust = as.numeric(p.adjust)) %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::mutate(p_adjust = as.numeric(p_adjust)) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::select(module_annotation, everything())
 
         functional_module_result$module_annotation <-
@@ -801,7 +801,7 @@ identify_functional_modules <-
 
             x =
               x %>%
-              dplyr::arrange(p.adjust)
+              dplyr::arrange(p_adjust)
 
             x$module_content <-
               paste(x$node, collapse = ";")
@@ -813,7 +813,7 @@ identify_functional_modules <-
               paste(x$Description, collapse = ";")
 
             x$p_value <- min(as.numeric(x$p_value))
-            x$p.adjust <- min(as.numeric(x$p.adjust))
+            x$p_adjust <- min(as.numeric(x$p_adjust))
 
             x$mapped_id <-
               x$mapped_id %>%
@@ -842,12 +842,12 @@ identify_functional_modules <-
             Description, ";"
           ), `[`, 1))) %>%
           dplyr::mutate(
-            p.adjust = as.numeric(p.adjust),
+            p_adjust = as.numeric(p_adjust),
             Count = as.numeric(Count),
             p_value = as.numeric(p_value),
             degree = as.numeric(degree)
           ) %>%
-          dplyr::arrange(p.adjust) %>%
+          dplyr::arrange(p_adjust) %>%
           dplyr::select(module_annotation, everything())
       }
     }

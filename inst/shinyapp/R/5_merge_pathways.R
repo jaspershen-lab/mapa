@@ -19,7 +19,7 @@ merge_pathways_ui <- function(id) {
                        fluidRow(
                          column(8,
                                 fileInput(inputId = ns("upload_enriched_pathways"),
-                                          label = tags$span("Upload Enrichment Analysis Result"),
+                                          label = tags$h4("Upload Enrichment Result"),
                                           accept = ".rda")
                          )
                        ),
@@ -318,6 +318,7 @@ merge_pathways_ui <- function(id) {
                        style = "border-right: 1px solid #ddd; padding-right: 20px;"
                 ),
 
+                ### Result display ----
                 column(8,
                        tabsetPanel(
                          tabPanel("Table",

@@ -21,32 +21,32 @@
 #
 #
 # {
-#   include_functional_modules = TRUE
-#   llm_text = TRUE
-#   include_modules = FALSE
-#   include_pathways = TRUE
-#   include_molecules = TRUE
-#   functional_module_color = "#F05C3BFF"
-#   module_color = "#46732EFF"
-#   pathway_color = "#197EC0FF"
-#   molecule_color = "#3B4992FF"
-#   functional_module_text = TRUE
-#   module_text = FALSE
-#   pathway_text = TRUE
-#   molecule_text = TRUE
-#   functional_module_text_size = 3
-#   module_text_size = 3
-#   pathway_text_size = 3
-#   molecule_text_size = 3
-#   circular_plot = FALSE
-#   functional_module_arrange_position = TRUE
-#   module_arrange_position = TRUE
-#   pathway_arrange_position = TRUE
-#   molecule_arrange_position = TRUE
-#   functional_module_position_limits = c(0.3, 0.7)
-#   module_position_limits = c(0.2, 0.8)
-#   pathway_position_limits = c(0.1, 0.9)
-#   molecule_position_limits = c(0, 1)
+  # include_functional_modules = TRUE
+  # llm_text = TRUE
+  # include_modules = FALSE
+  # include_pathways = TRUE
+  # include_molecules = FALSE
+  # functional_module_color = "#F05C3BFF"
+  # module_color = "#46732EFF"
+  # pathway_color = "#197EC0FF"
+  # molecule_color = "#3B4992FF"
+  # functional_module_text = TRUE
+  # module_text = FALSE
+  # pathway_text = TRUE
+  # molecule_text = TRUE
+  # functional_module_text_size = 3
+  # module_text_size = 3
+  # pathway_text_size = 3
+  # molecule_text_size = 3
+  # circular_plot = FALSE
+  # functional_module_arrange_position = TRUE
+  # module_arrange_position = TRUE
+  # pathway_arrange_position = TRUE
+  # molecule_arrange_position = TRUE
+  # functional_module_position_limits = c(0.3, 0.7)
+  # module_position_limits = c(0.2, 0.8)
+  # pathway_position_limits = c(0.1, 0.9)
+  # molecule_position_limits = c(0, 1)
 #   }
 #
 # plot_relationship_network(
@@ -74,7 +74,6 @@
 #   pathway_position_limits = pathway_position_limits,
 #   molecule_position_limits = molecule_position_limits
 # )
-
 
 #' Plot a multilevel relationship network
 #'
@@ -582,7 +581,7 @@ create_relation_network <-
           object@merged_module$functional_module_result |>
             dplyr::select(node = module,
                           annotation = llm_module_name,
-                          p.adjust,
+                          p_adjust,
                           Count) |>
             dplyr::mutate(Count = as.numeric(Count),
                           class = "Functional_module"),
@@ -596,7 +595,7 @@ create_relation_network <-
           object@merged_module$functional_module_result |>
             dplyr::select(node = module,
                           annotation = module_annotation,
-                          p.adjust,
+                          p_adjust,
                           Count) |>
             dplyr::mutate(Count = as.numeric(Count),
                           class = "Functional_module"),
@@ -637,7 +636,7 @@ create_relation_network <-
         object@merged_module$result_with_module %>%
           dplyr::select(node,
                         annotation = module_annotation,
-                        p.adjust,
+                        p_adjust,
                         Count,
                         database) %>%
           dplyr::mutate(Count = as.numeric(Count),
@@ -663,7 +662,7 @@ create_relation_network <-
         expr = {
           temp_df <- object@enrichment_go_result@result %>%
             dplyr::filter(
-              p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
+              p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
                 Count > object@process_info$merge_pathways@parameter$count.cutoff.go
               )
           # %>%
@@ -714,13 +713,13 @@ create_relation_network <-
         expr = {
           object@enrichment_go_result@result %>%
           dplyr::filter(
-            p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
+            p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.go &
               Count > object@process_info$merge_pathways@parameter$count.cutoff.go
           ) %>%
           # dplyr::filter(ONTOLOGY != "CC") %>%
           dplyr::select(node = ID,
                         annotation = Description,
-                        p.adjust,
+                        p_adjust,
                         Count) %>%
           dplyr::mutate(database = "GO")
           },
@@ -742,7 +741,7 @@ create_relation_network <-
         expr = {
           temp_df <- object@enrichment_kegg_result@result %>%
             dplyr::filter(
-              p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg &
+              p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg &
                 Count > object@process_info$merge_pathways@parameter$count.cutoff.kegg
             )
 
@@ -789,12 +788,12 @@ create_relation_network <-
       tryCatch(
         expr = {object@enrichment_kegg_result@result %>%
           dplyr::filter(
-            p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg &
+            p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.kegg &
               Count > object@process_info$merge_pathways@parameter$count.cutoff.kegg
           ) %>%
           dplyr::select(node = ID,
                         annotation = Description,
-                        p.adjust,
+                        p_adjust,
                         Count) %>%
           dplyr::mutate(database = "KEGG")},
         error = function(e) {
@@ -815,7 +814,7 @@ create_relation_network <-
         expr = {
           temp_df <- object@enrichment_reactome_result@result %>%
             dplyr::filter(
-              p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome &
+              p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome &
                 Count > object@process_info$merge_pathways@parameter$count.cutoff.reactome
             )
 
@@ -862,12 +861,12 @@ create_relation_network <-
       tryCatch(
         expr = {object@enrichment_reactome_result@result %>%
           dplyr::filter(
-            p.adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome &
+            p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.reactome &
               Count > object@process_info$merge_pathways@parameter$count.cutoff.reactome
           ) %>%
           dplyr::select(node = ID,
                         annotation = Description,
-                        p.adjust,
+                        p_adjust,
                         Count) %>%
           dplyr::mutate(database = "Reactome")},
         error = function(e) {
@@ -889,7 +888,7 @@ create_relation_network <-
           temp_df <-
             object@enrichment_hmdb_result@result %>%
             dplyr::filter(
-              p_value_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.hmdb &
+              p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.hmdb &
                 mapped_number > object@process_info$merge_pathways@parameter$count.cutoff.hmdb
             )
 
@@ -931,12 +930,12 @@ create_relation_network <-
       tryCatch(
         expr = {object@enrichment_hmdb_result@result %>%
             dplyr::filter(
-              p_value_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.hmdb &
+              p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.hmdb &
                 mapped_number > object@process_info$merge_pathways@parameter$count.cutoff.hmdb
             ) %>%
             dplyr::select(node = pathway_id,
                           annotation = pathway_name,
-                          p_value_adjust,
+                          p_adjust,
                           mapped_number) %>%
             dplyr::mutate(database = "HMDB")},
         error = function(e) {
@@ -958,7 +957,7 @@ create_relation_network <-
           temp_df <-
             object@enrichment_metkegg_result@result %>%
             dplyr::filter(
-              p_value_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.metkegg &
+              p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.metkegg &
                 mapped_number > object@process_info$merge_pathways@parameter$count.cutoff.metkegg
             )
 
@@ -1000,12 +999,12 @@ create_relation_network <-
       tryCatch(
         expr = {object@enrichment_metkegg_result@result %>%
             dplyr::filter(
-              p_value_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.metkegg &
+              p_adjust < object@process_info$merge_pathways@parameter$p.adjust.cutoff.metkegg &
                 mapped_number > object@process_info$merge_pathways@parameter$count.cutoff.metkegg
             ) %>%
             dplyr::select(node = pathway_id,
                           annotation = pathway_name,
-                          p_value_adjust,
+                          p_adjust,
                           mapped_number) %>%
             dplyr::mutate(database = "KEGG")},
         error = function(e) {

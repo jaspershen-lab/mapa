@@ -56,7 +56,7 @@ sim_matrix <-
   )
 node_data <-
   data.frame(module = c("M1", "M2", "M3"),
-             p.adjust = c(0.01, 0.05, 0.03))
+             p_adjust = c(0.01, 0.05, 0.03))
 result <-
   identify_functional_modules(sim_matrix,
                               node_data,

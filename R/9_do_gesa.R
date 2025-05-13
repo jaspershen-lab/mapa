@@ -209,6 +209,9 @@ do_gsea <-
                                                    function(x) {
                                                      length(stringr::str_split(x, pattern = "/")[[1]])
                                                    })
+      if (!is.null(gsea_go_result)) {
+        data.table::setnames(gsea_go_result@result, "p.adjust", "p_adjust")
+      }
     } else{
       gsea_go_result <- NULL
     }
@@ -237,6 +240,9 @@ do_gsea <-
                                                    function(x) {
                                                      length(stringr::str_split(x, pattern = "/")[[1]])
                                                    })
+      if (!is.null(gsea_kegg_result)) {
+        data.table::setnames(gsea_kegg_result@result, "p.adjust", "p_adjust")
+      }
     } else{
       gsea_kegg_result <- NULL
     }
@@ -276,6 +282,9 @@ do_gsea <-
                                                    function(x) {
                                                      length(stringr::str_split(x, pattern = "/")[[1]])
                                                      })
+      if (!is.null(gsea_reactome_result)) {
+        data.table::setnames(gsea_reactome_result@result, "p.adjust", "p_adjust")
+      }
     } else{
       gsea_reactome_result <- NULL
     }

@@ -21,7 +21,7 @@ server <-
     ### Step 4a merge modules ----
     enriched_functional_module_result <- merge_modules_server("merge_modules_tab", enriched_modules = enriched_modules_result, tab_switch)
 
-    ### Step 3-4b embed and cluster pathways
+    ### Step 3b-4b embed and cluster pathways
     enriched_functional_module_result <- embed_cluster_pathways_server("embed_cluster_pathways_tab", enriched_pathways = enriched_pathways_result, tab_switch)
     ### Step 5 Translation ----
 

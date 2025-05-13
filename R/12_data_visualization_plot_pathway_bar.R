@@ -32,9 +32,9 @@
 # plot_pathway_bar(
 #   object = enriched_functional_module,
 #   top_n = 10,
-#   x_axis_name = "RichFactor", #"qscore", "RichFactor", or "FoldEnrichment"
+#   x_axis_name = "FoldEnrichment", #"qscore", "RichFactor", or "FoldEnrichment"
 #   y_label_width = 30,
-#   level = "functional_module",
+#   level = "module", # "pathway", "module", "functional_module"
 #   line_type = "straight"
 # )
 #
@@ -69,36 +69,32 @@
 #   line_type = "meteor"
 # )
 #
-# plot_pathway_bar(
-#   object = object,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "functional_module"
-# )
 #
 # plot_pathway_bar(
 #   object = enriched_functional_module,
+#   x_axis_name = "qscore",
 #   top_n = 10,
 #   y_label_width = 30,
-#   level = "functional_module",
-#   line_type = "meteor"
+#   # level = "functional_module",
+#   level = "module",
+#   line_type = "straight"
 # )
 #
 # Metabolite enrichment result
-# plot_pathway_bar(object =  enriched_functional_modules,
+# plot_pathway_bar(object =  enriched_functional_module_met,
 #                  top_n = 5,
 #                  x_axis_name = "qscore",
-#                  level = "pathway",
+#                  # level = "pathway",
+#                  level = "functional_module",
 #                  line_type = "straight",
 #                  p.adjust.cutoff = 0.05,
-#                  count.cutoff = 5,
+#                  count.cutoff = 0,
 #                  database = c("kegg", "hmdb"))
-#
 
-# plot_pathway_bar(object = enriched_functional_modules,
+# plot_pathway_bar(object = enriched_functional_module,
 #                  top_n = 5,
 #                  x_axis_name = "qscore",
-#                  level = "module",
+#                  level = "functional_module",
 #                  line_type = "straight",
 #                  p.adjust.cutoff = 0.05,
 #                  count.cutoff = 5,
@@ -356,7 +352,7 @@ plot_pathway_bar <-
 
             temp_data <-
               temp_data |>
-              dplyr::filter(p.adjust < p.adjust.cutoff &
+              dplyr::filter(p_adjust < p.adjust.cutoff &
                               Count > count.cutoff)
           }
         }
@@ -387,13 +383,13 @@ plot_pathway_bar <-
         temp_data <-
           rbind(enrichment_hmdb_result, enrichment_metkegg_result)
 
-        colnames(temp_data)[6] <- "p.adjust"
         colnames(temp_data)[10] <- "Count"
 
         temp_data <-
           temp_data |>
-          dplyr::filter(p.adjust < p.adjust.cutoff &
-                          Count > count.cutoff)
+          dplyr::filter(p_adjust < p.adjust.cutoff &
+                          Count > count.cutoff) |>
+          dplyr::rename(Description = pathway_name)
       }
     }
 
@@ -462,7 +458,7 @@ plot_pathway_bar <-
 
           temp_data <-
             temp_data |>
-            dplyr::filter(p.adjust < p.adjust.cutoff &
+            dplyr::filter(p_adjust < p.adjust.cutoff &
                             Count > count.cutoff) |>
             dplyr::select(-Description) |>
             dplyr::rename(Description = module_annotation)
@@ -494,7 +490,7 @@ plot_pathway_bar <-
 
           temp_data <-
             temp_data |>
-            dplyr::filter(p.adjust < p.adjust.cutoff &
+            dplyr::filter(p_adjust < p.adjust.cutoff &
                             Count > count.cutoff) |>
             dplyr::select(-Description) |>
             dplyr::rename(Description = module_annotation)
@@ -520,7 +516,7 @@ plot_pathway_bar <-
         if (llm_text) {
           temp_data <-
             functional_module_result |>
-            dplyr::filter(p.adjust < p.adjust.cutoff &
+            dplyr::filter(p_adjust < p.adjust.cutoff &
                             Count > count.cutoff) |>
             dplyr::select(-Description) |>
             dplyr::rename(Description = llm_module_name) |>
@@ -539,7 +535,7 @@ plot_pathway_bar <-
         } else {
           temp_data <-
             functional_module_result |>
-            dplyr::filter(p.adjust < p.adjust.cutoff &
+            dplyr::filter(p_adjust < p.adjust.cutoff &
                             Count > count.cutoff) |>
             dplyr::select(-Description) |>
             dplyr::rename(Description = module_annotation) |>
@@ -562,7 +558,7 @@ plot_pathway_bar <-
         if (llm_text) {
           temp_data <-
             functional_module_result |>
-            dplyr::filter(p.adjust < p.adjust.cutoff &
+            dplyr::filter(p_adjust < p.adjust.cutoff &
                             Count > count.cutoff) |>
             dplyr::select(-Description) |>
             dplyr::rename(Description = llm_module_name) |>
@@ -581,7 +577,7 @@ plot_pathway_bar <-
         } else {
           temp_data <-
             functional_module_result |>
-            dplyr::filter(p.adjust < p.adjust.cutoff &
+            dplyr::filter(p_adjust < p.adjust.cutoff &
                             Count > count.cutoff) |>
             dplyr::select(-Description) |>
             dplyr::rename(Description = module_annotation) |>
@@ -635,9 +631,9 @@ plot_pathway_bar <-
       warning("No suitable pathways or modules are available")
       return(
         temp_data |>
-          dplyr::arrange(p.adjust) |>
+          dplyr::arrange(p_adjust) |>
           head(top_n) |>
-          dplyr::mutate(log.p = -log(p.adjust, 10)) |>
+          dplyr::mutate(log.p = -log(p_adjust, 10)) |>
           dplyr::arrange(log.p) |>
           dplyr::mutate(Description = factor(Description, levels = Description)) |>
           ggplot(aes(log.p, Description)) +
@@ -670,7 +666,7 @@ plot_pathway_bar <-
       if (query_type == "gene") {
         temp_data <-
           temp_data |>
-          dplyr::mutate(qscore = -log(p.adjust, 10)) |>
+          dplyr::mutate(qscore = -log(p_adjust, 10)) |>
           dplyr::arrange(.data[[x_axis_name]]) |>
           tail(top_n)
 
@@ -678,7 +674,7 @@ plot_pathway_bar <-
       } else if (query_type == "metabolite") {
         temp_data <-
           temp_data |>
-          dplyr::mutate(qscore = -log(p.adjust, 10)) |>
+          dplyr::mutate(qscore = -log(p_adjust, 10)) |>
           dplyr::arrange(dplyr::desc(qscore)) |>
           head(top_n)
       }
@@ -779,8 +775,8 @@ plot4pathway_enrichment <-
         } else if (query_type == "metabolite") {
           plot <-
             ggplot(data = temp_data,
-                   aes(x = temp_data$qscore,
-                       y = reorder(temp_data$Description, temp_data$qscore, decreasing = FALSE))) +
+                   aes(x = qscore,
+                       y = reorder(Description, qscore, decreasing = FALSE))) +
             scale_y_discrete(
               labels = function(x)
                 stringr::str_wrap(x, width = y_label_width)
@@ -792,15 +788,15 @@ plot4pathway_enrichment <-
             geom_segment(
               aes(
                 x = 0,
-                y = temp_data$Description,
-                xend = temp_data$qscore,
-                yend = temp_data$Description,
-                color = temp_data$class
+                y = Description,
+                xend = qscore,
+                yend = Description,
+                color = class
               ),
               show.legend = FALSE
             ) +
-            geom_point(aes(size = temp_data$Count,
-                           fill = temp_data$class),
+            geom_point(aes(size = Count,
+                           fill = class),
                        shape = 21) +
             #alpha = 1) +
             scale_size_continuous(range = c(3, 7)) +
@@ -825,7 +821,7 @@ plot4pathway_enrichment <-
       if (analysis_type == "do_gsea") {
         plot <-
           temp_data |>
-          dplyr::mutate(log.p = -log(p.adjust, 10)) |>
+          dplyr::mutate(log.p = -log(p_adjust, 10)) |>
           dplyr::arrange(NES) |>
           dplyr::mutate(Description = factor(Description, levels = Description)) |>
           ggplot(aes(NES, Description)) +
@@ -1013,7 +1009,7 @@ plot4pathway_enrichment <-
       if (analysis_type == "do_gsea") {
         plot <-
           temp_data |>
-          dplyr::mutate(log.p = -log(p.adjust, 10)) |>
+          dplyr::mutate(log.p = -log(p_adjust, 10)) |>
           dplyr::arrange(NES) |>
           dplyr::mutate(Description = factor(Description, levels = Description)) |>
           ggplot(aes(NES, Description)) +
