@@ -119,9 +119,9 @@ setMethod(
     cat(crayon::green("Analysis method:", analysis_type, "\n"))
     cat(crayon::yellow(paste(rep("-", 20), collapse = ""), "\n"))
 
-    message(crayon::green("-----------Variable information------------"))
-    message(crayon::green(nrow(object@variable_info)),
-            crayon::green(" features/markers in total"))
+    cat(crayon::green("-----------Variable information------------\n"))
+    cat(crayon::green(nrow(object@variable_info)),
+            crayon::green(" features/markers in total\n"))
 
 
     # p.adjust.cutoff <-
@@ -151,172 +151,179 @@ setMethod(
     #   )
 
     ## message for enrichment results and modules of genes ====
-    message(crayon::green("-----------Enrichment results and modules of genes------------"))
-    message(crayon::green("-----------GO------------"))
+    cat(crayon::green("-----------Enrichment results and modules of genes------------\n"))
+    cat(crayon::green("-----------GO------------\n"))
     if (is.null(enrichment_go_result)) {
-      message(crayon::green('No GO results'))
+      cat(crayon::green('No GO results\n'))
     } else{
       if (analysis_type == "enrich_pathway") {
         p.adjust.cutoff <- object@enrichment_go_result@pvalueCutoff
-        message(
+        cat(
           crayon::green(
             nrow(
               enrichment_go_result@result %>%
                 dplyr::filter(
-                  p.adjust < p.adjust.cutoff
+                  p_adjust < p.adjust.cutoff
                 )
             ),
             "GO terms with p.adjust <",
-            p.adjust.cutoff
+            p.adjust.cutoff,
+            "\n"
           )
         )
       } else{
         p.adjust.cutoff <- object@enrichment_go_result@params$pvalueCutoff
-        message(crayon::green(
+        cat(crayon::green(
           nrow(
             enrichment_go_result@result %>%
-              dplyr::filter(p.adjust < p.adjust.cutoff)
+              dplyr::filter(p_adjust < p.adjust.cutoff)
           ),
           "GO terms with p.adjust <",
-          p.adjust.cutoff
+          p.adjust.cutoff,
+          "\n"
         ))
       }
     }
 
     if (length(object@merged_pathway_go) == 0) {
-      message(crayon::green('No GO modules'))
+      cat(crayon::green('No GO modules\n'))
     } else{
-      message(crayon::green(
+      cat(crayon::green(
         length(object@merged_pathway_go$module_result$module),
-        "GO modules"
+        "GO modules",
+        "\n"
       ))
     }
 
-    message(crayon::green("-----------KEGG------------"))
+    cat(crayon::green("-----------KEGG------------\n"))
     if (is.null(enrichment_kegg_result)) {
-      message(crayon::green('No KEGG results'))
+      cat(crayon::green('No KEGG results\n'))
     } else{
       if (analysis_type == "enrich_pathway") {
         p.adjust.cutoff <- object@enrichment_kegg_result@pvalueCutoff
-        message(
+        cat(
           crayon::green(
             nrow(
               enrichment_kegg_result@result %>%
-                dplyr::filter(p.adjust < p.adjust.cutoff)
+                dplyr::filter(p_adjust < p.adjust.cutoff)
             ),
             "KEGG pathways with p.adjust <",
-            p.adjust.cutoff
+            p.adjust.cutoff,
+            "\n"
           )
         )
       } else{
         p.adjust.cutoff <- object@enrichment_kegg_result@params$pvalueCutoff
-        message(crayon::green(
+        cat(crayon::green(
           nrow(
             enrichment_kegg_result@result %>%
-              dplyr::filter(p.adjust < p.adjust.cutoff)
+              dplyr::filter(p_adjust < p.adjust.cutoff)
           ),
           "KEGG pathways with p.adjust <",
-          p.adjust.cutoff
+          p.adjust.cutoff,
+          "\n"
         ))
       }
     }
 
     if (length(object@merged_pathway_kegg) == 0) {
-      message(crayon::green('No KEGG modules'))
+      cat(crayon::green('No KEGG modules\n'))
     } else{
-      message(crayon::green(
+      cat(crayon::green(
         length(object@merged_pathway_kegg$module_result$module),
-        "KEGG modules"
+        "KEGG modules\n"
       ))
     }
 
-    message(crayon::green("-----------Reactome------------"))
+    cat(crayon::green("-----------Reactome------------\n"))
     if (is.null(enrichment_reactome_result)) {
-      message(crayon::green('No Reactome results'))
+      cat(crayon::green('No Reactome results\n'))
     } else{
       if (analysis_type == "enrich_pathway") {
         p.adjust.cutoff <- object@enrichment_reactome_result@pvalueCutoff
-        message(
+        cat(
           crayon::green(
             nrow(
               enrichment_reactome_result@result %>%
-                dplyr::filter(p.adjust < p.adjust.cutoff)
+                dplyr::filter(p_adjust < p.adjust.cutoff)
             ),
             "Reactome pathways with p.adjust <",
-            p.adjust.cutoff
+            p.adjust.cutoff,
+            "\n"
           )
         )
       } else{
         p.adjust.cutoff <- object@enrichment_reactome_result@params$pvalueCutoff
-        message(crayon::green(
+        cat(crayon::green(
           nrow(
             enrichment_reactome_result@result %>%
-              dplyr::filter(p.adjust < p.adjust.cutoff)
+              dplyr::filter(p_adjust < p.adjust.cutoff)
           ),
           "Reactome pathways with p.adjust <",
-          p.adjust.cutoff
+          p.adjust.cutoff,
+          "\n"
         ))
       }
     }
 
     if (length(object@merged_pathway_reactome) == 0) {
-      message(crayon::green('No Reactome modules'))
+      cat(crayon::green('No Reactome modules\n'))
     } else{
-      message(crayon::green(
+      cat(crayon::green(
         length(object@merged_pathway_reactome$module_result$module),
-        "Reactome modules"
+        "Reactome modules\n"
       ))
     }
 
     ## message for enrichment results and modules of metabolites ====
-    message(crayon::green("-----------Enrichment results and modules of metabolites------------"))
-    message(crayon::green("-----------HMDB------------"))
+    cat(crayon::green("-----------Enrichment results and modules of metabolites------------\n"))
+    cat(crayon::green("-----------HMDB------------\n"))
     if (is.null(enrichment_hmdb_result)) {
-      message(crayon::green('No HMDB enrichment results'))
+      cat(crayon::green('No HMDB enrichment results\n'))
     } else {
       print(enrichment_hmdb_result)
     }
     if (length(object@merged_pathway_hmdb) == 0) {
-      message(crayon::green('No HMDB modules'))
+      cat(crayon::green('No HMDB modules\n'))
     } else{
-      message(crayon::green(
+      cat(crayon::green(
         length(object@merged_pathway_hmdb$module_result$module),
-        "HMDB modules"
+        "HMDB modules\n"
       ))
     }
 
-    message(crayon::green("-----------KEGG Metabolite------------"))
+    cat(crayon::green("-----------KEGG Metabolite------------\n"))
     if (is.null(enrichment_metkegg_result)) {
-      message(crayon::green('No KEGG metabolite enrichment results'))
+      cat(crayon::green('No KEGG metabolite enrichment results\n'))
     } else {
       print(enrichment_metkegg_result)
     }
     if (length(object@merged_pathway_metkegg) == 0) {
-      message(crayon::green('No KEGG modules'))
+      cat(crayon::green('No KEGG modules\n'))
     } else{
-      message(crayon::green(
+      cat(crayon::green(
         length(object@merged_pathway_metkegg$module_result$module),
-        "KEGG modules"
+        "KEGG modules\n"
       ))
     }
 
-    message(crayon::green("-----------Functional modules------------"))
+    cat(crayon::green("-----------Functional modules------------\n"))
     if (length(object@merged_module) == 0) {
-      message(crayon::green('No Functional modules'))
+      cat(crayon::green('No Functional modules\n'))
     } else{
-      message(crayon::green(
+      cat(crayon::green(
         length(object@merged_module$functional_module_result$module),
-        "Functional modules"
+        "Functional modules\n"
       ))
     }
 
-    message(crayon::green("-----------LLM module interpretation------------"))
+    cat(crayon::green("-----------LLM module interpretation------------\n"))
     if (length(object@llm_module_interpretation) == 0) {
-      message(crayon::green('No LLM module interpretation results'))
+      cat(crayon::green('No LLM module interpretation results\n'))
     } else{
-      message(crayon::green(
+      cat(crayon::green(
         length(object@llm_module_interpretation),
-        "LLM interpreted modules"
+        "LLM interpreted modules\n"
       ))
     }
 

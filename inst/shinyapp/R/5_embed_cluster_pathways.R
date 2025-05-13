@@ -1,3 +1,15 @@
+#' Embed and Cluster Pathways UI Module
+#'
+#' Internal UI for embedding pathway descriptions, clustering them into
+#' functional modules, and displaying the resulting tables, plots, and
+#' downloadable objects.
+#'
+#' @param id Module id.
+#'
+#' @import shiny
+#' @importFrom shinyjs hidden toggleElement toggleState useShinyjs disable enable
+#' @noRd
+
 embed_cluster_pathways_ui <- function(id) {
   ns <- NS(id)
   tabItem(
@@ -367,6 +379,24 @@ embed_cluster_pathways_ui <- function(id) {
   )
 }
 
+#' Embed and Cluster Pathways Server Module
+#'
+#' Internal server logic for the embedding-based clustering step that follows
+#' pathway enrichment analysis.
+#'
+#' @param input,output,session Internal parameters for \strong{shiny}.
+#'   **Do not remove.**
+#' @param id Module id.
+#' @param enriched_pathways A reactive value that returns the
+#'   \code{enrich_pathway} object produced by the enrichment step.
+#' @param tab_switch    A callback used to programmatically switch tabs in the
+#'   parent \code{shinydashboard}.
+#'
+#' @import shiny
+#' @importFrom shinyjs toggleElement toggleState disable enable useShinyjs
+#' @importFrom utils capture.output write.csv
+#' @noRd
+
 embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
   moduleServer(
     id,
@@ -475,7 +505,6 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
                     api_provider = input$api_provider,
                     text_embedding_model = input$embedding_model,
                     api_key = input$api_key,
-                    include_gene_name = FALSE,
                     database = input$cluster_module_database,
                     p.adjust.cutoff.go = input$p.adjust.cutoff.go,
                     p.adjust.cutoff.kegg = input$p.adjust.cutoff.kegg,
@@ -573,7 +602,7 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
               ',
                 input$api_provider,
                 input$embedding_model,
-                nput$api_key,
+                input$api_key,
                 db_vector,
                 go_params,
                 kegg_params,
