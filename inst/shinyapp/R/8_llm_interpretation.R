@@ -10,26 +10,6 @@ llm_interpretation_ui <- function(id) {
                   4,
                   fluidRow(
                     column(12,
-                           fileInput(inputId = ns("upload_enriched_functional_module"),
-                                     label = tags$span("Upload functional module",
-                                                       shinyBS::bsButton(ns("upload_functional_module_info"),
-                                                                         label = "",
-                                                                         icon = icon("info"),
-                                                                         style = "info",
-                                                                         size = "extra-small")),
-                                     accept = ".rda"),
-                           bsPopover(
-                             id = ns("upload_functional_module_info"),
-                             title = "",
-                             content = "You can upload the functional module result here.",
-                             placement = "right",
-                             trigger = "hover",
-                             options = list(container = "body")
-                           )
-                    )
-                  ),
-                  fluidRow(
-                    column(12,
                            fileInput(
                              inputId = ns("upload_interpretation_result"),
                              label   = tags$span(
@@ -48,6 +28,27 @@ llm_interpretation_ui <- function(id) {
                              options   = list(container = "body")
                            )
                     ),
+                  ),
+                  tags$hr(style = "border-top: 1px solid #ddd; margin-top: 10px; margin-bottom: 10px;"),
+                  fluidRow(
+                    column(12,
+                           fileInput(inputId = ns("upload_enriched_functional_module"),
+                                     label = tags$span("Upload functional module",
+                                                       shinyBS::bsButton(ns("upload_functional_module_info"),
+                                                                         label = "",
+                                                                         icon = icon("info"),
+                                                                         style = "info",
+                                                                         size = "extra-small")),
+                                     accept = ".rda"),
+                           bsPopover(
+                             id = ns("upload_functional_module_info"),
+                             title = "",
+                             content = "You can upload the functional module result here.",
+                             placement = "right",
+                             trigger = "hover",
+                             options = list(container = "body")
+                           )
+                    )
                   ),
                   # br(),
                   fluidRow(
@@ -163,27 +164,7 @@ llm_interpretation_ui <- function(id) {
                        tabsetPanel(
                          tabPanel(
                            title = "Interpretation results",
-                           # uiOutput(ns("llm_interpretation_result")),
                            uiOutput(ns("module_details")),
-                           # selectInput(
-                           #   inputId = ns("module_selector"),
-                           #   label = "Select Functional Module:",
-                           #   choices = NULL,  # we will update this dynamically in the server
-                           #   selected = NULL
-                           # ),
-                           # hr(),
-                           # h3("Module Information"),
-                           # strong("Module Name:"),
-                           # textOutput(ns("module_name"), container = span),
-                           # br(),
-                           # strong("Module Summary:"),
-                           # textOutput(ns("module_summary"), container = span),
-                           # br(),
-                           # strong("Association With Phenotype:"),
-                           # textOutput(ns("association_summary"), container = span),
-                           # br(),
-                           # strong("Confidence Score:"),
-                           # textOutput(ns("confidence_score"), container = span),
                            br(),
                            shinyjs::useShinyjs(),
                            downloadButton(ns("download_llm_interpretation_result"),
@@ -201,12 +182,17 @@ llm_interpretation_ui <- function(id) {
                                           "Download",
                                           class = "btn-primary",
                                           style = "background-color: #d83428; color: white;")
+                         ),
+                         tabPanel(
+                           title = "R object",
+                           verbatimTextOutput(ns("llm_interpreted_functional_module_object")),
+                           br(),
+                           shinyjs::useShinyjs(),
+                           downloadButton(ns("download_llm_interpreted_functional_module_object"),
+                                          "Download",
+                                          class = "btn-primary",
+                                          style = "background-color: #d83428; color: white;")
                          )
-
-                         # tabPanel(
-                         #   title = "Functional module table 2",
-                         #   shiny::dataTableOutput(ns("llm_enriched_functional_modules2"))
-                         # )
                        )
                   )
                 )))
@@ -218,6 +204,11 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
     id,
     function(input, output, session) {
       ns <- session$ns
+
+      if (!is.reactive(enriched_functional_module)) {
+        enriched_functional_module <- reactiveVal(NULL)
+      }
+
       ## Section1: Load enriched_functional_module.rda and navigate to specified directory ====
       observeEvent(
         input$upload_enriched_functional_module, {
@@ -231,6 +222,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
 
             if (length(names) == 1) {
               enriched_functional_module(get(names[1], envir = tempEnv))
+              # uploaded_enriched_functional_module(get(names[1], envir = tempEnv))
             } else {
               message("The .rda file does not contain exactly one object.")
               showModal(
@@ -247,8 +239,6 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
 
       ## Display interpreted result ---------------------------------------------------------------------------
       observeEvent(input$upload_interpretation_result, {
-        req(input$upload_interpretation_result$datapath)
-
         tmp <- new.env()
         load(input$upload_interpretation_result$datapath, envir = tmp)
 
@@ -355,7 +345,9 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
       # Set up the future plan - this determines how parallel tasks will run
       future::plan(future::multisession)
 
-      observeEvent(input$submit_llm_interpretation, {
+      observe({
+        req(input$submit_llm_interpretation, enriched_functional_module())
+
         message("Interpreting functional modules in progress. This comprehensive analysis requires some time...")
 
         library(future)
@@ -393,6 +385,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
 
         # Run the interpretation asynchronously
         promises::future_promise({
+          library(mapa)
           # This code runs in a separate R process
           result <-
             mapa::llm_interpret_module(
@@ -539,6 +532,23 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
         )
       })
 
+      ### Show object
+      output$llm_interpreted_functional_module_object <-
+        renderText({
+          req(llm_interpreted_functional_module())
+          llm_interpreted_functional_module_obj <- llm_interpreted_functional_module()
+          captured_output1 <-
+            capture.output(llm_interpreted_functional_module_obj,
+                           type = "message")
+          captured_output2 <-
+            capture.output(llm_interpreted_functional_module_obj,
+                           type = "output")
+          captured_output <-
+            c(captured_output1,
+              captured_output2)
+          paste(captured_output, collapse = "\n")
+        })
+
       ### Show code
       observeEvent(input$show_llm_interpretation_code, {
         if (is.null(llm_interpretation_code()) ||
@@ -607,8 +617,10 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
         if (is.null(annotation_result()) ||
             length(annotation_result()) == 0) {
           shinyjs::disable("download_llm_interpretation_result")
+          shinyjs::disable("download_llm_interpreted_functional_module_object")
         } else {
           shinyjs::enable("download_llm_interpretation_result")
+          shinyjs::enable("download_llm_interpreted_functional_module_object")
         }
         if (is.null(module_prompt()) ||
             length(module_prompt()) == 0) {
@@ -618,8 +630,8 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
         }
       })
 
-      # Download handler for llm interpreted functional modules
-      output$download_llm_interpretation_result <-
+      # Download handler for llm interpreted functional modules object
+      output$download_llm_interpreted_functional_module_object <-
         shiny::downloadHandler(
           filename = function() {
             "llm_interpreted_functional_module.rda"
@@ -630,6 +642,34 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
             save(llm_interpreted_functional_module, file = file)
           }
         )
+
+      # Download handler for llm interpretation for a specific functional module ====
+      output$download_llm_interpretation_result <- downloadHandler(
+        filename = function() {
+          # e.g. “FM3_interpretation.txt”
+          paste0(input$module_selector, "_interpretation.txt")
+        },
+        content = function(file) {
+          req(annotation_result(),
+              input$module_selector)
+
+          mod_id   <- input$module_selector
+          mod_info <- annotation_result()[[mod_id]]$generated_name
+
+          # Compose the text lines
+          txt <- c(
+            paste0("Module ID: ",        mod_id),
+            paste0("Module Name: ",      mod_info$module_name),
+            paste0("Module Summary: ",   mod_info$summary),
+            paste0("Association Summary: ", mod_info$phenotype_analysis),
+            paste0("Confidence Score: ", mod_info$confidence_score)
+          )
+
+          writeLines(txt, file, useBytes = TRUE)
+        }
+      )
+
+
       # Download handler for the prompt
       output$download_llm_interpretation_prompt <- downloadHandler(
         filename = function() {

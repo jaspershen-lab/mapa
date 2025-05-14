@@ -84,6 +84,7 @@ enriched_pathways
 enriched_modules <-
   merge_pathways(
     object = enriched_pathways,
+    database = c("go", "kegg", "reactome"),
     p.adjust.cutoff.go = 0.05,
     p.adjust.cutoff.kegg = 0.05,
     p.adjust.cutoff.reactome = 0.05,

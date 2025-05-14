@@ -57,8 +57,12 @@ Text: Overexpression of receptor tyrosine kinases like DDR2, RET, and PDGFRA cor
 ## **Example Output**
 {
   "module_name": "Receptor Tyrosine Kinase Signaling in Fibrosis and Cancer",
-  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2’s central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression. Additionally, DDR2-mediated PIK3C2α signaling has been implicated in fibroblast function and fibrosis, presenting a potential therapeutic target."
-  "phenotype_analysis": "This module directly impacts fibrosis, which was the specified phenotype of interest. The RTK signaling (particularly through DDR2) influences myofibroblast differentiation, collagen deposition, and tissue remodeling, ultimately determining the severity of fibrotic disease in organs like liver, lung, and heart. The module affects fibrosis through multiple mechanisms: promoting fibroblast proliferation, preventing fibroblast apoptosis, enhancing extracellular matrix production, and modulating inflammatory responses. The literature directly supports DDR2's critical role in fibrosis progression, and inhibitors like WRG-28 have demonstrated efficacy in reducing fibrosis severity by blocking DDR2 activation. Additionally, while not directly evidenced in the provided literature, this module likely influences chronic wound healing processes that can lead to pathological fibrosis, representing a promising area for therapeutic intervention.",
+  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2’s central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression. Additionally, DDR2-mediated PIK3C2α signaling has been implicated in fibroblast function and fibrosis, presenting a potential therapeutic target. 
+  Reference: 
+  1. Ling, S., Kwak, D. & Kim, K. K. Inhibition of discoidin domain receptor 2 reveals kinase-dependent and kinase-independent functions in regulating fibroblast activity. Am. J. Physiol.-Lung Cell. Mol. Physiol. 325, L342–L351 (2023).",
+  "phenotype_analysis": "This module directly impacts fibrosis, which was the specified phenotype of interest. The RTK signaling (particularly through DDR2) influences myofibroblast differentiation, collagen deposition, and tissue remodeling, ultimately determining the severity of fibrotic disease in organs like liver, lung, and heart. The module affects fibrosis through multiple mechanisms: promoting fibroblast proliferation, preventing fibroblast apoptosis, enhancing extracellular matrix production, and modulating inflammatory responses. The literature directly supports DDR2's critical role in fibrosis progression, and inhibitors like WRG-28 have demonstrated efficacy in reducing fibrosis severity by blocking DDR2 activation. Additionally, while not directly evidenced in the provided literature, this module likely influences chronic wound healing processes that can lead to pathological fibrosis, representing a promising area for therapeutic intervention. 
+  Reference: 
+  1. Ling, S., Kwak, D. & Kim, K. K. Inhibition of discoidin domain receptor 2 reveals kinase-dependent and kinase-independent functions in regulating fibroblast activity. Am. J. Physiol.-Lung Cell. Mol. Physiol. 325, L342–L351 (2023).",
   "confidence_score": "0.95"
 }
 
@@ -73,20 +77,37 @@ Please provide your response in **JSON format**, strictly following this structu
 
 {
   "module_name": "Your concise module name here",
-  "summary": "A detailed, literature-integrated explanation of the module's function, key {query_molecules}, and relevant biological processes.",
-  "phenotype_analysis": "An analysis of the module's relationship to {phenotype}, including known associations or a hypothesis about potential impacts on {phenotype} based on the module's functions, with mechanisms of influence.",
-  "confidence_score": "A value between 0.00 and 1.00, based on {query_molecules}-pathway association and overall functional coherence."
+  "summary": "A detailed, literature-integrated explanation of the module's function, key {query_molecules}, and relevant biological processes. Each major claim MUST be supported by references in square brackets[1,2]. The summary MUST include a 'References:' section listing all cited references in Nature journal format.",
+  "phenotype_analysis": "An analysis of the module's relationship to {phenotype}, including known associations or hypotheses about potential impacts. Each major claim MUST be supported by references in square brackets[1,2]. The analysis MUST include a 'References:' section listing all cited references in Nature journal format.",
+  "confidence_score": "A value between 0.00 and 1.00"
 }
+
 When generating your answer, pay attention to the following:
 
-module_name should be concise and descriptive, highlighting the core biological process or disease relevance.
-summary should include:
-The central biological function or process.
-Key {query_molecules} and their roles within the identified pathways.
-Insights from the provided articles or research (if provided).
-phenotype_analysis should include:
-- Known associations between the module and {phenotype}.
-- If direct evidence is limited, a plausible hypothesis about how the module might impact {phenotype} based on pathway functions.
-- Potential mechanisms of influence on {phenotype}. 
-- Suggestions for experimental validation if appropriate.
-confidence_score should reflect how well the {query_molecules} and pathways associated with each other and support a coherent biological process, with 1.00 indicating very high confidence and 0.00 indicating minimal or no overlap.
+- module_name should be concise and descriptive, highlighting the core biological process or disease relevance.
+- summary MUST include:
+  * The central biological function or process
+  * Key {query_molecules} and their roles within the identified pathways
+  * Insights from the provided articles or research (if provided)
+  * Each major claim MUST be supported by citations using numbers in square brackets [1,2]
+  * A "References:" section MUST be included after the main text, containing:
+    - All cited references in Nature journal format
+    - Author names (et al. for more than 5 authors)
+    - Title of paper
+    - Journal name
+    - Volume number
+    - Page numbers
+    - Year in parentheses
+    Example:
+    "References:
+    1. Smith, J. et al. Title of paper. Nature 123, 45-67 (2023)."
+
+- phenotype_analysis MUST include:
+  * Known associations between the module and {phenotype}
+  * If direct evidence is limited, a plausible hypothesis about impacts
+  * Potential mechanisms of influence on {phenotype}
+  * Suggestions for experimental validation if appropriate
+  * Each major claim MUST be supported by citations using numbers in square brackets [1,2]
+  * A "References:" section MUST be included after the main text, formatted as described above
+
+- confidence_score should reflect how well the {query_molecules} and pathways are associated with each other and with {phenotype}, with 1.00 indicating very high confidence and 0.00 indicating minimal or no overlap.

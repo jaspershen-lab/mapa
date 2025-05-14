@@ -106,11 +106,13 @@
 #' @seealso [`create_relation_network()`]
 #'
 #' @examples
+#' \dontrun{
 #' # After merge_pathways() and merge_modules():
 #' plot_relationship_network(my_fmod,
 #'                           llm_text      = TRUE,
 #'                           include_modules = FALSE,
 #'                           molecule_text   = TRUE)
+#'}
 #'
 #' @import ggplot2
 #' @import dplyr

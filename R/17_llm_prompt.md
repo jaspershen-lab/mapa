@@ -38,7 +38,9 @@ Text: Overexpression of receptor tyrosine kinases like DDR2, RET, and PDGFRA cor
 ## **Example Output**
 {
   "module_name": "Receptor Tyrosine Kinase Signaling in Fibrosis and Cancer",
-  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2’s central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression. Additionally, DDR2-mediated PIK3C2α signaling has been implicated in fibroblast function and fibrosis, presenting a potential therapeutic target."
+  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2's central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression[1].
+  References:
+  1. Ling, S., Kwak, D. & Kim, K. K. Inhibition of discoidin domain receptor 2 reveals kinase-dependent and kinase-independent functions in regulating fibroblast activity. Am. J. Physiol.-Lung Cell. Mol. Physiol. 325, L342–L351 (2023).",
   "confidence_score": "0.95"
 }
 
@@ -52,14 +54,28 @@ Please provide your response in **JSON format**, strictly following this structu
 
 {
   "module_name": "Your concise module name here",
-  "summary": "A detailed, literature-integrated explanation of the module's function, key {query_molecules}, and relevant biological processes.",
-  "confidence_score": "A value between 0.00 and 1.00, based on {query_molecules}-pathway association and overall functional coherence."
+  "summary": "A detailed, literature-integrated explanation of the module's function, key {query_molecules}, and relevant biological processes. Each major claim should be supported by references in square brackets[1,2]. The summary MUST be followed by a 'References:' section listing all cited references in Nature journal format.",
+  "confidence_score": "A value between 0.00 and 1.00"
 }
+
 When generating your answer, pay attention to the following:
 
-module_name should be concise and descriptive, highlighting the core biological process or disease relevance.
-summary should include:
-The central biological function or process.
-Key {query_molecules} and their roles within the identified pathways.
-Insights from the provided articles or research (if provided).
-confidence_score should reflect how well the {query_molecules} and pathways associated with each other and support a coherent biological process, with 1.00 indicating very high confidence and 0.00 indicating minimal or no overlap.
+- module_name should be concise and descriptive, highlighting the core biological process or disease relevance.
+- summary MUST include:
+  * The central biological function or process
+  * Key {query_molecules} and their roles within the identified pathways
+  * Insights from the provided articles or research (if provided)
+  * Each major claim MUST be supported by citations using numbers in square brackets [1,2]
+  * A "References:" section MUST be included after the main text, containing:
+    - All cited references in Nature journal format
+    - Author names (et al. for more than 5 authors)
+    - Title of paper
+    - Journal name
+    - Volume number
+    - Page numbers
+    - Year in parentheses
+    Example format:
+    "References:
+    1. Smith, J. et al. Title of paper. Nature 123, 45-67 (2023).
+    2. Jones, R. et al. Another paper title. Cell 456, 89-101 (2023)."
+- confidence_score should reflect how well the {query_molecules} and pathways are associated

@@ -12,6 +12,7 @@
 #     llm_model = "gpt-4o-mini-2024-07-18",
 #     embedding_model = "text-embedding-3-small",
 #     api_key = api_key,
+#     phenotype = "pregnancy",
 #     embedding_output_dir = "demo_data/pregnancy_data/results/results_biotext/embedding_output/"
 #   )
 
