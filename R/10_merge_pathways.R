@@ -15,27 +15,6 @@
 #
 # load("result/enriched_pathways")
 #
-# object = enriched_pathways
-# p.adjust.cutoff.go = 0.05
-# p.adjust.cutoff.kegg = 0.05
-# p.adjust.cutoff.reactome = 0.05
-# count.cutoff.go = 5
-# count.cutoff.kegg = 5
-# count.cutoff.reactome = 5
-# sim.cutoff.go = 0.5
-# sim.cutoff.kegg = 0.5
-# sim.cutoff.reactome = 0.5
-# measure.method.go = "Sim_Wang_2007"
-# measure.method.kegg = "jaccard"
-# measure.method.reactome = "jaccard"
-# path = "result"
-# save_to_local = FALSE
-# control.method.go = list(contribution_factor = c("is_a" = 0.8,
-#                                        "part_of" = 0.6,
-#                                        "regulates" = 0.7,
-#                                        "negatively_regulates" = 0.75,
-#                                        "positively_regulates" = 0.75))
-#
 # enriched_modules <-
 #   merge_pathways(
 #     object = enriched_pathways,
@@ -85,21 +64,10 @@
 # save(enriched_modules, file = "result/enriched_modules")
 
 # ##GSEA analysis results
-# setwd(r4projects::get_project_wd())
-# source("R/6_utils.R")
-# source("R/8_functional_module_class.R")
-# setwd("demo_data/covid_data/")
-# library(ggraph)
-# library(igraph)
-# library(tidygraph)
-# library(tidyverse)
-# library(extrafont)
-# # library(GOSim)
-# library(plyr)
-#
 # load("result/gsea_pathways")
 #
 # object = gsea_pathways
+# database = c("go", "kegg", "reactome")
 # p.adjust.cutoff.go = 0.05
 # p.adjust.cutoff.kegg = 0.05
 # p.adjust.cutoff.reactome = 0.05
@@ -114,10 +82,11 @@
 # measure.method.reactome = "jaccard"
 # path = "result"
 # save_to_local = FALSE
-#
+
 # gsea_enriched_modules <-
 #   merge_pathways(
 #     object = gsea_pathways,
+#     database = c("go", "kegg", "reactome"),
 #     p.adjust.cutoff.go = 0.05,
 #     p.adjust.cutoff.kegg = 0.05,
 #     p.adjust.cutoff.reactome = 0.05,
@@ -187,7 +156,7 @@
 
 merge_pathways <-
   function(object,
-           database = NULL,
+           database = c("go", "kegg", "reactome", "hmdb"),
            p.adjust.cutoff.go = 0.05,
            p.adjust.cutoff.kegg = 0.05,
            p.adjust.cutoff.reactome = 0.05,
@@ -213,7 +182,13 @@ merge_pathways <-
            path = "result",
            save_to_local = FALSE) {
 
-    query_type <- object@process_info$enrich_pathway@parameter$query_type
+    if ("enrich_pathway" %in% names(object@process_info)) {
+      analysis_type <- "enrich_pathway"
+      query_type <- object@process_info$enrich_pathway@parameter$query_type
+    } else{
+      analysis_type <- "do_gsea"
+      query_type <- object@process_info$do_gsea@parameter$query_type
+    }
 
     if (query_type == "gene" && missing(database)) {
       stop("Please specify databases to merge pathways.")
@@ -256,12 +231,6 @@ merge_pathways <-
 
     if (!is(object, "functional_module")) {
       stop("object must be result from enrich_pathway function")
-    }
-
-    if ("enrich_pathway" %in% names(object@process_info)) {
-      analysis_type <- "enrich_pathway"
-    } else{
-      analysis_type <- "do_gsea"
     }
 
     if (save_to_local) {
@@ -776,7 +745,6 @@ merge_pathways_internal <-
 #' @importFrom purrr map
 #' @importFrom plyr dlply
 #' @export
-
 
 identify_modules <-
   function(sim_matrix,

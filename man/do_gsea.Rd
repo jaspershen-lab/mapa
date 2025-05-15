@@ -6,20 +6,21 @@
 \usage{
 do_gsea(
   variable_info,
+  query_type = "gene",
   order_by = "fc",
   database = c("go", "kegg", "reactome"),
   save_to_local = FALSE,
   path = "result",
-  OrgDb,
-  organism = "hsa",
-  keyType = "ENTREZID",
+  go.orgdb = NULL,
+  go.keytype = "ENTREZID",
+  go.ont = "ALL",
+  kegg.organism = "hsa",
+  kegg.keytype = "kegg",
+  reactome.organism = "human",
   exponent = 1,
   eps = 1e-10,
   verbose = TRUE,
   seed = FALSE,
-  by = "fgsea",
-  use_internal_data = FALSE,
-  ont = "ALL",
   pvalueCutoff = 0.05,
   pAdjustMethod = "BH",
   qvalueCutoff = 0.2,
@@ -30,97 +31,60 @@ do_gsea(
 )
 }
 \arguments{
-\item{variable_info}{A data frame containing variable information, including gene identifiers
-and associated statistics.}
+\item{variable_info}{A data frame containing variable information.}
 
-\item{order_by}{A character string specifying the column name in \code{variable_info} to order genes by.
-Default is \code{"fc"}.}
+\item{query_type}{Character, the category of biological entity to query. Must be one of:
+\itemize{
+\item "gene": for gene/protein-based enrichment
+\item "metabolite": for metabolite-based enrichment (currently unusable)
+}}
 
-\item{database}{A character vector specifying the databases to use for enrichment analysis.
-Options are \code{"go"}, \code{"kegg"}, and \code{"reactome"}.}
+\item{order_by}{Column name to order genes by. Default is "fc".}
 
-\item{save_to_local}{Logical value indicating whether to save the results locally.
-Default is \code{FALSE}.}
+\item{database}{Databases to use: "go", "kegg", "reactome".}
 
-\item{path}{A character string specifying the directory path to save results if \code{save_to_local} is \code{TRUE}.
-Default is \code{"result"}.}
+\item{save_to_local}{Save results locally. Default is FALSE.}
 
-\item{OrgDb}{An \code{OrgDb} object for the organism of interest. Required if \code{"go"} is included in \code{database}.}
+\item{path}{Directory to save results. Default is "result".}
 
-\item{organism}{A character string specifying the organism code (e.g., \code{"hsa"} for human).
-Default is \code{"hsa"}.}
+\item{go.orgdb}{OrgDb object for GO analysis.}
 
-\item{keyType}{A character string specifying the type of gene identifiers used.
-Default is \code{"ENTREZID"}.}
+\item{go.keytype}{Key type for GO. Default is "ENTREZID".}
 
-\item{exponent}{Numeric value specifying the exponent in the GSEA algorithm.
-Default is \code{1}.}
+\item{go.ont}{GO ontology to use. Default is "ALL".}
 
-\item{eps}{Numeric value specifying the tolerance in the GSEA calculation.
-Default is \code{1e-10}.}
+\item{kegg.organism}{Organism code for KEGG. Default is "hsa".}
 
-\item{verbose}{Logical value indicating whether to print messages during the analysis.
-Default is \code{TRUE}.}
+\item{kegg.keytype}{Key type for KEGG. Default is "kegg".}
 
-\item{seed}{Logical value indicating whether to set a random seed for reproducibility.
-Default is \code{FALSE}.}
+\item{reactome.organism}{Organism for Reactome. Default is "human".
+Supported values: "human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly".}
 
-\item{by}{Character string specifying the method to combine p-values.
-Default is \code{"fgsea"}.}
+\item{exponent}{GSEA ranking exponent. Default is 1.}
 
-\item{use_internal_data}{Logical value indicating whether to use internal data for KEGG analysis.
-Default is \code{FALSE}.}
+\item{eps}{Tolerance value. Default is 1e-10.}
 
-\item{ont}{Character string specifying the ontology to use in GO analysis.
-Default is \code{"ALL"}.}
+\item{verbose}{Print messages. Default is TRUE.}
 
-\item{pvalueCutoff}{Numeric value specifying the p-value cutoff for significance.
-Default is \code{0.05}.}
+\item{seed}{Set random seed. Default is FALSE.}
 
-\item{pAdjustMethod}{Character string specifying the method for p-value adjustment.
-Default is \code{"BH"}.}
+\item{pvalueCutoff}{P-value cutoff. Default is 0.05.}
 
-\item{qvalueCutoff}{Numeric value specifying the q-value cutoff for significance.
-Default is \code{0.2}.}
+\item{pAdjustMethod}{P-value adjustment method. Default is "BH".}
 
-\item{minGSSize}{Integer specifying the minimum size of gene sets to include in the analysis.
-Default is \code{10}.}
+\item{qvalueCutoff}{Q-value cutoff. Default is 0.2.}
 
-\item{maxGSSize}{Integer specifying the maximum size of gene sets to include in the analysis.
-Default is \code{500}.}
+\item{minGSSize}{Minimum gene set size. Default is 10.}
 
-\item{readable}{Logical value indicating whether to convert gene IDs to gene Symbols in the results.
-Default is \code{FALSE}.}
+\item{maxGSSize}{Maximum gene set size. Default is 500.}
 
-\item{...}{Additional arguments passed to the enrichment functions.}
+\item{readable}{Convert IDs to symbols. Default is FALSE.}
+
+\item{...}{Additional arguments}
 }
 \value{
-An object of class \code{functional_module} containing the enrichment analysis results.
+A functional_module object containing enrichment results
 }
 \description{
-This function performs Gene Set Enrichment Analysis using specified databases (GO, KEGG, Reactome)
-on provided variable information.
-}
-\examples{
-\dontrun{
-# Example usage:
-variable_info <- data.frame(
-  entrezid = c("1", "2", "3"),
-  uniprot = c("P12345", "Q67890", "A1B2C3"),
-  fc = c(2.5, -1.3, 0.8)
-)
-
-library(org.Hs.eg.db)
-result <- do_gsea(
-  variable_info = variable_info,
-  order_by = "fc",
-  database = c("go", "kegg"),
-  OrgDb = org.Hs.eg.db,
-  organism = "hsa"
-)
-}
-
-}
-\author{
-Xiaotao Shen \email{xiaotao.shen@outlook.com}
+Perform Gene Set Enrichment Analysis (GSEA)
 }

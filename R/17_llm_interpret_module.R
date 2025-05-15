@@ -21,8 +21,9 @@
 #   llm_interpret_module(
 #     object = enriched_functional_module,
 #     api_key = api_key,
-#     embedding_output_dir = "demo_data/updated_object_results_for_genes/gene_overlap_result/embedding_output/"
-#   )
+#     orgdb = org.Hs.eg.db,
+#     embedding_output_dir = "demo_data/updated_object_results_for_genes_gsea/biotext_sim_res/embedding_output/"
+# )
 
 #' Interpret Functional Module using LLM Integrated with RAG Strategy
 #'
@@ -52,7 +53,6 @@
 #'
 #' @importFrom methods is
 #' @importFrom dplyr filter mutate
-#' @import org.Hs.eg.db
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}

@@ -19,7 +19,7 @@
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10) { 
+pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10) {
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(min(detectCores()-1, 10))  # Creates clusters based on available cores
     parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search"))
@@ -28,13 +28,13 @@ pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10
       library(rentrez)
       library(curl)
     })
-    
+
     results <- parallel::parLapply(cl, names(processed_data), function(module_name) {
       module <- processed_data[[module_name]]
       result <- process_module(module_name, module, chunk_size, years, retmax)
       return(result)
     })
-    
+
     parallel::stopCluster(cl)
   } else {
     results <- pbmcapply::pbmclapply(names(processed_data), function(module_name) {
@@ -43,11 +43,11 @@ pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10
       return(result)
     }, mc.cores = parallel::detectCores() - 1)
   }
-  
+
   for (result in results) {
     processed_data[[result$module_name]]$PubmedIDs <- result$PubmedIDs
   }
-  
+
   return(processed_data)
 }
 
@@ -85,12 +85,12 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
     ## Generate query
     pathway_query <- paste(paste0("\"", pathway_names, "\""), collapse = " OR ")
     ## Perform PubMed search with query (gene_symbol AND pathway_names)
-    gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax)
+    gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
     ## Perform PubMed search with query (gene_name AND pathway_names)
-    gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax)
-    
+    gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+
     pmids <- unique(c(gene_symbol_ids, gene_name_ids))
-    
+
   } else if (length(module) == 5) { # For metabolites
     pathway_names <- paste0("\"", module$PathwayNames, "\"")
     met_names <- paste0("\"", module$MetNames_vec, "\"")
@@ -98,11 +98,11 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
     pathway_query <- paste(pathway_names, collapse = " OR ")
 
     ## Perform PubMed search with query (met_name AND pathway_names)
-    met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax)
-    
+    met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+
     pmids <- met_name_ids
   }
-  
+
   return(list(module_name = module_name, PubmedIDs = pmids))
 }
 
@@ -117,6 +117,7 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
 #' @param pathway_query A character string representing the pathway part of the query.
 #' @param years An integer specifying how many years to look back in the search.
 #' @param retmax An integer specifying the maximum number of results to retrieve.
+#' @param chunk_size An integer specifying the size of query chunks.
 #'
 #' @return A character vector of unique PubMed IDs retrieved from the search.
 #'
@@ -126,14 +127,15 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-perform_query <- function(query_terms, 
-                          pathway_query, 
+perform_query <- function(query_terms,
+                          pathway_query,
                           years,
-                          retmax) {
+                          retmax,
+                          chunk_size) {
   search_ids <- c()
   full_query <- paste("(", paste(query_terms, collapse = " OR "), ")", "AND", "(", pathway_query, ")", sep = " ")
   result <- safe_entrez_search(db = "pubmed", term = full_query, retmax = retmax, years = years)
-  
+
   if (!is.null(result)) {
     search_ids <- c(search_ids, result$ids)
   } else {
@@ -142,7 +144,7 @@ perform_query <- function(query_terms,
       term_chunk <- query_terms[i:min(i + chunk_size - 1, length(query_terms))]
       term_query <- paste(term_chunk, collapse = " OR ")
       chunk_query <- paste("(", term_query, ")", "AND", "(", pathway_query, ")", sep = " ")
-      
+
       chunk_result <- safe_entrez_search(db = "pubmed", term = chunk_query, retmax = retmax, years = years)
       if (!is.null(chunk_result)) {
         search_ids <- c(search_ids, chunk_result$ids)
@@ -158,13 +160,13 @@ perform_query <- function(query_terms,
       }
     }
   }
-  
+
   return(unique(search_ids))
 }
 
 #' Safely Perform an Entrez Search with Retries
 #'
-#' This internal function performs a PubMed search using Entrez with a specified number 
+#' This internal function performs a PubMed search using Entrez with a specified number
 #' of retries and pauses between attempts. It also handles date filtering using the years
 #' parameter to limit search results to recent publications.
 #'
@@ -180,7 +182,7 @@ perform_query <- function(query_terms,
 #' @importFrom rentrez entrez_search
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
-#' 
+#'
 #' @keywords internal
 
 safe_entrez_search <- function(db, term, retmax = 10, retries = 3, pause = 5, years = 5) {
@@ -193,7 +195,7 @@ safe_entrez_search <- function(db, term, retmax = 10, retries = 3, pause = 5, ye
     date_filter <- paste0(start_year, "[PDAT] : ", format(Sys.Date(), "%Y"), "[PDAT]")
     term <- paste0("(", term, ") AND (", date_filter, ")")  # Fix: Proper AND and parentheses
   }
-  
+
   attempt <- 1
   while (attempt <= retries) {
     result <- tryCatch({

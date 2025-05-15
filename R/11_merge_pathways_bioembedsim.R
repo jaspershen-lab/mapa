@@ -10,7 +10,7 @@
 #     cluster_method = "girvan newman",
 #     sim.cutoff = 0.5,
 #     save_to_local = FALSE
-#   )
+# )
 
 # For metabolite
 # object <- openai_sim_matrix_met
@@ -143,9 +143,10 @@ merge_pathways_bioembedsim <-
       if (!is.null(object$enriched_pathway@enrichment_kegg_result)) {
         result <-
           object$enriched_pathway@enrichment_kegg_result@result %>%
-          dplyr::select(-c(category, subcategory)) %>%
-          dplyr::filter(p_adjust < parameters$p.adjust.cutoff.kegg) %>%
-          dplyr::filter(Count > parameters$count.cutoff.kegg) %>%
+          {if ("enrich_pathway" %in% names(object$enriched_pathway@process_info))
+            dplyr::select(., -c(category, subcategory)) else .} %>%
+          dplyr::filter(.data$p_adjust < parameters$p.adjust.cutoff.kegg,
+                 .data$Count > parameters$count.cutoff.kegg) %>%
           dplyr::mutate(database = "KEGG") %>%
           rbind(result)
       }

@@ -35,18 +35,18 @@
 #
 # GSEA result
 # plot_similarity_network(
-#   object = gsea_enriched_functional_module,
+#   object = functional_module_annotation,
+#   llm_text = TRUE,
 #   level = "functional_module",
-#   database = "go",
-#   degree_cutoff = 1,
-#   module_id = "Functional_module_2"
+#   module_id = "Functional_module_4"
+#   # degree_cutoff = 5
 # )
 #
 # plot_similarity_network(
 #   object = gsea_enriched_functional_module,
 #   level = "module",
 #   degree_cutoff = 2,
-#   database = "go",
+#   database = "reactome",
 # )
 #
 # metabolite

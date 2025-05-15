@@ -73,7 +73,7 @@ stored in a \strong{functional_module} object.
 \dontrun{
 # After merge_pathways() and merge_modules():
 plot_relationship_network(my_fmod,
-                          llm_text      = TRUE,
+                          llm_text = TRUE,
                           include_modules = FALSE,
                           molecule_text   = TRUE)
 }

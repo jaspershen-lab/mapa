@@ -6,7 +6,7 @@
 \usage{
 merge_pathways(
   object,
-  database = NULL,
+  database = c("go", "kegg", "reactome", "hmdb"),
   p.adjust.cutoff.go = 0.05,
   p.adjust.cutoff.kegg = 0.05,
   p.adjust.cutoff.reactome = 0.05,

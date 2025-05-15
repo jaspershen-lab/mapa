@@ -54,7 +54,7 @@
 # showtext_auto(enable = TRUE)
 #
 # plot_pathway_bar(
-#   object = gsea_pathways,
+#   object = object,
 #   top_n = 10,
 #   y_label_width = 30,
 #   level = "pathway",
@@ -69,15 +69,14 @@
 #   line_type = "meteor"
 # )
 #
-#
 # plot_pathway_bar(
-#   object = enriched_functional_module,
-#   x_axis_name = "qscore",
+#   object = functional_module_annotation,
 #   top_n = 10,
 #   y_label_width = 30,
-#   # level = "functional_module",
-#   level = "module",
-#   line_type = "straight"
+#   level = "functional_module",
+#   # level = "module",
+#   line_type = "straight",
+#   llm_text = TRUE
 # )
 #
 # Metabolite enrichment result
@@ -928,13 +927,13 @@ plot4pathway_enrichment <-
               y = "",
               x = x_axis_name,
               size = "Gene number",
-              fill = "Database"
+              color = "Database"
             ) +
             #geom_vline(xintercept = 0) +
             theme(panel.grid.minor = element_blank(),
                   axis.ticks.y = element_blank(),
                   plot.title = element_text(hjust = 0.5)) +
-            guides(fill = guide_legend(override.aes = list(size = 5)))
+            guides(color = guide_legend(override.aes = list(size = 5)))
 
         } else if (query_type == "metabolite") {
           plot <-
@@ -996,13 +995,13 @@ plot4pathway_enrichment <-
               y = "",
               x = "qscore",
               size = "Gene number",
-              fill = "Database"
+              color = "Database"
             ) +
             #geom_vline(xintercept = 0) +
             theme(panel.grid.minor = element_blank(),
                   axis.ticks.y = element_blank(),
                   plot.title = element_text(hjust = 0.5)) +
-            guides(fill = guide_legend(override.aes = list(size = 5)))
+            guides(color = guide_legend(override.aes = list(size = 5)))
         }
       }
 
@@ -1055,13 +1054,13 @@ plot4pathway_enrichment <-
             y = "",
             x = "NES",
             size = "Gene number",
-            fill = "Database"
+            color = "Database"
           ) +
           geom_vline(xintercept = 0) +
           theme(panel.grid.minor = element_blank(),
                 axis.ticks.y = element_blank(),
                 plot.title = element_text(hjust = 0.5)) +
-          guides(fill = guide_legend(override.aes = list(size = 5)))
+          guides(color = guide_legend(override.aes = list(size = 5)))
       }
 
     }

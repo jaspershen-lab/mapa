@@ -4,7 +4,7 @@
 \alias{perform_query}
 \title{Perform PubMed Query with Terms and Pathway Information}
 \usage{
-perform_query(query_terms, pathway_query, years, retmax)
+perform_query(query_terms, pathway_query, years, retmax, chunk_size)
 }
 \arguments{
 \item{query_terms}{A character vector of query terms (e.g., gene symbols, gene names, metabolite names).}
@@ -14,6 +14,8 @@ perform_query(query_terms, pathway_query, years, retmax)
 \item{years}{An integer specifying how many years to look back in the search.}
 
 \item{retmax}{An integer specifying the maximum number of results to retrieve.}
+
+\item{chunk_size}{An integer specifying the size of query chunks.}
 }
 \value{
 A character vector of unique PubMed IDs retrieved from the search.

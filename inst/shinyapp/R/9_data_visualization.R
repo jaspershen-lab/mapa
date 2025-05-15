@@ -414,8 +414,7 @@ data_visualization_ui <- function(id) {
                                     choices = c("GO" = "go",
                                                 "KEGG" = "kegg",
                                                 "Reactome" = "reactome"),
-                                    selected = "go",
-                                    multiple = TRUE)
+                                    selected = "go")
                            )
                          ),
                          fluidRow(
@@ -647,7 +646,7 @@ data_visualization_ui <- function(id) {
                                                value = 3, min = 0.3, max = 10)
                            )
                          ),
-                         h4("Arrange posision"),
+                         h4("Arrange position"),
                          fluidRow(
                            column(3,
                                   checkboxInput(ns("relationship_network_functional_module_arrange_position"),
@@ -666,7 +665,7 @@ data_visualization_ui <- function(id) {
                                                 "Molecules", FALSE)
                            )
                          ),
-                         h4("Posision limits"),
+                         h4("Position limits"),
                          fluidRow(
                            column(6,
                                   sliderInput(

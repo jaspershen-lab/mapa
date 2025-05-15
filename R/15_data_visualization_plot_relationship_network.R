@@ -12,7 +12,7 @@
 # object <-
 #   enriched_functional_module
 # object <-
-#   gsea_enriched_functional_module
+#   functional_module_annotation
 # object <- enriched_functional_module_met
 #
 # object <- llm_interpreted_enriched_functional_module
@@ -23,7 +23,7 @@
 # {
   # include_functional_modules = TRUE
   # llm_text = TRUE
-  # include_modules = FALSE
+  # include_modules = TRUE
   # include_pathways = TRUE
   # include_molecules = FALSE
   # functional_module_color = "#F05C3BFF"
@@ -109,7 +109,7 @@
 #' \dontrun{
 #' # After merge_pathways() and merge_modules():
 #' plot_relationship_network(my_fmod,
-#'                           llm_text      = TRUE,
+#'                           llm_text = TRUE,
 #'                           include_modules = FALSE,
 #'                           molecule_text   = TRUE)
 #'}
@@ -1185,7 +1185,7 @@ create_relation_network <-
     # }
 
     ## 6. module vs molecule ====
-    if (analysis_type == "do_gsea") {
+    if (analysis_type == "do_gsea" && include_modules) {
       object@merged_pathway_go$module_result <-
         object@merged_pathway_go$module_result %>%
         dplyr::mutate(geneID = core_enrichment)

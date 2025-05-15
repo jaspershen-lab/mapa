@@ -18,36 +18,8 @@
 # library(curl)
 # library(jsonlite)
 # library(rtiktoken)
-
-# go_line <- sample(1:nrow(object@enrichment_go_result@result), 10)
-# kegg_line <- sample(1:nrow(object@enrichment_kegg_result@result), 10)
-# reactome_line <- sample(1:nrow(object@enrichment_reactome_result@result), 10)
-#
-# demo_data_go <- object@enrichment_go_result@result[go_line,]
-# demo_data_kegg <- object@enrichment_kegg_result@result[kegg_line,]
-# demo_data_reactome <- object@enrichment_reactome_result@result[reactome_line,]
-#
-# demo_go_info <- get_go_info(go_ids = demo_data_go$ID)
-# go_text_info <- get_ttl_abstr(data = demo_go_info)
-# demo_kegg_info <- get_kegg_info(kegg_ids = demo_data_kegg$ID)
-# kegg_text_info <- get_ttl_abstr(data = demo_kegg_info)
-# demo_reactome_info <- get_reactome_info(reactome_ids = demo_data_reactome$ID)
-# reactome_text_info <- get_ttl_abstr(data = demo_reactome_info)
-# all_text_info <- c(go_text_info, kegg_text_info, reactome_text_info)
-
-# go_info <- get_go_info(go_ids = object@enrichment_go_result@result$ID, include_gene_name = FALSE)
-# kegg_info <- get_kegg_info(kegg_ids = object@enrichment_kegg_result@result$ID, include_gene_name = FALSE)
-# reactome_info <- get_reactome_info(reactome_ids = object@enrichment_reactome_result@result$ID, include_gene_name = FALSE)
-# all_text_info <- c(go_info, kegg_info, reactome_info)
-# all_combined_info <- combine_info(info = all_text_info, include_gene_name = FALSE)
-
-# go_info <- get_go_info(go_ids = object@enrichment_go_result@result$ID, include_gene_name = TRUE)
-# kegg_info <- get_kegg_info(kegg_ids = object@enrichment_kegg_result@result$ID, include_gene_name = TRUE)
-# reactome_info <- get_reactome_info(reactome_ids = object@enrichment_reactome_result@result$ID, include_gene_name = TRUE)
-# all_text_info <- c(go_info, kegg_info, reactome_info)
-# all_combined_info <- combine_info(info = all_text_info, include_gene_name = TRUE)
-
 # For genes
+## ORA
 # openai_semantic_sim_matrix <-
 #   get_bioembedsim(object = enriched_pathways,
 #                   api_provider = "openai",
@@ -55,7 +27,14 @@
 #                   api_key = api_key,
 #                   save_to_local = FALSE)
 # gemini_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "gemini",  text_embedding_model = "text-embedding-004", api_key = api_key)
-
+## GSEA
+# openai_semantic_sim_matrix <-
+#   get_bioembedsim(object = gsea_pathways,
+#                   # database = c("go", "kegg", "reactome"),
+#                   api_provider = "openai",
+#                   text_embedding_model = "text-embedding-3-small",
+#                   api_key = api_key,
+#                   save_to_local = FALSE)
 # For metabolites
 # openai_sim_matrix_met <-
 #   get_bioembedsim(object = enriched_pathways,
@@ -171,7 +150,11 @@ get_bioembedsim <-
       stop("object must be result from enrich_pathway function")
     }
 
-    query_type <- object@process_info$enrich_pathway@parameter$query_type
+    if ("enrich_pathway" %in% names(object@process_info)) {
+      query_type <- object@process_info$enrich_pathway@parameter$query_type
+    } else{
+      query_type <- object@process_info$do_gsea@parameter$query_type
+    }
 
     if (missing(api_provider)) {
       stop("api_provider is required.")

@@ -94,12 +94,12 @@ merge_modules <-
       stop("Use merge_pathways() function to process first")
     }
 
-    query_type <- object@process_info$enrich_pathway@parameter$query_type
-
     if ("enrich_pathway" %in% names(object@process_info)) {
       analysis_type <- "enrich_pathway"
+      query_type <- object@process_info$enrich_pathway@parameter$query_type
     } else{
       analysis_type <- "do_gsea"
+      query_type <- object@process_info$do_gsea@parameter$query_type
     }
 
     ######calculate the similarity (jaccard index) between all the pathways
