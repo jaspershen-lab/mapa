@@ -151,15 +151,15 @@ data_visualization_ui <- function(id) {
                              id = ns("db_color_panel_gene"),
                              fluidRow(
                                column(8,
-                                      checkboxGroupInput(ns("barplot_database"),
+                                      selectInput(ns("gene_barplot_database"),
                                                          "Database",
                                                          choices = c(
                                                            "GO" = "go",
                                                            "KEGG" = "kegg",
                                                            "Reactome" = "reactome"
                                                          ),
-                                                         selected = NULL,
-                                                         inline = TRUE)
+                                                  selected = NULL,
+                                                  multiple = TRUE)
                                ) #,
                                # column(4,
                                #        checkboxInput(ns("barplot_translation"), "Translation", FALSE)
@@ -201,14 +201,11 @@ data_visualization_ui <- function(id) {
                              id = ns("db_color_panel_metabolite"),
                              fluidRow(
                                column(8,
-                                      checkboxGroupInput(ns("barplot_database"),
-                                                         "Database",
-                                                         choices = c(
-                                                           "HMDB" = "hmdb",
-                                                           "KEGG" = "kegg"
-                                                         ),
-                                                         selected = NULL,
-                                                         inline = TRUE)
+                                      selectInput(ns("met_barplot_database"),
+                                                  "Database",
+                                                  choices = c("HMDB" = "hmdb", "KEGG" = "metkegg"),
+                                                  selected = NULL,
+                                                  multiple = TRUE)
                                ) #,
                                # column(4,
                                #        checkboxInput(ns("barplot_translation"), "Translation", FALSE)
@@ -302,8 +299,7 @@ data_visualization_ui <- function(id) {
                                     choices = c("GO" = "go",
                                                 "KEGG" = "kegg",
                                                 "Reactome" = "reactome"),
-                                    selected = "go",
-                                    multiple = TRUE)
+                                    selected = "go")
                            ),
                            column(6,
                                   numericInput(
@@ -499,16 +495,16 @@ data_visualization_ui <- function(id) {
                   column(4,
                          br(),
                          fluidRow(
-                           column(4,
+                           column(6,
                                   checkboxInput(ns("relationship_network_circular_plot"),
                                                 "Circular layout", FALSE)
                            ),
-                           column(4,
-                                  checkboxInput(ns("relationship_network_filter"),
-                                                "Filter", FALSE)
-                           ),
-                           column(4,
-                                  checkboxInput(ns("relationship_network_llm_text"), "LLM text", FALSE)
+                           # column(4,
+                           #        checkboxInput(ns("relationship_network_filter"),
+                           #                      "Filter", FALSE)
+                           # ),
+                           column(6,
+                                  checkboxInput(ns("relationship_network_llm_text"), "LLM text", value = TRUE)
                            )
                            # column(4,
                            #        checkboxInput(ns("relationship_network_translation"),
@@ -530,10 +526,11 @@ data_visualization_ui <- function(id) {
                                     ns("relationship_network_module_id"),
                                     "Module ID",
                                     choices = NULL,
-                                    multiple = TRUE)
+                                    multiple = TRUE,
+                                    selected = NULL)
                            )
                          ),
-                         h4("Includes"),
+                         h4("Levels Included"),
                          fluidRow(
                            column(3,
                                   checkboxInput(ns("relationship_network_include_functional_modules"),
@@ -543,7 +540,7 @@ data_visualization_ui <- function(id) {
                                                                                     icon = icon("info"),
                                                                                     style = "info",
                                                                                     size = "extra-small")),
-                                                TRUE)),
+                                                value = TRUE)),
                            bsPopover(
                              id = ns("functional_module_info"),
                              title = "",
@@ -554,15 +551,18 @@ data_visualization_ui <- function(id) {
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_include_modules"),
-                                                "Modules", TRUE)
+                                                "Modules",
+                                                value = TRUE)
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_include_pathways"),
-                                                "Pathways", TRUE)
+                                                "Pathways",
+                                                value = TRUE)
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_include_molecules"),
-                                                "Molecules", TRUE)
+                                                "Molecules",
+                                                value = TRUE)
                            )
                          ),
                          h4("Colors"),
@@ -608,19 +608,23 @@ data_visualization_ui <- function(id) {
                          fluidRow(
                            column(3,
                                   checkboxInput(ns("relationship_network_functional_module_text"),
-                                                "FM", TRUE)
+                                                "FM",
+                                                value = TRUE)
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_module_text"),
-                                                "Module", TRUE)
+                                                "Module",
+                                                value = TRUE)
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_pathway_text"),
-                                                "Pathway", TRUE)
+                                                "Pathway",
+                                                value = TRUE)
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_molecule_text"),
-                                                "Molecules", FALSE)
+                                                "Molecules",
+                                                value = TRUE)
                            )
                          ),
                          h4("Text size"),
@@ -650,19 +654,23 @@ data_visualization_ui <- function(id) {
                          fluidRow(
                            column(3,
                                   checkboxInput(ns("relationship_network_functional_module_arrange_position"),
-                                                "FM", TRUE)
+                                                "FM",
+                                                value = TRUE)
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_module_arrange_position"),
-                                                "Module", TRUE)
+                                                "Module",
+                                                value = TRUE)
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_pathway_arrange_position"),
-                                                "Pathway", TRUE)
+                                                "Pathway",
+                                                value = TRUE)
                            ),
                            column(3,
                                   checkboxInput(ns("relationship_network_molecule_arrange_position"),
-                                                "Molecules", FALSE)
+                                                "Molecules",
+                                                value = TRUE)
                            )
                          ),
                          h4("Position limits"),
@@ -806,13 +814,36 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
 
       observe({
         req(enriched_functional_module())
+        db_choices <- c("GO" = "go", "KEGG" = "kegg", "Reactome" = "reactome", "HMDB" = "hmdb", "KEGG" = "metkegg")
         if ((query_type() == "gene") & ("enrich_pathway" %in% names(enriched_functional_module()@process_info))) {
           all_choices <- c("qscore", "RichFactor", "FoldEnrichment")
+          available_db <- enriched_functional_module()@process_info$enrich_pathway@parameter$database
+          updateSelectInput(
+            session,
+            "gene_barplot_database",
+            choices = db_choices[db_choices %in% available_db],
+            selected = available_db
+          )
         } else if ((query_type() == "gene") & ("do_gsea" %in% names(enriched_functional_module()@process_info))) {
           all_choices <- c("NES")
+          available_db <- enriched_functional_module()@process_info$do_gsea@parameter$database
+          updateSelectInput(
+            session,
+            "gene_barplot_database",
+            choices = db_choices[db_choices %in% available_db],
+            selected = available_db
+          )
         } else if (query_type() == "metabolite") {
           all_choices <- c("qscore")
+          available_db <- enriched_functional_module()@process_info$enrich_pathway@parameter$database
+          updateSelectInput(
+            session,
+            "met_barplot_database",
+            choices = db_choices[db_choices %in% available_db],
+            selected = available_db
+          )
         }
+
         updateSelectInput(
           session,
           "x_axis_name",
@@ -884,6 +915,70 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
         )
       })
 
+      observeEvent(enriched_functional_module(), {
+
+        if (query_type() == "gene") {
+          if (length(c(enriched_functional_module()@merged_pathway_go,
+                       enriched_functional_module()@merged_pathway_kegg,
+                       enriched_functional_module()@merged_pathway_reactome)) == 0) {
+            updateSelectInput(session, "barplot_level",
+                              choices = c("FM" = "functional_module",
+                                          "Pathway" = "pathway"),
+                              selected = "pathway")
+            updateSelectInput(session, "module_similarity_network_level",
+                              choices = c("FM" = "functional_module"),
+                              selected = "functional_module")
+            updateSelectInput(session, "module_information_level",
+                              choices = c("FM" = "functional_module"),
+                              selected = "functional_module")
+            updateSelectInput(session, "relationship_network_level", choices = c("FM" = "functional_module"), selected = "functional_module")
+            updateCheckboxInput(session, "relationship_network_include_modules", value = FALSE)
+            disable("relationship_network_include_modules")
+            updateCheckboxInput(session, "relationship_network_module_text", value = FALSE)
+            disable("relationship_network_module_text")
+            updateCheckboxInput(session, "relationship_network_module_arrange_position", value = FALSE)
+            disable("relationship_network_module_arrange_position")
+          }
+        } else if (query_type() == "metabolite") {
+          if (length(c(enriched_functional_module()@merged_pathway_hmdb,
+                       enriched_functional_module()@merged_pathway_metkegg)) == 0) {
+            updateSelectInput(session, "barplot_level",
+                              choices = c("FM" = "functional_module",
+                                          "Pathway" = "pathway"),
+                              selected = "pathway")
+            updateSelectInput(session, "module_similarity_network_level",
+                              choices = c("FM" = "functional_module"),
+                              selected = "functional_module")
+            updateSelectInput(session, "module_information_level",
+                              choices = c("FM" = "functional_module"),
+                              selected = "functional_module")
+            updateSelectInput(session, "relationship_network_level", choices = c("FM" = "functional_module"), selected = "functional_module")
+            updateCheckboxInput(session, "relationship_network_include_modules", value = FALSE)
+            disable("relationship_network_include_modules")
+            updateCheckboxInput(session, "relationship_network_module_text", value = FALSE)
+            disable("relationship_network_module_text")
+            updateCheckboxInput(session, "relationship_network_module_arrange_position", value = FALSE)
+            disable("relationship_network_module_arrange_position")
+          }
+        }
+
+        if (length(enriched_functional_module()@llm_module_interpretation) == 0) {
+          updateCheckboxInput(session, "barplot_llm_text", value = FALSE)
+          disable("barplot_llm_text")
+          updateCheckboxInput(session, "module_similarity_network_llm_text", value = FALSE)
+          disable("module_similarity_network_llm_text")
+          updateCheckboxInput(session, "module_information_llm_text", value = FALSE)
+          disable("module_information_llm_text")
+          updateCheckboxInput(session, "relationship_network_llm_text", value = FALSE)
+          disable("relationship_network_llm_text")
+        }
+
+        if (input$module_information_level == "functional_module") {
+          updateSelectInput(session, "module_information_database", selected = NULL)
+          disable("module_information_database")
+        }
+      })
+
       ## Barplot ----
       # Observe generate barplot button click
       barplot <-
@@ -918,7 +1013,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                     count.cutoff = input$barplot_count_cutoff,
                     level = input$barplot_level,
                     llm_text = input$barplot_llm_text,
-                    database = input$barplot_database,
+                    database = input$gene_barplot_database,
                     line_type = input$line_type,
                     database_color = c(
                       GO = input$barplot_go_color,
@@ -938,7 +1033,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                     count.cutoff = input$barplot_count_cutoff,
                     level = input$barplot_level,
                     llm_text = input$barplot_llm_text,
-                    database = input$barplot_database,
+                    database = input$met_barplot_database,
                     line_type = input$line_type,
                     database_color = c(
                       HMDB = input$barplot_hmdb_color,
@@ -976,6 +1071,10 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                 sep = " = "
               ),
               collapse = ", "), ")")
+            barplot_database <-
+              paste0("c(", paste(unlist(lapply(paste(input$gene_barplot_database), function(x)
+                paste0('"', x, '"'))),
+                collapse = ", "), ")")
           } else {
             data_color <-
               paste0("c(", paste(paste(
@@ -987,12 +1086,11 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                 sep = " = "
               ),
               collapse = ", "), ")")
+            barplot_database <-
+              paste0("c(", paste(unlist(lapply(paste(input$met_barplot_database), function(x)
+                paste0('"', x, '"'))),
+                collapse = ", "), ")")
           }
-
-          barplot_database <-
-            paste0("c(", paste(unlist(lapply(paste(input$barplot_database), function(x)
-              paste0('"', x, '"'))),
-              collapse = ", "), ")")
 
           barplot_code <-
             sprintf(
@@ -1137,7 +1235,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                 showModal(
                   modalDialog(
                     title = "Error",
-                    "Please check your input parameters.",
+                    paste("Details:", e$message),
                     easyClose = TRUE,
                     footer = modalButton("Close")
                   )
@@ -1389,7 +1487,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                   showModal(
                     modalDialog(
                       title = "Error",
-                      "Please check your input parameters.",
+                      paste("Details:", e$message),
                       easyClose = TRUE,
                       footer = modalButton("Close")
                     )
@@ -1528,7 +1626,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
 
       ## Relationship network plot ----
       # Update the module ID
-      observe({
+      observeEvent(list(enriched_functional_module(), input$relationship_network_level),{
         if (!is.null(enriched_functional_module()) &
             length(enriched_functional_module()) != 0) {
           ####level is functional module
@@ -1569,11 +1667,29 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
               relationship_network_module_id_reactome <- NULL
             }
 
+            if (length(enriched_functional_module()@merged_pathway_hmdb) > 0) {
+              relationship_network_module_id_hmdb <-
+                unique(enriched_functional_module()@merged_pathway_hmdb$module_result$module)
+            } else{
+              relationship_network_module_id_hmdb <- NULL
+            }
+
+            if (length(enriched_functional_module()@merged_pathway_metkegg) > 0) {
+              relationship_network_module_id_metkegg <-
+                unique(
+                  enriched_functional_module()@merged_pathway_metkegg$module_result$module
+                )
+            } else{
+              relationship_network_module_id_metkegg <- NULL
+            }
+
             relationship_network_module_id <-
               c(
                 relationship_network_module_id_go,
                 relationship_network_module_id_kegg,
-                relationship_network_module_id_reactome
+                relationship_network_module_id_reactome,
+                relationship_network_module_id_hmdb,
+                relationship_network_module_id_metkegg
               )
           }
 
@@ -1581,7 +1697,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
             session,
             "relationship_network_module_id",
             choices = stringr::str_sort(relationship_network_module_id, numeric = TRUE),
-            selected = stringr::str_sort(relationship_network_module_id, numeric = TRUE)[1]
+            selected = NULL
           )
         }
       })
@@ -1611,7 +1727,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
           ####if filtered by functiobal module and modules
           object <-
             enriched_functional_module()
-          if (input$relationship_network_filter) {
+          if (!is.null(input$relationship_network_module_id)) {
             tryCatch({
               object <-
                 filter_functional_module(
@@ -1679,7 +1795,7 @@ data_visualization_server <- function(id, enriched_functional_module = NULL, tab
                 showModal(
                   modalDialog(
                     title = "Error",
-                    "Please check your input parameters.",
+                    paste("Details:", e$message),
                     easyClose = TRUE,
                     footer = modalButton("Close")
                   )

@@ -18,7 +18,6 @@
 #   merge_pathways_bioembedsim(
 #     object = openai_sim_matrix_met,
 #     cluster_method = "girvan newman",
-#     hclust.method = "complete",
 #     sim.cutoff = 0.5
 #   )
 
@@ -446,12 +445,26 @@ merge_pathways_bioembedsim <-
               x <- x %>%
                 dplyr::mutate(Description = pathway_name)
 
+              # x$mapped_id =
+              #   x$mapped_id %>%
+              #   stringr::str_split(pattern = ";") %>%
+              #   unlist() %>%
+              #   unify_id_internal(variable_info = object$enriched_pathway@variable_info,
+              #                     query_type = "metabolite") %>%
+              #   unique() %>%
+              #   paste(collapse = '/')
               x$mapped_id =
                 x$mapped_id %>%
                 stringr::str_split(pattern = ";") %>%
                 unlist() %>%
-                unify_id_internal(variable_info = object$enriched_pathway@variable_info,
-                                  query_type = "metabolite") %>%
+                {
+                  if (length(object$enriched_pathway@merged_pathway_hmdb) > 0) {
+                    unify_id_internal(., variable_info = object$enriched_pathway@variable_info,
+                                      query_type = "metabolite")
+                  } else {
+                    .
+                  }
+                } %>%
                 unique() %>%
                 paste(collapse = '/')
 
@@ -474,12 +487,26 @@ merge_pathways_bioembedsim <-
             x$p_value <- min(as.numeric(x$p_value))
             x$p_adjust <- min(as.numeric(x$p_adjust))
 
+            # x$mapped_id =
+            #   x$mapped_id %>%
+            #   stringr::str_split(pattern = ";") %>%
+            #   unlist() %>%
+            #   unify_id_internal(variable_info = object$enriched_pathway@variable_info,
+            #                     query_type = "metabolite") %>%
+            #   unique() %>%
+            #   paste(collapse = '/')
             x$mapped_id =
               x$mapped_id %>%
               stringr::str_split(pattern = ";") %>%
               unlist() %>%
-              unify_id_internal(variable_info = object$enriched_pathway@variable_info,
-                                query_type = "metabolite") %>%
+              {
+                if (length(object$enriched_pathway@merged_pathway_hmdb) > 0) {
+                  unify_id_internal(., variable_info = object$enriched_pathway@variable_info,
+                                    query_type = "metabolite")
+                } else {
+                  .
+                }
+              } %>%
               unique() %>%
               paste(collapse = '/')
 

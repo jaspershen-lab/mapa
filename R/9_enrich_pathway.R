@@ -49,6 +49,7 @@
 # variable_info <-
 #   variable_info %>%
 #   dplyr::rename(hmdbid = HMDB.ID)
+
 # id_conversion <-
 #   metpath::hmdb_compound_database@spectra.info %>%
 #   dplyr::select(HMDB.ID, KEGG.ID) %>%
@@ -57,12 +58,13 @@
 # variable_info <-
 #   variable_info %>%
 #   left_join(id_conversion)
-#
+
 # enriched_pathways <-
 #   enrich_pathway(
 #     variable_info = variable_info_up,
 #     query_type = "metabolite",
-#     database = c("hmdb", "kegg"),
+#     met_organism = "hsa",
+#     database = c("metkegg", "hmdb"),
 #     save_to_local = FALSE,
 #     pvalueCutoff = 0.05,
 #     pAdjustMethod = "BH"
@@ -84,7 +86,7 @@
 #'   - "metabolite": for metabolite-based enrichment
 #' @param database Character vector, specify which database(s) to use for enrichment:
 #'   - For genes: 'go', 'kegg', 'reactome'
-#'   - For metabolites: 'hmdb', 'kegg'
+#'   - For metabolites: 'hmdb', 'metkegg'. 'hmdb' is only for human.
 #' @param save_to_local Logical, if TRUE the results will be saved to local disk.
 #' @param path Character, the directory where to save the results if save_to_local is TRUE.
 #'
@@ -114,6 +116,9 @@
 #'   Supported values: "human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly".
 #' @param reactome.universe Numeric vector, the background universe for Reactome enrichment.
 #'   If NULL (default), all genes in Reactome database will be used.
+#'
+#' @param met_organism Character, the organism code for metabolite enrichment.
+#'   Default is "hsa" (human). See 'https://www.genome.jp/kegg/catalog/org_list.html' for supported organism codes.
 #'
 #' @param pvalueCutoff Numeric, the p-value cutoff for enrichment.
 #' @param pAdjustMethod Character, the method for adjusting p-values.
@@ -189,7 +194,7 @@
 #'   enrich_pathway(
 #'     variable_info = met_variable_info,
 #'     query_type = "metabolite",
-#'     database = c("hmdb", "kegg"),
+#'     database = c("hmdb", "metkegg"),
 #'     save_to_local = FALSE,
 #'     pvalueCutoff = 0.05,
 #'     pAdjustMethod = "BH"
@@ -199,7 +204,7 @@
 enrich_pathway <-
   function(variable_info,
            query_type = c("gene", "metabolite"),
-           database = c("go", "kegg", "reactome", "hmdb"),
+           database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
            save_to_local = FALSE,
            path = "result",
            # GO-specific parameters
@@ -213,9 +218,11 @@ enrich_pathway <-
            kegg.keytype = "kegg",
            kegg.universe = NULL,
            # Reactome-specific parameters
-           reactome.organism = c("human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly"),
+           reactome.organism = c("human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly", "bovine", "canine", "chicken"),
            ## reactome input ID should be Entrez ID
            reactome.universe = NULL,
+           # Metabolite specific parameters
+           met_organism = "hsa",
            # Common parameters
            pvalueCutoff = 0.05,
            pAdjustMethod = "BH",
@@ -404,7 +411,8 @@ enrich_pathway <-
         }
       }
     } else if (query_type == "metabolite") {
-      #### Get HMDB and KEGG databases
+      if (met_organism == "hsa") {
+      #### Get HMDB and KEGG databases for human
       dbs <- tryCatch({
         get_met_pathway_db(use_internal_data = TRUE)
       }, error = function(e) {
@@ -412,51 +420,80 @@ enrich_pathway <-
         return(list(hmdb_pathway = NULL, kegg_pathway = NULL))
       })
 
-      #### HMDB pathway enrichment
+      #### HMDB pathway enrichment (human only)
       if ("hmdb" %in% database && !is.null(dbs$hmdb_pathway)) {
         message("HMDB enrichment ...")
         enrichment_hmdb_result <- tryCatch({
-          metpath::enrich_hmdb(
-            query_id = variable_info$hmdbid,
-            query_type = "compound",
-            id_type = "HMDB",
-            pathway_database = dbs$hmdb_pathway,
-            only_primary_pathway = TRUE,
-            p_cutoff = pvalueCutoff,
-            p_adjust_method = pAdjustMethod,
-            threads = 3
-          )
+        metpath::enrich_hmdb(
+          query_id = variable_info$hmdbid,
+          query_type = "compound",
+          id_type = "HMDB",
+          pathway_database = dbs$hmdb_pathway,
+          only_primary_pathway = TRUE,
+          p_cutoff = pvalueCutoff,
+          p_adjust_method = pAdjustMethod,
+          threads = 3
+        )
         }, error = function(e) {
-          warning(paste("HMDB enrichment failed:", e$message))
-          return(NULL)
+        warning(paste("HMDB enrichment failed:", e$message))
+        return(NULL)
         })
 
         if (!is.null(enrichment_hmdb_result)) {
-          data.table::setnames(enrichment_hmdb_result@result, "p_value_adjust", "p_adjust")
+        data.table::setnames(enrichment_hmdb_result@result, "p_value_adjust", "p_adjust")
         }
       }
 
-      #### KEGG pathway enrichment
-      if ("kegg" %in% database && !is.null(dbs$kegg_pathway)) {
-        message("KEGG enrichment ...")
+      #### KEGG pathway enrichment for human
+      if ("metkegg" %in% database && !is.null(dbs$kegg_pathway)) {
+        message("KEGG enrichment for human ...")
+        enrichment_metkegg_result <- tryCatch({
+        metpath::enrich_kegg(
+          query_id = variable_info$keggid,
+          query_type = "compound",
+          id_type = "KEGG",
+          pathway_database = dbs$kegg_pathway,
+          p_cutoff = pvalueCutoff,
+          p_adjust_method = pAdjustMethod,
+          threads = 3
+        )
+        }, error = function(e) {
+        warning(paste("Metabolite KEGG enrichment failed:", e$message))
+        return(NULL)
+        })
+      }
+      } else {
+      #### KEGG pathway enrichment for other organisms
+      if ("metkegg" %in% database) {
+        message(paste("KEGG enrichment for", met_organism, "..."))
+        pathway_database <- tryCatch({
+        get_kegg_pathways(organism = met_organism, local = FALSE)
+        }, error = function(e) {
+        warning(paste("Failed to get KEGG pathway database:", e$message))
+        return(NULL)
+        })
+
+        if (!is.null(pathway_database)) {
         enrichment_metkegg_result <- tryCatch({
           metpath::enrich_kegg(
-            query_id = variable_info$keggid,
-            query_type = "compound",
-            id_type = "KEGG",
-            pathway_database = dbs$kegg_pathway,
-            p_cutoff = pvalueCutoff,
-            p_adjust_method = pAdjustMethod,
-            threads = 3
+          query_id = variable_info$keggid,
+          query_type = "compound",
+          id_type = "KEGG",
+          pathway_database = pathway_database,
+          p_cutoff = pvalueCutoff,
+          p_adjust_method = pAdjustMethod,
+          threads = 3
           )
         }, error = function(e) {
           warning(paste("Metabolite KEGG enrichment failed:", e$message))
           return(NULL)
         })
-
-        if (!is.null(enrichment_metkegg_result)) {
-          data.table::setnames(enrichment_metkegg_result@result, "p_value_adjust", "p_adjust")
         }
+      }
+      }
+
+      if (!is.null(enrichment_metkegg_result)) {
+      data.table::setnames(enrichment_metkegg_result@result, "p_value_adjust", "p_adjust")
       }
     }
 
@@ -514,6 +551,7 @@ enrich_pathway <-
         reactome.organism = reactome.organism,
         reactome.keytype = "entrezid",
         reactome.universe = if(is.null(reactome.universe)) NULL else "provided",
+        met_organism = met_organism,
         pvalueCutoff = pvalueCutoff,
         pAdjustMethod = pAdjustMethod,
         qvalueCutoff = qvalueCutoff,

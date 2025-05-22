@@ -120,12 +120,10 @@ merge_modules_ui <- function(id) {
 #' @importFrom clusterProfiler merge_modules
 #' @noRd
 
-merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
+merge_modules_server <- function(id, enriched_modules, enriched_functional_module, tab_switch) {
   moduleServer(
     id,
     function(input, output, session) {
-      # Define enriched_functional_module as a reactive value
-      enriched_functional_module <- reactiveVal()
       merge_modules_code <- reactiveVal()
 
       ### merge modules ====
@@ -173,12 +171,12 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
           ##save code
           merge_modules_code <-
             sprintf(
-              '
+            '
             enriched_functional_module <-
-            merge_modules(
-            object = enriched_modules,
-            sim.cutoff = %s,
-            measure_method = %s)
+              merge_modules(
+                object = enriched_modules,
+                sim.cutoff = %s,
+                measure_method = %s)
             ',
               input$sim.cutoff.module,
               paste0('"', input$measure.method.module, '"')
@@ -217,12 +215,12 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
       output$enriched_functional_module_object <-
         renderText({
           req(enriched_functional_module())
-          enriched_functional_module <- enriched_functional_module()
+          enriched_functional_module_res <- enriched_functional_module()
           captured_output1 <-
-            capture.output(enriched_functional_module,
+            capture.output(enriched_functional_module_res,
                            type = "message")
           captured_output2 <-
-            capture.output(enriched_functional_module,
+            capture.output(enriched_functional_module_res,
                            type = "output")
           captured_output <-
             c(captured_output1,
@@ -261,7 +259,8 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
             "enriched_functional_module.rda"
           },
           content = function(file) {
-            save(enriched_functional_module(), file = file)
+            result <- enriched_functional_module()
+            save(result, file = file)
           }
         )
 
@@ -278,7 +277,7 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
                 shinyjs::disable("download_enriched_functional_module_object")
               } else {
                 shinyjs::enable("download_enriched_functional_modules")
-                shinyjs::disable("download_enriched_functional_module_object")
+                shinyjs::enable("download_enriched_functional_module_object")
               }
             }
           },
@@ -363,8 +362,6 @@ merge_modules_server <- function(id, enriched_modules = NULL, tab_switch) {
           tab_switch("llm_interpretation")
         }
       })
-
-      return(enriched_functional_module)
     }
   )
 }

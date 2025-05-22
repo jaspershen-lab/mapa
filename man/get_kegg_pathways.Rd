@@ -8,15 +8,13 @@ This function is adapted from the metpath package by Xiaotao Shen
 \url{https://github.com/tidymass/metpath/blob/main/R/10_kegg_database.R}
 }
 \usage{
-get_kegg_pathways(local = TRUE, organism = "hsa", threads = 3)
+get_kegg_pathways(local = TRUE, organism = "hsa")
 }
 \arguments{
 \item{local}{Logical. If TRUE (default), uses locally stored data. If FALSE,
 retrieves data from KEGG API.}
 
 \item{organism}{Character. KEGG organism code (default: "hsa" for Homo sapiens)}
-
-\item{threads}{Integer. Number of threads to use for parallel processing (default: 3)}
 }
 \value{
 A pathway_database class object containing KEGG pathway information

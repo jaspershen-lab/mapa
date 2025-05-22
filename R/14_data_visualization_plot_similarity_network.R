@@ -51,11 +51,11 @@
 #
 # metabolite
 # plot_similarity_network(
-#   object = enriched_functional_module_met,
+#   object = merged_pathways,
 #   level = "module",
 #   degree_cutoff = 0,
-#   database = c("hmdb"),
-#   module_id = "hmdb_Module_1"
+#   database = c("metkegg")
+#   # module_id = "metkegg_Module_1"
 # )
 # plot_similarity_network(
 #   object = enriched_functional_module,
@@ -72,7 +72,7 @@
 #' @param level Character string specifying the analysis level: "module" (database-specific modules) or
 #'   "functional_module" (merged modules across databases). For results from get_bioembedsim() or
 #'   merge_pathways_bioembedsim(), use "functional_module".
-#' @param database Character string specifying the database to visualize: "go", "kegg", "reactome", or "hmdb".
+#' @param database Character string specifying the database to visualize: "go", "kegg", "reactome", "hmdb", or "metkegg".
 #'   Only required when level = "module".
 #' @param degree_cutoff Numeric value for filtering nodes; only nodes with module_content_number > degree_cutoff
 #'   are displayed.
@@ -133,7 +133,7 @@ plot_similarity_network <-
   function(object,
            level = c("module",
                      "functional_module"),
-           database = c("go", "kegg", "reactome", "hmdb"),
+           database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
            degree_cutoff = 0,
            module_id,
            llm_text = FALSE,
@@ -289,7 +289,7 @@ plot_similarity_network <-
         }
 
         ###KEGG
-        if (database == "kegg") {
+        if (database == "metkegg") {
           if (length(object@merged_pathway_metkegg) == 0) {
             warning("No enriched KEGG modules")
             return(ggplot() +

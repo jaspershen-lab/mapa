@@ -13,7 +13,10 @@ You are an AI tasked with generating a **biological module name, a research summ
 For instance, if the pathways are highly related (e.g., serine-type endopeptidase inhibitor activity and endopeptidase inhibitor activity), the score should be high (close to 1.00).
 If the pathways are largely unrelated (e.g., negative regulation of inflammatory response and camera-type eye development), the score should be low (close to 0.00).
 Consider whether these pathways genuinely point to one biological theme, whether the {query_molecules} are meaningfully involved in those pathways, and whether literature or research supports a functional connection.
-6. **Incorporate research insights**, ensuring the generated summary reflects findings from the provided literature (if provided).
+6. **Incorporate research insights**, ensuring that:
+All referenced findings must be directly extracted from the provided related articles. Do not fabricate or hallucinate study details.
+In the summary, explicitly indicate which findings are from which article.
+At the end of the summary, include a "References" section listing the article titles from related articles, sorted by relevance to the module, i.e., most directly related articles appear first.
 
 ## **Example Input**
 The module is defined by the following pathways:
@@ -38,10 +41,13 @@ Text: Overexpression of receptor tyrosine kinases like DDR2, RET, and PDGFRA cor
 ## **Example Output**
 {
   "module_name": "Receptor Tyrosine Kinase Signaling in Fibrosis and Cancer",
-  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2's central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression[1].
-  References:
-  1. Ling, S., Kwak, D. & Kim, K. K. Inhibition of discoidin domain receptor 2 reveals kinase-dependent and kinase-independent functions in regulating fibroblast activity. Am. J. Physiol.-Lung Cell. Mol. Physiol. 325, L342–L351 (2023).",
-  "confidence_score": "0.95"
+  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2’s central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression. Additionally, DDR2-mediated PIK3C2α signaling has been implicated in fibroblast function and fibrosis, presenting a potential therapeutic target."
+  "confidence_score": "0.95",
+    "references": [
+    "Title: Oncogene-driven receptor tyrosine kinase expression in cancer.",
+    "Title: Inhibition of DDR2 reveals kinase-dependent and kinase-independent functions.",
+    ...
+  ]
 }
 
 ## **Actual Input for Generation**
@@ -54,28 +60,21 @@ Please provide your response in **JSON format**, strictly following this structu
 
 {
   "module_name": "Your concise module name here",
-  "summary": "A detailed, literature-integrated explanation of the module's function, key {query_molecules}, and relevant biological processes. Each major claim should be supported by references in square brackets[1,2]. The summary MUST be followed by a 'References:' section listing all cited references in Nature journal format.",
-  "confidence_score": "A value between 0.00 and 1.00"
+  "summary": "A detailed, literature-grounded explanation of the module's function, key {query_molecules}, and relevant biological processes, citing evidence from provided articles only.",
+  "confidence_score": "A value between 0.00 and 1.00 reflecting the coherence of {query_molecules} and pathways.",
+  "references": [
+    "Title: Most relevant article first.",
+    "Title: Second most relevant article.",
+    "... more titles from combined_texts, in descending order of relevance."
+  ]
 }
 
 When generating your answer, pay attention to the following:
 
-- module_name should be concise and descriptive, highlighting the core biological process or disease relevance.
-- summary MUST include:
-  * The central biological function or process
-  * Key {query_molecules} and their roles within the identified pathways
-  * Insights from the provided articles or research (if provided)
-  * Each major claim MUST be supported by citations using numbers in square brackets [1,2]
-  * A "References:" section MUST be included after the main text, containing:
-    - All cited references in Nature journal format
-    - Author names (et al. for more than 5 authors)
-    - Title of paper
-    - Journal name
-    - Volume number
-    - Page numbers
-    - Year in parentheses
-    Example format:
-    "References:
-    1. Smith, J. et al. Title of paper. Nature 123, 45-67 (2023).
-    2. Jones, R. et al. Another paper title. Cell 456, 89-101 (2023)."
-- confidence_score should reflect how well the {query_molecules} and pathways are associated
+module_name should be concise and descriptive, highlighting the core biological process or disease relevance.
+summary should include:
+The central biological function or process.
+Key {query_molecules} and their roles within the identified pathways.
+Insights from the provided articles or research (if provided).
+confidence_score should reflect how well the {query_molecules} and pathways associated with each other and support a coherent biological process, with 1.00 indicating very high confidence and 0.00 indicating minimal or no overlap.
+references must be a ranked list of article titles from combined_texts, sorted by relevance to the inferred module (most relevant first).

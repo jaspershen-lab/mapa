@@ -18,8 +18,10 @@ enrich_pathway(
   kegg.organism = "hsa",
   kegg.keytype = "kegg",
   kegg.universe = NULL,
-  reactome.organism = c("human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly"),
+  reactome.organism = c("human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly",
+    "bovine", "canine", "chicken"),
   reactome.universe = NULL,
+  met_organism = "hsa",
   pvalueCutoff = 0.05,
   pAdjustMethod = "BH",
   qvalueCutoff = 0.2,
@@ -43,7 +45,7 @@ For metabolite-based queries, it should contain columns like 'hmdbid' and 'keggi
 \item{database}{Character vector, specify which database(s) to use for enrichment:
 \itemize{
 \item For genes: 'go', 'kegg', 'reactome'
-\item For metabolites: 'hmdb', 'kegg'
+\item For metabolites: 'hmdb', 'kegg'. 'hmdb' is only for human.
 }}
 
 \item{save_to_local}{Logical, if TRUE the results will be saved to local disk.}
@@ -85,6 +87,9 @@ Supported values: "human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fl
 
 \item{reactome.universe}{Numeric vector, the background universe for Reactome enrichment.
 If NULL (default), all genes in Reactome database will be used.}
+
+\item{met_organism}{Character, the organism code for metabolite enrichment.
+Default is "hsa" (human). See 'https://www.genome.jp/kegg/catalog/org_list.html' for supported organism codes.}
 
 \item{pvalueCutoff}{Numeric, the p-value cutoff for enrichment.}
 

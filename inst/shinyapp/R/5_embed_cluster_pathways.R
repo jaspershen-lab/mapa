@@ -65,7 +65,7 @@ embed_cluster_pathways_ui <- function(id) {
 
                    checkboxGroupInput(
                      ns("cluster_module_database"),
-                     "Database",
+                     "Available Database",
                      choices = c(
                        "HMDB" = "hmdb",
                        "KEGG" = "metkegg"
@@ -142,7 +142,7 @@ embed_cluster_pathways_ui <- function(id) {
 
                   checkboxGroupInput(
                     ns("cluster_module_database"),
-                    "Database",
+                    "Available Database",
                     choices = c(
                       "GO" = "go",
                       "KEGG" = "kegg",
@@ -397,7 +397,7 @@ embed_cluster_pathways_ui <- function(id) {
 #' @importFrom utils capture.output write.csv
 #' @noRd
 
-embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_switch) {
+embed_cluster_pathways_server <- function(id, enriched_pathways, enriched_functional_module, tab_switch) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -412,7 +412,7 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
           names <- ls(tempEnv)
 
           if (length(names) == 1) {
-            enriched_pathways(get(names[1], envir = tempEnv))
+            enriched_pathways$enriched_pathways_res <- get(names[1], envir = tempEnv)
           } else {
             message("The .rda file does not contain exactly one object.")
             showModal(
@@ -436,10 +436,7 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
         )
       })
 
-      query_type <- reactive({
-        req(enriched_pathways())
-        enriched_pathways()@process_info$enrich_pathway@parameter$query_type
-      })
+      query_type <- reactive({ enriched_pathways$query_type })
 
       observe({
         req(query_type())
@@ -453,6 +450,17 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
         shinyjs::toggleElement(
           id = "parameter_panel_metabolite",
           condition = query_type() == "metabolite"
+        )
+
+        db_choices <- c("GO" = "go",
+                        "KEGG" = "kegg",
+                        "Reactome" = "reactome",
+                        "HMDB" = "hmdb",
+                        "KEGG" = "metkegg")
+        updateCheckboxGroupInput(
+          session, "cluster_module_database",
+          choices  = db_choices[db_choices %in% enriched_pathways$available_db],
+          selected = enriched_pathways$available_db
         )
       })
 
@@ -477,14 +485,12 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
         }
       })
 
-      # Define enriched_functional_module as a reactive value
-      enriched_functional_module <- reactiveVal()
       merge_modules_code <- reactiveVal()
 
       observeEvent(
         input$submit_merge_pathways,
         {
-          if (is.null(enriched_pathways()) || length(enriched_pathways()) == 0) {
+          if (is.null(enriched_pathways$enriched_pathways_res) || length(enriched_pathways$enriched_pathways_res) == 0) {
             showModal(
               modalDialog(
                 title = "Warning",
@@ -501,7 +507,7 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
                 ### Step1: Embedding ====
                 bioembed_sim_matrix <-
                   get_bioembedsim(
-                    object = enriched_pathways(),
+                    object = enriched_pathways$enriched_pathways_res,
                     api_provider = input$api_provider,
                     text_embedding_model = input$embedding_model,
                     api_key = input$api_key,
@@ -558,8 +564,7 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
               kegg_params <- ""
               if ("kegg" %in% input$cluster_module_database) {
                 kegg_params <- sprintf(
-                  '
-                  p.adjust.cutoff.kegg = %s,
+                 'p.adjust.cutoff.kegg = %s,
                   count.cutoff.kegg = %s,
                   ',
                   input$p.adjust.cutoff.kegg,
@@ -569,10 +574,8 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
               reactome_params <- ""
               if ("reactome" %in% input$cluster_module_database) {
                 reactome_params <- sprintf(
-                  '
-                  p.adjust.cutoff.reactome = %s,
-                  count.cutoff.reactome = %s
-                  ',
+                 'p.adjust.cutoff.reactome = %s,
+                  count.cutoff.reactome = %s',
                   input$p.adjust.cutoff.reactome,
                   input$count.cutoff.reactome
                 )}
@@ -592,7 +595,7 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
                   save_to_local = FALSE
                   )
                enriched_functional_module <-
-                   merge_pathways_bioembedsim(
+                 merge_pathways_bioembedsim(
                    object = bioembed_sim_matrix,
                    sim.cutoff = %s,
                    cluster_method = %s,
@@ -627,10 +630,8 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
               metkegg_params <- ""
               if ("metkegg" %in% input$cluster_module_database) {
                 metkegg_params <- sprintf(
-                  '
-                  p.adjust.cutoff.metkegg = %s,
-                  count.cutoff.metkegg = %s,
-                  ',
+                 'p.adjust.cutoff.metkegg = %s,
+                  count.cutoff.metkegg = %s,',
                   input$p.adjust.cutoff.metkegg,
                   input$count.cutoff.metkegg
                 )}
@@ -650,7 +651,7 @@ embed_cluster_pathways_server <- function(id, enriched_pathways = NULL, tab_swit
                   save_to_local = FALSE
                   )
                enriched_functional_module <-
-                   merge_pathways_bioembedsim(
+                 merge_pathways_bioembedsim(
                    object = bioembed_sim_matrix,
                    sim.cutoff = %s,
                    cluster_method = %s,

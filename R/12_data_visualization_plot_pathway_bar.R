@@ -90,14 +90,14 @@
 #                  count.cutoff = 0,
 #                  database = c("kegg", "hmdb"))
 
-# plot_pathway_bar(object = enriched_functional_module,
+# plot_pathway_bar(object = llm_interpreted_enriched_functional_module,
 #                  top_n = 5,
 #                  x_axis_name = "qscore",
-#                  level = "functional_module",
+#                  level = "pathway",
 #                  line_type = "straight",
 #                  p.adjust.cutoff = 0.05,
 #                  count.cutoff = 5,
-#                  database = c("hmdb", "kegg"))
+#                  database = c("metkegg"))
 
 # plot_pathway_bar(object = llm_interpreted_enriched_functional_module,
 #                  top_n = 5,
@@ -139,7 +139,7 @@
 #' @param count.cutoff  Minimum gene/metabolite count to keep (default `5`).
 #' @param database_color  Named vector mapping databases to fill colours.
 #' @param database  Character vector of databases to include; values are
-#'   case-insensitive versions of `"go"`, `"kegg"`, `"reactome"`, `"hmdb"`.
+#'   case-insensitive versions of `"go"`, `"kegg"`, `"reactome"`, `"hmdb"`, `"metkegg"`.
 #'
 #' @return A **ggplot** object.
 #'
@@ -183,7 +183,7 @@ plot_pathway_bar <-
                Reactome = "#23b9c7",
                HMDB = "#7998ad"
              ),
-           database = c("go", "kegg", "reactome", "hmdb")) {
+           database = c("go", "kegg", "reactome", "hmdb", "metkegg")) {
 
     level <- match.arg(level)
     sim_method <- object@process_info$merge_pathways@function_name
@@ -526,7 +526,8 @@ plot_pathway_bar <-
                   stringr::str_detect(modules, "^go_Module") ~ "GO",
                   stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
                   stringr::str_detect(modules, "^reactome_Module") ~ "Reactome",
-                  stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB"
+                  stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB",
+                  stringr::str_detect(modules, "^metkegg_Module") ~ "KEGG"
                 ))
                 paste(dbs, collapse = "/")
               })
@@ -545,7 +546,8 @@ plot_pathway_bar <-
                   stringr::str_detect(modules, "^go_Module") ~ "GO",
                   stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
                   stringr::str_detect(modules, "^reactome_Module") ~ "Reactome",
-                  stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB"
+                  stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB",
+                  stringr::str_detect(modules, "^metkegg_Module") ~ "KEGG"
                 ))
                 paste(dbs, collapse = "/")
               })
@@ -604,6 +606,7 @@ plot_pathway_bar <-
     database2[database2 == "kegg"] <- "KEGG"
     database2[database2 == "reactome"] <- "Reactome"
     database2[database2 == "hmdb"] <- "HMDB"
+    database2[database2 == "metkegg"] <- "KEGG"
 
     ### Select the database of the representative pathway (min adjusted p value) in the module to color the module
     if (level == "functional_module") {

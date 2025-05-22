@@ -1,3 +1,22 @@
+#' LLM Interpretation Module UI
+#'
+#' Creates the user interface for LLM interpretation of functional modules,
+#' including file upload controls, parameter inputs, and result display tabs.
+#'
+#' @param id Character string. The module's namespace ID.
+#'
+#' @return A Shiny UI element containing the LLM interpretation interface
+#'   with input controls on the left (file uploads, model parameters, API key,
+#'   directory selection) and tabbed output panels on the right (interpretation
+#'   results, full prompt, R object).
+#'
+#' @import shiny
+#' @importFrom shinyBS bsButton bsPopover
+#' @importFrom shinyFiles shinyDirButton
+#' @importFrom shinyjs useShinyjs
+#' @importFrom DT dataTableOutput
+#' @noRd
+
 llm_interpretation_ui <- function(id) {
   ns <- NS(id)
   tabItem(
@@ -199,15 +218,40 @@ llm_interpretation_ui <- function(id) {
    )
 }
 
-llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab_switch) {
+#' LLM Interpretation Module Server
+#'
+#' Server-side logic for the LLM interpretation module. Handles file uploads,
+#' directory selection, asynchronous LLM processing, and result display.
+#' Performs functional module interpretation using large language models
+#' with literature search and embedding generation capabilities.
+#'
+#' @param id Character string. The module's namespace ID.
+#' @param enriched_functional_module Reactive value containing the enriched
+#'   functional module data object to be interpreted.
+#' @param tab_switch Function to switch between application tabs.
+#'
+#' @return Server function that manages:
+#'   - File upload and validation for .rda files
+#'   - Directory selection for corpus and embedding storage
+#'   - Asynchronous LLM interpretation using future/promises
+#'   - Dynamic UI updates for module selection and results display
+#'   - Download handlers for results, prompts, and R objects
+#'   - Navigation to next analysis step
+#'
+#' @import shiny
+#' @importFrom shinyjs disable enable useShinyjs
+#' @importFrom shinyFiles shinyDirChoose parseDirPath getVolumes
+#' @importFrom future plan multisession future_promise
+#' @importFrom promises %...>% %...!%
+#' @importFrom markdown markdownToHTML
+#' @importFrom mapa llm_interpret_module
+#' @noRd
+
+llm_interpretation_server <- function(id, enriched_functional_module, tab_switch) {
   moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-
-      if (!is.reactive(enriched_functional_module)) {
-        enriched_functional_module <- reactiveVal(NULL)
-      }
 
       ## Section1: Load enriched_functional_module.rda and navigate to specified directory ====
       observeEvent(
@@ -237,7 +281,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           }
       })
 
-      ## Display interpreted result ---------------------------------------------------------------------------
+      ## Display interpreted result
       observeEvent(input$upload_interpretation_result, {
         tmp <- new.env()
         load(input$upload_interpretation_result$datapath, envir = tmp)
@@ -247,7 +291,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
         if (length(ls(tmp)) == 1) {
           interpreted_functional_module <- get(ls(tmp), envir = tmp)
           annotation_result(interpreted_functional_module@llm_module_interpretation)
-          llm_interpreted_functional_module(interpreted_functional_module)
+          enriched_functional_module(interpreted_functional_module)
 
           showNotification("Interpretation result loaded successfully!",
                            type = "message")
@@ -261,7 +305,6 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           ))
         }
       })
-      ##---------------------------------------------------------------------------
 
       ### Set up shinyFiles directory selection
       volumes <- shinyFiles::getVolumes()
@@ -338,7 +381,6 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
 
       ## Define annotation result as reactive values
       annotation_result <- reactiveVal()
-      llm_interpreted_functional_module <- reactiveVal()
       llm_interpretation_code <- reactiveVal()
       module_prompt <- reactiveVal()
 
@@ -347,7 +389,6 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
 
       observe({
         req(input$submit_llm_interpretation, enriched_functional_module())
-
         message("Interpreting functional modules in progress. This comprehensive analysis requires some time...")
 
         library(future)
@@ -403,7 +444,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           # This runs when the future completes successfully
           (function(result) {
             # Store the results
-            llm_interpreted_functional_module(result)
+            enriched_functional_module(result)
             annotation_result(result@llm_module_interpretation)
 
             # # Show success notification
@@ -474,14 +515,14 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
             "
             functional_module_annotation <-
               llm_interpret_module(
-                object              = enriched_functional_module,
-                llm_model           = %s,
-                embedding_model     = %s,
-                api_key             = %s,
+                object = enriched_functional_module,
+                llm_model = %s,
+                embedding_model = %s,
+                api_key = %s,
                 embedding_output_dir = %s,
-                local_corpus_dir    = %s,
-                phenotype           = %s,
-                years               = %s
+                local_corpus_dir = %s,
+                phenotype = %s,
+                years = %s
               )
             ",
             ## wrap character inputs in quotes:
@@ -535,8 +576,8 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
       ### Show object
       output$llm_interpreted_functional_module_object <-
         renderText({
-          req(llm_interpreted_functional_module())
-          llm_interpreted_functional_module_obj <- llm_interpreted_functional_module()
+          req(enriched_functional_module())
+          llm_interpreted_functional_module_obj <- enriched_functional_module()
           captured_output1 <-
             capture.output(llm_interpreted_functional_module_obj,
                            type = "message")
@@ -638,7 +679,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
           },
           content = function(file) {
             llm_interpreted_functional_module <-
-              llm_interpreted_functional_module()
+              enriched_functional_module()
             save(llm_interpreted_functional_module, file = file)
           }
         )
@@ -833,8 +874,7 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
       observeEvent(input$go2data_visualization, {
         # Check if enriched_functional_module is available
         if ((is.null(enriched_functional_module()) ||
-            length(enriched_functional_module()) == 0) &&
-            is.null(llm_interpreted_functional_module())) {
+            length(enriched_functional_module()) == 0)) {
           showModal(
             modalDialog(
               title = "Warning",
@@ -844,20 +884,18 @@ llm_interpretation_server <- function(id, enriched_functional_module = NULL, tab
             )
           )
         } else {
-          # User never pressed “Submit” in this tab
-          if (is.null(llm_interpreted_functional_module()) ||
-              length(llm_interpreted_functional_module()) == 0) {
-
-            llm_interpreted_functional_module(
-              enriched_functional_module()
-            )
-          }
+          # # User never pressed “Submit” in this tab
+          # if (is.null(llm_interpreted_functional_module()) ||
+          #     length(llm_interpreted_functional_module()) == 0) {
+          #
+          #   llm_interpreted_functional_module(
+          #     enriched_functional_module()
+          #   )
+          # }
 
           tab_switch("data_visualization")
         }
       })
-
-      return(llm_interpreted_functional_module)
     }
   )
 }

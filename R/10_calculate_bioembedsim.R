@@ -39,9 +39,10 @@
 # openai_sim_matrix_met <-
 #   get_bioembedsim(object = enriched_pathways,
 #                   api_provider = "openai",
-#                   database = c("hmdb", "kegg"),
+#                   database = c("metkegg"),
 #                   text_embedding_model = "text-embedding-3-small",
 #                   api_key = api_key,
+#                   count.cutoff.metkegg = 0,
 #                   save_to_local = FALSE)
 
 
@@ -62,7 +63,7 @@
 #' @param api_key Character string of the API key for the specified provider
 #' @param include_gene_name Logical indicating whether to include annotated gene names
 #'   in the pathway descriptions (default: FALSE)
-#' @param database Character vector of databases to include. Options are "go", "kegg", "hmdb",
+#' @param database Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
 #'   and/or "reactome". Multiple selections allowed.
 #' @param p.adjust.cutoff.go Numeric cutoff for adjusted p-value for GO terms (default: 0.05)
 #' @param p.adjust.cutoff.kegg Numeric cutoff for adjusted p-value for KEGG pathways (default: 0.05)
@@ -128,7 +129,7 @@ get_bioembedsim <-
            text_embedding_model = NULL,
            api_key = NULL,
            include_gene_name = FALSE,
-           database = c("go", "kegg", "reactome", "hmdb"),
+           database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
            p.adjust.cutoff.go = 0.05,
            p.adjust.cutoff.kegg = 0.05,
            p.adjust.cutoff.reactome = 0.05,
@@ -217,7 +218,7 @@ get_bioembedsim <-
         }
       }
     } else if (query_type == "metabolite") {
-      if ("kegg" %in% database) {
+      if ("metkegg" %in% database) {
         if (is.null(object@enrichment_metkegg_result)) {
           stop("Please perform pathway enrichment based on KEGG database at first.")
         } else {

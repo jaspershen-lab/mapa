@@ -148,7 +148,7 @@ ui <- dashboardPage(
     tags$head(
       tags$style(HTML("
       .main-sidebar {
-        width: 250px !important;
+        width: 230px !important;
       }
     "))
     ),

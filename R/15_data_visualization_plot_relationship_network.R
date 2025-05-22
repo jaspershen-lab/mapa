@@ -25,7 +25,7 @@
   # llm_text = TRUE
   # include_modules = TRUE
   # include_pathways = TRUE
-  # include_molecules = FALSE
+  # include_molecules = TRUE
   # functional_module_color = "#F05C3BFF"
   # module_color = "#46732EFF"
   # pathway_color = "#197EC0FF"
@@ -674,8 +674,11 @@ create_relation_network <-
               dplyr::select(from = ID,
                             to = geneID) %>%
               apply(1, function(x) {
-                data.frame(from = as.character(x[1]),
-                           to = as.character(stringr::str_split(x[2], "/")[[1]]))
+                data.frame(
+                  from = as.character(x[1]),
+                  to = as.character(stringr::str_split(x[2], "/")[[1]]) |>
+                    unify_id_internal(variable_info = variable_info, query_type = "gene")
+                )
                 }) %>%
               do.call(rbind, .) %>%
               as.data.frame()
@@ -685,7 +688,9 @@ create_relation_network <-
                               to = core_enrichment) %>%
                 apply(1, function(x) {
                   data.frame(from = as.character(x[1]),
-                             to = as.character(stringr::str_split(x[2], "/")[[1]]))
+                             to = as.character(stringr::str_split(x[2], "/")[[1]]) |>
+                               unify_id_internal(variable_info = variable_info, query_type = "gene")
+                  )
                   }) %>%
                 do.call(rbind, .) %>%
                 as.data.frame()
@@ -752,8 +757,11 @@ create_relation_network <-
               dplyr::select(from = ID,
                             to = geneID) %>%
               apply(1, function(x) {
-                data.frame(from = as.character(x[1]),
-                           to = as.character(stringr::str_split(x[2], "/")[[1]]))
+                data.frame(
+                  from = as.character(x[1]),
+                  to = as.character(stringr::str_split(x[2], "/")[[1]]) |>
+                    unify_id_internal(variable_info = variable_info, query_type = "gene")
+                )
               }) %>%
               do.call(rbind, .) %>%
               as.data.frame()
@@ -763,7 +771,9 @@ create_relation_network <-
                             to = core_enrichment) %>%
               apply(1, function(x) {
                 data.frame(from = as.character(x[1]),
-                           to = as.character(stringr::str_split(x[2], "/")[[1]]))
+                           to = as.character(stringr::str_split(x[2], "/")[[1]]) |>
+                             unify_id_internal(variable_info = variable_info, query_type = "gene")
+                )
               }) %>%
               do.call(rbind, .) %>%
               as.data.frame()
@@ -825,8 +835,11 @@ create_relation_network <-
               dplyr::select(from = ID,
                             to = geneID) %>%
               apply(1, function(x) {
-                data.frame(from = as.character(x[1]),
-                           to = as.character(stringr::str_split(x[2], "/")[[1]]))
+                data.frame(
+                  from = as.character(x[1]),
+                  to = as.character(stringr::str_split(x[2], "/")[[1]]) |>
+                    unify_id_internal(variable_info = variable_info, query_type = "gene")
+                )
               }) %>%
               do.call(rbind, .) %>%
               as.data.frame()
@@ -836,7 +849,9 @@ create_relation_network <-
                             to = core_enrichment) %>%
               apply(1, function(x) {
                 data.frame(from = as.character(x[1]),
-                           to = as.character(stringr::str_split(x[2], "/")[[1]]))
+                           to = as.character(stringr::str_split(x[2], "/")[[1]]) |>
+                             unify_id_internal(variable_info = variable_info, query_type = "gene")
+                )
               }) %>%
               do.call(rbind, .) %>%
               as.data.frame()
@@ -1036,45 +1051,32 @@ create_relation_network <-
                       Count = 1,
                       class = "Molecule")
     } else if (query_type == "metabolite") {
-      ### For metabolite molecule
-      node_data3_molecule <-
-        variable_info %>%
-        dplyr::select(node = "hmdbid",
-                      keggid,
-                      variable_id) %>%
-        dplyr::mutate(annotation = variable_id,
-                      Count = 1,
-                      class = "Molecule")
+      if ("hmdbid" %in% colnames(variable_info)) {
+        ### For metabolite molecule
+        node_data3_molecule <-
+          variable_info %>%
+          dplyr::select(node = hmdbid,
+                        keggid,
+                        variable_id) %>%
+          dplyr::mutate(annotation = variable_id,
+                        Count = 1,
+                        class = "Molecule")
+      } else {
+        node_data3_molecule <-
+          variable_info %>%
+          dplyr::select(node = "keggid",
+                        variable_id) %>%
+          dplyr::mutate(annotation = variable_id,
+                        Count = 1,
+                        class = "Molecule")
+      }
     }
 
-    if (analysis_type == "enrich_pathway") {
-      if (!is.null(edge_data3_kegg)) {
-        edge_data3_kegg$to <-
-          variable_info$ensembl[match(edge_data3_kegg$to,
-                                      variable_info$uniprot)]}
-      if (!is.null(edge_data3_reactome)) {
-        edge_data3_reactome$to <-
-          variable_info$ensembl[match(edge_data3_reactome$to,
-                                      variable_info$entrezid)]}
-      if (!is.null(edge_data3_metkegg)) {
-        edge_data3_metkegg$to <-
-          variable_info$hmdbid[match(edge_data3_metkegg$to,
-                                      variable_info$keggid)]}
-      } else {
-      if (!is.null(edge_data3_go)) {
-        edge_data3_go$to <-
-          variable_info$ensembl[match(edge_data3_go$to,
-                                      variable_info$entrezid)]
-      }
-      if (!is.null(edge_data3_kegg)) {
-        edge_data3_kegg$to <-
-          variable_info$ensembl[match(edge_data3_kegg$to,
-                                      variable_info$entrezid)]}
-      if (!is.null(edge_data3_reactome)) {
-        edge_data3_reactome$to <-
-          variable_info$ensembl[match(edge_data3_reactome$to,
-                                      variable_info$entrezid)]}
-    }
+    if (analysis_type == "enrich_pathway" && "hmdbid" %in% colnames(variable_info) && !is.null(edge_data3_metkegg)) {
+      edge_data3_metkegg$to <-
+        variable_info$hmdbid[match(edge_data3_metkegg$to,
+                                   variable_info$keggid)]
+     }
 
     edge_data3 <-
       rbind(edge_data3_go,

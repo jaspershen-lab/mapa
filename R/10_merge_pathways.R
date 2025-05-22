@@ -120,7 +120,7 @@
 #' @param object An object of class "functional_module", typically a result from enrich_pathway function.
 #' @param database Character vector, specify which database(s) to use for merging pathways.
 #'   - For genes: 'go', 'kegg', 'reactome'
-#'   - For metabolites: 'hmdb', 'kegg'
+#'   - For metabolites: 'hmdb', 'metkegg'
 #' @param p.adjust.cutoff.go Adjusted p-value cutoff for GO database. Default is 0.05.
 #' @param p.adjust.cutoff.kegg Adjusted p-value cutoff for KEGG database. Default is 0.05.
 #' @param p.adjust.cutoff.reactome Adjusted p-value cutoff for Reactome database. Default is 0.05.
@@ -156,7 +156,7 @@
 
 merge_pathways <-
   function(object,
-           database = c("go", "kegg", "reactome", "hmdb"),
+           database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
            p.adjust.cutoff.go = 0.05,
            p.adjust.cutoff.kegg = 0.05,
            p.adjust.cutoff.reactome = 0.05,
@@ -192,9 +192,9 @@ merge_pathways <-
 
     if (query_type == "gene" && missing(database)) {
       stop("Please specify databases to merge pathways.")
-      database <- match.arg(database, choices = c("go", "kegg", "reactome", "hmdb"), several.ok = TRUE)
+      database <- match.arg(database, choices = c("go", "kegg", "reactome"), several.ok = TRUE)
     } else if (query_type == "metabolite") {
-      database <- c("hmdb", "kegg")
+      database <- c("hmdb", "metkegg")
     }
 
     ## Check input parameter for different query type
@@ -219,7 +219,7 @@ merge_pathways <-
           match.arg(measure.method.hmdb)
       }
 
-      if ("kegg" %in% database) {
+      if ("metkegg" %in% database) {
         measure.method.metkegg <-
           match.arg(measure.method.metkegg)
       }
@@ -333,7 +333,7 @@ merge_pathways <-
         merged_pathway_hmdb <- NULL
       }
 
-      if ("kegg" %in% database) {
+      if ("metkegg" %in% database) {
         message(rep("-", 20))
         message("KEGG database...")
 
@@ -344,7 +344,7 @@ merge_pathways <-
             analysis_type = analysis_type,
             p.adjust.cutoff = p.adjust.cutoff.metkegg,
             count.cutoff = count.cutoff.metkegg,
-            database = "kegg",
+            database = "metkegg",
             sim.cutoff = sim.cutoff.metkegg,
             measure.method = measure.method.metkegg,
             path = path,
@@ -486,7 +486,7 @@ merge_pathways_internal <-
            go.orgdb = NULL,
            p.adjust.cutoff = 0.05,
            count.cutoff = 5,
-           database = c("go", "kegg", "reactome", "hmdb"),
+           database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
            sim.cutoff = 0.5,
            measure.method,
            control.method.go = list(),
@@ -650,7 +650,7 @@ merge_pathways_internal <-
           )
       }
 
-      if (database == "kegg") {
+      if (database == "metkegg") {
         sim_matrix <-
           tryCatch(
             sim_matrix <-
@@ -704,7 +704,7 @@ merge_pathways_internal <-
 #' @param query_type Character, the category of biological entity to query ("gene", "metabolite") for merging pathway enrichment result.
 #' @param analysis_type Character. Type of analysis to perform: either `"enrich_pathway"` or `"do_gsea"`. Default is `"enrich_pathway"`.
 #' @param result A data frame containing the enrichment analysis results, including columns like `ID`, `Description`, `p_adjust`, and other relevant data.
-#' @param database Character. The database from which the enrichment results were obtained (`go`, `kegg`, `reactome`, `hmdb`).
+#' @param database Character. The database from which the enrichment results were obtained (`go`, `kegg`, `reactome`, `hmdb`, `metkegg`).
 #' @param sim.cutoff Numeric. The similarity cutoff value used to filter the edges in the similarity matrix. Default is `0.5`.
 #' @param save_to_local Logical. Whether to save the resulting data to local files. Default is `TRUE`.
 #' @param path Character. The directory path where intermediate results will be saved, if `save_to_local = TRUE`. Default is an empty string (current working directory).
@@ -751,7 +751,7 @@ identify_modules <-
            query_type = c("gene", "metabolite"),
            analysis_type = c("enrich_pathway", "do_gsea"),
            result,
-           database = c("go", "kegg", "reactome", "hmdb"),
+           database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
            sim.cutoff = 0.5,
            save_to_local = TRUE,
            path = "") {

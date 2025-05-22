@@ -550,13 +550,13 @@ check_variable_info <-
       }
 
     } else if (query_type == "metabolite") {
-      if (all(colnames(variable_info) != "hmdbid")) {
-        stop("HMDB ID should be in the variable_info")
-      } else {
-        if (all(is.na(variable_info$hmdbid))) {
-          stop("All hmdbid column are NA")
-        }
-      }
+      # if (all(colnames(variable_info) != "hmdbid")) {
+      #   stop("HMDB ID should be in the variable_info")
+      # } else {
+      #   if (all(is.na(variable_info$hmdbid))) {
+      #     stop("All hmdbid column are NA")
+      #   }
+      # }
 
       if (all(colnames(variable_info) != "keggid")) {
         stop("KEGG ID should be in the variable_info")
@@ -1011,8 +1011,7 @@ get_met_pathway_db <- function(use_internal_data = TRUE) {
   kegg_pathway <-
     get_kegg_pathways(
       local = use_internal_data,
-      organism = "hsa",
-      threads = 3
+      organism = "hsa"
     )
 
   return(list(
@@ -1029,7 +1028,6 @@ get_met_pathway_db <- function(use_internal_data = TRUE) {
 #' @param local Logical. If TRUE (default), uses locally stored data. If FALSE,
 #'        retrieves data from KEGG API.
 #' @param organism Character. KEGG organism code (default: "hsa" for Homo sapiens)
-#' @param threads Integer. Number of threads to use for parallel processing (default: 3)
 #' @return A pathway_database class object containing KEGG pathway information
 #'
 #' @importFrom KEGGREST keggList keggGet
@@ -1047,9 +1045,8 @@ get_met_pathway_db <- function(use_internal_data = TRUE) {
 #' @keywords internal
 
 get_kegg_pathways <- function(local = TRUE,
-                             organism = "hsa",
-                             threads = 3) {
-  organism = match.arg(organism)
+                             organism = "hsa") {
+  # organism = match.arg(organism)
   if (local) {
     if (organism == "hsa") {
       data("kegg_hsa_pathway", package = "metpath", envir = environment())
@@ -1064,27 +1061,27 @@ get_kegg_pathways <- function(local = TRUE,
     }
   } else{
     message(crayon::yellow("It may take a while...\n"))
-    organism = match.arg(organism)
+    # organism = match.arg(organism)
     pathway_ID <-
       KEGGREST::keggList(database = "pathway", organism = organism) %>%
       names() %>%
       unique() %>%
       stringr::str_replace_all(., "path:", "")
 
-    kegg_hsa_pathway_database <-
+    kegg_pathway_database <-
       pbapply::pblapply(pathway_ID, function(x) {
         KEGGREST::keggGet(dbentries = x)[[1]]
       })
 
     pathway_id =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         unname(x$ENTRY)
       }) %>%
       unlist()
 
     pathway_name =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         unname(x$PATHWAY_MAP)
         # stringr::str_split(pattern = " - ") %>%
@@ -1094,26 +1091,26 @@ get_kegg_pathways <- function(local = TRUE,
       unlist()
 
     pathway_name =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         unname(x$PATHWAY_MAP)
       }) %>%
       unlist()
 
     describtion =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         unname(x$DESCRIPTION)
       })
 
     pathway_class =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         unname(x$CLASS)
       })
 
     gene_list =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         gene = x$GENE
         if (is.null(gene)) {
@@ -1127,7 +1124,7 @@ get_kegg_pathways <- function(local = TRUE,
       })
 
     compound_list =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         data.frame(
           KEGG.ID = names(x$COMPOUND),
@@ -1137,7 +1134,7 @@ get_kegg_pathways <- function(local = TRUE,
       })
 
     reference_list =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         purrr::map(
           x$REFERENCE,
@@ -1161,7 +1158,7 @@ get_kegg_pathways <- function(local = TRUE,
       })
 
     related_disease =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         data.frame(
           Disease.ID = names(x$DISEASE),
@@ -1172,7 +1169,7 @@ get_kegg_pathways <- function(local = TRUE,
 
 
     related_module =
-      kegg_hsa_pathway_database %>%
+      kegg_pathway_database %>%
       purrr::map(function(x) {
         data.frame(
           Module.ID = names(x$MODULE),
@@ -1320,18 +1317,21 @@ unify_id_internal <- function(ids = NULL,
         }
       })
   } else if (query_type == "metabolite") {
-    unified_ids <-
-      ids %>%
-      purrr::map_chr(function(x) {
-        if (stringr::str_detect(x, "HMDB")) {
-          return(x)
-        }
+    if ("hmdbid" %in% colnames(variable_info)) {
+      unified_ids <-
+        ids %>%
+        purrr::map_chr(function(x) {
+          if (stringr::str_detect(x, "HMDB")) {
+            return(x)
+          }
 
-        if (stringr::str_detect(x, "C")) {
-          return(variable_info$hmdbid[match(x, variable_info$keggid)])
-        }
-      })
+          if (stringr::str_detect(x, "C")) {
+            return(variable_info$hmdbid[match(x, variable_info$keggid)])
+          }
+        })
+    } else {
+      unified_ids <- ids
+    }
   }
-
   return(unified_ids)
 }
