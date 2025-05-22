@@ -572,20 +572,48 @@ merge_pathways_ui <- function(id) {
           )
 }
 
-
 #' Merge Pathways Server Module
 #'
-#' Internal server logic for merging enriched pathways.
+#' Internal server logic for merging enriched pathways into database-specific modules.
+#' This module handles the server-side functionality for pathway clustering and
+#' merging based on similarity measures, supporting both gene and metabolite data.
 #'
-#' @param input,output,session Internal parameters for {shiny}. DO NOT REMOVE.
-#' @param id Module id.
-#' @param enriched_pathways Reactive value containing enriched pathways.
-#' @param tab_switch Function to switch tabs.
+#' @param id Character string. Module namespace identifier.
+#' @param enriched_pathways ReactiveValues object containing:
+#'   \describe{
+#'     \item{enriched_pathways_res}{The enriched pathways result object}
+#'     \item{query_type}{Character. Type of query data ("gene" or "metabolite")}
+#'     \item{organism}{Character. Organism information for analysis}
+#'     \item{available_db}{Character vector. Available databases for analysis}
+#'   }
+#' @param enriched_modules ReactiveVal object to store the merged pathway results.
+#' @param tab_switch Function to handle navigation between application tabs.
+#'
+#' @section Supported Databases:
+#' \describe{
+#'   \item{Gene queries}{GO (Gene Ontology), KEGG, Reactome}
+#'   \item{Metabolite queries}{HMDB (Human Metabolome Database), KEGG}
+#' }
+#'
+#'
 #' @import shiny
-#' @importFrom shinyjs toggleState useShinyjs
+#' @importFrom shinyjs toggleState useShinyjs toggleElement enable disable
 #' @importFrom clusterProfiler merge_pathways
-#' @importFrom org.Hs.eg.db org.Hs.eg.db
 #' @importFrom ReactomePA enrichPathway
+#'
+#' @note This function requires the clusterProfiler and ReactomePA packages
+#'   to be installed and loaded. For GO analysis, appropriate organism databases
+#'   (e.g., org.Hs.eg.db) must also be available.
+#'
+#' @examples
+#' \dontrun{
+#' # Used within the main server function
+#' merge_pathways_server("merge_pathways_tab",
+#'                       enriched_pathways = enriched_pathways,
+#'                       enriched_modules = enriched_modules,
+#'                       tab_switch = tab_switch)
+#' }
+#'
 #' @noRd
 
 merge_pathways_server <- function(id, enriched_pathways, enriched_modules, tab_switch) {

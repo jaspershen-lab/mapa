@@ -106,18 +106,35 @@ merge_modules_ui <- function(id) {
   )
 }
 
-
 #' Merge Modules Server Module
 #'
 #' Internal server logic for merging enriched modules into functional modules.
+#' This module handles the final clustering step where enriched pathway modules
+#' are merged based on similarity measures to create higher-level functional modules.
 #'
-#' @param input,output,session Internal parameters for {shiny}. DO NOT REMOVE.
-#' @param id Module id.
-#' @param enriched_modules Reactive value containing enriched modules.
-#' @param tab_switch Function to switch tabs.
+#' @param id Character string. Module namespace identifier.
+#' @param enriched_modules ReactiveVal object containing the enriched modules
+#'   result from the pathway merging step. This should be an object with
+#'   merged pathway information from different databases.
+#' @param enriched_functional_module ReactiveVal object to store the final
+#'   functional module results after module merging.
+#' @param tab_switch Function to handle navigation between application tabs.
+#'   Used to programmatically switch to the next analysis step.
+#'
 #' @import shiny
-#' @importFrom shinyjs toggleState useShinyjs
+#' @importFrom shinyjs toggleState useShinyjs enable disable
 #' @importFrom clusterProfiler merge_modules
+#' @importFrom ReactomePA (imported for compatibility)
+#'
+#' @examples
+#' \dontrun{
+#' # Used within the main server function
+#' merge_modules_server("merge_modules_tab",
+#'                      enriched_modules = enriched_modules,
+#'                      enriched_functional_module = enriched_functional_module,
+#'                      tab_switch = tab_switch)
+#' }
+#'
 #' @noRd
 
 merge_modules_server <- function(id, enriched_modules, enriched_functional_module, tab_switch) {

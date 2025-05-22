@@ -381,16 +381,22 @@ embed_cluster_pathways_ui <- function(id) {
 
 #' Embed and Cluster Pathways Server Module
 #'
-#' Internal server logic for the embedding-based clustering step that follows
-#' pathway enrichment analysis.
+#' Server-side logic for the embedding-based clustering step that follows
+#' pathway enrichment analysis. Handles text embedding generation via API calls,
+#' similarity matrix computation, and clustering to create
+#' functional modules from enriched pathways.
 #'
-#' @param input,output,session Internal parameters for \strong{shiny}.
-#'   **Do not remove.**
-#' @param id Module id.
-#' @param enriched_pathways A reactive value that returns the
-#'   \code{enrich_pathway} object produced by the enrichment step.
-#' @param tab_switch    A callback used to programmatically switch tabs in the
-#'   parent \code{shinydashboard}.
+#' @param id Character string. The module's namespace ID.
+#' @param enriched_pathways Reactive values object containing:
+#'   \itemize{
+#'     \item \code{enriched_pathways_res} - The enrichment analysis result object
+#'     \item \code{query_type} - Type of input data ("gene" or "metabolite")
+#'     \item \code{organism} - Organism identifier
+#'     \item \code{available_db} - Vector of available databases for analysis
+#'   }
+#' @param enriched_functional_module Reactive value to store the resulting
+#'   functional module object after embedding and clustering.
+#' @param tab_switch Function to switch between application tabs.
 #'
 #' @import shiny
 #' @importFrom shinyjs toggleElement toggleState disable enable useShinyjs
