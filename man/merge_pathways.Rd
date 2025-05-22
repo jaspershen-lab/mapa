@@ -6,7 +6,7 @@
 \usage{
 merge_pathways(
   object,
-  database = c("go", "kegg", "reactome", "hmdb"),
+  database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
   p.adjust.cutoff.go = 0.05,
   p.adjust.cutoff.kegg = 0.05,
   p.adjust.cutoff.reactome = 0.05,
@@ -48,7 +48,7 @@ merge_pathways(
 \item{database}{Character vector, specify which database(s) to use for merging pathways.
 \itemize{
 \item For genes: 'go', 'kegg', 'reactome'
-\item For metabolites: 'hmdb', 'kegg'
+\item For metabolites: 'hmdb', 'metkegg'
 }}
 
 \item{p.adjust.cutoff.go}{Adjusted p-value cutoff for GO database. Default is 0.05.}

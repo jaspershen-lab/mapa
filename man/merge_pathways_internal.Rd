@@ -11,7 +11,7 @@ merge_pathways_internal(
   go.orgdb = NULL,
   p.adjust.cutoff = 0.05,
   count.cutoff = 5,
-  database = c("go", "kegg", "reactome", "hmdb"),
+  database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
   sim.cutoff = 0.5,
   measure.method,
   control.method.go = list(),

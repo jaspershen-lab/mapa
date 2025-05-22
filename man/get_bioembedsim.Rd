@@ -10,7 +10,7 @@ get_bioembedsim(
   text_embedding_model = NULL,
   api_key = NULL,
   include_gene_name = FALSE,
-  database = c("go", "kegg", "reactome", "hmdb"),
+  database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
   p.adjust.cutoff.go = 0.05,
   p.adjust.cutoff.kegg = 0.05,
   p.adjust.cutoff.reactome = 0.05,
@@ -39,7 +39,7 @@ Options are "openai" or "gemini".}
 \item{include_gene_name}{Logical indicating whether to include annotated gene names
 in the pathway descriptions (default: FALSE)}
 
-\item{database}{Character vector of databases to include. Options are "go", "kegg", "hmdb",
+\item{database}{Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
 and/or "reactome". Multiple selections allowed.}
 
 \item{p.adjust.cutoff.go}{Numeric cutoff for adjusted p-value for GO terms (default: 0.05)}

@@ -7,7 +7,7 @@
 plot_similarity_network(
   object,
   level = c("module", "functional_module"),
-  database = c("go", "kegg", "reactome", "hmdb"),
+  database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
   degree_cutoff = 0,
   module_id,
   llm_text = FALSE,
@@ -22,7 +22,7 @@ plot_similarity_network(
 "functional_module" (merged modules across databases). For results from get_bioembedsim() or
 merge_pathways_bioembedsim(), use "functional_module".}
 
-\item{database}{Character string specifying the database to visualize: "go", "kegg", "reactome", or "hmdb".
+\item{database}{Character string specifying the database to visualize: "go", "kegg", "reactome", "hmdb", or "metkegg".
 Only required when level = "module".}
 
 \item{degree_cutoff}{Numeric value for filtering nodes; only nodes with module_content_number > degree_cutoff

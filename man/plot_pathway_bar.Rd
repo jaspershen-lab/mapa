@@ -16,7 +16,7 @@ plot_pathway_bar(
   count.cutoff = 5,
   database_color = c(GO = "#eeca40", KEGG = "#fd7541", Reactome = "#23b9c7", HMDB =
     "#7998ad"),
-  database = c("go", "kegg", "reactome", "hmdb")
+  database = c("go", "kegg", "reactome", "hmdb", "metkegg")
 )
 }
 \arguments{
@@ -45,7 +45,7 @@ wrapped (default \code{50}).}
 \item{database_color}{Named vector mapping databases to fill colours.}
 
 \item{database}{Character vector of databases to include; values are
-case-insensitive versions of \code{"go"}, \code{"kegg"}, \code{"reactome"}, \code{"hmdb"}.}
+case-insensitive versions of \code{"go"}, \code{"kegg"}, \code{"reactome"}, \code{"hmdb"}, \code{"metkegg"}.}
 }
 \value{
 A \strong{ggplot} object.

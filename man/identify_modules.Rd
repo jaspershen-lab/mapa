@@ -9,7 +9,7 @@ identify_modules(
   query_type = c("gene", "metabolite"),
   analysis_type = c("enrich_pathway", "do_gsea"),
   result,
-  database = c("go", "kegg", "reactome", "hmdb"),
+  database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
   sim.cutoff = 0.5,
   save_to_local = TRUE,
   path = ""
@@ -24,7 +24,7 @@ identify_modules(
 
 \item{result}{A data frame containing the enrichment analysis results, including columns like \code{ID}, \code{Description}, \code{p_adjust}, and other relevant data.}
 
-\item{database}{Character. The database from which the enrichment results were obtained (\code{go}, \code{kegg}, \code{reactome}, \code{hmdb}).}
+\item{database}{Character. The database from which the enrichment results were obtained (\code{go}, \code{kegg}, \code{reactome}, \code{hmdb}, \code{metkegg}).}
 
 \item{sim.cutoff}{Numeric. The similarity cutoff value used to filter the edges in the similarity matrix. Default is \code{0.5}.}
 

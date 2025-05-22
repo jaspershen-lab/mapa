@@ -7,7 +7,7 @@
 enrich_pathway(
   variable_info,
   query_type = c("gene", "metabolite"),
-  database = c("go", "kegg", "reactome", "hmdb"),
+  database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
   save_to_local = FALSE,
   path = "result",
   go.orgdb = NULL,
@@ -45,7 +45,7 @@ For metabolite-based queries, it should contain columns like 'hmdbid' and 'keggi
 \item{database}{Character vector, specify which database(s) to use for enrichment:
 \itemize{
 \item For genes: 'go', 'kegg', 'reactome'
-\item For metabolites: 'hmdb', 'kegg'. 'hmdb' is only for human.
+\item For metabolites: 'hmdb', 'metkegg'. 'hmdb' is only for human.
 }}
 
 \item{save_to_local}{Logical, if TRUE the results will be saved to local disk.}
@@ -173,7 +173,7 @@ met_enriched_pathways <-
   enrich_pathway(
     variable_info = met_variable_info,
     query_type = "metabolite",
-    database = c("hmdb", "kegg"),
+    database = c("hmdb", "metkegg"),
     save_to_local = FALSE,
     pvalueCutoff = 0.05,
     pAdjustMethod = "BH"
