@@ -64,7 +64,6 @@ server <-
 
     ### Step 8 Result and report ----
     results_server("results_tab",
-                   enriched_functional_module = enriched_functional_module_result,
-                   llm_interpretation_result = llm_interpretation_result,
+                   enriched_functional_module = enriched_functional_module,
                    tab_switch)
   }

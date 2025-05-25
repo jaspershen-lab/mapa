@@ -56,13 +56,13 @@ results_ui <- function(id) {
 #' @param input,output,session Internal parameters for {shiny}. DO NOT REMOVE.
 #' @param id Module id.
 #' @param enriched_functional_module Reactive value containing enriched functional module data.
-#' @param llm_interpretation_result Reactive value containing LLM interpretation result.
 #' @param tab_switch Function to switch tabs.
+#'
 #' @import shiny
 #' @importFrom shinyjs useShinyjs
 #' @noRd
 
-results_server <- function(id, enriched_functional_module = NULL, llm_interpretation_result = NULL, tab_switch) {
+results_server <- function(id, enriched_functional_module, tab_switch) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -84,65 +84,51 @@ results_server <- function(id, enriched_functional_module = NULL, llm_interpreta
             )
           )
         } else {
-          if (is.null(llm_interpretation_result()) ||
-              length(llm_interpretation_result()) == 0) {
-            showModal(
-              modalDialog(
-                title = "Warning",
-                "No LLM interpreatation result available.",
-                easyClose = TRUE,
-                footer = modalButton("Close")
+          # shinyjs::show("loading")
+
+          withProgress(message = 'Analysis in progress...', {
+            tryCatch({
+              report_path <-
+                file.path("files",
+                          paste(sample(
+                            c(letters, LETTERS, 0:9),
+                            30, replace = TRUE
+                          ), collapse = ""))
+
+              report_functional_module(
+                object = enriched_functional_module(),
+                path = report_path,
+                type = "html"
               )
-            )
-          } else{
-            # shinyjs::show("loading")
-
-            withProgress(message = 'Analysis in progress...', {
-              tryCatch({
-                report_path <-
-                  file.path("files",
-                            paste(sample(
-                              c(letters, LETTERS, 0:9),
-                              30, replace = TRUE
-                            ), collapse = ""))
-
-                report_functional_module(
-                  object = enriched_functional_module(),
-                  interpretation_result = llm_interpretation_result(),
-                  path = report_path,
-                  type = "html"
+            },
+            error = function(e) {
+              showModal(
+                modalDialog(
+                  title = "Error",
+                  paste("Details:", e$message),
+                  easyClose = TRUE,
+                  footer = modalButton("Close")
                 )
-              },
-              error = function(e) {
-                showModal(
-                  modalDialog(
-                    title = "Error",
-                    paste("Details:", e$message),
-                    easyClose = TRUE,
-                    footer = modalButton("Close")
-                  )
-                )
-              })
+              )
             })
+          })
 
-            report_path(report_path)
+          report_path(report_path)
 
-            # shinyjs::hide("loading")
+          # shinyjs::hide("loading")
 
-            ##save code
-            report_code <-
-              sprintf(
-                '
+          ##save code
+          report_code <-
+            sprintf(
+              '
               report_functional_module(
               object = enriched_functional_module,
-              interpretation_result = interpretation_result,
               path = %s,
               type = "html")
             ',
-                paste0('"', report_path(), '"')
-              )
-            report_code(report_code)
-          }
+              paste0('"', report_path(), '"')
+            )
+          report_code(report_code)
         }
       })
 

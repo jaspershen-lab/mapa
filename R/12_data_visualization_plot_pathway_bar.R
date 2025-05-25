@@ -127,7 +127,7 @@
 #' @param object  A **functional_module** object containing enrichment and merge
 #'   information.
 #' @param top_n  Number of top items to display (default `10`).
-#' @param x_axis_name  Metric for the x-axis (see Description).  Ignored for
+#' @param x_axis_name  Metric for the x-axis (see Description, default `qscore`).  Ignored for
 #'   GSEA (always `"NES"`).
 #' @param y_label_width  Maximum character width before y-axis labels are
 #'   wrapped (default `50`).
@@ -169,7 +169,7 @@
 plot_pathway_bar <-
   function(object,
            top_n = 10,
-           x_axis_name = NULL,
+           x_axis_name = "qscore",
            y_label_width = 50,
            level = c("pathway", "module", "functional_module"),
            llm_text = FALSE,
@@ -570,7 +570,8 @@ plot_pathway_bar <-
                   stringr::str_detect(modules, "GO") ~ "GO",
                   stringr::str_detect(modules, "hsa") ~ "KEGG",
                   stringr::str_detect(modules, "R-HSA") ~ "Reactome",
-                  stringr::str_detect(modules, "SMP") ~ "HMDB"
+                  stringr::str_detect(modules, "SMP") ~ "HMDB",
+                  TRUE ~ "KEGG"
                 ))
                 paste(dbs, collapse = "/")
               })
@@ -589,7 +590,8 @@ plot_pathway_bar <-
                   stringr::str_detect(modules, "GO") ~ "GO",
                   stringr::str_detect(modules, "hsa") ~ "KEGG",
                   stringr::str_detect(modules, "R-HSA") ~ "Reactome",
-                  stringr::str_detect(modules, "SMP") ~ "HMDB"
+                  stringr::str_detect(modules, "SMP") ~ "HMDB",
+                  TRUE ~ "KEGG"
                 ))
                 paste(dbs, collapse = "/")
               })

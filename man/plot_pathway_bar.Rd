@@ -7,7 +7,7 @@
 plot_pathway_bar(
   object,
   top_n = 10,
-  x_axis_name = NULL,
+  x_axis_name = "qscore",
   y_label_width = 50,
   level = c("pathway", "module", "functional_module"),
   llm_text = FALSE,
@@ -25,7 +25,7 @@ information.}
 
 \item{top_n}{Number of top items to display (default \code{10}).}
 
-\item{x_axis_name}{Metric for the x-axis (see Description).  Ignored for
+\item{x_axis_name}{Metric for the x-axis (see Description, default \code{qscore}).  Ignored for
 GSEA (always \code{"NES"}).}
 
 \item{y_label_width}{Maximum character width before y-axis labels are

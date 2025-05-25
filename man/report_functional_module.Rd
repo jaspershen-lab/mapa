@@ -6,7 +6,6 @@
 \usage{
 report_functional_module(
   object,
-  interpretation_result,
   path = ".",
   type = c("html", "pdf", "word", "md", "all")
 )
@@ -14,9 +13,6 @@ report_functional_module(
 \arguments{
 \item{object}{An object of class 'functional_module'. The function will
 generate a report based on this object.}
-
-\item{interpretation_result}{Placeholder for future functionality or data
-that might be included in the report.}
 
 \item{path}{A character string specifying the directory path where the report
 and associated files will be saved. Defaults to the current directory.}
@@ -34,7 +30,8 @@ This function generates a report for a given object of class 'functional_module'
 It creates the report in different formats (HTML, PDF, Word) based on user choice.
 The function also performs various tasks such as creating directories,
 fetching report templates, saving parameter and object data,
-and rendering bar plots for functional modules, modules, and pathways.
+and rendering bar plots for functional modules, modules, and pathways, similarity networks,
+and interpretation of functional modules.
 }
 \details{
 The function first checks for the presence and class of the 'object'

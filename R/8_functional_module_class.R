@@ -278,11 +278,41 @@ setMethod(
     ## message for enrichment results and modules of metabolites ====
     cat(crayon::green("-----------Enrichment results and modules of metabolites------------\n"))
     cat(crayon::green("-----------HMDB------------\n"))
+    # if (is.null(enrichment_hmdb_result)) {
+    #   cat(crayon::green('No HMDB enrichment results\n'))
+    # } else {
+    #   print(enrichment_hmdb_result)
+    # }
     if (is.null(enrichment_hmdb_result)) {
-      cat(crayon::green('No HMDB enrichment results\n'))
-    } else {
-      print(enrichment_hmdb_result)
+      cat(crayon::green('No HMDB results\n'))
+    } else{
+      if (analysis_type == "enrich_pathway") {
+        p.adjust.cutoff <- object@enrichment_hmbd_result@parameter@parameter$p_cutoff
+        cat(
+          crayon::green(
+            nrow(
+              enrichment_hmdb_result@result %>%
+                dplyr::filter(p_adjust < p.adjust.cutoff)
+            ),
+            "HMDB pathways with p.adjust <",
+            p.adjust.cutoff,
+            "\n"
+          )
+        )
+      } else{
+        # p.adjust.cutoff <- object@enrichment_reactome_result@params$pvalueCutoff
+        # cat(crayon::green(
+        #   nrow(
+        #     enrichment_reactome_result@result %>%
+        #       dplyr::filter(p_adjust < p.adjust.cutoff)
+        #   ),
+        #   "Reactome pathways with p.adjust <",
+        #   p.adjust.cutoff,
+        #   "\n"
+        # ))
+      }
     }
+
     if (length(object@merged_pathway_hmdb) == 0) {
       cat(crayon::green('No HMDB modules\n'))
     } else{
@@ -293,11 +323,41 @@ setMethod(
     }
 
     cat(crayon::green("-----------KEGG Metabolite------------\n"))
+    # if (is.null(enrichment_metkegg_result)) {
+    #   cat(crayon::green('No KEGG metabolite enrichment results\n'))
+    # } else {
+    #   print(enrichment_metkegg_result)
+    # }
     if (is.null(enrichment_metkegg_result)) {
-      cat(crayon::green('No KEGG metabolite enrichment results\n'))
-    } else {
-      print(enrichment_metkegg_result)
+      cat(crayon::green('No KEGG metabolite results\n'))
+    } else{
+      if (analysis_type == "enrich_pathway") {
+        p.adjust.cutoff <- object@enrichment_metkegg_result@parameter@parameter$p_cutoff
+        cat(
+          crayon::green(
+            nrow(
+              enrichment_metkegg_result@result %>%
+                dplyr::filter(p_adjust < p.adjust.cutoff)
+            ),
+            "KEGG pathways with p.adjust <",
+            p.adjust.cutoff,
+            "\n"
+          )
+        )
+      } else{
+        # p.adjust.cutoff <- object@enrichment_reactome_result@params$pvalueCutoff
+        # cat(crayon::green(
+        #   nrow(
+        #     enrichment_reactome_result@result %>%
+        #       dplyr::filter(p_adjust < p.adjust.cutoff)
+        #   ),
+        #   "Reactome pathways with p.adjust <",
+        #   p.adjust.cutoff,
+        #   "\n"
+        # ))
+      }
     }
+
     if (length(object@merged_pathway_metkegg) == 0) {
       cat(crayon::green('No KEGG modules\n'))
     } else{

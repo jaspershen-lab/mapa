@@ -10,7 +10,18 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,
                       comment = "#>")
+knitr::opts_chunk$set(fig.align = "center",   # nice centring
+                      out.width = "\\linewidth")   # always fit page width in PDF
 ```
+
+```{r include-helper, include=FALSE}
+library(knitr)
+
+include_if_exists <- function(path, ...) {
+  if (file.exists(path)) knitr::include_graphics(path, ...)
+}
+```
+
 
 <img src="mapa_logo.png" alt="" style="width:200px">
 
@@ -22,16 +33,21 @@ knitr::opts_chunk$set(echo = TRUE,
 
 # **<font color = "lightseagreen">Introduction</font>**
 
-<h4> <p style="line-height:1.5em;">**mapa (version 0.01)**: Created in 2021 by [The Shen lab](https://www.shen-lab.org/)</p> </h4>
+<h4> <p style="line-height:1.5em;">**mapa (version 0.1.30)**: Created in 2021 by [The Shen lab](https://www.shen-lab.org/)</p> </h4>
 
 ---
 
 # **<font color = "lightseagreen">Parameters</font>**
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, message=FALSE}
-library(knitr)
 load("parameters.rda")
-kable(parameters, format = "markdown")
+if (knitr::is_latex_output()) {
+  kableExtra::kable(parameters, format = "latex", booktabs = TRUE) %>% 
+  kableExtra::kable_styling(latex_options = c("scale_down", "hold_position"),
+                position     = "center")
+} else {
+  knitr::kable(parameters, format = "markdown") 
+}
 ```
 
 ---
@@ -45,18 +61,45 @@ object
 
 # **<font color = "lightseagreen">Bar plot shows the top 10 modules/pathways</font>**
 
-![](plot_functional_module.png)
-![](plot_module.png)
-![](plot_pathway.png)
+```{r fig.pth, echo=FALSE}
+include_if_exists("plot_pathway.png")
+```
 
-**Figure 1: Barplot of the enriched pathways/modules.**
+```{r fig.module, echo=FALSE}
+include_if_exists("plot_module.png")
+```
+
+```{r fig.fm, echo=FALSE}
+include_if_exists("plot_functional_module.png")
+```
+
+**Figure 1: Barplot of the enriched pathways/modules (p.adjust.cutoff = 0.05, count.cutoff = 5).**
 
 # **<font color = "lightseagreen">Module network</font>**
 
-![](similarity_network_function_module.png)
-![](similarity_network_go.png)
-![](similarity_network_reactome.png)
-![](similarity_network_kegg.png)
+```{r fig.sim.network.fm, echo=FALSE}
+include_if_exists("similarity_network_function_module.png")
+```
+
+```{r fig.sim.network.go, echo=FALSE}
+include_if_exists("similarity_network_go.png")
+```
+
+```{r fig.sim.network.reactome, echo=FALSE}
+include_if_exists("similarity_network_reactome.png")
+```
+
+```{r fig.sim.network.kegg, echo=FALSE}
+include_if_exists("similarity_network_kegg.png")
+```
+
+```{r fig.sim.network.hmdb, echo=FALSE}
+include_if_exists("similarity_network_hmdb.png")
+```
+
+```{r fig.sim.network.metkegg, echo=FALSE}
+include_if_exists("similarity_network_metkegg.png")
+```
 
 **Figure 2: Module networks of the enriched pathways/modules.**
 
@@ -68,6 +111,10 @@ object
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, message=FALSE}
-knitr::asis_output(params$text_data)
+#knitr::asis_output(params$text_data)
 ```
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE, message=FALSE}
+load("interpretation_result.rda")
+knitr::kable(interpretation_result, format = "markdown")
+```

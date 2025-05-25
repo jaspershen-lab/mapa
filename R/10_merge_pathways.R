@@ -394,6 +394,7 @@ merge_pathways <-
         pacakge_name = "mapa",
         function_name = "merge_pathways()",
         parameter = list(
+          query_type = query_type,
           database = database,
           p.adjust.cutoff.go = p.adjust.cutoff.go,
           p.adjust.cutoff.kegg = p.adjust.cutoff.kegg,
@@ -416,6 +417,7 @@ merge_pathways <-
         pacakge_name = "mapa",
         function_name = "merge_pathways()",
         parameter = list(
+          query_type = query_type,
           database = database,
           p.adjust.cutoff.hmdb = p.adjust.cutoff.hmdb,
           p.adjust.cutoff.metkegg = p.adjust.cutoff.metkegg,

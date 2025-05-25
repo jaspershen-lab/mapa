@@ -7,7 +7,6 @@
 #
 # report_functional_module(
 #   object = enriched_functional_module,
-#   interpretation_result = interpretation_result,
 #   path = ".",
 #   type = "html"
 # )
@@ -18,12 +17,11 @@
 #' It creates the report in different formats (HTML, PDF, Word) based on user choice.
 #' The function also performs various tasks such as creating directories,
 #' fetching report templates, saving parameter and object data,
-#' and rendering bar plots for functional modules, modules, and pathways.
+#' and rendering bar plots for functional modules, modules, and pathways, similarity networks,
+#' and interpretation of functional modules.
 #'
 #' @param object An object of class 'functional_module'. The function will
 #'               generate a report based on this object.
-#' @param interpretation_result Placeholder for future functionality or data
-#'                             that might be included in the report.
 #' @param path A character string specifying the directory path where the report
 #'             and associated files will be saved. Defaults to the current directory.
 #' @param type A character vector specifying the format of the report.
@@ -51,9 +49,21 @@
 
 report_functional_module <-
   function(object,
-           interpretation_result,
            path = ".",
            type = c("html", "pdf", "word", "md", "all")) {
+
+    if (identical(type, "pdf") && Sys.which("pdflatex") == "") {
+      stop("PDF output requires a LaTeX distribution. ",
+           "Install TinyTeX via install.packages('tinytex') and tinytex::install_tinytex(), ",
+           "or re-run with type = 'html' or 'word'.")
+    }
+
+    has_kableExtra <- requireNamespace("kableExtra", quietly = TRUE)
+
+    if (!has_kableExtra && identical(type, "pdf")) {
+      warning("kableExtra not found; tables will not scale to page width in PDF. ",
+              "Run install.packages('kableExtra') for prettier tables.")
+    }
 
     if (missing(object)) {
       stop("object is missing")
@@ -83,6 +93,9 @@ report_functional_module <-
         idx <- 0
       }
 
+      if (!is.finite(idx))          # catches -Inf as well as Inf
+        idx <- 0
+
       output_path <-
         file.path(path, paste('Report', idx + 1, sep = "_"))
     } else{
@@ -100,8 +113,8 @@ report_functional_module <-
       edit = FALSE
     )
 
-    ###parameters
-    message("Parameters.")
+    ## Parameters ====
+    message("Saving parameters ...")
 
     parameters <-
       object@process_info %>%
@@ -122,8 +135,24 @@ report_functional_module <-
     save(parameters, file = file.path(output_path, "parameters.rda"))
     save(object, file = file.path(output_path, "object.rda"))
 
-    ####Barplot to show the pathways
-    message("Barplot")
+    ## Barplot to show the top 10 pathways ====
+    message("Saving barplots ...")
+
+    if (length(c(object@merged_pathway_go,
+                 object@merged_pathway_kegg,
+                 object@merged_pathway_reactome,
+                 object@merged_pathway_hmdb,
+                 object@merged_pathway_metkegg)) == 0) {
+      module <- FALSE
+    } else {
+      module <- TRUE
+    }
+
+    if ("llm_interpret_module" %in% names(object@process_info)) {
+      llm_text <- TRUE
+    } else {
+      llm_text <- FALSE
+    }
 
     plot_functional_module <-
       plot_pathway_bar(
@@ -132,20 +161,21 @@ report_functional_module <-
         p.adjust.cutoff = 0.05,
         count.cutoff = 5,
         y_label_width = 30,
-        level = "functional_module"
-      ) +
-      labs(title = "Functional module")
+        level = "functional_module",
+        llm_text = llm_text
+      )
 
-    plot_module <-
-      plot_pathway_bar(
-        object = object,
-        top_n = 10,
-        p.adjust.cutoff = 0.05,
-        count.cutoff = 5,
-        y_label_width = 30,
-        level = "module"
-      ) +
-      labs(title = "Module")
+    if (module) {
+      plot_module <-
+        plot_pathway_bar(
+          object = object,
+          top_n = 10,
+          p.adjust.cutoff = 0.05,
+          count.cutoff = 5,
+          y_label_width = 30,
+          level = "module"
+        )
+    }
 
     plot_pathway <-
       plot_pathway_bar(
@@ -155,123 +185,215 @@ report_functional_module <-
         count.cutoff = 5,
         y_label_width = 30,
         level = "pathway"
-      ) +
-      labs(title = "Pathway")
+      )
 
-    ggplot2::ggsave(
-      filename = file.path(output_path, "plot_functional_module.png"),
-      plot = plot_functional_module,
-      width = 8,
-      height = 6,
-      dpi = 600
-    )
+    tryCatch({
+      ggplot2::ggsave(
+        filename = file.path(output_path, "plot_functional_module.png"),
+        plot = plot_functional_module,
+        width = 8,
+        height = 6,
+        dpi = 600
+      )
+      message("Plot plot_functional_module.png saved successfully to: ", file.path(output_path, "plot_functional_module.png"), "!")
+    }, error = function(e) {
+      message("Error saving plot: ", e$message)
+    })
 
-    ggplot2::ggsave(
-      filename = file.path(output_path, "plot_module.png"),
-      plot = plot_module,
-      width = 8,
-      height = 6
-    )
+    if (!module) {
+      message("No module level result was generated - no plot to save.")
+    } else {
+      tryCatch({
+        ggsave(
+          filename = file.path(output_path, "plot_module.png"),
+          plot = plot_module,
+          width = 8,
+          height = 6
+        )
+        message("Plot plot_module.png saved successfully to: ", file.path(output_path, "plot_module.png"), "!")
+      }, error = function(e) {
+        message("Error saving plot: ", e$message)
+      })
+    }
 
-    ggplot2::ggsave(
-      filename = file.path(output_path, "plot_pathway.png"),
-      plot = plot_pathway,
-      width = 8,
-      height = 6
-    )
+    tryCatch({
+      ggplot2::ggsave(
+        filename = file.path(output_path, "plot_pathway.png"),
+        plot = plot_pathway,
+        width = 8,
+        height = 6
+      )
+      message("Plot plot_pathway.png saved successfully to: ", file.path(output_path, "plot_pathway.png"), "!")
+    }, error = function(e) {
+      message("Error saving plot: ", e$message)
+    })
 
-    ####Whole module network
-    similarity_network_go <-
-      plot_similarity_network(object = object,
-                              level = "module",
-                              database = "go") +
-      labs(title = "GO")
+    ## Whole module network ====
+    message("Saving similarity networks ...")
 
-    similarity_network_reactome <-
-      plot_similarity_network(object = object,
-                              level = "module",
-                              database = "reactome") +
-      labs(title = "Reactome")
+    if (length(object@merged_pathway_go) != 0) {
+      similarity_network_go <-
+        plot_similarity_network(object = object,
+                                level = "module",
+                                database = "go") +
+        labs(title = "GO Modules")
 
-    similarity_network_kegg <-
-      plot_similarity_network(object = object,
-                              level = "module",
-                              database = "kegg") +
-      labs(title = "KEGG")
+      tryCatch({
+        ggplot2::ggsave(
+          filename = file.path(output_path, "similarity_network_go.png"),
+          plot = similarity_network_go,
+          width = 8,
+          height = 6
+        )
+        message("Plot similarity_network_go.png saved successfully to: ", file.path(output_path, "similarity_network_go.png"), "!")
+      }, error = function(e) {
+        message("Error saving plot: ", e$message)
+      })
+    }
+
+    if (length(object@merged_pathway_kegg) != 0) {
+      similarity_network_kegg <-
+        plot_similarity_network(object = object,
+                                level = "module",
+                                database = "kegg") +
+        labs(title = "KEGG Modules")
+
+      tryCatch({
+        ggplot2::ggsave(
+          filename = file.path(output_path, "similarity_network_kegg.png"),
+          plot = similarity_network_kegg,
+          width = 8,
+          height = 6
+        )
+        message("Plot similarity_network_kegg.png saved successfully to: ", file.path(output_path, "similarity_network_kegg.png"), "!")
+      }, error = function(e) {
+        message("Error saving plot: ", e$message)
+      })
+    }
+
+    if (length(object@merged_pathway_reactome) != 0) {
+      similarity_network_reactome <-
+        plot_similarity_network(object = object,
+                                level = "module",
+                                database = "reactome") +
+        labs(title = "Reactome Modules")
+
+      tryCatch({
+        ggplot2::ggsave(
+          filename = file.path(output_path, "similarity_network_reactome.png"),
+          plot = similarity_network_reactome,
+          width = 8,
+          height = 6
+        )
+        message("Plot similarity_network_reactome.png saved successfully to: ", file.path(output_path, "similarity_network_reactome.png"), "!")
+      }, error = function(e) {
+        message("Error saving plot: ", e$message)
+      })
+    }
+
+    if (length(object@merged_pathway_hmdb) != 0) {
+      similarity_network_hmdb <-
+        plot_similarity_network(object = object,
+                                level = "module",
+                                database = "hmdb") +
+        labs(title = "HMDB Modules")
+
+      tryCatch({
+        ggplot2::ggsave(
+          filename = file.path(output_path, "similarity_network_hmdb.png"),
+          plot = similarity_network_hmdb,
+          width = 8,
+          height = 6
+        )
+        message("Plot similarity_network_hmdb.png saved successfully to: ", file.path(output_path, "similarity_network_hmdb.png"), "!")
+      }, error = function(e) {
+        message("Error saving plot: ", e$message)
+      })
+    }
+
+    if (length(object@merged_pathway_metkegg) != 0) {
+      similarity_network_metkegg <-
+        plot_similarity_network(object = object,
+                                level = "module",
+                                database = "metkegg") +
+        labs(title = "KEGG Modules")
+
+      tryCatch({
+        ggplot2::ggsave(
+          filename = file.path(output_path, "similarity_network_metkegg.png"),
+          plot = similarity_network_metkegg,
+          width = 8,
+          height = 6
+        )
+        message("Plot similarity_network_metkegg.png saved successfully to: ", file.path(output_path, "similarity_network_metkegg.png"), "!")
+      }, error = function(e) {
+        message("Error saving plot: ", e$message)
+      })
+    }
 
     similarity_network_function_module <-
       plot_similarity_network(object = object,
                               level = "functional_module",
-                              database = "kegg") +
-      labs(title = "Functional modules")
+                              llm_text = llm_text) +
+      labs(title = "Functional Modules")
 
-    ggplot2::ggsave(
-      filename = file.path(output_path, "similarity_network_function_module.png"),
-      plot = similarity_network_function_module,
-      width = 8,
-      height = 6
-    )
+    tryCatch({
+      ggplot2::ggsave(
+        filename = file.path(output_path, "similarity_network_function_module.png"),
+        plot = similarity_network_function_module,
+        width = 8,
+        height = 6
+      )
+      message("Plot similarity_network_function_module.png saved successfully to: ", file.path(output_path, "similarity_network_function_module.png"), "!")
+    }, error = function(e) {
+      message("Error saving plot: ", e$message)
+    })
 
-    ggplot2::ggsave(
-      filename = file.path(output_path, "similarity_network_go.png"),
-      plot = similarity_network_go,
-      width = 8,
-      height = 6
-    )
+    ## Module network analysis ====
+    # functional_module_id <-
+    #   object@merged_module$functional_module_result %>%
+    #   dplyr::filter(p_adjust < 0.05 & Count >= 5) %>%
+    #   dplyr::arrange(p_adjust) %>%
+    #   head(10) %>%
+    #   pull(module)
+    #
+    # if (length(functional_module_id) > 0) {
+    #   functional_module_length <-
+    #     lapply(functional_module_id, function(x) {
+    #       sum(object@merged_module$result_with_module$module == x)
+    #     }) %>%
+    #     unlist()
+    #
+    #   functional_module_id <-
+    #     functional_module_id[functional_module_length > 1]
+    # }
+    #
+    # if (length(functional_module_id) > 0) {
+    #   plot <-
+    #     plot_module_info(object = object,
+    #                      level = "functional_module",
+    #                      module_id = functional_module_id[1])
+    # }
 
-    ggplot2::ggsave(
-      filename = file.path(output_path, "similarity_network_reactome.png"),
-      plot = similarity_network_reactome,
-      width = 8,
-      height = 6
-    )
+    ## Interpretation of functional modules ====
+    message("Saving the interpretation of functional modules ...")
 
-    ggplot2::ggsave(
-      filename = file.path(output_path, "similarity_network_kegg.png"),
-      plot = similarity_network_kegg,
-      width = 8,
-      height = 6
-    )
-
-    ####Module network analysis
-    ###
-    functional_module_id <-
-      enriched_functional_module@merged_module$functional_module_result %>%
-      dplyr::filter(p.adjust < 0.05 & Count >= 5) %>%
-      dplyr::arrange(p.adjust) %>%
-      head(10) %>%
-      pull(module)
-
-    if (length(functional_module_id) > 0) {
-      functional_module_length <-
-        lapply(functional_module_id, function(x) {
-          sum(enriched_functional_module@merged_module$result_with_module$module == x)
-        }) %>%
-        unlist()
-
-      functional_module_id <-
-        functional_module_id[functional_module_length > 1]
+    if (llm_text) {
+      interpretation_result <- extract_llm_module_data(llm_module_interpretation = object@llm_module_interpretation)
+    } else {
+      interpretation_result <- object@merged_module$functional_module_result
     }
 
-    if (length(functional_module_id) > 0) {
-      plot <-
-        plot_module_info(object = enriched_functional_module,
-                         level = "functional_module",
-                         module_id = functional_module_id[1])
-    }
+    save(interpretation_result, file = file.path(output_path, "interpretation_result.rda"))
 
-    message("Render report.")
-
-    if (missing(interpretation_result)) {
-      interpretation_result <- "> No interpretation result is provided."
-    }
+    message("Rendering report ...")
 
     ##transform rmd to HTML or pdf
     if (type == "html" | type == "all") {
       rmarkdown::render(
         file.path(output_path, "mapa.template.Rmd"),
         output_format = rmarkdown::html_document(),
-        params = list(text_data = interpretation_result)
+        params = list(text_data = NULL)
       )
 
       file.rename(
@@ -285,7 +407,7 @@ report_functional_module <-
       rmarkdown::render(
         input = file.path(output_path, "mapa.template.Rmd"),
         output_format = rmarkdown::pdf_document(),
-        params = list(text_data = interpretation_result)
+        params = list(text_data = NULL)
       )
       file.rename(
         from = file.path(output_path, "mapa.template.pdf"),
@@ -298,7 +420,7 @@ report_functional_module <-
       rmarkdown::render(
         file.path(output_path, "mapa.template.Rmd"),
         output_format = rmarkdown::word_document(),
-        params = list(text_data = interpretation_result)
+        params = list(text_data = NULL)
       )
       file.rename(
         from = file.path(output_path, "mapa.template.pdf"),
@@ -311,7 +433,7 @@ report_functional_module <-
       rmarkdown::render(
         file.path(output_path, "mapa.template.Rmd"),
         output_format = rmarkdown::md_document(),
-        params = list(text_data = interpretation_result)
+        params = list(text_data =  NULL)
       )
       file.rename(
         from = file.path(output_path, "mapa.template.md"),
@@ -328,4 +450,4 @@ report_functional_module <-
       recursive = TRUE,
       force = TRUE
     )
-  }
+}

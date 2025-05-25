@@ -1335,3 +1335,59 @@ unify_id_internal <- function(ids = NULL,
   }
   return(unified_ids)
 }
+
+# Function to extract LLM module interpretation data into a data frame
+extract_llm_module_data <- function(llm_module_interpretation) {
+
+  # Get the names of all functional modules
+  module_names <- names(llm_module_interpretation)
+
+  # Initialize empty vectors for each column
+  module <- character()
+  llm_interpreted_name <- character()
+  llm_summary <- character()
+  llm_phenotype_analysis <- character()
+  confidence_score <- numeric()
+
+  # Loop through each functional module
+  for (i in seq_along(module_names)) {
+    module_name <- module_names[i]
+    module_data <- llm_module_interpretation[[module_name]]
+
+    # Extract data from generated_name section
+    generated_name <- module_data$generated_name
+
+    # Append data to vectors
+    module <- c(module, module_name)
+    llm_interpreted_name <- c(llm_interpreted_name,
+                              ifelse(is.null(generated_name$module_name),
+                                     NA_character_,
+                                     generated_name$module_name))
+    llm_summary <- c(llm_summary,
+                     ifelse(is.null(generated_name$summary),
+                            NA_character_,
+                            generated_name$summary))
+
+    llm_phenotype_analysis <- c(llm_phenotype_analysis,
+                                ifelse(is.null(generated_name$phenotype_analysis),
+                                       NA_character_,
+                                       generated_name$phenotype_analysis))
+
+    confidence_score <- c(confidence_score,
+                          ifelse(is.null(generated_name$confidence_score),
+                                 NA_real_,
+                                 generated_name$confidence_score))
+  }
+
+  # Create the data frame
+  result_df <- data.frame(
+    module = module,
+    llm_interpreted_name = llm_interpreted_name,
+    llm_summary = llm_summary,
+    llm_phenotype_analysis = llm_phenotype_analysis,
+    confidence_score = confidence_score,
+    stringsAsFactors = FALSE
+  )
+
+  return(result_df)
+}

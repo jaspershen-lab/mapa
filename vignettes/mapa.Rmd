@@ -25,6 +25,7 @@ knitr::opts_chunk$set(
   message = TRUE,
   out.width = "100%"
 )
+set.seed(123)
 ```
 
 
@@ -35,12 +36,10 @@ library(mapa)
 if(!require(massdataset)){
   remotes::install_gitlab("tidymass/massdataset")
 }
-if(!require(org.Hs.eg.db)){
-  BiocManager::install("org.Hs.eg.db")
-}
+
 data("demo_data", package = "mapa")
 load("demo_data.rda")
-demo_data
+str(demo_data)
 ```
 
 # Pathway enrichment
@@ -61,7 +60,7 @@ enriched_pathways <-
     go.keytype = "ENSEMBL",
     go.ont = "ALL",
     kegg.organism = "hsa",
-    kegg.keytype = "uniprot",
+    kegg.keytype = "kegg",
     reactome.organism = "human",
     pvalueCutoff = 0.05,
     pAdjustMethod = "BH",
@@ -86,6 +85,7 @@ enriched_modules <-
     object = enriched_pathways,
     database = c("go", "kegg", "reactome"),
     p.adjust.cutoff.go = 0.05,
+    go.orgdb = org.Hs.eg.db,
     p.adjust.cutoff.kegg = 0.05,
     p.adjust.cutoff.reactome = 0.05,
     count.cutoff.go = 5,
@@ -166,7 +166,7 @@ plot_pathway_bar(object = enriched_functional_module,
 
 # Check the individual module
 
-```{r,eval=FALSE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 plot <-
   plot_module_info(
     object = enriched_functional_module,
@@ -178,8 +178,8 @@ plot <-
 plot_module_info(
   object = enriched_functional_module,
   level = "module",
-  database = "kegg",
-  module_id = "kegg_Module_15"
+  database = "reactome",
+  module_id = "reactome_Module_7"
 )
 
 
@@ -187,7 +187,7 @@ enriched_functional_module@merged_module$functional_module_result$module
 
 plot_module_info(object = enriched_functional_module,
                  level = "functional_module",
-                 module_id = "Functional_module_17")
+                 module_id = "Functional_module_12")
 
 # export_module_info_plot(object = object, path = "result2")
 
@@ -195,46 +195,27 @@ plot_module_info(object = enriched_functional_module,
 
 # The whole similary network
 
-```{r,eval=FALSE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 
 plot_similarity_network(
   object = enriched_functional_module,
   level = "module",
   database = "go",
-  degree_cutoff = 10
+  degree_cutoff = 5
 )
 
 plot_similarity_network(
   object = enriched_functional_module,
   level = "module",
-  database = "go",
-  degree_cutoff = 0,
-  module_id = "go_Module_2",
-  text_all = TRUE
-)
-
-plot_similarity_network(
-  object = enriched_functional_module,
-  level = "module",
-  degree_cutoff = 0,
-  database = "go",
-  text_all = TRUE
-)
-
-plot_similarity_network(
-  object = enriched_functional_module,
-  level = "module",
-  degree_cutoff = 0,
-  database = "kegg",
-  text_all = TRUE
-)
-
-plot_similarity_network(
-  object = enriched_functional_module,
-  level = "module",
-  degree_cutoff = 1,
+  degree_cutoff = 2,
   database = "reactome",
   text_all = TRUE
+)
+
+plot_similarity_network(
+  object = enriched_functional_module,
+  level = "functional_module",
+  degree_cutoff = 3
 )
 ```
 
@@ -244,7 +225,7 @@ plot_similarity_network(
 object <-
   enriched_functional_module
 object@merged_module$functional_module_result <-
-  head(object@merged_module$functional_module_result, 3)
+  head(object@merged_module$functional_module_result, 2)
 plot_relationship_network(
   object = object,
   include_functional_modules = TRUE,
@@ -291,8 +272,8 @@ plot_relationship_network(
 
 # Export results as excel
 
-```{r,eval=FALSE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
-export_functional_module(object = object)
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+export_functional_module(object = enriched_functional_module)
 ```
 
 
