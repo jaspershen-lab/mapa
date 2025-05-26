@@ -20,11 +20,11 @@ of writing files.
 }
 \description{
 Writes every enrichment/table contained in a
-\code{\link{functional_module}} object to \strong{individual UTF-8 CSV files}.
+\code{functional_module} object to \strong{individual UTF-8 CSV files}.
 }
 \details{
 \itemize{
-\item Files are written with \code{\link[readr:write_delim]{readr::write_csv()}}, overwriting any
+\item Files are written with \code{\link[readr]{write_csv}}, overwriting any
 existing files of the same name.
 \item Slots that are \code{NULL} are written as empty data-frames so the list
 of output files is always predictable.

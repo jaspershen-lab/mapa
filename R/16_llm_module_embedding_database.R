@@ -112,15 +112,20 @@ embedding_local_corpus <-
 #' @details
 #' This function performs the following:
 #' \enumerate{
-#'   \item Extracts text from the PDF using \code{\link{pdf_text}}.
-#'   \item Splits the text into smaller chunks using \code{\link{split_into_chunks}}.
-#'   \item Generates embeddings for each chunk using a parallelized approach (\code{\link{parallel::parLapply}} or \code{\link{pbmclapply}}).
+#'   \item Extracts text from the PDF using
+#'         \code{\link[pdftools]{pdf_text}}.
+#'   \item Splits the text into smaller chunks using
+#'         \code{\link{split_into_chunks}}.
+#'   \item Generates embeddings for each chunk in parallel with
+#'         \code{\link[parallel]{parLapply}} (Windows/macOS) or
+#'         \code{\link[pbmcapply]{pbmclapply}} (Linux).
 #' }
 #' The resulting data frame contains the title of the PDF, the processed chunks, and their corresponding embedding vectors.
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
+
 embedding_single_pdf <- function(pdf_path,
                                  embedding_model = "text-embedding-3-small",
                                  api_key){
@@ -173,15 +178,8 @@ embedding_single_pdf <- function(pdf_path,
 #'
 #' @return A character vector where each element is a text chunk.
 #'
-#' @importFrom stringr str_split str_count str_trim str_c str_detect
+#' @importFrom stringr str_split str_count str_trim str_c str_detect regex
 #'
-#' @examples
-#' \dontrun{
-#' # Example: Split a full text into chunks
-#' full_text <- "This is the first line.\nThis is the second line, which has more words.\n\nReferences\nThis line will be excluded."
-#' chunks <- split_into_chunks(full_text)
-#' print(chunks)
-#' }
 #' @details
 #' This function handles both single-column and double-column texts. Double-column texts are identified based on the number of spaces in a line (\code{space_threshold}). The function also filters out chunks containing references or URLs and ensures that only chunks with at least \code{min_chunk_length} words are included.
 #'

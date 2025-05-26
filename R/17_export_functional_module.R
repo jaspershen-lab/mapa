@@ -17,7 +17,7 @@
 #' Export functional-module results to CSV
 #'
 #' Writes every enrichment/table contained in a
-#' [`functional_module`] object to **individual UTF-8 CSV files**.
+#' `functional_module` object to **individual UTF-8 CSV files**.
 #'
 #' @param object  A `functional_module` object returned by the MAPA
 #'   workflow, containing the enrichment and module results.
@@ -26,7 +26,7 @@
 #'   **Default:** `"result"`.
 #'
 #' @details
-#' * Files are written with [readr::write_csv()], overwriting any
+#' * Files are written with \code{\link[readr]{write_csv}}, overwriting any
 #'   existing files of the same name.
 #' * Slots that are `NULL` are written as empty data-frames so the list
 #'   of output files is always predictable.

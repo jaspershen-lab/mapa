@@ -123,7 +123,7 @@
 #' @importFrom dplyr filter mutate select rename pull group_by arrange slice_head left_join summarise
 #' @importFrom tidygraph activate as_tibble
 #' @importFrom ggraph ggraph geom_edge_link geom_node_point geom_node_text theme_graph create_layout
-#' @importFrom igraph as_data_frame vertex_attr gorder
+#' @importFrom igraph vertex_attr gorder
 #' @importFrom ggplot2 ggplot geom_blank element_rect labs scale_size_continuous theme guides guide_legend
 #' @importFrom stringr str_wrap
 #'

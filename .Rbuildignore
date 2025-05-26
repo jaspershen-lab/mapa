@@ -3,7 +3,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
-
+^\.Rhistory$
+^\.RData$
+^\.RDataTmp$
 
 
 demo_data/

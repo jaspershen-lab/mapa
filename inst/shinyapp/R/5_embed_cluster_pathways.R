@@ -596,7 +596,6 @@ embed_cluster_pathways_server <- function(id, enriched_pathways, enriched_functi
                   api_provider = %s,
                   text_embedding_model = %s,
                   api_key = %s,
-                  include_gene_name = FALSE,
                   database = %s,%s%s%s
                   save_to_local = FALSE
                   )
@@ -652,7 +651,6 @@ embed_cluster_pathways_server <- function(id, enriched_pathways, enriched_functi
                   api_provider = %s,
                   text_embedding_model = %s,
                   api_key = %s,
-                  include_gene_name = FALSE,
                   database = %s,%s%s
                   save_to_local = FALSE
                   )

@@ -164,6 +164,8 @@
 #' @importFrom stringr str_wrap str_split str_detect
 #' @importFrom purrr map map_chr
 #' @importFrom methods is
+#' @importFrom stats reorder
+#'
 #' @export
 
 plot_pathway_bar <-

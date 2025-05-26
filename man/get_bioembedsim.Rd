@@ -9,7 +9,6 @@ get_bioembedsim(
   api_provider = c("openai", "gemini"),
   text_embedding_model = NULL,
   api_key = NULL,
-  include_gene_name = FALSE,
   database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
   p.adjust.cutoff.go = 0.05,
   p.adjust.cutoff.kegg = 0.05,
@@ -35,9 +34,6 @@ Options are "openai" or "gemini".}
 (e.g., "text-embedding-3-small" for OpenAI or "text-embedding-004" for Gemini)}
 
 \item{api_key}{Character string of the API key for the specified provider}
-
-\item{include_gene_name}{Logical indicating whether to include annotated gene names
-in the pathway descriptions (default: FALSE)}
 
 \item{database}{Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
 and/or "reactome". Multiple selections allowed.}
@@ -108,8 +104,7 @@ sim_matrix <- get_bioembedsim(
   api_provider = "gemini",
   text_embedding_model = "text-embedding-004",
   api_key = "your_gemini_key",
-  database = "reactome",
-  include_gene_name = TRUE
+  database = "reactome"
 )
 }
 

@@ -21,7 +21,7 @@ processed by \code{merge_pathways()} and \code{merge_modules()}.}
 \item{llm_text}{Use the \code{llm_module_name} (GPT annotation) column instead of
 \code{module_annotation} for functional-module labels?}
 
-\item{include_functional_modules, include_modules, include_pathways, }{include_molecules Logical; include the corresponding node class (at least
+\item{include_functional_modules, include_modules, include_molecules, include_pathways, }{include_molecules Logical; include the corresponding node class (at least
 two must be \code{TRUE}).}
 }
 \value{

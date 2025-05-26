@@ -29,9 +29,13 @@ Processes a single PDF file by extracting text, splitting it into manageable chu
 \details{
 This function performs the following:
 \enumerate{
-\item Extracts text from the PDF using \code{\link{pdf_text}}.
-\item Splits the text into smaller chunks using \code{\link{split_into_chunks}}.
-\item Generates embeddings for each chunk using a parallelized approach (\code{\link{parallel::parLapply}} or \code{\link{pbmclapply}}).
+\item Extracts text from the PDF using
+\code{\link[pdftools]{pdf_text}}.
+\item Splits the text into smaller chunks using
+\code{\link{split_into_chunks}}.
+\item Generates embeddings for each chunk in parallel with
+\code{\link[parallel]{parLapply}} (Windows/macOS) or
+\code{\link[pbmcapply]{pbmclapply}} (Linux).
 }
 The resulting data frame contains the title of the PDF, the processed chunks, and their corresponding embedding vectors.
 }

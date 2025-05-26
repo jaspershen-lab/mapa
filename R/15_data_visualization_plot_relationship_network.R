@@ -86,17 +86,15 @@
 #'   Hex fill colours for the four node classes.
 #' @param functional_module_text,module_text,pathway_text,molecule_text
 #'   Logical; draw text labels for the corresponding class?
-#' @param functional_module_text_size,module_text_size,pathway_text_size,
-#'   molecule_text_size Numeric; text‐label size (pts) for each class.
+#' @param functional_module_text_size,module_text_size,pathway_text_size,molecule_text_size
+#'   Numeric; text‐label size (pts) for each class.
 #' @param circular_plot  If `TRUE`, lay nodes out on concentric circles instead
 #'   of four horizontal tracks.
-#' @param functional_module_arrange_position,module_arrange_position,
-#'   pathway_arrange_position,molecule_arrange_position Logical; evenly space
-#'   the x position of nodes in each class between the limits given in the
+#' @param functional_module_arrange_position,module_arrange_position,pathway_arrange_position,molecule_arrange_position
+#'   Logical; evenly space the x position of nodes in each class between the limits given in the
 #'   matching `*_position_limits`.
-#' @param functional_module_position_limits,module_position_limits,
-#'   pathway_position_limits,molecule_position_limits Numeric length-2 vectors
-#'   (`[0,1]`) giving the left/right fraction of the x-axis used by each track.
+#' @param functional_module_position_limits,module_position_limits,pathway_position_limits,molecule_position_limits
+#'   Numeric length-2 vectors (`[0,1]`) giving the left/right fraction of the x-axis used by each track.
 #'
 #' @return A **ggplot** object.
 #'
@@ -469,7 +467,7 @@ plot_relationship_network <-
 #'   processed by `merge_pathways()` and `merge_modules()`.
 #' @param llm_text  Use the `llm_module_name` (GPT annotation) column instead of
 #'   `module_annotation` for functional-module labels?
-#' @param include_functional_modules,include_modules,include_pathways,
+#' @param include_functional_modules,include_modules,include_molecules,include_pathways,
 #'   include_molecules Logical; include the corresponding node class (at least
 #'   two must be `TRUE`).
 #'

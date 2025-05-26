@@ -32,14 +32,6 @@ Splits a given full text into smaller chunks based on specified parameters such 
 \details{
 This function handles both single-column and double-column texts. Double-column texts are identified based on the number of spaces in a line (\code{space_threshold}). The function also filters out chunks containing references or URLs and ensures that only chunks with at least \code{min_chunk_length} words are included.
 }
-\examples{
-\dontrun{
-# Example: Split a full text into chunks
-full_text <- "This is the first line.\nThis is the second line, which has more words.\n\nReferences\nThis line will be excluded."
-chunks <- split_into_chunks(full_text)
-print(chunks)
-}
-}
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }

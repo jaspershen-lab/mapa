@@ -61,8 +61,6 @@
 #' @param text_embedding_model Character string specifying the embedding model to use
 #'   (e.g., "text-embedding-3-small" for OpenAI or "text-embedding-004" for Gemini)
 #' @param api_key Character string of the API key for the specified provider
-#' @param include_gene_name Logical indicating whether to include annotated gene names
-#'   in the pathway descriptions (default: FALSE)
 #' @param database Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
 #'   and/or "reactome". Multiple selections allowed.
 #' @param p.adjust.cutoff.go Numeric cutoff for adjusted p-value for GO terms (default: 0.05)
@@ -110,13 +108,12 @@
 #'   api_provider = "gemini",
 #'   text_embedding_model = "text-embedding-004",
 #'   api_key = "your_gemini_key",
-#'   database = "reactome",
-#'   include_gene_name = TRUE
+#'   database = "reactome"
 #' )
 #' }
 #'
 #' @importFrom dplyr filter pull
-#' @importFrom httr2 request req_auth_bearer_token req_headers req_body_json req_retry req_perform resp_body_json
+#' @importFrom httr2 request req_auth_bearer_token req_headers req_body_json req_retry req_perform resp_body_json resp_is_error resp_status
 #' @importFrom KEGGREST keggGet
 #' @importFrom purrr map map_df
 #' @importFrom rtiktoken get_token_count
@@ -128,7 +125,6 @@ get_bioembedsim <-
            api_provider = c("openai", "gemini"),
            text_embedding_model = NULL,
            api_key = NULL,
-           include_gene_name = FALSE,
            database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
            p.adjust.cutoff.go = 0.05,
            p.adjust.cutoff.kegg = 0.05,
@@ -185,7 +181,7 @@ get_bioembedsim <-
             dplyr::filter(p_adjust < p.adjust.cutoff.go) %>%
             dplyr::filter(Count > count.cutoff.go) %>%
             dplyr::pull(ID) %>%
-            get_go_info(include_gene_name = include_gene_name)
+            get_go_info()
           all_text_info <- c(all_text_info, go_info)
         }
       }
@@ -199,7 +195,7 @@ get_bioembedsim <-
             dplyr::filter(p_adjust < p.adjust.cutoff.kegg) %>%
             dplyr::filter(Count > count.cutoff.kegg) %>%
             dplyr::pull(ID) %>%
-            get_kegg_pathway_info(include_gene_name = include_gene_name)
+            get_kegg_pathway_info()
           all_text_info <- c(all_text_info, kegg_info)
         }
       }
@@ -213,7 +209,7 @@ get_bioembedsim <-
             dplyr::filter(p_adjust < p.adjust.cutoff.reactome) %>%
             dplyr::filter(Count > count.cutoff.reactome) %>%
             dplyr::pull(ID) %>%
-            get_reactome_pathway_info(include_gene_name = include_gene_name)
+            get_reactome_pathway_info()
           all_text_info <- c(all_text_info, reactome_info)
         }
       }
@@ -263,12 +259,11 @@ get_bioembedsim <-
       }
     }
 
-    all_combined_info <- combine_info(info = all_text_info, include_gene_name = include_gene_name)
+    all_combined_info <- combine_info(info = all_text_info)
 
 
     ## Get embedding matrix
     embedding_matrix <- get_embedding_matrix(text = all_combined_info,
-                                             include_gene_name = include_gene_name,
                                              api_provider = api_provider,
                                              text_embedding_model = text_embedding_model,
                                              api_key = api_key)
@@ -339,19 +334,19 @@ get_bioembedsim <-
 ## 1.1 Extract GO info (go_id, annotated gene IDs, name, definition, PMID)====
 ### test: GO:0031954 -> 0PMID; GO:1902074 -> 1 PMID; GO:0000001 -> 2PMID
 
-get_go_info <- function(go_ids, include_gene_name = FALSE) {
+get_go_info <- function(go_ids) {
   #### Generate GO terms and annotated Entrez Gene identifiers dict
   go2egs <- NULL
   eg2genename <- NULL
 
-  # Only retrieve gene-related information if include_gene_name is TRUE
-  if (include_gene_name) {
-    go2egs <- suppressMessages(AnnotationDbi::select(org.Hs.eg.db, keys = go_ids, columns = "ENTREZID", keytype = "GOALL"))
-    #### Generate entrez ID to gene name dict
-    eg2genename <-
-      suppressMessages(AnnotationDbi::select(org.Hs.eg.db, keys = go2egs$ENTREZID, columns = "GENENAME")) %>%
-      dplyr::distinct()
-  }
+  # # Only retrieve gene-related information if include_gene_name is TRUE
+  # if (include_gene_name) {
+  #   go2egs <- suppressMessages(AnnotationDbi::select(org.Hs.eg.db, keys = go_ids, columns = "ENTREZID", keytype = "GOALL"))
+  #   #### Generate entrez ID to gene name dict
+  #   eg2genename <-
+  #     suppressMessages(AnnotationDbi::select(org.Hs.eg.db, keys = go2egs$ENTREZID, columns = "GENENAME")) %>%
+  #     dplyr::distinct()
+  # }
 
   chunk_size <- 100
   chunks <- split(go_ids, ceiling(seq_along(go_ids) / chunk_size))
@@ -364,16 +359,16 @@ get_go_info <- function(go_ids, include_gene_name = FALSE) {
           # Initialize empty gene name string
           go2genename <- ""
 
-          # Only process gene names if include_gene_name is TRUE
-          if (include_gene_name) {
-            # Get GENENAME: GO ID -> ENTREZID -> GENENAME
-            go2genename <- go2egs %>%
-              dplyr::filter(GOALL == x$id) %>%
-              dplyr::distinct(ENTREZID, .keep_all = TRUE) %>%
-              dplyr::left_join(eg2genename, by = "ENTREZID") %>%
-              dplyr::pull(GENENAME) %>%
-              paste0(collapse = ", ")
-          }
+          # # Only process gene names if include_gene_name is TRUE
+          # if (include_gene_name) {
+          #   # Get GENENAME: GO ID -> ENTREZID -> GENENAME
+          #   go2genename <- go2egs %>%
+          #     dplyr::filter(GOALL == x$id) %>%
+          #     dplyr::distinct(ENTREZID, .keep_all = TRUE) %>%
+          #     dplyr::left_join(eg2genename, by = "ENTREZID") %>%
+          #     dplyr::pull(GENENAME) %>%
+          #     paste0(collapse = ", ")
+          # }
 
           # # Get PMID
           # if ("xrefs" %in% names(x$definition)){
@@ -398,10 +393,10 @@ get_go_info <- function(go_ids, include_gene_name = FALSE) {
             "term_definition" = x$definition$text
           )
 
-          # Only add annotated_genename field if include_gene_name is TRUE
-          if (include_gene_name) {
-            all_info$annotated_genename <- go2genename
-          }
+          # # Only add annotated_genename field if include_gene_name is TRUE
+          # if (include_gene_name) {
+          #   all_info$annotated_genename <- go2genename
+          # }
 
           return(all_info)
         }
@@ -438,7 +433,7 @@ quickgo_api <- function(go_ids) {
 }
 
 ## 1.2 Extract KEGG info (pathway_id, name, definition(description), PMID) ====
-get_kegg_pathway_info <- function(kegg_ids, include_gene_name = FALSE){
+get_kegg_pathway_info <- function(kegg_ids){
   chunk_size <- 10
   chunks <- split(kegg_ids, ceiling(seq_along(kegg_ids) / chunk_size))
   kegg_info <- list()
@@ -453,15 +448,15 @@ get_kegg_pathway_info <- function(kegg_ids, include_gene_name = FALSE){
               # Initialize kegg2genename as empty
               kegg2genename <- NA
 
-              # Only get annotated Entrez ID if include_gene_name is TRUE
-              if (include_gene_name && "GENE" %in% names(x)) {
-                kegg2genename <-
-                  x$GENE[seq(2, length(x$GENE), 2)] %>%
-                  stringr::str_match(pattern = ";\\s*(.*?)\\s*\\[") %>%
-                  as.data.frame() %>%
-                  dplyr::pull(V2) %>%
-                  paste0(collapse = ",")
-              }
+              # # Only get annotated Entrez ID if include_gene_name is TRUE
+              # if (include_gene_name && "GENE" %in% names(x)) {
+              #   kegg2genename <-
+              #     x$GENE[seq(2, length(x$GENE), 2)] %>%
+              #     stringr::str_match(pattern = ";\\s*(.*?)\\s*\\[") %>%
+              #     as.data.frame() %>%
+              #     dplyr::pull(V2) %>%
+              #     paste0(collapse = ",")
+              # }
 
               # # Get PMID
               # if ("REFERENCE" %in% names(x)) {
@@ -485,10 +480,10 @@ get_kegg_pathway_info <- function(kegg_ids, include_gene_name = FALSE){
                 "term_definition" = paste(x$DESCRIPTION, collapse = " ")
               )
 
-              # Only add gene name information if requested
-              if (include_gene_name) {
-                all_info$annotated_genename <- kegg2genename
-              }
+              # # Only add gene name information if requested
+              # if (include_gene_name) {
+              #   all_info$annotated_genename <- kegg2genename
+              # }
 
               return(all_info)
             })
@@ -506,15 +501,15 @@ get_kegg_pathway_info <- function(kegg_ids, include_gene_name = FALSE){
             # Initialize kegg2genename as empty
             kegg2genename <- NA
 
-            # Only get annotated Entrez ID if include_gene_name is TRUE
-            if (include_gene_name && "GENE" %in% names(entry)) {
-              kegg2genename <-
-                entry$GENE[seq(2, length(entry$GENE), 2)] %>%
-                stringr::str_match(pattern = ";\\s*(.*?)\\s*\\[") %>%
-                as.data.frame() %>%
-                dplyr::pull(V2) %>%
-                paste0(collapse = ",")
-            }
+            # # Only get annotated Entrez ID if include_gene_name is TRUE
+            # if (include_gene_name && "GENE" %in% names(entry)) {
+            #   kegg2genename <-
+            #     entry$GENE[seq(2, length(entry$GENE), 2)] %>%
+            #     stringr::str_match(pattern = ";\\s*(.*?)\\s*\\[") %>%
+            #     as.data.frame() %>%
+            #     dplyr::pull(V2) %>%
+            #     paste0(collapse = ",")
+            # }
 
             # Collect base info (always included)
             all_info <- list(
@@ -524,9 +519,9 @@ get_kegg_pathway_info <- function(kegg_ids, include_gene_name = FALSE){
             )
 
             # Only add gene name information if requested
-            if (include_gene_name) {
-              all_info$annotated_genename <- kegg2genename
-            }
+            # if (include_gene_name) {
+            #   all_info$annotated_genename <- kegg2genename
+            # }
 
             all_info
           }, error = function(e2) {
@@ -552,20 +547,20 @@ get_kegg_pathway_info <- function(kegg_ids, include_gene_name = FALSE){
 }
 
 ## 1.3 Extract Reactome info (pathway_id, name, definition, PMID) ====
-get_reactome_pathway_info <- function(reactome_ids, include_gene_name = FALSE) {
+get_reactome_pathway_info <- function(reactome_ids) {
   #### Initialize gene-related variables
   reactome2egs <- NULL
   eg2genename <- NULL
 
   #### Only retrieve gene-related information if include_gene_name is TRUE
-  if (include_gene_name) {
-    #### Generate Reactome terms and annotated Entrez Gene identifiers dict
-    suppressMessages(reactome2egs <- AnnotationDbi::select(reactome.db, keys = reactome_ids, columns = "ENTREZID", keytype = "PATHID"))
-    #### Generate entrez ID to gene name dict
-    eg2genename <-
-      suppressMessages(AnnotationDbi::select(org.Hs.eg.db, keys = reactome2egs$ENTREZID, columns = "GENENAME")) %>%
-      dplyr::distinct()
-  }
+  # if (include_gene_name) {
+  #   #### Generate Reactome terms and annotated Entrez Gene identifiers dict
+  #   suppressMessages(reactome2egs <- AnnotationDbi::select(reactome.db, keys = reactome_ids, columns = "ENTREZID", keytype = "PATHID"))
+  #   #### Generate entrez ID to gene name dict
+  #   eg2genename <-
+  #     suppressMessages(AnnotationDbi::select(org.Hs.eg.db, keys = reactome2egs$ENTREZID, columns = "GENENAME")) %>%
+  #     dplyr::distinct()
+  # }
 
   chunk_size <- 20
   chunks <- split(reactome_ids, ceiling(seq_along(reactome_ids) / chunk_size))
@@ -582,16 +577,16 @@ get_reactome_pathway_info <- function(reactome_ids, include_gene_name = FALSE) {
           # Initialize empty gene name string
           reactome2genename <- ""
 
-          # Only process gene names if include_gene_name is TRUE
-          if (include_gene_name) {
-            # Get GENENAME: Reactome ID -> ENTREZID -> GENENAME
-            reactome2genename <- reactome2egs %>%
-              dplyr::filter(PATHID == x$stId) %>%
-              dplyr::distinct(ENTREZID, .keep_all = TRUE) %>%
-              dplyr::left_join(eg2genename, by = "ENTREZID") %>%
-              dplyr::pull(GENENAME) %>%
-              paste0(collapse = ", ")
-          }
+          # # Only process gene names if include_gene_name is TRUE
+          # if (include_gene_name) {
+          #   # Get GENENAME: Reactome ID -> ENTREZID -> GENENAME
+          #   reactome2genename <- reactome2egs %>%
+          #     dplyr::filter(PATHID == x$stId) %>%
+          #     dplyr::distinct(ENTREZID, .keep_all = TRUE) %>%
+          #     dplyr::left_join(eg2genename, by = "ENTREZID") %>%
+          #     dplyr::pull(GENENAME) %>%
+          #     paste0(collapse = ", ")
+          # }
 
           # # Get PMID
           # if ("literatureReference" %in% names(x)) {
@@ -615,10 +610,10 @@ get_reactome_pathway_info <- function(reactome_ids, include_gene_name = FALSE) {
             "term_definition" = gsub("(<BR>|<br>)", "", x$summation[[1]]$text)
           )
 
-          # Only add gene name information if requested
-          if (include_gene_name) {
-            all_info$annotated_genename <- reactome2genename
-          }
+          # # Only add gene name information if requested
+          # if (include_gene_name) {
+          #   all_info$annotated_genename <- reactome2genename
+          # }
 
           return(all_info)
         }
@@ -629,15 +624,16 @@ get_reactome_pathway_info <- function(reactome_ids, include_gene_name = FALSE) {
 }
 
 ## 1.4 Combine information (term name, term description, gene names) into a string ====
-combine_info <- function(info, include_gene_name = FALSE) {
+combine_info <- function(info) {
   info %>%
     purrr::map(
       function(x) {
-        if (include_gene_name) {
-          text_info <- sprintf("Pathway name: %s\nDefinition: %s\nAnnotated gene names: %s", x$term_name, x$term_definition, x$annotated_genename)
-        } else {
-          text_info <- sprintf("%s: %s", x$term_name, x$term_definition)
-        }
+        # if (include_gene_name) {
+        #   text_info <- sprintf("Pathway name: %s\nDefinition: %s\nAnnotated gene names: %s", x$term_name, x$term_definition, x$annotated_genename)
+        # } else {
+        #   text_info <- sprintf("%s: %s", x$term_name, x$term_definition)
+        # }
+        text_info <- sprintf("%s: %s", x$term_name, x$term_definition)
 
         text <- list(
           "id" = x$id,
@@ -759,7 +755,6 @@ combine_info <- function(info, include_gene_name = FALSE) {
 get_embedding_matrix <-
   function(
     text,
-    include_gene_name = FALSE,
     api_provider = c("openai", "gemini"),
     text_embedding_model,
     api_key) {
@@ -784,10 +779,10 @@ get_embedding_matrix <-
         token_num <-
           rtiktoken::get_token_count(text = x$text_info, model = "text-embedding-3-small")
         # max input for openai embedding model is 8191 (March 05, 2025)
-        if (include_gene_name == TRUE & token_num > 8000) {
-          x$text_info <- sub(pattern = "\nAnnotated gene names.*$", "", x$text_info)
-          message(paste0("Text information of ", x$id, " exceeded token limit and annotated gene names were removed."))
-        }
+        # if (include_gene_name == TRUE & token_num > 8000) {
+        #   x$text_info <- sub(pattern = "\nAnnotated gene names.*$", "", x$text_info)
+        #   message(paste0("Text information of ", x$id, " exceeded token limit and annotated gene names were removed."))
+        # }
         embedding <-
           get_openai_embedding_internal(input_text = x$text_info, text_embedding_model = text_embedding_model, api_key = api_key) %>%
           t() %>%

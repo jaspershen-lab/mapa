@@ -779,13 +779,17 @@ data_visualization_ui <- function(id) {
 #' @importFrom stringr str_sort
 #' @noRd
 
-data_visualization_server <- function(id, enriched_functional_module = NULL, tab_switch) {
+data_visualization_server <- function(id, enriched_functional_module, tab_switch) {
   moduleServer(
     id,
     function(input, output, session) {
       query_type <- reactive({
         req(enriched_functional_module())
-        enriched_functional_module()@process_info$enrich_pathway@parameter$query_type
+        if ("enrich_pathway" %in% names(enriched_functional_module()@process_info)) {
+          enriched_functional_module()@process_info$enrich_pathway@parameter$query_type
+        } else {
+          enriched_functional_module()@process_info$do_gsea@parameter$query_type
+        }
         })
 
       observe({

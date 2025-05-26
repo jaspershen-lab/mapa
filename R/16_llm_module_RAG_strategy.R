@@ -74,7 +74,7 @@ read_titles <- function(save_dir, start_row = 1, n_rows = -1) {
   file_path <- paste0(save_dir, "/paper_title.txt")
 
   # 读取文件
-  titles <- readLines(file_path, skip = start_row - 1, n = n_rows)
+  titles <- readr::read_lines(file = file_path, skip = start_row - 1, n_max = n_rows)
 
   return(titles)
 }
@@ -98,13 +98,13 @@ read_titles <- function(save_dir, start_row = 1, n_rows = -1) {
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-# 读取abstract或chunks
+
 read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
   # 拼接路径，确保路径前缀是 "embedding_output/"
   file_path <- paste0(save_dir, "/chunk.txt")
 
   # 读取文件
-  chunks <- readLines(file_path, skip = start_row - 1, n = n_rows)
+  chunks <- readr::read_lines(file = file_path, skip = start_row - 1, n_max = n_rows)
 
   return(chunks)
 }

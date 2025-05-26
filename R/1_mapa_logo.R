@@ -27,7 +27,6 @@
 #' @importFrom massdataset activate_mass_dataset extract_variable_info
 #' @importFrom httr POST content_type_json content
 #' @import ggraph
-#' @import igraph
 #' @importFrom plyr dlply .
 #' @import patchwork
 #' @importFrom ggforce geom_link

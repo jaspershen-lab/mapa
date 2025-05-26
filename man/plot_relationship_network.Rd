@@ -39,7 +39,7 @@ plot_relationship_network(
 \item{object}{A \strong{functional_module} S4 object that has already been
 processed by \code{merge_pathways()} and \code{merge_modules()}.}
 
-\item{include_functional_modules, include_modules, include_pathways}{include_molecules Logical; include the corresponding node class (at least
+\item{include_functional_modules, include_modules, include_molecules, include_pathways}{include_molecules Logical; include the corresponding node class (at least
 two must be \code{TRUE}).}
 
 \item{functional_module_color, module_color, pathway_color, molecule_color}{Hex fill colours for the four node classes.}
@@ -49,17 +49,15 @@ two must be \code{TRUE}).}
 \item{llm_text}{Use the \code{llm_module_name} (GPT annotation) column instead of
 \code{module_annotation} for functional-module labels?}
 
-\item{functional_module_text_size, module_text_size, pathway_text_size, }{molecule_text_size Numeric; text‐label size (pts) for each class.}
+\item{functional_module_text_size, module_text_size, pathway_text_size, molecule_text_size}{Numeric; text‐label size (pts) for each class.}
 
 \item{circular_plot}{If \code{TRUE}, lay nodes out on concentric circles instead
 of four horizontal tracks.}
 
-\item{functional_module_arrange_position, module_arrange_position, }{pathway_arrange_position,molecule_arrange_position Logical; evenly space
-the x position of nodes in each class between the limits given in the
+\item{functional_module_arrange_position, module_arrange_position, pathway_arrange_position, molecule_arrange_position}{Logical; evenly space the x position of nodes in each class between the limits given in the
 matching \verb{*_position_limits}.}
 
-\item{functional_module_position_limits, module_position_limits, }{pathway_position_limits,molecule_position_limits Numeric length-2 vectors
-(\verb{[0,1]}) giving the left/right fraction of the x-axis used by each track.}
+\item{functional_module_position_limits, module_position_limits, pathway_position_limits, molecule_position_limits}{Numeric length-2 vectors (\verb{[0,1]}) giving the left/right fraction of the x-axis used by each track.}
 }
 \value{
 A \strong{ggplot} object.

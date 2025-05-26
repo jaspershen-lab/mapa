@@ -440,7 +440,7 @@ llm_interpretation_server <- function(id, enriched_functional_module, tab_switch
             years = years
           )
         },
-        globals = TRUE) %...>%
+        globals = TRUE, seed = TRUE) %...>%
           # This runs when the future completes successfully
           (function(result) {
             # Store the results
