@@ -16,13 +16,13 @@
 
 # Installation
 
-You can install `mapa` from [GitHub](https://github.com/jaspershen/mapa)
+You can install `mapa` from [GitHub](https://github.com/jaspershen-lab/mapa)
 
 ``` r
 if(!require(remotes)){
 install.packages("remotes")
 }
-remotes::install_github("jaspershen/mapa")
+remotes::install_github("jaspershen-lab/mapa", dependencies = TRUE)
 ```
 
 More information can be found [here](https://jaspershen.github.com/mapa).
