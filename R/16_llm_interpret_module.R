@@ -22,7 +22,6 @@
 #     object = enriched_functional_module,
 #     api_key = api_key,
 #     orgdb = org.Hs.eg.db,
-#     phenotype = "COVID",
 #     embedding_output_dir = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/embedding_output/"
 # )
 

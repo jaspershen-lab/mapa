@@ -278,7 +278,7 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
     parallel::clusterEvalQ(cl, {
       library(jsonlite)
       library(curl)
-      source("R/17_llm_module_utils.R")  # 导入包含 gpt_api_call 的文件
+      source("R/16_llm_module_utils.R")  # 导入包含 gpt_api_call 的文件
     })
 
     # 执行并行处理
@@ -293,7 +293,8 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
                                   molecules = molecules,
                                   api_key = api_key,
                                   model = model,
-                                  mc.cores = detectCores()-1)
+                                  mc.cores = detectCores()-1
+                                  )
   }
 
   # 对结果按 relevance_score 进行降序排序
@@ -306,13 +307,10 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
 check_json_format <- function(response) {
   tryCatch({
     result <- jsonlite::fromJSON(response)
-    if (!is.null(result$relevance_score) && !is.null(result$cleaned_text)) {
-      return(TRUE)
-    }
+    !is.null(result$relevance_score) && !is.null(result$cleaned_text)
   }, error = function(e) {
     return(FALSE)
   })
-  return(FALSE)
 }
 
 # 定义修改格式的逻辑
@@ -339,6 +337,7 @@ process_chunk <- function(chunk,
                           molecules,
                           api_key,
                           model = "gpt-4o-mini-2024-07-18") {
+  browser()
   # 构建 GPT API 的 prompt
   messages <- list(
     list(role = "system", content = "You are an AI tasked with identifying the most relevant and valuable articles for the given module."),
@@ -362,13 +361,13 @@ process_chunk <- function(chunk,
   # 初次调用 GPT API
   gpt_response <- gpt_api_call(messages, api_key, model = model)
 
-  # 检查格式是否正确
+  #检查格式是否正确
   if (!check_json_format(gpt_response)) {
     # 格式不对，重复调用两次
     gpt_response <- gpt_api_call(messages, api_key, model = model)
     if (!check_json_format(gpt_response)) {
-      # 第二次格式依然不对，再次修改 prompt
-      messages <- modify_prompt_for_format(messages)
+      # 第二次格式依然不对，第三次调用
+      # messages <- modify_prompt_for_format(messages)
       gpt_response <- gpt_api_call(messages, api_key, model = model)
       if (!check_json_format(gpt_response)) {
         # 三次调用仍然失败，返回一个固定格式的默认失败结果

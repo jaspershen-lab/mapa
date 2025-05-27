@@ -34,46 +34,46 @@
 #'
 #' @keywords internal
 get_go_term_info <- function(go_ids) {
-  
+
   # # 选取一个已知的有效 GO ID
   # valid_go_id <- "GO:0008150"  # 该 GO ID 代表 "biological process"，通常有效
-  # 
+  #
   # # 记录是否需要删除该 GO ID
   # need_remove <- !(valid_go_id %in% go_ids)
-  # 
+  #
   # # 在 `go_ids` 里添加该有效 GO ID（如果原本不存在）
   # if (need_remove) {
   #   go_ids <- c(go_ids, valid_go_id)
   # }
-  # 
+  #
   # #### Get ENTIREZID: GO ID -> EntrezID
   # suppressMessages(go2egs <- AnnotationDbi::select(org.Hs.eg.db, keys = go_ids, columns = c("ENTREZID", "SYMBOL", "GENENAME"), keytype = "GO"))
-  # 
+  #
   # #### Generate Entrez ID to Gene Name and Symbol mapping
   # eg2genename <- go2egs %>%
   #   dplyr::distinct(ENTREZID, SYMBOL, GENENAME)
-  
+
   chunk_size <- 100
   chunks <- split(go_ids, ceiling(seq_along(go_ids) / chunk_size))
-  
+
   go_info <- list()
-  
+
   for (i in 1:length(chunks)) {
     sub_go_info <-
       quickgo_api(go_ids = chunks[[i]]) %>%
       purrr::map(
         function(x) {
-          
+
           # # Get ENTIREZID and GENENAME: GO ID -> ENTREZID -> SYMBOL & GENENAME
           # go2gene_info <- go2egs %>%
           #   dplyr::filter(GO == x$id) %>%
           #   dplyr::distinct(ENTREZID, SYMBOL, GENENAME, .keep_all = TRUE)
-          # 
+          #
           # # Extract ENTIREZID, SYMBOL, and GENENAME
           # go2entrez <- go2gene_info$ENTREZID  # 返回一个向量
           # go2symbol <- go2gene_info$SYMBOL    # 返回一个向量
           # go2genename <- go2gene_info$GENENAME  # 这里去掉 paste()，让它返回列表
-          
+
           # Get PMID
           if ("xrefs" %in% names(x$definition)){
             # Extract 'dbId' from each element in the list
@@ -89,7 +89,7 @@ get_go_term_info <- function(go_ids) {
           } else {
             pmid <- ""
           }
-          
+
           # Collect all info
           all_info <- list(
             "id" = x$id,
@@ -102,7 +102,7 @@ get_go_term_info <- function(go_ids) {
           )
         }
       )
-    
+
     go_info <- c(go_info, sub_go_info)
   }
   # # 删除之前添加的有效 GO ID（如果原本不在输入中）
@@ -173,25 +173,25 @@ quickgo_api <- function(go_ids) {
 #' @keywords internal
 get_kegg_info <- function(kegg_ids) {
   # Process each KEGG ID individually using purrr::map
-  kegg_info <- 
-    kegg_ids %>% 
+  kegg_info <-
+    kegg_ids %>%
     purrr::map(function(kegg_id) {
       # Get KEGG data for this ID
       x <- KEGGREST::keggGet(dbentries = kegg_id)[[1]]
-      
+
       # if ("GENE" %in% names(x)) {
       #   # Get annotated Entrez Gene IDs
       #   entrez_ids <- x$GENE[seq(1, length(x$GENE), 2)]
-      #   
+      #
       #   # Get SYMBOL and GENENAME
       #   gene_symbols <- stringr::str_match(x$GENE[seq(2, length(x$GENE), 2)], "^(.*?);")[,2]
-      #   gene_names <- stringr::str_match(x$GENE[seq(2, length(x$GENE), 2)], ";\\s*(.*?)\\s*\\[")[,2] 
+      #   gene_names <- stringr::str_match(x$GENE[seq(2, length(x$GENE), 2)], ";\\s*(.*?)\\s*\\[")[,2]
       # } else {
       #   entrez_ids <- NA_character_
       #   gene_symbols <- NA_character_
       #   gene_names <- NA_character_
       # }
-      
+
       # Extract PMIDs
       pmid <- if ("REFERENCE" %in% names(x)) {
         pmid_list <- purrr::map(x$REFERENCE, function(r) {
@@ -205,19 +205,19 @@ get_kegg_info <- function(kegg_ids) {
       } else {
         NA_character_
       }
-      
+
       # Return compiled information
       list(
         "id" = unname(x$ENTRY),
         "term_name" = x$NAME,
         "term_definition" = paste(x$DESCRIPTION, collapse = " "),
-        # "annotated_entrez" = entrez_ids,  
-        # "annotated_symbol" = gene_symbols, 
-        # "annotated_genename" = gene_names, 
+        # "annotated_entrez" = entrez_ids,
+        # "annotated_symbol" = gene_symbols,
+        # "annotated_genename" = gene_names,
         "PMID" = pmid
       )
     })
-  
+
   return(kegg_info)
 }
 
@@ -227,7 +227,6 @@ get_kegg_info <- function(kegg_ids) {
 #' using the rbioapi package.
 #'
 #' @param reactome_ids A character vector of Reactome pathway IDs
-#' @param orgdb An OrganismDb object, defaults to org.Hs.eg.db
 #'
 #' @return A list of Reactome pathway information, where each element contains:
 #'   \item{id}{Reactome pathway ID}
@@ -241,41 +240,41 @@ get_kegg_info <- function(kegg_ids) {
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-get_reactome_info <- function(reactome_ids, orgdb = org.Hs.eg.db) {
+get_reactome_info <- function(reactome_ids) {
   # #### 1️⃣ 获取 Reactome ID 到 Entrez Gene ID 的映射
   # suppressMessages(
-  #   reactome2egs <- AnnotationDbi::select(reactome.db, 
-  #                                         keys = reactome_ids, 
-  #                                         columns = "ENTREZID", 
+  #   reactome2egs <- AnnotationDbi::select(reactome.db,
+  #                                         keys = reactome_ids,
+  #                                         columns = "ENTREZID",
   #                                         keytype = "PATHID")
   # )
-  # 
+  #
   # #### 2️⃣ 获取 Entrez Gene ID 对应的 Gene Symbol 和 Gene Name
   # if (!is.null(reactome2egs$ENTREZID)) {
   #   suppressMessages(
-  #     eg2info <- AnnotationDbi::select(orgdb, 
-  #                                      keys = reactome2egs$ENTREZID, 
-  #                                      columns = c("SYMBOL", "GENENAME"), 
+  #     eg2info <- AnnotationDbi::select(orgdb,
+  #                                      keys = reactome2egs$ENTREZID,
+  #                                      columns = c("SYMBOL", "GENENAME"),
   #                                      keytype = "ENTREZID")
   #   )
   #   eg2info <- dplyr::distinct(eg2info)
   # } else {
   #   eg2info <- data.frame(ENTREZID = NA_character_, SYMBOL = NA_character_, GENENAME = NA_character_)
   # }
-  
+
   #### 3️⃣ 分批查询 Reactome API
   chunk_size <- 20
   chunks <- split(reactome_ids, ceiling(seq_along(reactome_ids) / chunk_size))
-  
+
   reactome_info <- list()
-  
+
   for (i in 1:length(chunks)) {
     reactome_api_result <- suppressMessages(rbioapi::rba_reactome_query(ids = chunks[[i]]))
-    
+
     if (length(chunks[[i]]) == 1) {
       reactome_api_result <- list(reactome_api_result)
     }
-    
+
     sub_reactome_info <- purrr::map(
       reactome_api_result,
       function(x) {
@@ -284,12 +283,12 @@ get_reactome_info <- function(reactome_ids, orgdb = org.Hs.eg.db) {
         #   dplyr::filter(PATHID == x$stId) %>%
         #   dplyr::distinct(ENTREZID, .keep_all = TRUE) %>%
         #   dplyr::left_join(eg2info, by = "ENTREZID")
-        # 
+        #
         # # **修改：直接返回字符向量**
         # annotated_entrez <- reactome_gene_info$ENTREZID
         # annotated_symbol <- reactome_gene_info$SYMBOL
         # annotated_genename <- reactome_gene_info$GENENAME
-        
+
         # **修改：PMID 直接返回字符向量**
         if ("literatureReference" %in% names(x)) {
           pmid_list <- lapply(x$literatureReference, function(r) {
@@ -303,7 +302,7 @@ get_reactome_info <- function(reactome_ids, orgdb = org.Hs.eg.db) {
         } else {
           pmid <- NA_character_  # 空值返回字符向量
         }
-        
+
         # **整理输出**
         all_info <- list(
           "id" = x$stId,
@@ -317,10 +316,10 @@ get_reactome_info <- function(reactome_ids, orgdb = org.Hs.eg.db) {
         return(all_info)
       }
     )
-    
+
     reactome_info <- c(reactome_info, sub_reactome_info)
   }
-  
+
   return(reactome_info)
 }
 
@@ -344,12 +343,12 @@ get_reactome_info <- function(reactome_ids, orgdb = org.Hs.eg.db) {
 #' @keywords internal
 get_metkegg_info <- function(kegg_ids) {
   metkegg_info <- list()
-  
+
   for (i in 1:length(kegg_ids)) {
     kegg_id <- kegg_ids[i]
     ### Get a single KEGG entry
     entry <- KEGGREST::keggGet(dbentries = kegg_id)[[1]]
-    
+
     ### Get PMID for reference
     if ("REFERENCE" %in% names(entry)) {
       pmid_list <- lapply(entry$REFERENCE, function(r) {
@@ -363,7 +362,7 @@ get_metkegg_info <- function(kegg_ids) {
     } else {
       pmid <- ""
     }
-    
+
     # Collect base info (always included)
     all_info <- list(
       "id" = unname(entry$ENTRY),
@@ -371,10 +370,10 @@ get_metkegg_info <- function(kegg_ids) {
       "term_definition" = paste(entry$DESCRIPTION, collapse = " "),
       "PMID" = pmid
     )
-    
+
     metkegg_info <- c(list(all_info), metkegg_info)
   }
-  
+
   return(metkegg_info)
 }
 
@@ -399,7 +398,7 @@ get_metkegg_info <- function(kegg_ids) {
 get_smpdb_info <- function(smpdb_ids) {
   smpdb_pathway_info <- metpath::hmdb_pathway
   smpdb_info <-
-    smpdb_ids %>% 
+    smpdb_ids %>%
     purrr::map(function(x) {
       indx <- which(smpdb_pathway_info@pathway_id == x)
       term_name <- smpdb_pathway_info@pathway_name[indx]
@@ -412,7 +411,7 @@ get_smpdb_info <- function(smpdb_ids) {
         "PMID" = NA_character_
       )
     })
-  
+
   return(smpdb_info)
 }
 

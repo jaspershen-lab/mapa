@@ -8,8 +8,7 @@ get_pathway_and_metabolite_info(pathwayID_vec)
 }
 \arguments{
 \item{pathwayID_vec}{A character vector of pathway IDs. IDs should follow the format conventions
-of their respective databases: KEGG IDs should match the pattern "hsa\\d+", and SMPDB IDs
-should match the pattern "SMP\\d+".}
+of their respective databases.}
 }
 \value{
 A list containing the following components:

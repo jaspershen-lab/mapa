@@ -4,12 +4,10 @@
 \alias{get_reactome_info}
 \title{Extract information from Reactome pathways using Reactome IDs}
 \usage{
-get_reactome_info(reactome_ids, orgdb = org.Hs.eg.db)
+get_reactome_info(reactome_ids)
 }
 \arguments{
 \item{reactome_ids}{A character vector of Reactome pathway IDs}
-
-\item{orgdb}{An OrganismDb object, defaults to org.Hs.eg.db}
 }
 \value{
 A list of Reactome pathway information, where each element contains:

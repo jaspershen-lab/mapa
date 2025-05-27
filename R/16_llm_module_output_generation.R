@@ -46,9 +46,11 @@ single_module_generation <- function(module_related_paper,
   combined_texts <- paste(title_text_pairs, collapse = "\n\n")
 
   if (is.null(phenotype)) {
-    prompt_text <- readLines("R/16_llm_prompt.md", warn = FALSE)
+    prompt_path <- system.file("prompts_template","16_llm_prompt.md", package = "mapa")
+    prompt_text <- readLines(prompt_path, warn = FALSE)
   } else {
-    prompt_text <- readLines("R/16_llm_prompt_with_phenotype.md", warn = FALSE)
+    prompt_path <- system.file("prompts_template","16_llm_prompt_with_phenotype.md", package = "mapa")
+    prompt_text <- readLines(prompt_path, warn = FALSE)
     prompt_text <- gsub("\\{phenotype\\}", phenotype, prompt_text)
   }
 

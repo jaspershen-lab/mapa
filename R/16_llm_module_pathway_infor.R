@@ -153,10 +153,8 @@ preprocess_module <- function(df,
       pathwayDescription_vec = pathway_info$pathwayDescription_vec
       pathwayReferencePMID_vec = pathway_info$PMID_vec
 
-      MetNames_vec <-
-        metpath::hmdb_compound_database@spectra.info %>%
-        dplyr::filter(HMDB.ID %in% MetIDs_vec) %>%
-        dplyr::pull(Compound.name)
+
+      MetNames_vec <- get_metabolite_name(MetIDs_vec)
 
       result_list[[mod_raw]] <- list(
         PathwayNames = pthName_vec,
@@ -216,8 +214,8 @@ preprocess_module <- function(df,
 get_pathway_and_gene_info <- function(pathwayID_vec) {
   # Identify different types of pathway ID
   go_ids <- pathwayID_vec[grepl("^GO:", pathwayID_vec)]
-  kegg_ids <- pathwayID_vec[grepl("^hsa\\d+$", pathwayID_vec)]
-  reactome_ids <- pathwayID_vec[grepl("^R-HSA-\\d+$", pathwayID_vec)]
+  kegg_ids <- pathwayID_vec[grepl("^[a-zA-Z]+\\d+$", pathwayID_vec)]
+  reactome_ids <- pathwayID_vec[grepl("^R-[A-Z]{3,4}-\\d+$", pathwayID_vec)]
 
   # Initialize the structure of retrieved data
   pathwayDescription_vec <- c()
@@ -278,8 +276,7 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
 #' (KEGG, SMPDB) based on provided pathway IDs.
 #'
 #' @param pathwayID_vec A character vector of pathway IDs. IDs should follow the format conventions
-#'        of their respective databases: KEGG IDs should match the pattern "hsa\\d+", and SMPDB IDs
-#'        should match the pattern "SMP\\d+".
+#'        of their respective databases.
 #'
 #' @return A list containing the following components:
 #' \itemize{
@@ -313,10 +310,12 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
+
 get_pathway_and_metabolite_info <- function(pathwayID_vec) {
   # Identify different types of pathway ID
-  kegg_ids <- pathwayID_vec[grepl("^hsa\\d+$", pathwayID_vec)]
+  # kegg_ids <- pathwayID_vec[grepl("^[a-zA-Z]+\\d+$", pathwayID_vec)]
   smpdb_ids <- pathwayID_vec[grepl("^SMP\\d+$", pathwayID_vec)]
+  kegg_ids <- pathwayID_vec[!(pathwayID_vec %in% smpdb_ids)]
 
   # Initialize the structure of retrieved data
   pathwayDescription_vec <- c()
@@ -345,6 +344,24 @@ get_pathway_and_metabolite_info <- function(pathwayID_vec) {
     pathwayDescription_vec = pathwayDescription_vec,
     PMID_vec = PMID_vec
   ))
+}
+
+get_metabolite_name <- function(MetIDs_vec) {
+  hmdb_MetNames_vec <-
+    metpath::hmdb_compound_database@spectra.info %>%
+    dplyr::filter(HMDB.ID %in% MetIDs_vec) %>%
+    dplyr::pull(Compound.name)
+
+  kegg_MetNames_vec <-
+    MetIDs_vec[!grepl("^HMDB", MetIDs_vec)] |>
+    sapply(function(x){
+      compound_info <- KEGGREST::keggGet(x)
+      compound_name <- gsub(";", "", compound_info[[1]]$NAME[1])
+    })
+
+  MetNames_vec <- c(hmdb_MetNames_vec, unname(kegg_MetNames_vec))
+
+  return(MetNames_vec)
 }
 
 #从不同的geneid获取symbol和description
