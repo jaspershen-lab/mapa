@@ -6,7 +6,6 @@
 # library(pbmcapply)
 # library(roxygen2)
 
-
 #' Read Embeddings from Storage
 #'
 #' @description
@@ -297,6 +296,10 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
                                   )
   }
 
+  # for (chunk in chunks) {
+  #   res <- process_chunk(chunk, pathways, molecules, api_key, model = model)
+  #   reranked_results <- c(reranked_results, res)
+  # }
   # 对结果按 relevance_score 进行降序排序
   reranked_results <- reranked_results[order(sapply(reranked_results, function(x) x$relevance_score), decreasing = TRUE)]
 
@@ -337,7 +340,6 @@ process_chunk <- function(chunk,
                           molecules,
                           api_key,
                           model = "gpt-4o-mini-2024-07-18") {
-  browser()
   # 构建 GPT API 的 prompt
   messages <- list(
     list(role = "system", content = "You are an AI tasked with identifying the most relevant and valuable articles for the given module."),

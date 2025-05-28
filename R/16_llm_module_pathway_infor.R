@@ -361,7 +361,8 @@ get_metabolite_name <- function(MetIDs_vec) {
 
   MetNames_vec <- c(hmdb_MetNames_vec, unname(kegg_MetNames_vec))
 
-  return(MetNames_vec)
+  # return(MetNames_vec)
+  return(unlist(MetNames_vec, use.names = FALSE))
 }
 
 #从不同的geneid获取symbol和description
