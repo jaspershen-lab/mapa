@@ -19,10 +19,15 @@
 You can install `mapa` from [GitHub](https://github.com/jaspershen-lab/mapa)
 
 ``` r
-if(!require(remotes)){
-install.packages("remotes")
-}
-remotes::install_github("jaspershen-lab/mapa", dependencies = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+remotes::install_github(
+  "jaspershen-lab/mapa",
+  dependencies = TRUE,
+  repos        = BiocManager::repositories(),
+  upgrade      = "ask" 
+)
 ```
 
 More information can be found [here](https://jaspershen.github.com/mapa).
