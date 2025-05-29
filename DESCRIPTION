@@ -59,7 +59,7 @@ Imports:
     rtiktoken,
     rvest,
     simona,
-    simplifyEnrichment,
+    simplifyEnrichment (>= 2.0.0),
     stats,
     stringr,
     tibble,

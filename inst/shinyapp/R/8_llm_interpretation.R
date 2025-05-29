@@ -241,8 +241,8 @@ llm_interpretation_ui <- function(id) {
 #' @import shiny
 #' @importFrom shinyjs disable enable useShinyjs
 #' @importFrom shinyFiles shinyDirChoose parseDirPath getVolumes
-#' @importFrom future plan multisession future_promise
-#' @importFrom promises %...>% %...!%
+#' @importFrom future plan multisession
+#' @importFrom promises %...>% %...!% future_promise
 #' @importFrom markdown markdownToHTML
 #' @importFrom mapa llm_interpret_module
 #' @noRd

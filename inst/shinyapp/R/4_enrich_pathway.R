@@ -415,9 +415,8 @@ enrich_pathway_ui <- function(id) {
 #' @param tab_switch Function to switch tabs.
 #' @import shiny
 #' @importFrom shinyjs toggleElement disable enable useShinyjs
-#' @importFrom clusterProfiler enrich_pathway do_gsea
+#' @importFrom mapa enrich_pathway do_gsea
 #' @importFrom org.Hs.eg.db org.Hs.eg.db
-#' @importFrom ReactomePA enrichPathway
 #' @noRd
 
 enrich_pathway_server <- function(id, processed_info, enriched_pathways, tab_switch) {
@@ -556,8 +555,8 @@ enrich_pathway_server <- function(id, processed_info, enriched_pathways, tab_swi
         } else {
           withProgress(message = 'Analysis in progress...', {
             result <- tryCatch({
-              library(clusterProfiler)
-              library(ReactomePA)
+              # library(clusterProfiler)
+              # library(ReactomePA)
 
               # Extract common parameters
               common_params <- list(

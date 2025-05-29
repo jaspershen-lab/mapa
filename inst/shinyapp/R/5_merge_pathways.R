@@ -598,8 +598,6 @@ merge_pathways_ui <- function(id) {
 #'
 #' @import shiny
 #' @importFrom shinyjs toggleState useShinyjs toggleElement enable disable
-#' @importFrom clusterProfiler merge_pathways
-#' @importFrom ReactomePA enrichPathway
 #'
 #' @note This function requires the clusterProfiler and ReactomePA packages
 #'   to be installed and loaded. For GO analysis, appropriate organism databases

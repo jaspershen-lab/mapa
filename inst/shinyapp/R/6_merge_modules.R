@@ -123,8 +123,6 @@ merge_modules_ui <- function(id) {
 #'
 #' @import shiny
 #' @importFrom shinyjs toggleState useShinyjs enable disable
-#' @importFrom clusterProfiler merge_modules
-#' @importFrom ReactomePA (imported for compatibility)
 #'
 #' @examples
 #' \dontrun{

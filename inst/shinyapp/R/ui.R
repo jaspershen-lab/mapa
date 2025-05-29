@@ -7,11 +7,6 @@ setwd(r4projects::get_project_wd())
 # source("inst/shinyapp/R/4_enrich_pathway.R")
 devtools::load_all()
 
-if (!require(tidyverse)) {
-  install.packages("tidyverse")
-  library(tidyverse)
-}
-
 if (!require(shiny)) {
   install.packages("shiny")
   library(shiny)
