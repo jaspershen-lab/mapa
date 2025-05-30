@@ -24,3 +24,6 @@ _pkgdown.yml
 
 ^R/17_deprec_llm_interpretation\.R$
 ^R/98_deprec_openai_chatgpt\.R$
+
+shinyapp/
+^\.github$

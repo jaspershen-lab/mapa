@@ -1,12 +1,13 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # mapa <img src="man/figures/mapa_logo.png" align="right" alt="" width="120" />
-
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/jaspershen-lab/mapa/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jaspershen-lab/mapa/actions/workflows/R-CMD-check.yaml)
 [![](https://www.r-pkg.org/badges/version/mapa?color=green)](https://cran.r-project.org/package=mapa)
 [![](https://img.shields.io/github/languages/code-size/jaspershen/mapa.svg)](https://github.com/jaspershen/mapa)
 [![Dependencies](https://tinyverse.netlify.com/badge/mapa)](https://cran.r-project.org/package=mapa)
 [![](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
-
+<!-- badges: end -->
 ------
 
 # About
