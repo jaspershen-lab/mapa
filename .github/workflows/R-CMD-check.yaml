@@ -40,27 +40,41 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: any::rcmdcheck
-          needs: check
-
-      - name: Install GitHub dependencies
+      - name: Configure repositories and install metpath
         run: |
           if (!requireNamespace("BiocManager", quietly = TRUE))
               install.packages("BiocManager")
           if (!requireNamespace("remotes", quietly = TRUE))
               install.packages("remotes")
-          tryCatch({
-            remotes::install_github(
-              "tidymass/metpath",
-              dependencies = TRUE,
-              repos = BiocManager::repositories(),
-              upgrade = "never"
-            )
-          }, error = function(e) {
-            cat("Warning: Could not install metpath from GitHub:", e$message, "\n")
-          })
+
+          # Install metpath first using remotes
+          remotes::install_github(
+            "tidymass/metpath",
+            dependencies = TRUE,
+            repos = BiocManager::repositories(),
+            upgrade = "never"
+          )
+
+          # Configure BiocManager to ignore metpath in future installations
+          options(BiocManager.site_repository = "https://github.com/tidymass")
+        shell: Rscript {0}
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+          dependencies: '"hard"'
+        run: |
+          if (!requireNamespace("BiocManager", quietly = TRUE))
+              install.packages("BiocManager")
+          if (!requireNamespace("remotes", quietly = TRUE))
+              install.packages("remotes")
+          remotes::install_github(
+            "tidymass/metpath",
+            dependencies = TRUE,
+            repos = BiocManager::repositories(),
+            upgrade = "never"
+          )
         shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
