@@ -1,3 +1,7 @@
+# mapa 0.2.0
+
+* Fixed LLM interpretation bugs during RAG.
+
 # mapa 0.1.1
 
 * Fix bugs.

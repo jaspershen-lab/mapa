@@ -270,7 +270,7 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
 
     # 导出工具函数
     parallel::clusterExport(cl, c("process_chunk", "check_json_format",
-                                 "modify_prompt_for_format"),
+                                 "modify_prompt_for_format", "gpt_api_call"),
                            envir = environment())
 
     # 加载必要的包
@@ -309,10 +309,32 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
 # 定义验证 JSON 格式的函数
 check_json_format <- function(response) {
   tryCatch({
-    result <- jsonlite::fromJSON(response)
-    !is.null(result$relevance_score) && !is.null(result$cleaned_text)
+    result <- jsonlite::fromJSON(response, simplifyVector = FALSE)
+    return(exists("relevance_score", result) && exists("cleaned_text", result))
   }, error = function(e) {
     return(FALSE)
+  })
+}
+
+extract_and_parse_json <- function(response) {
+  tryCatch({
+    # 使用正则表达式提取JSON部分
+    json_pattern <- "\\{[^{}]*\"relevance_score\"[^{}]*\"cleaned_text\"[^{}]*\\}"
+    json_match <- regmatches(response, regexpr(json_pattern, response))
+
+    if (length(json_match) > 0) {
+      result <- jsonlite::fromJSON(json_match)
+      return(list(
+        success = TRUE,
+        relevance_score = result$relevance_score,
+        cleaned_text = result$cleaned_text
+      ))
+    } else {
+      return(list(success = FALSE, error = "No valid JSON found"))
+    }
+
+  }, error = function(e) {
+    return(list(success = FALSE, error = e$message))
   })
 }
 
@@ -335,11 +357,7 @@ modify_prompt_for_format <- function(original_prompt) {
 }
 
 # 遍历 chunks，调用 GPT API
-process_chunk <- function(chunk,
-                          pathways,
-                          molecules,
-                          api_key,
-                          model = "gpt-4o-mini-2024-07-18") {
+process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-mini-2024-07-18") {
   # 构建 GPT API 的 prompt
   messages <- list(
     list(role = "system", content = "You are an AI tasked with identifying the most relevant and valuable articles for the given module."),
@@ -359,30 +377,38 @@ process_chunk <- function(chunk,
     ))
   )
 
+  # 尝试解析GPT响应的函数
+  parse_gpt_response <- function(response) {
+    parsed <- extract_and_parse_json(response)
+    if (parsed$success) {
+      return(list(relevance_score = parsed$relevance_score, cleaned_text = parsed$cleaned_text))
+    } else {
+      return(NULL)
+    }
+  }
 
-  # 初次调用 GPT API
+  # 第一次调用 GPT API
   gpt_response <- gpt_api_call(messages, api_key, model = model)
+  result <- parse_gpt_response(gpt_response)
 
-  #检查格式是否正确
-  if (!check_json_format(gpt_response)) {
-    # 格式不对，重复调用两次
+  # 如果第一次失败，重试
+  if (is.null(result)) {
     gpt_response <- gpt_api_call(messages, api_key, model = model)
-    if (!check_json_format(gpt_response)) {
-      # 第二次格式依然不对，第三次调用
-      # messages <- modify_prompt_for_format(messages)
+    result <- parse_gpt_response(gpt_response)
+
+    # 如果第二次也失败，再试一次
+    if (is.null(result)) {
       gpt_response <- gpt_api_call(messages, api_key, model = model)
-      if (!check_json_format(gpt_response)) {
-        # 三次调用仍然失败，返回一个固定格式的默认失败结果
-        gpt_response <- '{"relevance_score": 0, "cleaned_text": "Unable to process the request."}'
+      result <- parse_gpt_response(gpt_response)
+
+      # 如果三次都失败，返回默认结果
+      if (is.null(result)) {
+        return(list(relevance_score = 0, cleaned_text = "Unable to process the request after 3 attempts."))
       }
     }
   }
 
-  # 解析 GPT 返回的 JSON 格式结果
-  result <- jsonlite::fromJSON(gpt_response)
-
-  # 返回解析后的结果
-  return(list(relevance_score = result$relevance_score, cleaned_text = result$cleaned_text))
+  return(result)
 }
 
 #' Retrieve and Rerank Strategy for Modules

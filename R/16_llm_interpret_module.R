@@ -1,9 +1,9 @@
-# source("R/17_llm_module_pathway_infor.R")
-# source("R/17_llm_module_online_retrieval.R")
-# source("R/17_llm_module_embedding_database.R")
-# source("R/17_llm_module_RAG_strategy.R")
-# source("R/17_llm_module_utils.R")
-# source('R/17_llm_module_output_generation.R')
+# source("R/16_llm_module_pathway_infor.R")
+# source("R/16_llm_module_online_retrieval.R")
+# source("R/16_llm_module_embedding_database.R")
+# source("R/16_llm_module_RAG_strategy.R")
+# source("R/16_llm_module_utils.R")
+# source('R/16_llm_module_output_generation.R')
 
 # Metabolite
 # llm_interpreted_enriched_functional_module <-
