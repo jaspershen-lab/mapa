@@ -1,5 +1,7 @@
 # mapa 1.3.0
 
+* Two more clustering methods "binary cut" and "hierarchical" are now available for clustering overlapped based similarity calculation results.
+
 # mapa 1.2.0
 
 * Fixed LLM interpretation bugs during RAG.
