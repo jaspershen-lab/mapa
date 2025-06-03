@@ -24,5 +24,5 @@ utils::globalVariables(c(
   "degree", "describtion", "RichFactor", "FoldEnrichment", "zScore", "Var1",
   "Var2", "edges", "nodes", "qscore", "cx", "cy", "x_axis", "y_axis", "text_field",
   "module_content", "module_content_number.y", "label", "Compound.name", "HMDB.ID",
-  "pmids"
+  "pmids", "ENTREZID", "KEGG.ID"
 ))

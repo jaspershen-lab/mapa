@@ -19,6 +19,7 @@ Depends:
     R (>= 4.1)
 Imports:
     AnnotationDbi,
+    BiocManager,
     cli,
     clusterProfiler,
     crayon,
