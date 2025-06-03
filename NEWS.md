@@ -1,3 +1,5 @@
+# mapa 1.4.0
+
 # mapa 1.3.0
 
 * Two more clustering methods "binary cut" and "hierarchical" are now available for clustering overlapped based similarity calculation results.
