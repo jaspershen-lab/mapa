@@ -1,5 +1,7 @@
 # mapa 1.4.1
 
+* For metabolite analysis, if a pathway do not have any metabolite, no metabolite information will be available for PubMed Search.
+
 # mapa 1.4.0
 
 * ID conversion is now available for mapa package.
