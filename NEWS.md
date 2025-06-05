@@ -1,5 +1,7 @@
 # mapa 1.5.0
 
+* Now for non-model organism, users can provide AnnotationHub ID to perform the following analysis. 
+
 # mapa 1.4.1
 
 * For metabolite analysis, if a pathway do not have any metabolite, no metabolite information will be available for PubMed Search.
