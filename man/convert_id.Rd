@@ -8,8 +8,9 @@ convert_id(
   data = NULL,
   query_type = c("gene", "metabolite"),
   from_id_type = NULL,
-  to_id_type = c("ENTREZID"),
-  organism = NULL
+  organism = NULL,
+  ah_id = NULL,
+  return_orgdb = FALSE
 )
 }
 \arguments{
@@ -20,55 +21,66 @@ Must contain a column with the identifier type specified in \code{from_id_type}.
 "gene" or "metabolite". Default is c("gene", "metabolite").}
 
 \item{from_id_type}{Character string. The identifier type to convert from.
-For genes, this should match valid identifier types supported by the
-organism database (e.g., "SYMBOL", "ENTREZID", "ENSEMBL"). For metabolites,
-supported types are "hmdbid" and "keggid".}
-
-\item{to_id_type}{Character vector. The identifier types to convert to.
-ENTREZID is automatically included unless the input data already contains
-an "entrezid" column. For genes, types should match valid identifier types
-supported by the organism database. For metabolites, this parameter is not
-used as conversion is bidirectional between HMDB and KEGG IDs. Default is c("ENTREZID").}
+For genes, must be one of "ensembl", "entrezid", "uniprot", or "symbol".
+For metabolites, supported types are "hmdbid" and "keggid".}
 
 \item{organism}{Character string or OrgDb object. For genes, specify the
 organism database to use (e.g., "org.Hs.eg.db" for human). For metabolites,
 must be "hsa" (human).}
+
+\item{ah_id}{Character string. AnnotationHub ID to use when the orgDb package
+is not available. If provided, the function will retrieve the organism database
+from AnnotationHub using this ID. Only used for gene conversion.}
+
+\item{return_orgdb}{Logical. If TRUE and ah_id is provided, returns a list containing
+both the converted data and the OrgDb object for downstream analysis. If FALSE,
+returns only the converted data. Default is FALSE.}
 }
 \value{
 A data frame with the original data joined with the converted identifiers.
-For genes, ENTREZID is included in the results unless the input data already
-contains an "entrezid" column. Any additional requested identifier types are
-also added as new columns with lowercase names. For metabolites, both HMDB
-and KEGG IDs are added regardless of the input type.
+For genes, the output will always contain four required columns: ensembl,
+entrezid, uniprot, and symbol. The column corresponding to from_id_type is
+preserved from the original data. If no identifier is available for conversion,
+NA is returned. If multiple identifiers are available for one from_id_type,
+only the first match is retained. For metabolites, both HMDB and KEGG IDs are
+added regardless of the input type. If return_orgdb = TRUE and ah_id is provided,
+returns a list with elements 'data' (converted data) and 'orgdb' (OrgDb object).
 }
 \description{
 This function converts between different identifier types for genes or metabolites.
-For genes, it uses the clusterProfiler package to perform ID conversion via
-organism-specific databases. For metabolites (human only), it converts between
-HMDB and KEGG identifiers using the metpath package.
+For genes, it uses the clusterProfiler package and the output will always contain
+four columns: ensembl, entrezid, uniprot, and symbol. For metabolites (human only),
+it converts between HMDB and KEGG identifiers using the metpath package.
 }
 \examples{
 \dontrun{
-# Convert gene symbols to ENSEMBL IDs (ENTREZID automatically included)
+# Convert from gene symbols using standard org.Db package
 gene_data <- data.frame(symbol = c("TP53", "BRCA1", "EGFR"))
 converted_genes <- convert_id(
   data = gene_data,
   query_type = "gene",
-  from_id_type = "SYMBOL",
-  to_id_type = "ENSEMBL",
+  from_id_type = "symbol",
   organism = "org.Hs.eg.db"
 )
 
-# If data already has ENTREZID, only convert to requested types
-gene_data_with_entrez <- data.frame(
-  symbol = c("TP53", "BRCA1", "EGFR"),
-  entrezid = c("7157", "672", "1956")
-)
-converted_genes2 <- convert_id(
-  data = gene_data_with_entrez,
+# Convert using AnnotationHub ID and return both data and OrgDb object
+gene_data_mouse <- data.frame(symbol = c("Tp53", "Brca1", "Egfr"))
+result_with_orgdb <- convert_id(
+  data = gene_data_mouse,
   query_type = "gene",
-  from_id_type = "SYMBOL",
-  to_id_type = "ENSEMBL",  # Only ENSEMBL will be added, not ENTREZID
+  from_id_type = "symbol",
+  ah_id = "AH123456",  # Example AnnotationHub ID
+  return_orgdb = TRUE
+)
+# Access converted data: result_with_orgdb$data
+# Access OrgDb object: result_with_orgdb$orgdb
+
+# Convert from ENTREZ IDs
+gene_data_entrez <- data.frame(entrezid = c("7157", "672", "1956"))
+converted_genes2 <- convert_id(
+  data = gene_data_entrez,
+  query_type = "gene",
+  from_id_type = "entrezid",
   organism = "org.Hs.eg.db"
 )
 

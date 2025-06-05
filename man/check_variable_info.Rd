@@ -9,7 +9,7 @@ check_variable_info(variable_info, query_type, order_by = NULL)
 \arguments{
 \item{variable_info}{A data frame containing biological entity information.
 \itemize{
-\item For \code{query_type = "gene"}: Must contain an "entrezid" column
+\item For \code{query_type = "gene"}: Must contain an "ensembl" column
 with at least one non-NA value.
 \item For \code{query_type = "metabolite"}: Must contain a "keggid" column
 with at least one non-NA value.

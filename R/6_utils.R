@@ -329,7 +329,7 @@ get_jaccard_index_for_diff_databases <- function(
         stringr::str_split("/") %>%
         #unique() %>%
         purrr::map(function(x) {
-          if (stringr::str_detect(x[1], "ENSG")) {
+          if (stringr::str_detect(x[1], "ENS")) {
             return(x)
           }
 
@@ -479,7 +479,7 @@ arrange_coords <- function(coords, ratio = 0.95) {
 #'
 #' @param variable_info A data frame containing biological entity information.
 #'   \itemize{
-#'     \item For \code{query_type = "gene"}: Must contain an "entrezid" column
+#'     \item For \code{query_type = "gene"}: Must contain an "ensembl" column
 #'           with at least one non-NA value.
 #'     \item For \code{query_type = "metabolite"}: Must contain a "keggid" column
 #'           with at least one non-NA value.
@@ -524,13 +524,13 @@ check_variable_info <-
 
       }
 
-      # if (all(colnames(variable_info) != "ensembl")) {
-      #   stop("ensembl should be in the variable_info")
-      # } else{
-      #   if (all(is.na(variable_info$ensembl))) {
-      #     stop("All ensembl column are NA")
-      #   }
-      # }
+      if (all(colnames(variable_info) != "ensembl")) {
+        stop("ensembl should be in the variable_info")
+      } else{
+        if (all(is.na(variable_info$ensembl))) {
+          stop("All ensembl column are NA")
+        }
+      }
 
       # if (all(colnames(variable_info) != "symbol")) {
       #   stop("symbol should be in the variable_info")
@@ -548,13 +548,13 @@ check_variable_info <-
       #   }
       # }
 
-      if (all(colnames(variable_info) != "entrezid")) {
-        stop("entrezid should be in the variable_info")
-      } else{
-        if (all(is.na(variable_info$entrezid))) {
-          stop("All entrezid column are NA")
-        }
-      }
+      # if (all(colnames(variable_info) != "entrezid")) {
+      #   stop("entrezid should be in the variable_info")
+      # } else{
+      #   if (all(is.na(variable_info$entrezid))) {
+      #     stop("All entrezid column are NA")
+      #   }
+      # }
 
     } else if (query_type == "metabolite") {
       # if (all(colnames(variable_info) != "hmdbid")) {
@@ -1301,6 +1301,7 @@ get_hmdb_pathways <-
 #' }
 #'
 #' @keywords internal
+
 unify_id_internal <- function(ids = NULL,
                               variable_info = NULL,
                               query_type = c("gene", "metabolite")) {
@@ -1311,7 +1312,7 @@ unify_id_internal <- function(ids = NULL,
     unified_ids <-
       ids %>%
       purrr::map_chr(function(x) {
-        if (stringr::str_detect(x, "ENSG")) {
+        if (stringr::str_detect(x, "ENS")) {
           return(x)
         }
 

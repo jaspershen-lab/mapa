@@ -68,6 +68,7 @@ Imports:
     tidyr,
     utils
 Suggests: 
+    AnnotationHub,
     BiocGenerics,
     flexclust,
     ggplotify,
