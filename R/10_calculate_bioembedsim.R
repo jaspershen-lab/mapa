@@ -476,7 +476,8 @@ get_kegg_pathway_info <- function(kegg_ids){
               # Collect base info (always included)
               all_info <- list(
                 "id" = unname(x$ENTRY),
-                "term_name" = sub(" - Homo sapiens \\(human\\)$", "", x$NAME),
+                # "term_name" = sub(" - Homo sapiens \\(human\\)$", "", x$NAME),
+                "term_name" = sub(" - [^(]+\\([^)]+\\)$", "", x$NAME),
                 "term_definition" = paste(x$DESCRIPTION, collapse = " ")
               )
 
@@ -514,7 +515,8 @@ get_kegg_pathway_info <- function(kegg_ids){
             # Collect base info (always included)
             all_info <- list(
               "id" = unname(entry$ENTRY),
-              "term_name" = sub(" - Homo sapiens \\(human\\)$", "", entry$NAME),
+              # "term_name" = sub(" - Homo sapiens \\(human\\)$", "", entry$NAME),
+              "term_name" = sub(" - [^(]+\\([^)]+\\)$", "", entry$NAME),
               "term_definition" = paste(entry$DESCRIPTION, collapse = " ")
             )
 

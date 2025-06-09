@@ -34,6 +34,7 @@
 #'   for each functional module.
 #'
 #' @param object A functional_module class object.
+#' @param module_content_number_cutoff Integer. Only modules with content number greater than this value will be processed. Default is 1.
 #' @param llm_model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param embedding_model A string specifying the embedding model to use. Default is `"text-embedding-3-small"`.
 #' @param api_key Character string. API key for OpenAI or other embedding service. (Currently, only API key for OpenAI can be used)
@@ -48,10 +49,20 @@
 #' @param orgdb Object. Organism database for gene annotation, default is org.Hs.eg.db. Only used for gene enrichment results.
 #' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
 #'
-#' @return A list containing the final results with module names and study summaries.
+#' @return A functional_module class object with updated slots:
+#'   \itemize{
+#'     \item \code{llm_module_interpretation}: Contains the final results with module names and study summaries
+#'     \item \code{merged_module$functional_module_result}: Updated with LLM-generated module names in the \code{llm_module_name} column
+#'     \item \code{process_info}: Updated with parameters and timestamp for this operation
+#'   }
 #'
-#' @importFrom methods is
-#' @importFrom dplyr filter mutate
+#' @note
+#'   \itemize{
+#'     \item The object must be processed with \code{merge_modules()} function before using this function
+#'     \item Only modules with content number greater than \code{module_content_number_cutoff} will be processed
+#'   }
+#'
+#' @importFrom dplyr filter mutate left_join
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
@@ -59,6 +70,7 @@
 #' @export
 
 llm_interpret_module <- function(object,
+                                 module_content_number_cutoff = 1,
                                  llm_model = "gpt-4o-mini-2024-07-18",
                                  embedding_model = "text-embedding-3-small",
                                  api_key,
@@ -80,7 +92,9 @@ llm_interpret_module <- function(object,
   if (all(names(object@process_info) != "merge_modules")) {
     stop("Please use the merge_modules() function to process first")
   }
-  functional_module_result <- object@merged_module$functional_module_result
+  functional_module_result <-
+    object@merged_module$functional_module_result |>
+    dplyr::filter(module_content_number > module_content_number_cutoff)
 
   # # Check if local corpus parameters are provided when local_corpus is TRUE
   # if (local_corpus) {
@@ -158,6 +172,7 @@ llm_interpret_module <- function(object,
   }, related_paper, pubmed_result)
 
   # 7. Generate module names and study summaries
+  message("Start to generate name and summary for functional modules ...")
   final_result <- module_name_generation(paper_result = paper_result,
                                          phenotype = phenotype,
                                          model = llm_model,
@@ -180,12 +195,17 @@ llm_interpret_module <- function(object,
     object@merged_module$functional_module_result |>
     dplyr::left_join(llm_module_name_df, by = "module")
 
+  object@merged_module$functional_module_result <-
+    object@merged_module$functional_module_result |>
+    mutate(llm_module_name = ifelse(is.na(llm_module_name), yes = module_annotation, no = llm_module_name))
+
   # 9. Create a process_info entry for this operation using the tidymass_parameter class
   parameter = new(
     Class = "tidymass_parameter",
     pacakge_name = "mapa",
     function_name = "llm_interpret_module()",
     parameter = list(
+      module_content_number_cutoff = module_content_number_cutoff,
       llm_model = llm_model,
       embedding_model = embedding_model,
       phenotype = phenotype,

@@ -6,6 +6,7 @@
 \usage{
 llm_interpret_module(
   object,
+  module_content_number_cutoff = 1,
   llm_model = "gpt-4o-mini-2024-07-18",
   embedding_model = "text-embedding-3-small",
   api_key,
@@ -23,6 +24,8 @@ llm_interpret_module(
 }
 \arguments{
 \item{object}{A functional_module class object.}
+
+\item{module_content_number_cutoff}{Integer. Only modules with content number greater than this value will be processed. Default is 1.}
 
 \item{llm_model}{A string specifying the GPT model to use. Default is \code{"gpt-4o-mini-2024-07-18"}.}
 
@@ -51,7 +54,12 @@ llm_interpret_module(
 \item{output_prompt}{Logical. Whether to output prompt in final annotation result. Default is TRUE.}
 }
 \value{
-A list containing the final results with module names and study summaries.
+A functional_module class object with updated slots:
+\itemize{
+\item \code{llm_module_interpretation}: Contains the final results with module names and study summaries
+\item \code{merged_module$functional_module_result}: Updated with LLM-generated module names in the \code{llm_module_name} column
+\item \code{process_info}: Updated with parameters and timestamp for this operation
+}
 }
 \description{
 This function processes functional module results by retrieving
@@ -60,6 +68,12 @@ description extraction, PubMed searching, embedding of search results, and retri
 related papers with ranking. Finally, input the functional module information and
 abstract and title of retrieved and filtered papers into LLM to generate a name and a summary
 for each functional module.
+}
+\note{
+\itemize{
+\item The object must be processed with \code{merge_modules()} function before using this function
+\item Only modules with content number greater than \code{module_content_number_cutoff} will be processed
+}
 }
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
