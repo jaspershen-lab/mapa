@@ -1,5 +1,7 @@
 # mapa 1.5.1
 
+* Fixed bugs in `merge_pathways()`.
+
 # mapa 1.5.0
 
 * Now for non-model organism, users can provide AnnotationHub ID to perform the following analysis. 
