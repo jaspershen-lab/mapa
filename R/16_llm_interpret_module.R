@@ -92,6 +92,11 @@ llm_interpret_module <- function(object,
   if (all(names(object@process_info) != "merge_modules")) {
     stop("Please use the merge_modules() function to process first")
   }
+
+  if (module_content_number_cutoff >= max(object@merged_module$functional_module_result$module_content_number)) {
+    stop("module_content_number_cutoff should be smaller than the maximum of all module content numbers in your functional module result.")
+  }
+
   functional_module_result <-
     object@merged_module$functional_module_result |>
     dplyr::filter(module_content_number > module_content_number_cutoff)
