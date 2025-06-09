@@ -498,7 +498,7 @@ merge_pathways_internal <-
     query_type <- match.arg(query_type)
     analysis_type <- match.arg(analysis_type)
     database <- match.arg(database)
-    if (database == "go" && missing(go.orgdb)) {
+    if (database == "go" && (missing(go.orgdb) || is.null(go.orgdb))) {
       stop("Please provide the OrgDb object to merge GO terms.")
     }
 
