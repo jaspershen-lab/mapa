@@ -584,8 +584,6 @@ check_variable_info <-
 #'
 #' @param result A data frame containing GO term IDs in column 'ID' and ontologies in column 'ONTOLOGY'.
 #' @param go.orgdb An organism-specific database for GO annotations (default: NULL).
-#' @param sim.cutoff A numeric value for the similarity cutoff (default: 0). Only term pairs with
-#'                  similarity greater than this value will be returned.
 #' @param measure.method A character vector specifying the semantic similarity
 #'                      measure method for GO terms. Default is `"Sim_XGraSM_2013"`.
 #'                      See `simona::all_term_sim_methods()` for available measures.
@@ -607,7 +605,6 @@ check_variable_info <-
 get_go_result_sim <-
   function(result,
            go.orgdb = NULL,
-           sim.cutoff = 0,
            measure.method = "Sim_XGraSM_2013",
            control.method = list()) {
 
@@ -638,12 +635,12 @@ get_go_result_sim <-
       bp_sim_df <-
         bp_sim_matrix %>%
         as.data.frame() %>%
-        tibble::rownames_to_column(var = "name1") %>%
+        tibble::rownames_to_column(var = "name1") |>
         tidyr::pivot_longer(cols = -name1,
                             names_to = "name2",
-                            values_to = "sim") %>%
-        dplyr::filter(name1 < name2) %>%
-        dplyr::filter(sim > sim.cutoff)
+                            values_to = "sim") |>
+        dplyr::filter(name1 < name2)
+        # dplyr::filter(sim > sim.cutoff)
       message("Completed GO term (BP) similarity calculation.")
     } else {
       bp_sim_df <- NULL
@@ -672,12 +669,12 @@ get_go_result_sim <-
       mf_sim_df <-
         mf_sim_matrix %>%
         as.data.frame() %>%
-        tibble::rownames_to_column(var = "name1") %>%
+        tibble::rownames_to_column(var = "name1") |>
         tidyr::pivot_longer(cols = -name1,
                             names_to = "name2",
-                            values_to = "sim") %>%
-        dplyr::filter(name1 < name2) %>%
-        dplyr::filter(sim > sim.cutoff)
+                            values_to = "sim") |>
+        dplyr::filter(name1 < name2)
+        # dplyr::filter(sim > sim.cutoff)
       message("Completed GO term (MF) similarity calculation.")
     } else {
       mf_sim_df <- NULL
@@ -704,14 +701,14 @@ get_go_result_sim <-
                                control.method = control.method)
       cc_obsolete_terms <- attr(cc_sim_matrix, "obsolete_terms")
       cc_sim_df <-
-        cc_sim_matrix %>%
-        as.data.frame() %>%
-        tibble::rownames_to_column(var = "name1") %>%
+        cc_sim_matrix |>
+        as.data.frame() |>
+        tibble::rownames_to_column(var = "name1") |>
         tidyr::pivot_longer(cols = -name1,
                             names_to = "name2",
-                            values_to = "sim") %>%
-        dplyr::filter(name1 < name2) %>%
-        dplyr::filter(sim > sim.cutoff)
+                            values_to = "sim") |>
+        dplyr::filter(name1 < name2)
+        # dplyr::filter(sim > sim.cutoff)
       message("Completed GO term (CC) similarity calculation.")
     } else {
       cc_sim_df <- NULL

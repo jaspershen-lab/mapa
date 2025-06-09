@@ -7,7 +7,6 @@
 get_go_result_sim(
   result,
   go.orgdb = NULL,
-  sim.cutoff = 0,
   measure.method = "Sim_XGraSM_2013",
   control.method = list()
 )
@@ -16,9 +15,6 @@ get_go_result_sim(
 \item{result}{A data frame containing GO term IDs in column 'ID' and ontologies in column 'ONTOLOGY'.}
 
 \item{go.orgdb}{An organism-specific database for GO annotations (default: NULL).}
-
-\item{sim.cutoff}{A numeric value for the similarity cutoff (default: 0). Only term pairs with
-similarity greater than this value will be returned.}
 
 \item{measure.method}{A character vector specifying the semantic similarity
 measure method for GO terms. Default is \code{"Sim_XGraSM_2013"}.

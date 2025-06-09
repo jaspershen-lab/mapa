@@ -566,7 +566,6 @@ merge_pathways_internal <-
                 # result = dplyr::filter(result, ONTOLOGY != "CC"),
                 result = result,
                 go.orgdb = go.orgdb,
-                sim.cutoff = sim.cutoff,
                 measure.method = measure.method,
                 control.method = control.method.go
               )
