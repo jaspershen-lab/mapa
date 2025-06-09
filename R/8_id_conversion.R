@@ -11,7 +11,7 @@
 # ### Query the object for Macaca fascicularis
 # mf_query_result <- AnnotationHub::query(ah, c("Macaca fascicularis", "OrgDb"))
 # ### Get the orgDb object
-# mf.orgdb <- ah[[mf_query_result$ah_id]] #| Taxonomy ID: 9541
+# mf.orgdb <- ah[["AH119900"]] #| Taxonomy ID: 9541
 # converted_dt <- convert_id(
 #   data = dt_u,
 #   query_type = "gene",

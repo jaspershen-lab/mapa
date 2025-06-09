@@ -627,22 +627,28 @@ get_go_result_sim <-
       ))
     }
 
-    bp_sim_matrix <-
-      GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "BP"],
-                             ont = "BP",
-                             go.orgdb = go.orgdb,
-                             measure = measure.method,
-                             control.method = control.method)
-    bp_obsolete_terms <- attr(bp_sim_matrix, "obsolete_terms")
-    bp_sim_df <-
-      bp_sim_matrix %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "name1") %>%
-      tidyr::pivot_longer(cols = -name1,
-                          names_to = "name2",
-                          values_to = "sim") %>%
-      dplyr::filter(name1 < name2) %>%
-      dplyr::filter(sim > sim.cutoff)
+    if (sum(result$ONTOLOGY == "BP") > 0) {
+      bp_sim_matrix <-
+        GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "BP"],
+                               ont = "BP",
+                               go.orgdb = go.orgdb,
+                               measure = measure.method,
+                               control.method = control.method)
+      bp_obsolete_terms <- attr(bp_sim_matrix, "obsolete_terms")
+      bp_sim_df <-
+        bp_sim_matrix %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column(var = "name1") %>%
+        tidyr::pivot_longer(cols = -name1,
+                            names_to = "name2",
+                            values_to = "sim") %>%
+        dplyr::filter(name1 < name2) %>%
+        dplyr::filter(sim > sim.cutoff)
+      message("Completed GO term (BP) similarity calculation.")
+    } else {
+      bp_sim_df <- NULL
+      bp_obsolete_terms <- NULL
+    }
 
     # name <- apply(bp_sim_df, 1, function(x) {
     #   paste(sort(x[1:2]), collapse = "_")
@@ -655,22 +661,28 @@ get_go_result_sim <-
     #   dplyr::distinct(name, .keep_all = TRUE) %>%
     #   dplyr::select(-name)
 
-    mf_sim_matrix <-
-      GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "MF"],
-                             ont = "MF",
-                             go.orgdb = go.orgdb,
-                             measure = measure.method,
-                             control.method = control.method)
-    mf_obsolete_terms <- attr(mf_sim_matrix, "obsolete_terms")
-    mf_sim_df <-
-      mf_sim_matrix %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "name1") %>%
-      tidyr::pivot_longer(cols = -name1,
-                          names_to = "name2",
-                          values_to = "sim") %>%
-      dplyr::filter(name1 < name2) %>%
-      dplyr::filter(sim > sim.cutoff)
+    if (sum(result$ONTOLOGY == "MF") > 0) {
+      mf_sim_matrix <-
+        GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "MF"],
+                               ont = "MF",
+                               go.orgdb = go.orgdb,
+                               measure = measure.method,
+                               control.method = control.method)
+      mf_obsolete_terms <- attr(mf_sim_matrix, "obsolete_terms")
+      mf_sim_df <-
+        mf_sim_matrix %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column(var = "name1") %>%
+        tidyr::pivot_longer(cols = -name1,
+                            names_to = "name2",
+                            values_to = "sim") %>%
+        dplyr::filter(name1 < name2) %>%
+        dplyr::filter(sim > sim.cutoff)
+      message("Completed GO term (MF) similarity calculation.")
+    } else {
+      mf_sim_df <- NULL
+      mf_obsolete_terms <- NULL
+    }
 
     # name <- apply(mf_sim_df, 1, function(x) {
     #   paste(sort(x[1:2]), collapse = "_")
@@ -683,22 +695,28 @@ get_go_result_sim <-
     #   dplyr::distinct(name, .keep_all = TRUE) %>%
     #   dplyr::select(-name)
 
-    cc_sim_matrix <-
-      GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "CC"],
-                             ont = "CC",
-                             go.orgdb = go.orgdb,
-                             measure = measure.method,
-                             control.method = control.method)
-    cc_obsolete_terms <- attr(cc_sim_matrix, "obsolete_terms")
-    cc_sim_df <-
-      cc_sim_matrix %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "name1") %>%
-      tidyr::pivot_longer(cols = -name1,
-                          names_to = "name2",
-                          values_to = "sim") %>%
-      dplyr::filter(name1 < name2) %>%
-      dplyr::filter(sim > sim.cutoff)
+    if (sum(result$ONTOLOGY == "CC") > 0) {
+      cc_sim_matrix <-
+        GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "CC"],
+                               ont = "CC",
+                               go.orgdb = go.orgdb,
+                               measure = measure.method,
+                               control.method = control.method)
+      cc_obsolete_terms <- attr(cc_sim_matrix, "obsolete_terms")
+      cc_sim_df <-
+        cc_sim_matrix %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column(var = "name1") %>%
+        tidyr::pivot_longer(cols = -name1,
+                            names_to = "name2",
+                            values_to = "sim") %>%
+        dplyr::filter(name1 < name2) %>%
+        dplyr::filter(sim > sim.cutoff)
+      message("Completed GO term (CC) similarity calculation.")
+    } else {
+      cc_sim_df <- NULL
+      cc_obsolete_terms <- NULL
+    }
 
     # name <- apply(cc_sim_df, 1, function(x) {
     #   paste(sort(x[1:2]), collapse = "_")
@@ -716,7 +734,7 @@ get_go_result_sim <-
 
     attr(sim_matrix, "obsolete_terms") <- c(bp_obsolete_terms, mf_obsolete_terms, cc_obsolete_terms)
 
-    sim_matrix
+    return(sim_matrix)
   }
 
 #' Compute Similarity Between GO Terms for each subontology
