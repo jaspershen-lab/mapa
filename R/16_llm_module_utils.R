@@ -159,17 +159,17 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
       req <- httr2::request(url)
 
       resp <- req %>%
-        req_auth_bearer_token(token = api_key) %>%
-        req_body_json(data = data) %>%
-        req_retry(
+        httr2::req_auth_bearer_token(token = api_key) %>%
+        httr2::req_body_json(data = data) %>%
+        httr2::req_retry(
           max_tries = 3,
           max_seconds = 60,
           after = \(resp) is.null(resp) && resp$status_code != 200  # 重试条件
         ) %>%
-        req_perform()
+        httr2::req_perform()
 
       # 提取嵌入向量
-      embedding <- resp_body_json(resp)$data[[1]]$embedding   # 解析 JSON 响应
+      embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding   # 解析 JSON 响应
       unlist(embedding)
     },
     error = function(e) {
