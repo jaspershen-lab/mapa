@@ -1432,14 +1432,14 @@ merge_by_Girvan_Newman <- function(edge_data,
                                    sim.cutoff) {
   ## Filter graph data according to sim.cutoff
   edge_data <-
-    edge_data %>%
+    edge_data |>
     dplyr::filter(sim > sim.cutoff)
   ## Create tidygraph object
   graph_data <-
     tidygraph::tbl_graph(nodes = node_data,
                          edges = edge_data,
                          directed = FALSE,
-                         node_key = "node") %>%
+                         node_key = "node") |>
     dplyr::mutate(degree = tidygraph::centrality_degree())
 
   ## Perform clustering
@@ -1468,4 +1468,23 @@ merge_by_hierarchical <- function(sim_matrix,
                module = paste("Functional_module", as.character(clusters), sep = "_"))
 
   return(cluster_result)
+}
+
+calculate_modularity <- function(graph_obj, clusters) {
+  tryCatch({
+    igraph::modularity(x = graph_obj,
+                       membership = clusters)
+  }, error = function(e) {
+    NA_real_
+  })
+}
+
+calculate_silhouette <- function(dist_obj, clusters) {
+  tryCatch({
+    if (length(unique(clusters)) < 2) return(NA_real_)
+    sil <- cluster::silhouette(clusters, dist_obj)
+    mean(sil[, "sil_width"])
+  }, error = function(e) {
+    NA_real_
+  })
 }
