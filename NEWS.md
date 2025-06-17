@@ -1,3 +1,7 @@
+# mapa 1.6.2
+
+* Combined `merge_modules()` and `merge_pathways_bioembedsim()` into one generia function `get_functional_modules()`.
+
 # mapa 1.6.0
 
 * Enable clustering evaluation.
