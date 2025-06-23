@@ -7,12 +7,12 @@
 
 #' gpt_api_call: Function for calling GPT model APIs (supports OpenAI and Gemini providers)
 #'
-#' This internal function is designed to interact with GPT-based APIs (such as OpenAI's GPT or a hypothetical Gemini API).
+#' This internal function is designed to interact with GPT-based APIs (such as OpenAI's GPT or the Gemini API).
 #' It handles HTTP requests, retries failed attempts, and parses responses.
 #' This function is not intended for direct use by package users.
 #'
 #' @param messages A list of messages to send to the GPT model, usually representing the conversation history.
-#'                 Each message should be a list with `role` (e.g., "system", "user", or "assistant") and `content`.
+#'                  Each message should be a list with `role` (e.g., "system", "user", or "assistant") and `content`.
 #' @param api_key A string containing the API key required for authentication.
 #' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
 #' @param max_tokens An integer indicating the maximum number of tokens to generate in the response (default is `1000`).
@@ -20,9 +20,10 @@
 #'                    (default is `0.7`, where lower values produce more deterministic results).
 #' @param retry_attempts An integer specifying the maximum number of retry attempts if the API call fails (default is `3`).
 #' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #'
 #' @return The generated text from the GPT model if the call is successful. If the call fails after the specified number
-#'         of retries, the function returns `NULL`.
+#'          of retries, the function returns `NULL`.
 #'
 #' @note Ensure you have a valid API key and the correct endpoint for your chosen provider. For Gemini, update the URL
 #'       in the code if necessary.
@@ -31,7 +32,7 @@
 #'
 #' @keywords internal
 gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", max_tokens = 1000,
-                         temperature = 0.7, retry_attempts = 3, api_provider = "openai") {
+                         temperature = 0.7, retry_attempts = 3, api_provider = "openai", thinkingBudget = 0) {
   # 根据 API 提供者选择 URL
   api_url <- switch(
     api_provider,
@@ -65,32 +66,32 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
     })
     # 过滤掉 NULL 元素（如果存在）
     gemini_contents <- gemini_contents[!sapply(gemini_contents, is.null)]
-    
+
     request_body <- jsonlite::toJSON(list(
       contents = gemini_contents,
       generationConfig = list( # Gemini 的额外配置
         maxOutputTokens = max_tokens,
         temperature = temperature,
         thinkingConfig = list(
-          thinkingBudget = 0 # 设置思考预算为 0
+          thinkingBudget = thinkingBudget # 设置思考预算为 0
         )
       )
     ), auto_unbox = TRUE, null = "null") # auto_unbox = TRUE 用于将单元素向量转换为标量，null = "null" 处理空值
-    
+
   } else {
     stop("Invalid API provider. Request body cannot be constructed.")
   }
-  
+
   # 初始化重试计数
   attempt <- 0
-  
+
   # 循环重试逻辑
   repeat {
     attempt <- attempt + 1
-    
+
     # 使用 curl 发送请求
     handle <- curl::new_handle()
-    
+
     # Gemini API 的 key 直接在 URL 中，OpenAI 的 key 在 Authorization header 中
     if (api_provider == "openai") {
       curl::handle_setheaders(handle,
@@ -100,13 +101,13 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
       curl::handle_setheaders(handle, `Content-Type` = "application/json")
       # API Key 已经在 URL 中，所以这里不需要 Authorization header
     }
-    
+
     curl::handle_setopt(handle,
                         url = api_url,
                         postfields = request_body,
                         customrequest = "POST",
                         timeout = 100)
-    
+
     response <- tryCatch({
       curl::curl_fetch_memory(api_url, handle)
     }, error = function(e) {
@@ -114,7 +115,7 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
       message(paste("Attempt", attempt, "failed with error:", e$message))
       NULL
     })
-    
+
     # 如果请求失败，判断是否需要重试
     if (is.null(response)) {
       if (attempt >= retry_attempts) {
@@ -124,12 +125,12 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
       Sys.sleep(1) # 短暂等待后重试
       next
     }
-    
+
     # 检查 HTTP 响应状态
     if (response$status_code == 200) {
       # 如果成功返回，解析 JSON 内容
       response_content <- jsonlite::fromJSON(rawToChar(response$content))
-      
+
       # 根据不同的 API 提供者解析响应
       llm_output <- switch(
         api_provider,
@@ -142,7 +143,7 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
       # 打印错误信息
       message(paste("Attempt", attempt, "failed with status code:", response$status_code,
                     "and message:", rawToChar(response$content)))
-      
+
       # 如果超过最大重试次数，停止执行
       if (attempt >= retry_attempts) {
         warning("Failed to call LLM API after ", retry_attempts, " attempts. Last error status code: ", response$status_code)

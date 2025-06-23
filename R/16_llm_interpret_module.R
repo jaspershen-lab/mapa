@@ -48,7 +48,8 @@
 #' @param GPT_filter_num Integer. Number of papers to filter using GPT. Default is 5.
 #' @param orgdb Object. Organism database for gene annotation, default is org.Hs.eg.db. Only used for gene enrichment results.
 #' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
-#'
+#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #' @return A functional_module class object with updated slots:
 #'   \itemize{
 #'     \item \code{llm_module_interpretation}: Contains the final results with module names and study summaries
@@ -83,7 +84,9 @@ llm_interpret_module <- function(object,
                                  similarity_filter_num = 20,
                                  GPT_filter_num = 5,
                                  orgdb = org.Hs.eg.db,
-                                 output_prompt = TRUE) {
+                                 output_prompt = TRUE,
+                                 api_provider = "openai",
+                                 thinkingBudget = 0) {
 
   # 1. Collect functional module result
   if (!is(object, "functional_module")) {
@@ -182,7 +185,9 @@ llm_interpret_module <- function(object,
                                          phenotype = phenotype,
                                          model = llm_model,
                                          api_key = api_key,
-                                         output_prompt = output_prompt)
+                                         output_prompt = output_prompt,
+                                         api_provider = api_provider,
+                                         thinkingBudget = thinkingBudget)
 
   # 8. Store the final result in the object's llm_module_interpretation slot
   object@llm_module_interpretation <- final_result
