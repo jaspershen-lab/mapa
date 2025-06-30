@@ -88,12 +88,12 @@ single_module_generation <- function(module_related_paper,
 
   gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
 
-  if (!check_json_format(gpt_response)) {
+  if (!check_json_format_output_generation(gpt_response)) {
     gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
-    if (!check_json_format(gpt_response)) {
-      prompt <- modify_prompt_for_format(messages)
+    if (!check_json_format_output_generation(gpt_response)) {
+      prompt <- modify_prompt_for_format_output_generation(gpt_response)
       gpt_response <- gpt_api_call(prompt, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
-      if (!check_json_format(gpt_response)) {
+      if (!check_json_format_output_generation(gpt_response)) {
         print(gpt_response)
         gpt_response <- '{"module_name": "Default Module Name", "summary": "Unable to process the request."}'
       }
@@ -137,7 +137,7 @@ single_module_generation <- function(module_related_paper,
   }
 }
 
-check_json_format <- function(response) {
+check_json_format_output_generation <- function(response) {
   tryCatch({
     result <- jsonlite::fromJSON(response)
     if (!is.null(result$module_name) && !is.null(result$summary)) {
@@ -149,28 +149,19 @@ check_json_format <- function(response) {
   return(FALSE)
 }
 
-modify_prompt_for_format <- function(messages) {
-  # 找到用户输入消息
-  user_message_index <- which(sapply(messages, function(msg) msg$role == "user"))
-
-  if (length(user_message_index) > 0) {
-    # 修改用户输入消息的内容
-    user_message_index <- user_message_index[1]  # 假定只有一个用户输入消息
-    original_content <- messages[[user_message_index]]$content
-
-    # 添加格式说明到用户输入消息
-    messages[[user_message_index]]$content <- paste0(
-      original_content,
-      "\n\nIf your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
+modify_prompt_for_format_output_generation <- function(gpt_response) {
+  messages <- list(
+    list(role = "system", content = "You are an efficient and insightful assistant to a molecular biologist."),
+    list(role = "user", content = paste0(
+      "Please convert the following response to the required JSON format:\n\n",
+      gpt_response,
+      "\n\nReturn a valid JSON structure like this:\n",
       "{\n",
       "  \"module_name\": \"<biological module name>\",\n",
       "  \"summary\": \"<summary of the current research>\"\n",
       "}"
-    )
-  } else {
-    warning("No user message found in the provided messages.")
-  }
-
+    ))
+  )
   return(messages)
 }
 

@@ -177,7 +177,7 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 #'
 #' @keywords internal
 get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small", api_provider = "openai") {
-  # 根据 API 提供者选择 URL
+  # Select URL based on API provider
   url <- switch(
     api_provider,
     "openai" = "https://api.openai.com/v1/embeddings",
@@ -187,39 +187,67 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
 
   # Body specifying model and text
   data <- list(
-    model = model_name,  # 可配置的模型名称
-    input = chunk        # 输入文本
+    model = model_name,  # Configurable model name
+    input = chunk        # Input text
   )
 
-  # 请求嵌入向量
+  # Request embedding vector
   embedding <- tryCatch(
     expr = {
-      # 创建请求对象
+      # Create request object
       req <- httr2::request(url)
-
       resp <- req %>%
         httr2::req_auth_bearer_token(token = api_key) %>%
         httr2::req_body_json(data = data) %>%
         httr2::req_retry(
           max_tries = 3,
           max_seconds = 60,
-          after = \(resp) is.null(resp) && resp$status_code != 200  # 重试条件
+          after = \(resp) is.null(resp) && resp$status_code != 200  # Retry condition
         ) %>%
         httr2::req_perform()
-
-      # 提取嵌入向量
-      embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding   # 解析 JSON 响应
+      # Extract embedding vector
+      embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding   # Parse JSON response
       unlist(embedding)
     },
     error = function(e) {
-      warning("Failed to get embedding after 3 retries:", e$message)
-      NULL
+      # If failed, try truncating text and retry
+      est_tokens <- nchar(chunk) / 4
+      max_tokens <- 7000
+      if (est_tokens > max_tokens) {
+        max_chars <- max_tokens * 4
+        warning("Input too long, truncating to fit token limit.")
+        truncated_chunk <- substr(chunk, 1, max_chars)
+
+        # Retry with truncated text
+        data_truncated <- list(
+          model = model_name,
+          input = truncated_chunk
+        )
+
+        tryCatch(
+          expr = {
+            req <- httr2::request(url)
+            resp <- req %>%
+              httr2::req_auth_bearer_token(token = api_key) %>%
+              httr2::req_body_json(data = data_truncated) %>%
+              httr2::req_perform()
+            embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding
+            unlist(embedding)
+          },
+          error = function(e2) {
+            warning("Failed to get embedding even after truncation:", e2$message)
+            NULL
+          }
+        )
+      } else {
+        warning("Failed to get embedding:", e$message)
+        NULL
+      }
     }
   )
 
   return(embedding)
 }
-
 
 
 #' Clear the embedding_output directory

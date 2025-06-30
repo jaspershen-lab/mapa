@@ -433,8 +433,8 @@ embedding_single_module_pubmed_search <- function(module_name,
                                                   embedding_model = "text-embedding-3-small",
                                                   api_key,
                                                   embedding_output_dir) {
-  # 将PID_list分成每组5个的批次
-  batch_size <- 5
+  # 将PID_list分成每组200个的批次
+  batch_size <- 200
   PID_batches <- split(PID_list, ceiling(seq_along(PID_list)/batch_size))
 
   # 按批次获取摘要和标题
@@ -442,7 +442,7 @@ embedding_single_module_pubmed_search <- function(module_name,
   for(batch in PID_batches) {
     batch_results <- query_abstracts_and_titles_by_pubmed_ids(batch)
     abstracts_and_titles_list <- c(abstracts_and_titles_list, batch_results)
-    Sys.sleep(1)  # 添加短暂延迟以避免API限制
+    Sys.sleep(2)  # 添加短暂延迟以避免API限制
   }
 
   # 提取所有标题和摘要
@@ -518,53 +518,117 @@ embedding_single_module_pubmed_search <- function(module_name,
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-query_abstracts_and_titles_by_pubmed_ids <- function(PID_list, retries = 2, pause = 1) {
-  if (is.null(PID_list) || length(PID_list) == 0) {
+query_abstracts_and_titles_by_pubmed_ids <- function(pmid_list, retries = 2, pause = 1) {
+  if (is.null(pmid_list) || length(pmid_list) == 0) {
     stop("Invalid PubMed ID list provided.")
   }
 
-  # 将PID_list逐个处理
-  results <- list()
-  for (pmid in PID_list) {
-    attempt <- 1
-    while (attempt <= retries) {
-      tryCatch({
-        # 调用 retrieve_abstr_ttl 函数获取标题和摘要
-        abstr_ttl <- retrieve_abstr_ttl(pmid, retries, pause)
+  # Convert single PMID to vector
+  if (length(pmid_list) == 1) {
+    pmid_list <- as.character(pmid_list)
+  }
 
-        if (abstr_ttl == "") {
+  attempt <- 1
+  while (attempt <= retries) {
+    tryCatch({
+      # Fetch data for multiple PMIDs at once
+      html_result <- rentrez::entrez_fetch(
+        db = "pubmed",
+        id = pmid_list,  # Pass the entire list
+        rettype = "abstract",
+        retmode = "html"
+      )
+
+      # Parse HTML
+      parsed_html <- rvest::read_html(html_result)
+
+      # Get all article nodes
+      articles <- parsed_html %>% rvest::html_nodes("pubmedarticle")
+
+      # Process each article
+      results <- list()
+      for (i in seq_along(articles)) {
+        article <- articles[[i]]
+
+        # Get PMID
+        pmid <- article %>%
+          rvest::html_node("pmid") %>%
+          rvest::html_text(trim = TRUE)
+
+        # Check if it's a Review article
+        publication_types <- article %>%
+          rvest::html_nodes("publicationtype") %>%
+          rvest::html_text()
+
+        if ("Review" %in% publication_types) {
           results[[pmid]] <- list(
-            title = sprintf("Error: No abstract found for PubMed ID %s", pmid),
-            abstract = sprintf("Error: No abstract found for PubMed ID %s", pmid)
+            title = sprintf("Skipped: PubMed ID %s is a review article", pmid),
+            abstract = sprintf("Skipped: PubMed ID %s is a review article", pmid)
+          )
+          next
+        }
+
+        # Get title
+        title <- article %>%
+          rvest::html_node("articletitle") %>%
+          rvest::html_text(trim = TRUE)
+
+        # Get abstract
+        abstract <- article %>%
+          rvest::html_node("abstract") %>%
+          rvest::html_text(trim = TRUE)
+
+        # Handle missing data
+        if (is.na(title)) title <- sprintf("No title found for PubMed ID %s", pmid)
+        if (is.na(abstract)) {
+          results[[pmid]] <- list(
+            title = title,
+            abstract = sprintf("No abstract found for PubMed ID %s", pmid)
           )
         } else {
-          # 拆分标题和摘要
-          title <- sub("^Title: (.+?)\\nAbstract:.*$", "\\1", abstr_ttl)
-          abstract <- sub("^Title: .+?\\nAbstract: (.+)$", "\\1", abstr_ttl)
-
           results[[pmid]] <- list(
             title = title,
             abstract = abstract
           )
         }
-        break
-      }, error = function(e) {
-        warning(sprintf("Attempt %d failed for PubMed ID: %s. Error: %s",
-                        attempt, pmid, e))
-        Sys.sleep(pause)
-      })
-      attempt <- attempt + 1
-    }
+      }
 
-    if (attempt > retries) {
-      results[[pmid]] <- list(
-        title = sprintf("Error: Failed to retrieve title for PubMed ID %s after %d attempts. Probably because this is a review.", pmid, retries),
-        abstract = sprintf("Error: Failed to retrieve abstract for PubMed ID %s after %d attempts. Probably because this is a review.", pmid, retries)
-      )
-    }
+      # Check for missing PMIDs
+      retrieved_pmids <- names(results)
+      missing_pmids <- setdiff(as.character(pmid_list), retrieved_pmids)
+
+      # Add error messages for missing PMIDs
+      for (missing_pmid in missing_pmids) {
+        results[[missing_pmid]] <- list(
+          title = sprintf("Error: No data found for PubMed ID %s", missing_pmid),
+          abstract = sprintf("Error: No data found for PubMed ID %s", missing_pmid)
+        )
+      }
+
+      return(results)
+    }, error = function(e) {
+      warning(sprintf("Attempt %d failed for PubMed IDs: %s. Error: %s",
+                      attempt, paste(pmid_list, collapse = ", "), e$message))
+      Sys.sleep(pause)
+    })
+    attempt <- attempt + 1
   }
 
-  return(results)
+  # If all attempts failed
+  warning(sprintf("All attempts failed for PubMed IDs: %s",
+                  paste(pmid_list, collapse = ", ")))
+
+  # Return error information
+  error_results <- list()
+  for (pmid in pmid_list) {
+    error_results[[as.character(pmid)]] <- list(
+      title = sprintf("Error: Failed to retrieve title for PubMed ID %s after %d attempts",
+                      pmid, retries),
+      abstract = sprintf("Error: Failed to retrieve abstract for PubMed ID %s after %d attempts",
+                         pmid, retries)
+    )
+  }
+  return(error_results)
 }
 
 #' Get Dataset Dimensions

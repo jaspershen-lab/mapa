@@ -270,8 +270,7 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
                            envir = environment())
 
     # 导出工具函数
-    parallel::clusterExport(cl, c("process_chunk", "check_json_format",
-                                 "modify_prompt_for_format", "gpt_api_call"),
+    parallel::clusterExport(cl, c("process_chunk", "gpt_api_call"),
                            envir = environment())
 
     # 加载必要的包
@@ -311,15 +310,15 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
   return(reranked_results)
 }
 
-# 定义验证 JSON 格式的函数
-check_json_format <- function(response) {
-  tryCatch({
-    result <- jsonlite::fromJSON(response, simplifyVector = FALSE)
-    return(exists("relevance_score", result) && exists("cleaned_text", result))
-  }, error = function(e) {
-    return(FALSE)
-  })
-}
+# # 定义验证 JSON 格式的函数
+# check_json_format <- function(response) {
+#   tryCatch({
+#     result <- jsonlite::fromJSON(response, simplifyVector = FALSE)
+#     return(exists("relevance_score", result) && exists("cleaned_text", result))
+#   }, error = function(e) {
+#     return(FALSE)
+#   })
+# }
 
 extract_and_parse_json <- function(response) {
   tryCatch({
@@ -343,23 +342,23 @@ extract_and_parse_json <- function(response) {
   })
 }
 
-# 定义修改格式的逻辑
-modify_prompt_for_format <- function(original_prompt) {
-  # 将原始 prompt 和附加信息封装为 messages 格式
-  messages <- list(
-    list(role = "system", content = "You are an AI tasked with ensuring responses follow a strict JSON format."),
-    list(role = "user", content = paste0(
-      original_prompt, "\n\n",
-      "If your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
-      "{\n",
-      "  \"relevance_score\": <score>,\n",
-      "  \"cleaned_text\": \"<cleaned text>\"\n",
-      "}"
-    ))
-  )
-
-  return(messages)
-}
+# # 定义修改格式的逻辑
+# modify_prompt_for_format <- function(original_prompt) {
+#   # 将原始 prompt 和附加信息封装为 messages 格式
+#   messages <- list(
+#     list(role = "system", content = "You are an AI tasked with ensuring responses follow a strict JSON format."),
+#     list(role = "user", content = paste0(
+#       original_prompt, "\n\n",
+#       "If your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
+#       "{\n",
+#       "  \"relevance_score\": <score>,\n",
+#       "  \"cleaned_text\": \"<cleaned text>\"\n",
+#       "}"
+#     ))
+#   )
+#
+#   return(messages)
+# }
 
 # 遍历 chunks，调用 GPT API
 process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-mini-2024-07-18",  api_provider = "openai",  thinkingBudget = 0) {
