@@ -1,4 +1,32 @@
-# mapa 0.2.0
+# mapa 1.6.2
+
+* Combined `merge_modules()` and `merge_pathways_bioembedsim()` into one generia function `get_functional_modules()`.
+
+# mapa 1.6.0
+
+* Enable clustering evaluation.
+
+# mapa 1.5.1
+
+* Fixed bugs in `merge_pathways()`.
+
+# mapa 1.5.0
+
+* Now for non-model organism, users can provide AnnotationHub ID to perform the following analysis. 
+
+# mapa 1.4.1
+
+* For metabolite analysis, if a pathway do not have any metabolite, no metabolite information will be available for PubMed Search.
+
+# mapa 1.4.0
+
+* ID conversion is now available for mapa package.
+
+# mapa 1.3.0
+
+* Two more clustering methods "binary cut" and "hierarchical" are now available for clustering overlapped based similarity calculation results.
+
+# mapa 1.2.0
 
 * Fixed LLM interpretation bugs during RAG.
 

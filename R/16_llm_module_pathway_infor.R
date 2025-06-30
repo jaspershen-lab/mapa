@@ -352,11 +352,32 @@ get_metabolite_name <- function(MetIDs_vec) {
     dplyr::filter(HMDB.ID %in% MetIDs_vec) %>%
     dplyr::pull(Compound.name)
 
+  # kegg_MetNames_vec <-
+  #   MetIDs_vec[!grepl("^HMDB", MetIDs_vec)] |>
+  #   sapply(function(x){
+  #     compound_info <- KEGGREST::keggGet(x)
+  #     compound_name <- gsub(";", "", compound_info[[1]]$NAME[1])
+  #   })
   kegg_MetNames_vec <-
     MetIDs_vec[!grepl("^HMDB", MetIDs_vec)] |>
-    sapply(function(x){
-      compound_info <- KEGGREST::keggGet(x)
-      compound_name <- gsub(";", "", compound_info[[1]]$NAME[1])
+    sapply(function(x) {
+      # Skip if ID is "NA" (the string)
+      if (is.na(x) || x == "NA") {
+        return(NA)
+      }
+
+      # Add delay between requests (1-2 seconds recommended)
+      Sys.sleep(1.5)
+
+      # Try-catch for error handling
+      tryCatch({
+        compound_info <- KEGGREST::keggGet(x)
+        compound_name <- gsub(";", "", compound_info[[1]]$NAME[1])
+        return(compound_name)
+      }, error = function(e) {
+        cat("Error for ID", x, ":", e$message, "\n")
+        return(NA)  # Return NA for failed requests
+      })
     })
 
   MetNames_vec <- c(hmdb_MetNames_vec, unname(kegg_MetNames_vec))

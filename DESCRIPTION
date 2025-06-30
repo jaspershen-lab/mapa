@@ -1,8 +1,8 @@
 Type: Package
 Package: mapa
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 0.2.0
-Date: 2025-04-15
+Version: 1.6.2
+Date: 2025-06-17
 Authors@R: c(
     person("Xiaotao", "Shen", , "shenxt1990@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-9608-9964")),
@@ -19,7 +19,9 @@ Depends:
     R (>= 4.1)
 Imports:
     AnnotationDbi,
+    BiocManager,
     cli,
+    cluster,
     clusterProfiler,
     crayon,
     curl,
@@ -67,6 +69,7 @@ Imports:
     tidyr,
     utils
 Suggests: 
+    AnnotationHub,
     BiocGenerics,
     flexclust,
     ggplotify,

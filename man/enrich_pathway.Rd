@@ -10,7 +10,7 @@ enrich_pathway(
   database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
   save_to_local = FALSE,
   path = "result",
-  go.orgdb = NULL,
+  go.orgdb = org.Hs.eg.db,
   go.keytype = "ENTREZID",
   go.ont = "ALL",
   go.universe = NULL,
@@ -52,7 +52,7 @@ For metabolite-based queries, it should contain columns like 'hmdbid' and 'keggi
 
 \item{path}{Character, the directory where to save the results if save_to_local is TRUE.}
 
-\item{go.orgdb}{Object, the OrgDb object required for GO enrichment (e.g., org.Hs.eg.db).
+\item{go.orgdb}{OrgDb object or character string naming the \emph{OrgDb} annotation package required for GO enrichment (e.g., org.Hs.eg.db or "org.Hs.eg.db").
 See Bioconductor OrgDb packages for available organisms.}
 
 \item{go.keytype}{Character, the key type to be used for GO enrichment. Default is "ENTREZID".

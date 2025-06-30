@@ -8,6 +8,8 @@ merge_modules(
   object,
   sim.cutoff = 0.5,
   measure_method = c("jaccard"),
+  cluster_method = c("girvan newman", "binary cut", "hierarchical"),
+  hclust.method = NULL,
   path = "result",
   save_to_local = FALSE
 )
@@ -15,9 +17,21 @@ merge_modules(
 \arguments{
 \item{object}{An S4 object, expected to be processed by \code{merge_pathways()}.}
 
-\item{sim.cutoff}{A numerical value for similarity cutoff, default is 0.5.}
+\item{sim.cutoff}{A numerical value for similarity cutoff, default is 0.5.
+For binary cut and hierarchical clustering, sim.cutoff is the cutoff for cutting the dendrogram.
+For Girvan-Newman, sim.cutoff is the similarity cutoff for pathways. Only edges with similarity above the cutoff will be stored in the graph data.}
 
-\item{measure_method}{A character vector indicating the method for measuring similarity, default is "jaccard".}
+\item{measure_method}{A character vector indicating the method for measuring similarity between modules, default is "jaccard".}
+
+\item{cluster_method}{Character, method for clustering pathways. Options are:
+\itemize{
+\item "binary cut": Uses simplifyEnrichment binary_cut algorithm
+\item "girvan newman": Uses Girvan-Newman community detection (default)
+\item "hierarchical": Uses hierarchical clustering
+}}
+
+\item{hclust.method}{Character, the agglomeration method for hierarchical clustering.
+Only used when cluster_method is "hierarchical". See \code{\link[stats]{hclust}} for options.}
 
 \item{path}{A character string for the directory where to save results, default is "result".}
 
@@ -26,10 +40,6 @@ merge_modules(
 \description{
 This function identify functional modules from various databases, such as GO, KEGG, and Reactome.
 It calculates the similarity matrix between all the pathways and clusters them into functional modules.
-}
-\note{
-Please ensure that \code{object} has been processed by \code{merge_pathways()}
-before using this function.
 }
 \examples{
 \dontrun{

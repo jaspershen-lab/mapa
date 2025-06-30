@@ -25,6 +25,7 @@
 #                   api_provider = "openai",
 #                   text_embedding_model = "text-embedding-3-small",
 #                   api_key = api_key,
+#                   database = c("go", "kegg", "reactome"),
 #                   save_to_local = FALSE)
 # gemini_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "gemini",  text_embedding_model = "text-embedding-004", api_key = api_key)
 ## GSEA
@@ -415,16 +416,16 @@ quickgo_api <- function(go_ids) {
       req <- httr2::request(url)
 
       resp <- req %>%
-        req_headers("Accept" = "application/json") %>%
-        req_retry(max_tries = 3,
+        httr2::req_headers("Accept" = "application/json") %>%
+        httr2::req_retry(max_tries = 3,
                   max_seconds = 60,
                   # Condition for when to retry
                   after = \(resp) is.null(resp) && resp$status_code != 200
         ) %>%
-        req_perform()
+        httr2::req_perform()
 
       # Parse json to get a list
-      info <- resp_body_json(resp)$result
+      info <- httr2::resp_body_json(resp)$result
     },
     error = function(e) {
       warning("Failed to get info from QuickGO after 3 retries:", e$message)
@@ -476,7 +477,8 @@ get_kegg_pathway_info <- function(kegg_ids){
               # Collect base info (always included)
               all_info <- list(
                 "id" = unname(x$ENTRY),
-                "term_name" = sub(" - Homo sapiens \\(human\\)$", "", x$NAME),
+                # "term_name" = sub(" - Homo sapiens \\(human\\)$", "", x$NAME),
+                "term_name" = sub(" - [^(]+\\([^)]+\\)$", "", x$NAME),
                 "term_definition" = paste(x$DESCRIPTION, collapse = " ")
               )
 
@@ -514,7 +516,8 @@ get_kegg_pathway_info <- function(kegg_ids){
             # Collect base info (always included)
             all_info <- list(
               "id" = unname(entry$ENTRY),
-              "term_name" = sub(" - Homo sapiens \\(human\\)$", "", entry$NAME),
+              # "term_name" = sub(" - Homo sapiens \\(human\\)$", "", entry$NAME),
+              "term_name" = sub(" - [^(]+\\([^)]+\\)$", "", entry$NAME),
               "term_definition" = paste(entry$DESCRIPTION, collapse = " ")
             )
 
@@ -842,17 +845,17 @@ get_openai_embedding_internal <-
         req <- httr2::request(url)
 
         resp <- req %>%
-          req_auth_bearer_token(token = api_key) %>%
-          req_body_json(data = data) %>%
-          req_retry(max_tries = 3,
+          httr2::req_auth_bearer_token(token = api_key) %>%
+          httr2::req_body_json(data = data) %>%
+          httr2::req_retry(max_tries = 3,
                     max_seconds = 60,
                     after = \(resp) is.null(resp) && resp$status_code != 200 # Condition for when to retry
           ) %>%
-          req_perform()
+          httr2::req_perform()
 
         embedding <-
           # Parsed JSON -> an embedding, a list
-          resp_body_json(resp) %>%
+          httr2::resp_body_json(resp) %>%
           {.$data[[1]]$embedding} %>%
           unlist()
       },
@@ -876,22 +879,22 @@ get_gemini_embedding_internal <-
 
       # Get response
       resp <- req %>%
-        req_headers("Content-Type" = "application/json") %>%
-        req_body_json(
+        httr2::req_headers("Content-Type" = "application/json") %>%
+        httr2::req_body_json(
           list(
             model = paste0("models/", text_embedding_model),
             content = list(parts = list(list(text = input_text)))
           )
         ) %>%
-        req_retry(max_tries = 3,
+        httr2::req_retry(max_tries = 3,
                   max_seconds = 60,
                   after = \(resp) is.null(resp) && resp$status_code != 200 # Condition for when to retry
         ) %>%
-        req_perform()
+        httr2::req_perform()
 
       # Parse the JSON response
       embedding <- resp %>%
-        resp_body_json() %>%
+        httr2::resp_body_json() %>%
         {.$embedding$values} %>%
         unlist()
     },
@@ -934,18 +937,18 @@ gemini_api_call <-
     )
 
     # Create and send the request using httr2
-    response <- request(url) %>%
-      req_headers("Content-Type" = "application/json") %>%
-      req_body_json(request_body) %>%
-      req_perform()
+    response <- httr2::request(url) %>%
+      httr2::req_headers("Content-Type" = "application/json") %>%
+      httr2::req_body_json(request_body) %>%
+      httr2::req_perform()
 
     # Check for errors
-    if (resp_is_error(response)) {
+    if (httr2::resp_is_error(response)) {
       stop(paste("API request failed with status:", resp_status(response)))
     }
 
     # Parse and return the JSON response
-    result <- response %>% resp_body_json()
+    result <- response %>% httr2::resp_body_json()
 
     # Extract generated text
     return(result$candidates[[1]]$content$parts[[1]]$text)

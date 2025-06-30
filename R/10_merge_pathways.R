@@ -15,26 +15,15 @@
 #
 # load("result/enriched_pathways")
 #
-# enriched_modules <-
-#   merge_pathways(
-#     object = enriched_pathways,
-#     database = c("go", "kegg", "reactome"),
-#     go.orgdb = org.Hs.eg.db,
-#     p.adjust.cutoff.go = 0.05,
-#     p.adjust.cutoff.kegg = 0.05,
-#     p.adjust.cutoff.reactome = 0.05,
-#     count.cutoff.go = 5,
-#     count.cutoff.kegg = 5,
-#     count.cutoff.reactome = 5,
-#     sim.cutoff.go = 0.5,
-#     sim.cutoff.kegg = 0.5,
-#     sim.cutoff.reactome = 0.5,
-#     measure.method.go = "Sim_XGraSM_2013",
-#     measure.method.kegg = "jaccard",
-#     measure.method.reactome = "jaccard",
-#     path = "result",
-#     save_to_local = FALSE
-#   )
+# merged_pathways <- merge_pathways(
+#   object = enrich_pathway_res,
+#   database = c("go", "kegg"),
+#   sim.cutoff.go = 0.5,
+#   sim.cutoff.kegg = 0.5,
+#   measure.method.go = "Sim_Lin_1998",
+#   go.orgdb = mf.orgdb,
+#   measure.method.kegg = "jaccard"
+# )
 #
 # enriched_modules <-
 #   merge_pathways(
@@ -498,11 +487,13 @@ merge_pathways_internal <-
     query_type <- match.arg(query_type)
     analysis_type <- match.arg(analysis_type)
     database <- match.arg(database)
-    if (database == "go" && missing(go.orgdb)) {
+    if (database == "go" && (missing(go.orgdb) || is.null(go.orgdb))) {
       stop("Please provide the OrgDb object to merge GO terms.")
     }
 
-    path <- file.path(path, database)
+    if (save_to_local) {
+      path <- file.path(path, database)
+    }
 
     if (missing(pathway_result)) {
       stop("pathway_result is required")
@@ -540,7 +531,7 @@ merge_pathways_internal <-
           pathway_result@result %>%
           dplyr::filter(p_adjust < p.adjust.cutoff) %>%
           dplyr::arrange(p_adjust)
-        ## TO DO: Add filter for the count of core_enrichment based on the parameter count.cutoff
+        ## TO DO: Whether to add filter for the count of core_enrichment based on the parameter count.cutoff?
         # result$Count <- purrr::map_int(pathway_result@result$core_enrichment,
         #                                function(x) {
         #                                  length(stringr::str_split(x, pattern = "/")[[1]])
@@ -570,14 +561,20 @@ merge_pathways_internal <-
       if (database == "go") {
         sim_matrix <-
           tryCatch(
-            get_go_result_sim(
-              # result = dplyr::filter(result, ONTOLOGY != "CC"),
-              result = result,
-              go.orgdb = go.orgdb,
-              sim.cutoff = sim.cutoff,
-              measure.method = measure.method,
-              control.method = control.method.go),
-            error = function(x) {
+            expr = {
+              result_sim <- get_go_result_sim(
+                # result = dplyr::filter(result, ONTOLOGY != "CC"),
+                result = result,
+                go.orgdb = go.orgdb,
+                measure.method = measure.method,
+                control.method = control.method.go
+              )
+              message("Completed GO term similarity calculation successfully!")
+              result_sim
+            },
+            error = function(e) {
+              message(paste("Error in GO term similarity calculation:", e$message))
+              message("Setting GO term sim_matrix as empty data frame and continuing...")
               data.frame(name1 = character(),
                          name2 = character(),
                          sim = numeric())
@@ -588,18 +585,24 @@ merge_pathways_internal <-
       if (database == "kegg") {
         sim_matrix <-
           tryCatch(
-            sim_matrix <-
-              term_similarity_KEGG(term_id = c(result$ID),
-                                   measure.method = measure.method) %>%
-              as.data.frame() %>%
-              tibble::rownames_to_column(var = "name1") %>%
-              tidyr::pivot_longer(
-                cols = -name1,
-                names_to = "name2",
-                values_to = "sim"
-              ) %>%
-              dplyr::filter(name1 < name2),
-            error = function(x) {
+            {
+              result_sim <-
+                term_similarity_KEGG(term_id = c(result$ID),
+                                     measure.method = measure.method) %>%
+                as.data.frame() %>%
+                tibble::rownames_to_column(var = "name1") %>%
+                tidyr::pivot_longer(
+                  cols = -name1,
+                  names_to = "name2",
+                  values_to = "sim"
+                ) %>%
+                dplyr::filter(name1 < name2)
+              message("Completed KEGG pathway similarity calculation successfully!")
+              result_sim
+            },
+            error = function(e) {
+              message(paste("Error in KEGG pathway similarity calculation:", e$message))
+              message("Setting KEGG pathway sim_matrix as empty data frame and continuing...")
               data.frame(name1 = character(),
                          name2 = character(),
                          sim = numeric())
@@ -610,18 +613,24 @@ merge_pathways_internal <-
       if (database == "reactome") {
         sim_matrix <-
           tryCatch(
-            sim_matrix <-
-              term_similarity_Reactome(term_id = c(result$ID),
-                                       measure.method = measure.method) %>%
-              as.data.frame() %>%
-              tibble::rownames_to_column(var = "name1") %>%
-              tidyr::pivot_longer(
-                cols = -name1,
-                names_to = "name2",
-                values_to = "sim"
-              ) %>%
-              dplyr::filter(name1 < name2),
-            error = function(x) {
+            {
+              result_sim <-
+                term_similarity_Reactome(term_id = c(result$ID),
+                                         measure.method = measure.method) %>%
+                as.data.frame() %>%
+                tibble::rownames_to_column(var = "name1") %>%
+                tidyr::pivot_longer(
+                  cols = -name1,
+                  names_to = "name2",
+                  values_to = "sim"
+                ) %>%
+                dplyr::filter(name1 < name2)
+              message("Completed Reactome pathway similarity calculation successfully!")
+              result_sim
+            },
+            error = function(e) {
+              message(paste("Error in Reactome pathway similarity calculation:", e$message))
+              message("Setting Reactome pathway sim_matrix as empty data frame and continuing...")
               data.frame(name1 = character(),
                          name2 = character(),
                          sim = numeric())
@@ -632,19 +641,26 @@ merge_pathways_internal <-
       if (database == "hmdb") {
         sim_matrix <-
           tryCatch(
-            sim_matrix <-
-              term_similarity_metabolite(
-                enrichment_result = result,
-                measure.method = measure.method) %>%
-              as.data.frame() %>%
-              tibble::rownames_to_column(var = "name1") %>%
-              tidyr::pivot_longer(
-                cols = -name1,
-                names_to = "name2",
-                values_to = "sim"
-              ) %>%
-              dplyr::filter(name1 != name2),
-            error = function(x) {
+            {
+              result_sim <-
+                term_similarity_metabolite(
+                  enrichment_result = result,
+                  measure.method = measure.method) %>%
+                as.data.frame() %>%
+                tibble::rownames_to_column(var = "name1") %>%
+                tidyr::pivot_longer(
+                  cols = -name1,
+                  names_to = "name2",
+                  values_to = "sim"
+                ) %>%
+                dplyr::filter(name1 != name2)
+
+              message("Completed SMPDB pathway similarity calculation successfully!")
+              result_sim
+            },
+            error = function(e) {
+              message(paste("Error in SMPDB pathway similarity calculation:", e$message))
+              message("Setting SMPDB pathway sim_matrix as empty data frame and continuing...")
               data.frame(name1 = character(),
                          name2 = character(),
                          sim = numeric())
@@ -655,19 +671,26 @@ merge_pathways_internal <-
       if (database == "metkegg") {
         sim_matrix <-
           tryCatch(
-            sim_matrix <-
-              term_similarity_metabolite(
-                enrichment_result = result,
-                measure.method = measure.method) %>%
-              as.data.frame() %>%
-              tibble::rownames_to_column(var = "name1") %>%
-              tidyr::pivot_longer(
-                cols = -name1,
-                names_to = "name2",
-                values_to = "sim"
-              ) %>%
-              dplyr::filter(name1 != name2),
-            error = function(x) {
+            {
+              result_sim <-
+                term_similarity_metabolite(
+                  enrichment_result = result,
+                  measure.method = measure.method) %>%
+                as.data.frame() %>%
+                tibble::rownames_to_column(var = "name1") %>%
+                tidyr::pivot_longer(
+                  cols = -name1,
+                  names_to = "name2",
+                  values_to = "sim"
+                ) %>%
+                dplyr::filter(name1 != name2)
+
+              message("Completed KEGG pathway similarity calculation successfully!")
+              result_sim
+            },
+            error = function(e) {
+              message(paste("Error in KEGG pathway similarity calculation:", e$message))
+              message("Setting KEGG pathway sim_matrix as empty data frame and continuing...")
               data.frame(name1 = character(),
                          name2 = character(),
                          sim = numeric())

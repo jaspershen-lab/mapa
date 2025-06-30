@@ -287,7 +287,7 @@ setMethod(
       cat(crayon::green('No HMDB results\n'))
     } else{
       if (analysis_type == "enrich_pathway") {
-        p.adjust.cutoff <- object@enrichment_hmbd_result@parameter@parameter$p_cutoff
+        p.adjust.cutoff <- object@enrichment_hmdb_result@parameter@parameter$p_cutoff
         cat(
           crayon::green(
             nrow(

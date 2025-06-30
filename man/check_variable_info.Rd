@@ -7,31 +7,37 @@
 check_variable_info(variable_info, query_type, order_by = NULL)
 }
 \arguments{
-\item{variable_info}{A data frame. The data frame should have at least the columns
-"ensembl", "symbol", "uniprot", and "entrezid". Each of these columns should have
-at least one non-NA value.}
+\item{variable_info}{A data frame containing biological entity information.
+\itemize{
+\item For \code{query_type = "gene"}: Must contain an "ensembl" column
+with at least one non-NA value.
+\item For \code{query_type = "metabolite"}: Must contain a "keggid" column
+with at least one non-NA value.
+}}
 
-\item{query_type}{Character, the category of biological entity to query ("gene", "metabolite") for pathway enrichment.}
+\item{query_type}{Character string specifying the category of biological entity
+to query. Accepted values are "gene" or "metabolite".}
 
-\item{order_by}{A character specifying the column to order by during GSEA.}
+\item{order_by}{Optional character string specifying the column name to order by
+during Gene Set Enrichment Analysis (GSEA). If provided:
+\itemize{
+\item Must be a character string
+\item Must correspond to an existing column in \code{variable_info}
+\item The specified column must not contain any NA values
+\item The column should contain numeric values for proper ordering
+}}
 }
 \value{
-This function does not return any value. It stops execution and throws an
-error if any of the required conditions are not met.
+This function does not return any value. It performs validation checks
+and stops execution with an informative error message if any required
+conditions are not met.
 }
 \description{
-This function checks if the input data frame \code{variable_info} has the required columns,
-and if these columns have any non-NA values.
-}
-\examples{
-variable_info <- data.frame(
-  ensembl = c("ENSG000001", NA, NA),
-  symbol = c("Gene1", "Gene2", "Gene3"),
-  uniprot = c(NA, "P12345", "Q67890"),
-  entrezid = c(101, 102, 103)
-)
-check_variable_info(variable_info, query_type = "gene")
+This function validates the input data frame \code{variable_info} to ensure it contains
+the required columns for the specified query type and that these columns have
+valid (non-NA) values. It also validates the \code{order_by} parameter when provided.
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
 }
+\keyword{internal}

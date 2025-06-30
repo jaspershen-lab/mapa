@@ -7,14 +7,14 @@
 #
 # object <-
 #   enriched_functional_module
-#
+# load("demo_data/pregnancy_data/results/result_overlap/sim_cluster_result.rda")
 # plot_similarity_network(
-#   object = enriched_functional_module,
+#   object = sim_cluster_result,
 #   level = "module",
-#   database = "reactome",
-#   degree_cutoff = 0
+#   database = "hmdb",
+#   degree_cutoff = 0,
+#   text = TRUE
 # )
-
 # library(showtext)
 # showtext_auto(enable = TRUE)
 #
@@ -421,11 +421,19 @@ plot_similarity_network <-
           df <- igraph::as_data_frame(graph_data, what = "vertices")
 
           if (analysis_type == "enrich_pathway") {
-            df |>
-              dplyr::group_by(module) |>
-              dplyr::arrange(p_adjust, desc(Count), .by_group = TRUE) |>
-              dplyr::slice_head(n = 1) |>
-              dplyr::pull(label)
+            if ("Count" %in% colnames(df)) {
+              df |>
+                dplyr::group_by(module) |>
+                dplyr::arrange(p_adjust, desc(Count), .by_group = TRUE) |>
+                dplyr::slice_head(n = 1) |>
+                dplyr::pull(label)
+            } else {
+              df |>
+                dplyr::group_by(module) |>
+                dplyr::arrange(p_adjust, desc(mapped_number), .by_group = TRUE) |>
+                dplyr::slice_head(n = 1) |>
+                dplyr::pull(label)
+            }
           } else {
             df |>
               dplyr::group_by(module) |>

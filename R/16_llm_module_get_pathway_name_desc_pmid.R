@@ -135,16 +135,16 @@ quickgo_api <- function(go_ids) {
       req <- httr2::request(url)
 
       resp <- req %>%
-        req_headers("Accept" = "application/json") %>%
-        req_retry(max_tries = 3,
-                  max_seconds = 60,
-                  # Condition for when to retry
-                  after = \(resp) is.null(resp) && resp$status_code != 200
+        httr2::req_headers("Accept" = "application/json") %>%
+        httr2::req_retry(max_tries = 3,
+                         max_seconds = 60,
+                         # Condition for when to retry
+                         after = \(resp) is.null(resp) && resp$status_code != 200
         ) %>%
-        req_perform()
+        httr2::req_perform()
 
       # Parse json to get a list
-      info <- resp_body_json(resp)$result
+      info <- httr2::resp_body_json(resp)$result
     },
     error = function(e) {
       warning("Failed to get info from QuickGO after 3 retries:", e$message)
@@ -366,7 +366,8 @@ get_metkegg_info <- function(kegg_ids) {
     # Collect base info (always included)
     all_info <- list(
       "id" = unname(entry$ENTRY),
-      "term_name" = sub(" - Homo sapiens \\(human\\)$", "", entry$NAME),
+      # "term_name" = sub(" - Homo sapiens \\(human\\)$", "", entry$NAME),
+      "term_name" = sub(" - [^(]+\\([^)]+\\)$", "", entry$NAME),
       "term_definition" = paste(entry$DESCRIPTION, collapse = " "),
       "PMID" = pmid
     )

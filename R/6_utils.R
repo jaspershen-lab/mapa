@@ -329,7 +329,7 @@ get_jaccard_index_for_diff_databases <- function(
         stringr::str_split("/") %>%
         #unique() %>%
         purrr::map(function(x) {
-          if (stringr::str_detect(x[1], "ENSG")) {
+          if (stringr::str_detect(x[1], "ENS")) {
             return(x)
           }
 
@@ -473,29 +473,36 @@ arrange_coords <- function(coords, ratio = 0.95) {
 
 #' Check Variable Information
 #'
-#' This function checks if the input data frame `variable_info` has the required columns,
-#' and if these columns have any non-NA values.
+#' This function validates the input data frame `variable_info` to ensure it contains
+#' the required columns for the specified query type and that these columns have
+#' valid (non-NA) values. It also validates the `order_by` parameter when provided.
 #'
-#' @param variable_info A data frame. The data frame should have at least the columns
-#'   "ensembl", "symbol", "uniprot", and "entrezid". Each of these columns should have
-#'   at least one non-NA value.
-#' @param query_type Character, the category of biological entity to query ("gene", "metabolite") for pathway enrichment.
-#' @param order_by A character specifying the column to order by during GSEA.
-#' @return This function does not return any value. It stops execution and throws an
-#'   error if any of the required conditions are not met.
+#' @param variable_info A data frame containing biological entity information.
+#'   \itemize{
+#'     \item For \code{query_type = "gene"}: Must contain an "ensembl" column
+#'           with at least one non-NA value.
+#'     \item For \code{query_type = "metabolite"}: Must contain a "keggid" column
+#'           with at least one non-NA value.
+#'   }
+#' @param query_type Character string specifying the category of biological entity
+#'   to query. Accepted values are "gene" or "metabolite".
+#' @param order_by Optional character string specifying the column name to order by
+#'   during Gene Set Enrichment Analysis (GSEA). If provided:
+#'   \itemize{
+#'     \item Must be a character string
+#'     \item Must correspond to an existing column in \code{variable_info}
+#'     \item The specified column must not contain any NA values
+#'     \item The column should contain numeric values for proper ordering
+#'   }
 #'
-#' @export
+#' @return This function does not return any value. It performs validation checks
+#'   and stops execution with an informative error message if any required
+#'   conditions are not met.
 #'
-#' @author Xiaotao Shen \email{shenxt1990@@outlook.com}
 #'
-#' @examples
-#' variable_info <- data.frame(
-#'   ensembl = c("ENSG000001", NA, NA),
-#'   symbol = c("Gene1", "Gene2", "Gene3"),
-#'   uniprot = c(NA, "P12345", "Q67890"),
-#'   entrezid = c(101, 102, 103)
-#' )
-#' check_variable_info(variable_info, query_type = "gene")
+#' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#'
+#' @keywords internal
 
 check_variable_info <-
   function(variable_info, query_type, order_by = NULL) {
@@ -525,29 +532,29 @@ check_variable_info <-
         }
       }
 
-      if (all(colnames(variable_info) != "symbol")) {
-        stop("symbol should be in the variable_info")
-      } else{
-        if (all(is.na(variable_info$symbol))) {
-          stop("All symbol column are NA")
-        }
-      }
+      # if (all(colnames(variable_info) != "symbol")) {
+      #   stop("symbol should be in the variable_info")
+      # } else{
+      #   if (all(is.na(variable_info$symbol))) {
+      #     stop("All symbol column are NA")
+      #   }
+      # }
 
-      if (all(colnames(variable_info) != "uniprot")) {
-        stop("uniprot should be in the variable_info")
-      } else{
-        if (all(is.na(variable_info$uniprot))) {
-          stop("All uniprot column are NA")
-        }
-      }
+      # if (all(colnames(variable_info) != "uniprot")) {
+      #   stop("uniprot should be in the variable_info")
+      # } else{
+      #   if (all(is.na(variable_info$uniprot))) {
+      #     stop("All uniprot column are NA")
+      #   }
+      # }
 
-      if (all(colnames(variable_info) != "entrezid")) {
-        stop("entrezid should be in the variable_info")
-      } else{
-        if (all(is.na(variable_info$entrezid))) {
-          stop("All entrezid column are NA")
-        }
-      }
+      # if (all(colnames(variable_info) != "entrezid")) {
+      #   stop("entrezid should be in the variable_info")
+      # } else{
+      #   if (all(is.na(variable_info$entrezid))) {
+      #     stop("All entrezid column are NA")
+      #   }
+      # }
 
     } else if (query_type == "metabolite") {
       # if (all(colnames(variable_info) != "hmdbid")) {
@@ -577,8 +584,6 @@ check_variable_info <-
 #'
 #' @param result A data frame containing GO term IDs in column 'ID' and ontologies in column 'ONTOLOGY'.
 #' @param go.orgdb An organism-specific database for GO annotations (default: NULL).
-#' @param sim.cutoff A numeric value for the similarity cutoff (default: 0). Only term pairs with
-#'                  similarity greater than this value will be returned.
 #' @param measure.method A character vector specifying the semantic similarity
 #'                      measure method for GO terms. Default is `"Sim_XGraSM_2013"`.
 #'                      See `simona::all_term_sim_methods()` for available measures.
@@ -600,7 +605,6 @@ check_variable_info <-
 get_go_result_sim <-
   function(result,
            go.orgdb = NULL,
-           sim.cutoff = 0,
            measure.method = "Sim_XGraSM_2013",
            control.method = list()) {
 
@@ -620,22 +624,28 @@ get_go_result_sim <-
       ))
     }
 
-    bp_sim_matrix <-
-      GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "BP"],
-                             ont = "BP",
-                             go.orgdb = go.orgdb,
-                             measure = measure.method,
-                             control.method = control.method)
-    bp_obsolete_terms <- attr(bp_sim_matrix, "obsolete_terms")
-    bp_sim_df <-
-      bp_sim_matrix %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "name1") %>%
-      tidyr::pivot_longer(cols = -name1,
-                          names_to = "name2",
-                          values_to = "sim") %>%
-      dplyr::filter(name1 < name2) %>%
-      dplyr::filter(sim > sim.cutoff)
+    if (sum(result$ONTOLOGY == "BP") > 0) {
+      bp_sim_matrix <-
+        GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "BP"],
+                               ont = "BP",
+                               go.orgdb = go.orgdb,
+                               measure = measure.method,
+                               control.method = control.method)
+      bp_obsolete_terms <- attr(bp_sim_matrix, "obsolete_terms")
+      bp_sim_df <-
+        bp_sim_matrix %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column(var = "name1") |>
+        tidyr::pivot_longer(cols = -name1,
+                            names_to = "name2",
+                            values_to = "sim") |>
+        dplyr::filter(name1 < name2)
+        # dplyr::filter(sim > sim.cutoff)
+      message("Completed GO term (BP) similarity calculation.")
+    } else {
+      bp_sim_df <- NULL
+      bp_obsolete_terms <- NULL
+    }
 
     # name <- apply(bp_sim_df, 1, function(x) {
     #   paste(sort(x[1:2]), collapse = "_")
@@ -648,22 +658,28 @@ get_go_result_sim <-
     #   dplyr::distinct(name, .keep_all = TRUE) %>%
     #   dplyr::select(-name)
 
-    mf_sim_matrix <-
-      GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "MF"],
-                             ont = "MF",
-                             go.orgdb = go.orgdb,
-                             measure = measure.method,
-                             control.method = control.method)
-    mf_obsolete_terms <- attr(mf_sim_matrix, "obsolete_terms")
-    mf_sim_df <-
-      mf_sim_matrix %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "name1") %>%
-      tidyr::pivot_longer(cols = -name1,
-                          names_to = "name2",
-                          values_to = "sim") %>%
-      dplyr::filter(name1 < name2) %>%
-      dplyr::filter(sim > sim.cutoff)
+    if (sum(result$ONTOLOGY == "MF") > 0) {
+      mf_sim_matrix <-
+        GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "MF"],
+                               ont = "MF",
+                               go.orgdb = go.orgdb,
+                               measure = measure.method,
+                               control.method = control.method)
+      mf_obsolete_terms <- attr(mf_sim_matrix, "obsolete_terms")
+      mf_sim_df <-
+        mf_sim_matrix %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column(var = "name1") |>
+        tidyr::pivot_longer(cols = -name1,
+                            names_to = "name2",
+                            values_to = "sim") |>
+        dplyr::filter(name1 < name2)
+        # dplyr::filter(sim > sim.cutoff)
+      message("Completed GO term (MF) similarity calculation.")
+    } else {
+      mf_sim_df <- NULL
+      mf_obsolete_terms <- NULL
+    }
 
     # name <- apply(mf_sim_df, 1, function(x) {
     #   paste(sort(x[1:2]), collapse = "_")
@@ -676,22 +692,28 @@ get_go_result_sim <-
     #   dplyr::distinct(name, .keep_all = TRUE) %>%
     #   dplyr::select(-name)
 
-    cc_sim_matrix <-
-      GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "CC"],
-                             ont = "CC",
-                             go.orgdb = go.orgdb,
-                             measure = measure.method,
-                             control.method = control.method)
-    cc_obsolete_terms <- attr(cc_sim_matrix, "obsolete_terms")
-    cc_sim_df <-
-      cc_sim_matrix %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "name1") %>%
-      tidyr::pivot_longer(cols = -name1,
-                          names_to = "name2",
-                          values_to = "sim") %>%
-      dplyr::filter(name1 < name2) %>%
-      dplyr::filter(sim > sim.cutoff)
+    if (sum(result$ONTOLOGY == "CC") > 0) {
+      cc_sim_matrix <-
+        GO_similarity_internal(go_id = result$ID[result$ONTOLOGY == "CC"],
+                               ont = "CC",
+                               go.orgdb = go.orgdb,
+                               measure = measure.method,
+                               control.method = control.method)
+      cc_obsolete_terms <- attr(cc_sim_matrix, "obsolete_terms")
+      cc_sim_df <-
+        cc_sim_matrix |>
+        as.data.frame() |>
+        tibble::rownames_to_column(var = "name1") |>
+        tidyr::pivot_longer(cols = -name1,
+                            names_to = "name2",
+                            values_to = "sim") |>
+        dplyr::filter(name1 < name2)
+        # dplyr::filter(sim > sim.cutoff)
+      message("Completed GO term (CC) similarity calculation.")
+    } else {
+      cc_sim_df <- NULL
+      cc_obsolete_terms <- NULL
+    }
 
     # name <- apply(cc_sim_df, 1, function(x) {
     #   paste(sort(x[1:2]), collapse = "_")
@@ -709,7 +731,7 @@ get_go_result_sim <-
 
     attr(sim_matrix, "obsolete_terms") <- c(bp_obsolete_terms, mf_obsolete_terms, cc_obsolete_terms)
 
-    sim_matrix
+    return(sim_matrix)
   }
 
 #' Compute Similarity Between GO Terms for each subontology
@@ -1294,6 +1316,7 @@ get_hmdb_pathways <-
 #' }
 #'
 #' @keywords internal
+
 unify_id_internal <- function(ids = NULL,
                               variable_info = NULL,
                               query_type = c("gene", "metabolite")) {
@@ -1304,7 +1327,7 @@ unify_id_internal <- function(ids = NULL,
     unified_ids <-
       ids %>%
       purrr::map_chr(function(x) {
-        if (stringr::str_detect(x, "ENSG")) {
+        if (stringr::str_detect(x, "ENS")) {
           return(x)
         }
 
@@ -1390,4 +1413,78 @@ extract_llm_module_data <- function(llm_module_interpretation) {
   )
 
   return(result_df)
+}
+
+## Internal functions to get clustering results
+merge_by_binary_cut <- function(sim_matrix,
+                                sim.cutoff) {
+  requireNamespace("flexclust", quietly = TRUE)
+  clusters <- simplifyEnrichment::binary_cut(mat = sim_matrix, cutoff = sim.cutoff)
+  cluster_result <-
+    data.frame(node = rownames(sim_matrix),
+               module = paste("Functional_module", as.character(clusters), sep = "_"))
+
+  return(cluster_result)
+}
+
+merge_by_Girvan_Newman <- function(edge_data,
+                                   node_data,
+                                   sim.cutoff) {
+  ## Filter graph data according to sim.cutoff
+  edge_data <-
+    edge_data |>
+    dplyr::filter(sim > sim.cutoff)
+  ## Create tidygraph object
+  graph_data <-
+    tidygraph::tbl_graph(nodes = node_data,
+                         edges = edge_data,
+                         directed = FALSE,
+                         node_key = "node") |>
+    dplyr::mutate(degree = tidygraph::centrality_degree())
+
+  ## Perform clustering
+  subnetwork <-
+    suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data, weights = abs(igraph::edge_attr(graph_data, "sim"))))
+  ## Assign functional module label for pathways
+  cluster_result <-
+    data.frame(node = node_data$node,
+               module = paste("Functional_module", as.character(igraph::membership(subnetwork)), sep = "_"))
+
+  return(cluster_result)
+}
+
+merge_by_hierarchical <- function(sim_matrix,
+                                  hclust.method,
+                                  sim.cutoff) {
+  cosine_dist <- 1 - sim_matrix
+  ## Convert distance matrix to a 'dist' object
+  cosine_dist_obj <- as.dist(cosine_dist)
+  ## Perform hierarchical clustering
+  hc <- hclust(cosine_dist_obj, method = hclust.method)
+
+  clusters <- cutree(hc, h = sim.cutoff)
+  cluster_result <-
+    data.frame(node = hc$labels,
+               module = paste("Functional_module", as.character(clusters), sep = "_"))
+
+  return(cluster_result)
+}
+
+calculate_modularity <- function(graph_obj, clusters) {
+  tryCatch({
+    igraph::modularity(x = graph_obj,
+                       membership = clusters)
+  }, error = function(e) {
+    NA_real_
+  })
+}
+
+calculate_silhouette <- function(dist_obj, clusters) {
+  tryCatch({
+    if (length(unique(clusters)) < 2) return(NA_real_)
+    sil <- cluster::silhouette(clusters, dist_obj)
+    mean(sil[, "sil_width"])
+  }, error = function(e) {
+    NA_real_
+  })
 }

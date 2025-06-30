@@ -110,10 +110,11 @@ enriched_modules
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 enriched_functional_module <-
-  merge_modules(
+  get_functional_modules(
     object = enriched_modules,
     sim.cutoff = 0.5,
     measure_method = c("jaccard"),
+    cluster_method = "girvan newman",
     path = "result",
     save_to_local = FALSE
   )
