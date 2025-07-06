@@ -126,3 +126,7 @@
 
 * Expand the functionality of `do_gsea()` function to let it accept metabolite gsea.
 
+# mapa 0.1.32
+
+* Change `meta` argument to met, including updating metabolic do_gsea() test data.
+

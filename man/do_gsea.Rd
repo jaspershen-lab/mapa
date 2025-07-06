@@ -7,7 +7,7 @@
 do_gsea(
   variable_info,
   order_by = "fc",
-  analysis_type = c("transc", "meta"),
+  omic_type = c("transc", "met"),
   database,
   save_to_local = FALSE,
   path = "result",
@@ -38,12 +38,12 @@ do_gsea(
 \item{order_by}{Character specifying the column in variable_info to use for ranking features.
 Typically contains fold change values. Must be specified. Default is 'fc'.}
 
-\item{analysis_type}{Analysis type: "transc" for transcriptomics or "meta" for metabolomics.
+\item{omic_type}{Analysis type: "transc" for transcriptomics or "met" for metabolomics.
 Mandatory parameter with no default.}
 
 \item{database}{Character vector specifying databases to use:
 - For "transc": c("go", "kegg", "reactome")
-- For "meta": c("kegg", "hmdb")}
+- For "met": c("kegg", "hmdb")}
 
 \item{save_to_local}{Logical indicating whether to save results to local files.
 Default is \code{FALSE}.}
@@ -92,10 +92,10 @@ An object of class \code{functional_module} containing the enrichment analysis r
 \description{
 This integrated function performs GSEA for both transcriptomics and metabolomics data:
 \itemize{
-\item \strong{Transcriptomics} (analysis_type = "transc"):
+\item \strong{Transcriptomics} (omic_type = "transc"):
 Supports GO/KEGG/Reactome databases. Requires Entrez IDs and fold change values.
 
-\item \strong{Metabolomics} (analysis_type = "meta"):
+\item \strong{Metabolomics} (omic_type = "met"):
 Supports KEGG/HMDB metabolic pathways. Requires KEGG IDs, HMDB IDs and fold change values.
 }
 }
@@ -105,7 +105,7 @@ Supports KEGG/HMDB metabolic pathways. Requires KEGG IDs, HMDB IDs and fold chan
 library(org.Hs.eg.db)
 data(gene_data) # Contains entrezid and fc columns
 result_transc <- do_gsea(
-  analysis_type = "transc",
+  omic_type = "transc",
   variable_info = gene_data,
   database = c("go", "kegg"),
   OrgDb = org.Hs.eg.db,
@@ -113,16 +113,16 @@ result_transc <- do_gsea(
 )
 
 # Metabolomics example
-data(metabo_data) # Contains keggid and fc columns
-result_meta <- do_gsea(
-  analysis_type = "meta",
-  variable_info = metabo_data,
+data(met_data) # Contains keggid and fc columns
+result_met <- do_gsea(
+  omic_type = "met",
+  variable_info = met_data,
   database = "kegg",
   organism = "hsa"
 )
 
 # Extract KEGG pathway results
-kegg_res <- result_meta@meta_gsea_kegg_res
+kegg_res <- result_met@enrichment_metkegg_result
 }
 
 }

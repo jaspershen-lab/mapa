@@ -3,27 +3,49 @@
 # library(metid)
 # library(metpath)
 # library(tidymass)
+# get_kegg_pathway <- function() {
+#   data("kegg_hsa_pathway", envir = environment())
+#   message(
+#     crayon::yellow(
+#       "This database is downloaded in",
+#       kegg_hsa_pathway@database_info$version
+#     )
+#   )
+#   cat("\n")
+#   return(kegg_hsa_pathway)
+# }
 #
-# load("/do_gsea_demoData/meta.rda")
+# get_hmdb_pathway <- function() {
+#   data("hmdb_pathway", envir = environment())
+#   message(
+#     crayon::yellow(
+#       "This database is downloaded in",
+#       hmdb_pathway@database_info$version
+#     )
+#   )
+#   cat("\n")
+#   return(hmdb_pathway)
+# }
 #
-# plot(log(meta_info$score, 2))
+# load("/do_gsea_demoData/met.rda")
+#
+# plot(log(met_info$score, 2))
 #
 # gsea_pathways <- do_gsea(
-#   variable_info = meta_info,
+#   variable_info = met_info,
 #   database = c("kegg", "hmdb"),
 #   order_by = "score",
-#   omic_type = "meta",
+#   omic_type = "met",
 #   pvalueCutoff = 1,
 #   minGSSize = 0,
 #   maxGSSize = 1000
 # )
 #
-# meta_kegg_gsea_res <-
+# met_kegg_gsea_res <-
 #   as.data.frame(gsea_pathways@enrichment_metkegg_result@result)
 #
-# meta_hmdb_gsea_res <-
+# met_hmdb_gsea_res <-
 #   as.data.frame(gsea_pathways@enrichment_hmdb_result@result)
-#
 #
 # ##### test: transcript gsea ######
 #
@@ -117,7 +139,7 @@
 #'   \item \strong{Transcriptomics} (omic_type = "transc"):
 #'   Supports GO/KEGG/Reactome databases. Requires Entrez IDs and fold change values.
 #'
-#'   \item \strong{Metabolomics} (omic_type = "meta"):
+#'   \item \strong{Metabolomics} (omic_type = "met"):
 #'   Supports KEGG/HMDB metabolic pathways. Requires KEGG IDs, HMDB IDs and fold change values.
 #' }
 #'
@@ -126,11 +148,11 @@
 #'                     - For transcriptomics: 'entrezid' (Entrez Gene IDs)
 #' @param order_by Character specifying the column in variable_info to use for ranking features.
 #'                Typically contains fold change values. Must be specified. Default is 'fc'.
-#' @param omic_type Analysis type: "transc" for transcriptomics or "meta" for metabolomics.
+#' @param omic_type Analysis type: "transc" for transcriptomics or "met" for metabolomics.
 #'                     Mandatory parameter with no default.
 #' @param database Character vector specifying databases to use:
 #'                - For "transc": c("go", "kegg", "reactome")
-#'                - For "meta": c("kegg", "hmdb")
+#'                - For "met": c("kegg", "hmdb")
 #' @param save_to_local Logical indicating whether to save results to local files.
 #' Default is `FALSE`.
 #' @param path Output directory path when save_to_local=TRUE.
@@ -172,16 +194,16 @@
 #' )
 #'
 #' # Metabolomics example
-#' data(metabo_data) # Contains keggid and fc columns
-#' result_meta <- do_gsea(
-#'   omic_type = "meta",
-#'   variable_info = metabo_data,
+#' data(met_data) # Contains keggid and fc columns
+#' result_met <- do_gsea(
+#'   omic_type = "met",
+#'   variable_info = met_data,
 #'   database = "kegg",
 #'   organism = "hsa"
 #' )
 #'
 #' # Extract KEGG pathway results
-#' kegg_res <- result_meta@meta_gsea_kegg_res
+#' kegg_res <- result_met@enrichment_metkegg_result
 #' }
 #'
 #' @export
@@ -189,7 +211,7 @@
 do_gsea <-
   function(variable_info,
            order_by = "fc",
-           omic_type = c("transc", "meta"),
+           omic_type = c("transc", "met"),
            database,
            save_to_local = FALSE,
            path = "result",
@@ -215,11 +237,11 @@ do_gsea <-
 
     ### check if type are clarified
     if (!missing(omic_type)) {
-      if (!omic_type %in% c("transc", "meta")) {
-        stop("Invalid omic_type detected. Choose 'transc' for transcriptomics gsea or 'meta' for metabolomics gsea.")
+      if (!omic_type %in% c("transc", "met")) {
+        stop("Invalid omic_type detected. Choose 'transc' for transcriptomics gsea or 'met' for metabolomics gsea.")
       }
       if (length(omic_type) != 1) {
-        stop("Incorrect omic_type input. Please choose one and only one from 'transc' or 'meta'.")
+        stop("Incorrect omic_type input. Please choose one and only one from 'transc' or 'met'.")
       } else if (omic_type == "transc") {
         do_gsea_transc(
           variable_info = variable_info,
@@ -245,8 +267,8 @@ do_gsea <-
           readable = readable,
           ...
         )
-      } else if (omic_type == "meta") {
-        do_gsea_meta(
+      } else if (omic_type == "met") {
+        do_gsea_met(
           variable_info = variable_info,
           order_by = order_by,
           database = database,
@@ -269,7 +291,7 @@ do_gsea <-
         )
       }
     } else {
-      stop("Please specify the type of omic data for GSEA analysis: use 'transc' for transcriptomics or 'meta' for metabolomics.")
+      stop("Please specify the type of omic data for GSEA analysis: use 'transc' for transcriptomics or 'met' for metabolomics.")
     }
   }
 
@@ -543,42 +565,32 @@ do_gsea_transc <- function(variable_info = variable_info,
   result
 }
 
-do_gsea_meta <- function(variable_info = variable_info,
-                         order_by = order_by,
-                         database = database,
-                         save_to_local = save_to_local,
-                         path = path,
-                         organism = organism,
-                         exponent = exponent,
-                         eps = eps,
-                         verbose = verbose,
-                         seed = seed,
-                         by = by,
-                         use_internal_data = use_internal_data,
-                         pvalueCutoff = pvalueCutoff,
-                         pAdjustMethod = pAdjustMethod,
-                         minGSSize = minGSSize,
-                         maxGSSize = maxGSSize,
-                         readable = readable,
-                         ...) {
-  ### check the id of markers
-  if (readable) {
-    readable <- FALSE
-  }
+do_gsea_met <- function(variable_info = variable_info,
+                        order_by = order_by,
+                        database = database,
+                        save_to_local = save_to_local,
+                        path = path,
+                        organism = organism,
+                        exponent = exponent,
+                        eps = eps,
+                        verbose = verbose,
+                        seed = seed,
+                        by = by,
+                        use_internal_data = use_internal_data,
+                        pvalueCutoff = pvalueCutoff,
+                        pAdjustMethod = pAdjustMethod,
+                        minGSSize = minGSSize,
+                        maxGSSize = maxGSSize,
+                        readable = readable,
+                        ...) {
+  if (readable) readable <- FALSE
 
-  if (missing(database)) {
-    stop("Please specify which database you intend to use.")
-  }
+  if (missing(database)) stop("Please specify which database you intend to use.")
   valid_db <- c("kegg", "hmdb")
   database <- match.arg(database, choices = valid_db, several.ok = TRUE)
 
-  if (missing(order_by)) {
-    stop("order_by must be specified.")
-  }
-
-  if (missing(variable_info)) {
-    stop("variable_info cannot be empty.")
-  }
+  if (missing(order_by)) stop("order_by must be specified.")
+  if (missing(variable_info)) stop("variable_info cannot be empty.")
 
   check_variable_info(
     variable_info = variable_info,
@@ -587,8 +599,8 @@ do_gsea_meta <- function(variable_info = variable_info,
   )
 
   ### initialize
-  meta_gsea_kegg_res <- NULL
-  meta_gsea_hmdb_res <- NULL
+  met_gsea_kegg_res <- NULL
+  met_gsea_hmdb_res <- NULL
 
   # get_kegg_pathway <- function() {
   #   data("kegg_hsa_pathway", envir = environment())
@@ -623,23 +635,33 @@ do_gsea_meta <- function(variable_info = variable_info,
     )
 
     # process variable_info
-    variable_info <- variable_info |>
+    variable_info_kegg <- variable_info |>
       dplyr::filter(!is.na(keggid)) |>
-      dplyr::distinct()
+      dplyr::distinct(keggid, .keep_all = TRUE)
 
     # check if keggid has duplicate values
-    if (any(duplicated(variable_info$keggid))) {
-      stop("Duplicate KEGG IDs detected in variable_info.\n",
-           "Please ensure that each KEGG ID is unique.")
+    if (any(duplicated(variable_info_kegg$keggid))) {
+      dup_ids <- variable_info_kegg$keggid[duplicated(variable_info_kegg$keggid)]
+      variable_info_kegg <- variable_info_kegg |>
+        dplyr::group_by(keggid) |>
+        dplyr::arrange(desc(!!rlang::sym(order_by)), .by_group = TRUE) |>
+        dplyr::slice(1) |>
+        dplyr::ungroup()
+      message(
+        "Duplicated KEGG ID detected! Only the entry with the largest '", order_by, "' is kept for each KEGG ID: ",
+        paste(unique(dup_ids), collapse = ", ")
+      )
     }
 
-    # check KEGG ID format
-    if (!any(grepl("^C\\d{5}$", variable_info$keggid))) {
-      stop("All KEGG ID does not match compound format (e.g. C00001)")
+    if (!all(grepl("^C\\d{5}$", variable_info_kegg$keggid))) {
+      wrong_ids <- variable_info_kegg$keggid[!grepl("^C\\d{5}$", variable_info_kegg$keggid)]
+      stop("Some KEGG IDs do not match compound format (e.g. C00001). Problematic IDs: ", paste(wrong_ids, collapse = ", "))
     } else {
+      met_list <- log(variable_info_kegg[[order_by]], 2)
+      names(met_list) <- variable_info_kegg$keggid
+
       # load KEGG pathways from metpath
-      kegg_hsa_pathway <-
-        get_kegg_pathways()
+      kegg_hsa_pathway <- get_kegg_pathways()
 
       # Arrange database
       kegg_ids <- sapply(kegg_hsa_pathway@compound_list, function(x) x$KEGG.ID)
@@ -650,20 +672,16 @@ do_gsea_meta <- function(variable_info = variable_info,
         pathway_name = kegg_pathways,
         metabolite_ids = metabolite_strs,
         stringsAsFactors = FALSE
-      )
-
-      term2metabolite_kegg <- term2metabolite_kegg |>
+      ) |>
         tidyr::separate_rows(metabolite_ids, sep = ",") |>
         dplyr::mutate(metabolite_ids = trimws(metabolite_ids)) |>
         dplyr::filter(!is.na(metabolite_ids) & metabolite_ids != "") |>
         dplyr::distinct()
 
-      meta_list <- log(variable_info[[order_by]], 2)
-      names(meta_list) <- variable_info$keggid
-
-      meta_gsea_kegg_res <- clusterProfiler::GSEA(
-        geneList = sort(meta_list, decreasing = TRUE),
+      met_gsea_kegg_res <- clusterProfiler::GSEA(
+        geneList = sort(met_list, decreasing = TRUE),
         TERM2GENE = term2metabolite_kegg,
+        exponent = exponent,
         minGSSize = minGSSize,
         maxGSSize = maxGSSize,
         eps = eps,
@@ -676,22 +694,21 @@ do_gsea_meta <- function(variable_info = variable_info,
         # does not have `qvalueCutoff` parameter
       )
 
-      meta_gsea_kegg_res@result$count <-
+      met_gsea_kegg_res@result$count <-
         purrr::map_int(
-          meta_gsea_kegg_res@result$core_enrichment,
+          met_gsea_kegg_res@result$core_enrichment,
           function(x) {
             length(stringr::str_split(x, pattern = "/")[[1]])
           }
         )
-
-      meta_gsea_kegg_res@result <-
-        subset(meta_gsea_kegg_res@result, select = -ID)
-      meta_gsea_kegg_res@result <-
-        meta_gsea_kegg_res@result |>
-        rename(pathway = Description)
+      met_gsea_kegg_res@result <-
+        met_gsea_kegg_res@result |>
+        subset(select = -ID) |>
+        dplyr::rename(pathway = Description)
     }
   }
 
+  # ---- HMDB分析 ----
   if ("hmdb" %in% database) {
     message(
       "\n",
@@ -701,23 +718,34 @@ do_gsea_meta <- function(variable_info = variable_info,
     )
 
     # process variable_info
-    variable_info <- variable_info |>
+    variable_info_hmdb <- variable_info |>
       dplyr::filter(!is.na(hmdbid)) |>
-      dplyr::distinct()
+      dplyr::distinct(hmdbid, .keep_all = TRUE)
 
-    # check if keggid has duplicate values
-    if (any(duplicated(variable_info$hmdbid))) {
-      stop("Duplicate HMDB IDs detected in variable_info.\n",
-           "Please ensure that each HMDB ID is unique.")
+    # check if hmdbid has duplicate values
+    if (any(duplicated(variable_info_hmdb$hmdbid))) {
+      dup_ids <- variable_info_hmdb$hmdbid[duplicated(variable_info_hmdb$hmdbid)]
+      variable_info_hmdb <- variable_info_hmdb |>
+        dplyr::group_by(hmdbid) |>
+        dplyr::arrange(desc(!!rlang::sym(order_by)), .by_group = TRUE) |>
+        dplyr::slice(1) |>
+        dplyr::ungroup()
+      message(
+        "Duplicated HMDB ID detected! Only the entry with the largest '", order_by, "' is kept for each HMDB ID: ",
+        paste(unique(dup_ids), collapse = ", ")
+      )
     }
 
     # check HMDB ID format
-    if (!any(grepl("^HMDB\\d{7}$", variable_info$hmdbid))) {
-      stop("All HMDB ID does not match compound format (e.g. HMDB0000001)")
+    if (!all(grepl("^HMDB\\d{7}$", variable_info_hmdb$hmdbid))) {
+      wrong_ids <- variable_info_hmdb$hmdbid[!grepl("^HMDB\\d{7}$", variable_info_hmdb$hmdbid)]
+      stop("Some HMDB IDs do not match compound format (e.g. HMDB0000001). Problematic IDs: ", paste(wrong_ids, collapse = ", "))
     } else {
-      # load HMDB pathways from metpath
-      hmdb_hsa_pathway <-
-        get_hmdb_pathway()
+      met_list <- log(variable_info_hmdb[[order_by]], 2)
+      names(met_list) <- variable_info_hmdb$hmdbid
+
+      # Load HMDB pathways from metpath
+      hmdb_hsa_pathway <- get_hmdb_pathway()
 
       # Arrange database
       hmdb_ids <- sapply(hmdb_hsa_pathway@compound_list, function(x) x$HMDB.ID)
@@ -728,19 +756,14 @@ do_gsea_meta <- function(variable_info = variable_info,
         pathway_name = hmdb_pathways,
         metabolite_ids = metabolite_strs,
         stringsAsFactors = FALSE
-      )
-
-      term2metabolite_hmdb <- term2metabolite_hmdb |>
+      ) |>
         tidyr::separate_rows(metabolite_ids, sep = ",") |>
         dplyr::mutate(metabolite_ids = trimws(metabolite_ids)) |>
         dplyr::filter(!is.na(metabolite_ids) & metabolite_ids != "") |>
         dplyr::distinct()
 
-      meta_list <- log(variable_info[[order_by]], 2)
-      names(meta_list) <- variable_info$hmdbid
-
-      meta_gsea_hmdb_res <- clusterProfiler::GSEA(
-        geneList = sort(meta_list, decreasing = TRUE),
+      met_gsea_hmdb_res <- clusterProfiler::GSEA(
+        geneList = sort(met_list, decreasing = TRUE),
         TERM2GENE = term2metabolite_hmdb,
         exponent = exponent,
         minGSSize = minGSSize,
@@ -753,19 +776,17 @@ do_gsea_meta <- function(variable_info = variable_info,
         by = by
       )
 
-      meta_gsea_hmdb_res@result$count <-
+      met_gsea_hmdb_res@result$count <-
         purrr::map_int(
-          meta_gsea_hmdb_res@result$core_enrichment,
+          met_gsea_hmdb_res@result$core_enrichment,
           function(x) {
             length(stringr::str_split(x, pattern = "/")[[1]])
           }
         )
-
-      meta_gsea_hmdb_res@result <-
-        subset(meta_gsea_hmdb_res@result, select = -ID)
-      meta_gsea_hmdb_res@result <-
-        meta_gsea_hmdb_res@result |>
-        rename(pathway = Description)
+      met_gsea_hmdb_res@result <-
+        met_gsea_hmdb_res@result |>
+        subset(select = -ID) |>
+        dplyr::rename(pathway = Description)
     }
   }
 
@@ -774,13 +795,12 @@ do_gsea_meta <- function(variable_info = variable_info,
     dir.create(file.path(path, "kegg"), showWarnings = FALSE)
     dir.create(file.path(path, "hmdb"), showWarnings = FALSE)
 
-    save(meta_gsea_kegg_res,
-      file = file.path(path, "kegg/meta_gsea_kegg_res")
-    )
-
-    save(meta_gsea_hmdb_res,
-      file = file.path(path, "hmdb/meta_gsea_hmdb_res")
-    )
+    if (!is.null(met_gsea_kegg_res)) {
+      save(met_gsea_kegg_res, file = file.path(path, "kegg/met_gsea_kegg_res"))
+    }
+    if (!is.null(met_gsea_hmdb_res)) {
+      save(met_gsea_hmdb_res, file = file.path(path, "hmdb/met_gsea_hmdb_res"))
+    }
   }
 
   parameter <- new(
@@ -810,14 +830,13 @@ do_gsea_meta <- function(variable_info = variable_info,
   )
 
   process_info <- list()
-
   process_info$do_gsea <- parameter
 
   result <- new(
     "functional_module",
     variable_info = variable_info,
-    enrichment_metkegg_result = meta_gsea_kegg_res,
-    enrichment_hmdb_result = meta_gsea_hmdb_res,
+    enrichment_metkegg_result = met_gsea_kegg_res,
+    enrichment_hmdb_result = met_gsea_hmdb_res,
     process_info = process_info
   )
 
