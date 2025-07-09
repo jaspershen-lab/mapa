@@ -1419,7 +1419,7 @@ extract_llm_module_data <- function(llm_module_interpretation) {
 merge_by_binary_cut <- function(sim_matrix,
                                 sim.cutoff) {
   requireNamespace("flexclust", quietly = TRUE)
-  clusters <- simplifyEnrichment::binary_cut(mat = sim_matrix, cutoff = sim.cutoff)
+  clusters <- simplifyEnrichment::binary_cut(mat = sim_matrix, cutoff = 1 - sim.cutoff)
   cluster_result <-
     data.frame(node = rownames(sim_matrix),
                module = paste("Functional_module", as.character(clusters), sep = "_"))
@@ -1427,31 +1427,31 @@ merge_by_binary_cut <- function(sim_matrix,
   return(cluster_result)
 }
 
-merge_by_Girvan_Newman <- function(edge_data,
-                                   node_data,
-                                   sim.cutoff) {
-  ## Filter graph data according to sim.cutoff
-  edge_data <-
-    edge_data |>
-    dplyr::filter(sim > sim.cutoff)
-  ## Create tidygraph object
-  graph_data <-
-    tidygraph::tbl_graph(nodes = node_data,
-                         edges = edge_data,
-                         directed = FALSE,
-                         node_key = "node") |>
-    dplyr::mutate(degree = tidygraph::centrality_degree())
-
-  ## Perform clustering
-  subnetwork <-
-    suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data, weights = abs(igraph::edge_attr(graph_data, "sim"))))
-  ## Assign functional module label for pathways
-  cluster_result <-
-    data.frame(node = node_data$node,
-               module = paste("Functional_module", as.character(igraph::membership(subnetwork)), sep = "_"))
-
-  return(cluster_result)
-}
+# merge_by_Girvan_Newman <- function(edge_data,
+#                                    node_data,
+#                                    sim.cutoff) {
+#   ## Filter graph data according to sim.cutoff
+#   edge_data <-
+#     edge_data |>
+#     dplyr::filter(sim > sim.cutoff)
+#   ## Create tidygraph object
+#   graph_data <-
+#     tidygraph::tbl_graph(nodes = node_data,
+#                          edges = edge_data,
+#                          directed = FALSE,
+#                          node_key = "node") |>
+#     dplyr::mutate(degree = tidygraph::centrality_degree())
+#
+#   ## Perform clustering
+#   subnetwork <-
+#     suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data, weights = abs(igraph::edge_attr(graph_data, "sim"))))
+#   ## Assign functional module label for pathways
+#   cluster_result <-
+#     data.frame(node = node_data$node,
+#                module = paste("Functional_module", as.character(igraph::membership(subnetwork)), sep = "_"))
+#
+#   return(cluster_result)
+# }
 
 merge_by_hierarchical <- function(sim_matrix,
                                   hclust.method,
@@ -1462,7 +1462,7 @@ merge_by_hierarchical <- function(sim_matrix,
   ## Perform hierarchical clustering
   hc <- hclust(cosine_dist_obj, method = hclust.method)
 
-  clusters <- cutree(hc, h = sim.cutoff)
+  clusters <- cutree(hc, h = 1 - sim.cutoff)
   cluster_result <-
     data.frame(node = hc$labels,
                module = paste("Functional_module", as.character(clusters), sep = "_"))
@@ -1470,21 +1470,31 @@ merge_by_hierarchical <- function(sim_matrix,
   return(cluster_result)
 }
 
-calculate_modularity <- function(graph_obj, clusters) {
+calculate_modularity <- function(sim_matrix, edge_data, sim.cutoff, clusters) {
   tryCatch({
-    igraph::modularity(x = graph_obj,
-                       membership = clusters)
+    filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+    # Handle case where all nodes are in the same cluster
+    if (length(unique(clusters)) <= 1) {
+      return(0)
+    }
+    graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                               vertices = rownames(sim_matrix))
+    igraph::modularity(graph_obj, clusters)
   }, error = function(e) {
-    NA_real_
+    warning(paste("Modularity calculation failed:", e$message))
+    return(NA)
   })
 }
 
-calculate_silhouette <- function(dist_obj, clusters) {
+calculate_silhouette <- function(sim_matrix, clusters) {
+  dist_matrix <- 1 - sim_matrix
+  dist_obj <- as.dist(dist_matrix)
   tryCatch({
-    if (length(unique(clusters)) < 2) return(NA_real_)
+    if (length(unique(clusters)) < 2 || length(unique(clusters)) > (nrow(sim_matrix) - 1)) return(NA_real_)
     sil <- cluster::silhouette(clusters, dist_obj)
     mean(sil[, "sil_width"])
   }, error = function(e) {
-    NA_real_
+    warning(paste("Silhouette calculation failed:", e$message))
+    return(NA)
   })
 }

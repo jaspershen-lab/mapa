@@ -104,7 +104,7 @@
 #'   similarity_filter_num = 30,
 #'   GPT_filter_num = 8
 #' )
-#'
+#'}
 #'
 #' @importFrom dplyr filter mutate left_join
 #'

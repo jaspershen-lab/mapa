@@ -10,7 +10,9 @@ single_module_generation(
   phenotype = NULL,
   model = "gpt-4o-mini-2024-07-18",
   api_key,
-  output_prompt = TRUE
+  output_prompt = TRUE,
+  api_provider = "openai",
+  thinkingBudget = 0
 )
 }
 \arguments{
@@ -25,6 +27,10 @@ single_module_generation(
 \item{api_key}{A string containing the API key required to access the AI API.}
 
 \item{output_prompt}{Logical. Whether to output prompt in final annotation result. Default is TRUE.}
+
+\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+
+\item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
 }
 \value{
 A list containing two elements: \code{module_name} (the generated biological module name)

@@ -8,7 +8,9 @@ GPT_process_chunk(
   chunks,
   module_list,
   api_key,
-  model = "gpt-4o-mini-2024-07-18"
+  model = "gpt-4o-mini-2024-07-18",
+  api_provider = "openai",
+  thinkingBudget = 0
 )
 }
 \arguments{
@@ -21,6 +23,10 @@ GPT_process_chunk(
 \item{api_key}{A character string containing the API key for the GPT service.}
 
 \item{model}{A string specifying the GPT model to use (default is \code{"gpt-4o-mini-2024-07-18"}).}
+
+\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+
+\item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
 }
 \value{
 A list of results where each element is a list containing:
