@@ -1427,6 +1427,23 @@ merge_by_binary_cut <- function(sim_matrix,
   return(cluster_result)
 }
 
+merge_by_hierarchical <- function(sim_matrix,
+                                  hclust.method,
+                                  sim.cutoff) {
+  cosine_dist <- 1 - sim_matrix
+  ## Convert distance matrix to a 'dist' object
+  cosine_dist_obj <- as.dist(cosine_dist)
+  ## Perform hierarchical clustering
+  hc <- hclust(cosine_dist_obj, method = hclust.method)
+
+  clusters <- cutree(hc, h = 1 - sim.cutoff)
+  cluster_result <-
+    data.frame(node = hc$labels,
+               module = paste("Functional_module", as.character(clusters), sep = "_"))
+
+  return(cluster_result)
+}
+
 # merge_by_Girvan_Newman <- function(edge_data,
 #                                    node_data,
 #                                    sim.cutoff) {
@@ -1447,28 +1464,11 @@ merge_by_binary_cut <- function(sim_matrix,
 #     suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data, weights = abs(igraph::edge_attr(graph_data, "sim"))))
 #   ## Assign functional module label for pathways
 #   cluster_result <-
-#     data.frame(node = node_data$node,
-#                module = paste("Functional_module", as.character(igraph::membership(subnetwork)), sep = "_"))
+    # data.frame(node = node_data$node,
+    #            module = paste("Functional_module", as.character(igraph::membership(subnetwork)), sep = "_"))
 #
 #   return(cluster_result)
 # }
-
-merge_by_hierarchical <- function(sim_matrix,
-                                  hclust.method,
-                                  sim.cutoff) {
-  cosine_dist <- 1 - sim_matrix
-  ## Convert distance matrix to a 'dist' object
-  cosine_dist_obj <- as.dist(cosine_dist)
-  ## Perform hierarchical clustering
-  hc <- hclust(cosine_dist_obj, method = hclust.method)
-
-  clusters <- cutree(hc, h = 1 - sim.cutoff)
-  cluster_result <-
-    data.frame(node = hc$labels,
-               module = paste("Functional_module", as.character(clusters), sep = "_"))
-
-  return(cluster_result)
-}
 
 calculate_modularity <- function(sim_matrix, edge_data, sim.cutoff, clusters) {
   tryCatch({

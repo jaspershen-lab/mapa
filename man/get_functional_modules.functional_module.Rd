@@ -8,7 +8,7 @@
   object,
   sim.cutoff = 0.5,
   measure_method = c("jaccard"),
-  cluster_method = c("girvan newman", "binary cut", "hierarchical"),
+  cluster_method = "louvain",
   hclust.method = NULL,
   path = "result",
   save_to_local = FALSE,
@@ -22,11 +22,13 @@
 
 \item{measure_method}{Character, similarity measure. Currently supports "jaccard" (default).}
 
-\item{cluster_method}{Character, clustering method: "girvan newman" (default),
-"binary cut", or "hierarchical".}
+\item{cluster_method}{Character, clustering method options:  "louvain" (default), "hierarchical",
+"binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
+"leading_eigen", "optimal".}
 
-\item{hclust.method}{Character, agglomeration method for hierarchical clustering.
-Only used when \code{cluster_method = "hierarchical"}. See \code{\link[stats]{hclust}} for options.}
+\item{hclust.method}{Character, agglomeration method for hierarchical clustering including:
+"ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
+Only used when \code{cluster_method = "hierarchical"}.}
 
 \item{path}{Character, directory path to save results (default: "result").}
 

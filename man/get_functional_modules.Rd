@@ -38,14 +38,14 @@ clustering methods.
 enriched_modules <- get_functional_modules(
   object = my_functional_module_object,
   sim.cutoff = 0.5,
-  cluster_method = "girvan newman"
+  cluster_method = "louvain"
 )
 
 # For biotext embedding results
 enriched_modules <- get_functional_modules(
   object = biotext_results,
   sim.cutoff = 0.6,
-  cluster_method = "binary cut"
+  cluster_method = "louvain"
 )
 }
 

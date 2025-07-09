@@ -3,7 +3,7 @@
 # load("demo_data/pregnancy_data/results/result_overlap/up_enriched_modules.rda")
 # functional_modules <- get_functional_modules(object = merged_pathways,
 #                                              sim.cutoff = 0.5,
-#                                              cluster_method = c("girvan newman"))
+#                                              cluster_method = c("louvain"))
 
 # load("demo_data/pregnancy_data/results/results_biotext/openai_sim_matrix_met.rda")
 # biotext_functional_modules <- get_functional_modules(object = openai_sim_matrix_met,
@@ -43,14 +43,14 @@
 #' enriched_modules <- get_functional_modules(
 #'   object = my_functional_module_object,
 #'   sim.cutoff = 0.5,
-#'   cluster_method = "girvan newman"
+#'   cluster_method = "louvain"
 #' )
 #'
 #' # For biotext embedding results
 #' enriched_modules <- get_functional_modules(
 #'   object = biotext_results,
 #'   sim.cutoff = 0.6,
-#'   cluster_method = "binary cut"
+#'   cluster_method = "louvain"
 #' )
 #' }
 #'
@@ -73,10 +73,12 @@ get_functional_modules <- function(object, ...) {
 #' @param object A `functional_module` class object processed by `merge_pathways()` function.
 #' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.5).
 #' @param measure_method Character, similarity measure. Currently supports "jaccard" (default).
-#' @param cluster_method Character, clustering method: "girvan newman" (default),
-#'   "binary cut", or "hierarchical".
-#' @param hclust.method Character, agglomeration method for hierarchical clustering.
-#'   Only used when `cluster_method = "hierarchical"`. See \code{\link[stats]{hclust}} for options.
+#' @param cluster_method Character, clustering method options:  "louvain" (default), "hierarchical",
+#'   "binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
+#'   "leading_eigen", "optimal".
+#' @param hclust.method Character, agglomeration method for hierarchical clustering including:
+#'   "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
+#'   Only used when `cluster_method = "hierarchical"`.
 #' @param path Character, directory path to save results (default: "result").
 #' @param save_to_local Logical, save results to local files (default: FALSE).
 #' @param ... Additional arguments (currently unused).
@@ -98,7 +100,7 @@ get_functional_modules <- function(object, ...) {
 get_functional_modules.functional_module <- function(object,
                                                      sim.cutoff = 0.5,
                                                      measure_method = c("jaccard"),
-                                                     cluster_method = c("girvan newman", "binary cut", "hierarchical"),
+                                                     cluster_method = "louvain",
                                                      hclust.method = NULL,
                                                      path = "result",
                                                      save_to_local = FALSE,
@@ -126,9 +128,12 @@ get_functional_modules.functional_module <- function(object,
 #'
 #' @param object A \code{list} containing "enriched_pathway" and "sim_matrix" components.
 #' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.5).
-#' @param cluster_method Character, clustering method: "binary cut" (default),
-#'   "girvan newman", or "hierarchical".
-#' @param hclust.method Character, agglomeration method for hierarchical clustering.
+#' @param cluster_method Character, clustering method options:  "louvain" (default), "hierarchical",
+#'   "binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
+#'   "leading_eigen", "optimal".
+#' @param hclust.method Character, agglomeration method for hierarchical clustering including:
+#'   "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
+#'   Only used when `cluster_method = "hierarchical"`.
 #' @param save_to_local Logical, save results to local files (default: FALSE).
 #' @param path Character, directory path to save results (default: "result").
 #' @param ... Additional arguments (currently unused).
@@ -149,7 +154,7 @@ get_functional_modules.functional_module <- function(object,
 
 get_functional_modules.list <- function(object,
                                         sim.cutoff = 0.5,
-                                        cluster_method = c("binary cut", "girvan newman", "hierarchical"),
+                                        cluster_method = "louvain",
                                         hclust.method = NULL,
                                         save_to_local = FALSE,
                                         path = "result",

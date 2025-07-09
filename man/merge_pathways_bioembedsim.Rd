@@ -7,7 +7,7 @@
 merge_pathways_bioembedsim(
   object,
   sim.cutoff = 0.5,
-  cluster_method = c("binary cut", "girvan newman", "hierarchical"),
+  cluster_method = "louvain",
   hclust.method = NULL,
   save_to_local = FALSE,
   path = "result"
@@ -17,19 +17,16 @@ merge_pathways_bioembedsim(
 \item{object}{An object containing functional enrichment result and similarity matrix.
 The object must have \code{enriched_pathway} and \code{sim_matrix} components.}
 
-\item{sim.cutoff}{Numeric, similarity cutoff for clustering (default: 0.5).
-For binary cut and hierarchical clustering, sim.cutoff is the cutoff for cutting the dendrogram.
-For Girvan-Newman, sim.cutoff is the similarity cutoff for pathways. Only edges with similarity above the cutoff will be stored in the graph data.}
+\item{sim.cutoff}{A numerical value for similarity cutoff, default is 0.5. This is the similarity cutoff for pathways.
+Only edges with similarity above the cutoff will be stored in the graph data.}
 
-\item{cluster_method}{Character, method for clustering pathways. Options are:
-\itemize{
-\item "binary cut": Uses simplifyEnrichment binary_cut algorithm
-\item "girvan newman": Uses Girvan-Newman community detection
-\item "hierarchical": Uses hierarchical clustering
-}}
+\item{cluster_method}{Character, clustering method options:  "louvain" (default), "hierarchical",
+"binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
+"leading_eigen", "optimal".}
 
-\item{hclust.method}{Character, the agglomeration method for hierarchical clustering.
-Only used when cluster_method is "hierarchical". See \code{\link[stats]{hclust}} for options.}
+\item{hclust.method}{Character, agglomeration method for hierarchical clustering including:
+"ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
+Only used when \code{cluster_method = "hierarchical"}.}
 
 \item{save_to_local}{Logical, whether to save intermediate results locally (default: FALSE).}
 
@@ -68,7 +65,7 @@ them into unified functional modules based on similarity.
 enriched_with_modules <- merge_pathways_bioembedsim(
   object = result,
   sim.cutoff = 0.6,
-  cluster_method = "binary cut"
+  cluster_method = "binary_cut"
 )
 
 # Using hierarchical clustering with complete linkage
@@ -77,14 +74,6 @@ enriched_with_modules <- merge_pathways_bioembedsim(
   sim.cutoff = 0.5,
   cluster_method = "hierarchical",
   hclust.method = "complete"
-)
-
-# Save results to local directory
-enriched_with_modules <- merge_pathways_bioembedsim(
-  object = result,
-  cluster_method = "girvan newman",
-  save_to_local = TRUE,
-  path = "project/results"
 )
 }
 

@@ -7,7 +7,7 @@
 \method{get_functional_modules}{list}(
   object,
   sim.cutoff = 0.5,
-  cluster_method = c("binary cut", "girvan newman", "hierarchical"),
+  cluster_method = "louvain",
   hclust.method = NULL,
   save_to_local = FALSE,
   path = "result",
@@ -19,10 +19,13 @@
 
 \item{sim.cutoff}{Numeric, similarity cutoff for clustering (default: 0.5).}
 
-\item{cluster_method}{Character, clustering method: "binary cut" (default),
-"girvan newman", or "hierarchical".}
+\item{cluster_method}{Character, clustering method options:  "louvain" (default), "hierarchical",
+"binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
+"leading_eigen", "optimal".}
 
-\item{hclust.method}{Character, agglomeration method for hierarchical clustering.}
+\item{hclust.method}{Character, agglomeration method for hierarchical clustering including:
+"ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
+Only used when \code{cluster_method = "hierarchical"}.}
 
 \item{save_to_local}{Logical, save results to local files (default: FALSE).}
 
