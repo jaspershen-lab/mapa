@@ -1,3 +1,9 @@
+# mapa 2.0.0
+
+* 1. Enable to use both ChatGPT and Gemini models to perform llm interpretation.
+* 2. Enable to help user determine the optimal clustering parameters and assess clustering quality.
+* 3. More clustering algorithms are provided, including: binary cut, hierarchical clustering, and eight graph-based clustering methods.
+
 # mapa 1.6.2
 
 * Combined `merge_modules()` and `merge_pathways_bioembedsim()` into one generia function `get_functional_modules()`.
