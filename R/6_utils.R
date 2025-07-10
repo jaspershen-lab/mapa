@@ -1486,15 +1486,44 @@ calculate_modularity <- function(sim_matrix, edge_data, sim.cutoff, clusters) {
   })
 }
 
+# calculate_silhouette <- function(sim_matrix, clusters) {
+#   dist_matrix <- 1 - sim_matrix
+#   dist_obj <- as.dist(dist_matrix)
+#   tryCatch({
+#     if (length(unique(clusters)) < 2 || length(unique(clusters)) > (nrow(sim_matrix) - 1)) return(NA_real_)
+#
+#     sil <- cluster::silhouette(clusters, dist_obj)
+#     mean(sil[, "sil_width"])
+#   }, error = function(e) {
+#     warning(paste("Silhouette calculation failed:", e$message))
+#     return(NA)
+#   })
+# }
+
 calculate_silhouette <- function(sim_matrix, clusters) {
-  dist_matrix <- 1 - sim_matrix
+
+  cluster_counts <- table(clusters)
+  non_singleton_clusters <- names(cluster_counts[cluster_counts > 1])
+
+  # If there are fewer than two non-singleton clusters, silhouette score is not meaningful
+  if (length(non_singleton_clusters) < 2) {
+    warning("Cannot calculate silhouette score with fewer than two non-singleton clusters.")
+    return(NA_real_)
+  }
+
+  indices_to_keep <- which(clusters %in% non_singleton_clusters)
+
+  clusters_filtered <- clusters[indices_to_keep]
+  sim_matrix_filtered <- sim_matrix[indices_to_keep, indices_to_keep, drop = FALSE]
+
+  dist_matrix <- 1 - sim_matrix_filtered
   dist_obj <- as.dist(dist_matrix)
+
   tryCatch({
-    if (length(unique(clusters)) < 2 || length(unique(clusters)) > (nrow(sim_matrix) - 1)) return(NA_real_)
-    sil <- cluster::silhouette(clusters, dist_obj)
+    sil <- cluster::silhouette(clusters_filtered, dist_obj)
     mean(sil[, "sil_width"])
   }, error = function(e) {
-    warning(paste("Silhouette calculation failed:", e$message))
-    return(NA)
+    warning(paste("Silhouette calculation failed after removing singletons:", e$message))
+    return(NA_real_)
   })
 }

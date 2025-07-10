@@ -35,7 +35,7 @@
 #' names and summaries for each functional module.
 #'
 #' @param object A `functional_module` class object that has been processed with
-#'   `merge_modules()` function.
+#'   `get_functional_modules()` function.
 #' @param module_content_number_cutoff Integer. Only modules with content number
 #'   greater than this value will be processed. Must be smaller than the maximum
 #'   module content number in the results. Default is `1`.

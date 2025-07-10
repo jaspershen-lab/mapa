@@ -26,7 +26,7 @@ llm_interpret_module(
 }
 \arguments{
 \item{object}{A \code{functional_module} class object that has been processed with
-\code{merge_modules()} function.}
+\code{get_functional_modules()} function.}
 
 \item{module_content_number_cutoff}{Integer. Only modules with content number
 greater than this value will be processed. Must be smaller than the maximum
