@@ -498,8 +498,8 @@ embedding_single_module_pubmed_search <- function(module_name,
 #' @details
 #' This function performs the following steps for each PubMed ID:
 #' \itemize{
-#'   \item Queries PubMed for the title and abstract using \code{\link{retrieve_abstr_ttl}}.
-#'   \item Handles errors and retries the query up to \code{retries} times in case of failure.
+#'   \item Queries PubMed for the title and abstract.
+#'   \item Handles errors and retries the query up to `retries` times in case of failure.
 #'   \item Returns a default error message if all retry attempts fail.
 #' }
 #'
@@ -513,7 +513,6 @@ embedding_single_module_pubmed_search <- function(module_name,
 #' print(results)
 #' }
 #'
-#' @seealso \code{\link{retrieve_abstr_ttl}}
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'

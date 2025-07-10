@@ -1,8 +1,6 @@
 # setwd(r4projects::get_project_wd())
 # source("R/6_utils.R")
 # source("R/8_functional_module_class.R")
-# load("data/enriched_pathways.rda")
-# object <- enriched_pathways
 # library(dplyr)
 # library(purrr)
 # library(httr2)
@@ -20,6 +18,8 @@
 # library(rtiktoken)
 # For genes
 ## ORA
+# load("demo_data/updated_object_results_for_genes_ora/ora_enriched_pathways.rda")
+# setwd("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/")
 # openai_semantic_sim_matrix <-
 #   get_bioembedsim(object = enriched_pathways,
 #                   api_provider = "openai",
@@ -27,6 +27,7 @@
 #                   api_key = api_key,
 #                   database = c("go", "kegg", "reactome"),
 #                   save_to_local = FALSE)
+# save(openai_semantic_sim_matrix, file = "openai_semantic_sim_matrix.rda")
 # gemini_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "gemini",  text_embedding_model = "text-embedding-004", api_key = api_key)
 ## GSEA
 # openai_semantic_sim_matrix <-

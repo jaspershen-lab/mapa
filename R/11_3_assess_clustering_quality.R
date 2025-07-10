@@ -1,9 +1,12 @@
 # setwd(r4projects::get_project_wd())
-# library(mapa)
-# load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/ora_enriched_functional_module.rda")
-# load("demo_data/updated_object_results_for_genes_ora/gene_overlap_result/ora_enriched_functional_module.rda")
-# object <- enriched_functional_module
-# assess_result <- assess_clustering_quality(object = enriched_functional_module)
+#
+# load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/biotext_functional_modules.rda")
+# assess_result <- assess_clustering_quality(object = biotext_functional_modules)
+# save(assess_result, file = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/assess_result.rda")
+# assess_result$size_plot
+# assess_result$evaluation_plot
+# assess_result$quality_metrics
+
 # head(assess_result$quality_metrics)
 # assess_result$evaluation_plot
 

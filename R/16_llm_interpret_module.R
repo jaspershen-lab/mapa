@@ -18,11 +18,16 @@
 # Gene
 # llm_interpreted_functional_module <-
 #   llm_interpret_module(
-#     object = enriched_functional_module,
+#     object = biotext_functional_modules,
+#     module_content_number_cutoff = 2,
+#     llm_model = "gpt-4o-mini-2024-07-18",
+#     embedding_model = "text-embedding-3-small",
+#     api_provider = "openai",
 #     api_key = api_key,
 #     orgdb = org.Hs.eg.db,
 #     embedding_output_dir = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/embedding_output/"
-# )
+#   )
+# save(llm_interpreted_functional_module, file = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/llm_interpreted_functional_module_cutoff_2.rda")
 
 #' Interpret Functional Modules using LLM with RAG Strategy
 #'

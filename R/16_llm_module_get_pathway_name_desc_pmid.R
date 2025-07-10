@@ -431,29 +431,29 @@ get_smpdb_info <- function(smpdb_ids) {
 #'
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @keywords internal
-get_ttl_abstr <- function(data) {
-  data %>%
-    purrr::map(
-      function(x) {
-        # Format text info
-        if (nchar(x$PMID) == 0){
-          text_info <- sprintf("ID: %s\nName: %s\nDefinition: %s\nAnnotated Gene names: %s", x$id, x$term_name, x$term_definition, x$annotated_genename)
-
-        } else {
-          ttls_abstrs <-
-            stringr::str_split(x$PMID, ",")[[1]] %>%
-            purrr::map_chr(~ retrieve_abstr_ttl(pmid = .x)) %>%
-            paste(., collapse = "\n")
-          text_info <- sprintf("ID: %s\nName: %s\nDefinition: %s\nAnnotated Gene names: %s\nReference:\n%s", x$id, x$term_name, x$term_definition, x$annotated_genename, ttls_abstrs)
-        }
-
-        text <- list(
-          "id" = x$id,
-          "text_info" = text_info
-        )
-      })
-}
+#' @noRd
+# get_ttl_abstr <- function(data) {
+#   data %>%
+#     purrr::map(
+#       function(x) {
+#         # Format text info
+#         if (nchar(x$PMID) == 0){
+#           text_info <- sprintf("ID: %s\nName: %s\nDefinition: %s\nAnnotated Gene names: %s", x$id, x$term_name, x$term_definition, x$annotated_genename)
+#
+#         } else {
+#           ttls_abstrs <-
+#             stringr::str_split(x$PMID, ",")[[1]] %>%
+#             purrr::map_chr(~ retrieve_abstr_ttl(pmid = .x)) %>%
+#             paste(., collapse = "\n")
+#           text_info <- sprintf("ID: %s\nName: %s\nDefinition: %s\nAnnotated Gene names: %s\nReference:\n%s", x$id, x$term_name, x$term_definition, x$annotated_genename, ttls_abstrs)
+#         }
+#
+#         text <- list(
+#           "id" = x$id,
+#           "text_info" = text_info
+#         )
+#       })
+# }
 
 
 

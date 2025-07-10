@@ -1,8 +1,6 @@
-# ##pathway enrichment analysis
 # setwd(r4projects::get_project_wd())
 # source("R/6_utils.R")
 # source("R/8_functional_module_class.R")
-# setwd("demo_data/")
 # library(ggraph)
 # library(igraph)
 # library(tidygraph)
@@ -12,18 +10,19 @@
 # # library(GOSim)
 # library(plyr)
 # library(massdataset)
-#
-# load("result/enriched_pathways")
-#
+# For gene, ora
+# load("demo_data/updated_object_results_for_genes_ora/ora_enriched_pathways.rda")
+# setwd("demo_data/updated_object_results_for_genes_ora/gene_overlap_result/")
 # merged_pathways <- merge_pathways(
-#   object = enrich_pathway_res,
-#   database = c("go", "kegg"),
+#   object = enriched_pathways,
+#   database = c("go", "kegg", "reactome"),
 #   sim.cutoff.go = 0.5,
 #   sim.cutoff.kegg = 0.5,
 #   measure.method.go = "Sim_Lin_1998",
-#   go.orgdb = mf.orgdb,
+#   go.orgdb = org.Hs.eg.db,
 #   measure.method.kegg = "jaccard"
 # )
+# save(merged_pathways, file = "merged_pathways.rda")
 #
 # enriched_modules <-
 #   merge_pathways(

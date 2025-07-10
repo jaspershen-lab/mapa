@@ -1,15 +1,20 @@
+# setwd(r4projects::get_project_wd())
 # source("11_merge_modules.R")
 # source("11_merge_pathways_bioembedsim.R")
+###
+# For gene overlap based
 # load("demo_data/pregnancy_data/results/result_overlap/up_enriched_modules.rda")
 # functional_modules <- get_functional_modules(object = merged_pathways,
 #                                              sim.cutoff = 0.5,
 #                                              cluster_method = c("louvain"))
-
-# load("demo_data/pregnancy_data/results/results_biotext/openai_sim_matrix_met.rda")
-# biotext_functional_modules <- get_functional_modules(object = openai_sim_matrix_met,
-#                                                      sim.cutoff = 0.5,
-#                                                      cluster_method = c("hierarchical"),
-#                                                      hclust.method = "complete")
+####
+# For biotext embedding
+# setwd("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/")
+# load("openai_semantic_sim_matrix.rda")
+# biotext_functional_modules <- get_functional_modules(object = openai_semantic_sim_matrix,
+#                                                      sim.cutoff = 0.9,
+#                                                      cluster_method = "louvain")
+# save(biotext_functional_modules, file = "biotext_functional_modules.rda")
 
 #' Get Functional Modules from Pathway Similarity and Pathway Enrichment Results
 #'

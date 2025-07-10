@@ -106,18 +106,46 @@ enriched_modules <-
 enriched_modules
 ```
 
-# Merge modules to get functional modules
+# Determine optimal clustering parameters
+
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+results <- determine_optimal_clusters(object = enriched_modules,
+                                      cutoff_increment = 0.1,
+                                      cutoff_range = c(0.1, 0.9),
+                                      hclust_methods = "ward.D2",
+                                      methods = c("hierarchical", "binary_cut", "louvain"))
+```
+
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+results$evaluation_plot
+```
+
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+results$best_combination
+```
+
+# Merge modules to get functional modules according to the optimal clustering parameters
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 enriched_functional_module <-
   get_functional_modules(
     object = enriched_modules,
-    sim.cutoff = 0.5,
+    sim.cutoff = 0.9,
     measure_method = c("jaccard"),
-    cluster_method = "girvan newman",
+    cluster_method = "louvain",
     path = "result",
     save_to_local = FALSE
   )
+```
+
+# Assess clustering quality
+
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+assess_result <- assess_clustering_quality(object = enriched_functional_module)
+```
+
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+assess_result$evaluation_plot
 ```
 
 # Check the enriched pathways/modules

@@ -1,10 +1,14 @@
 # setwd(r4projects::get_project_wd())
-# library(mapa)
 # source("R/6_utils.R")
+# devtools::load_all()
 # object is list from biotext embedding
-# load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/ora_openai_semantic_sim_matrix.rda")
+# setwd("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/")
+# load("ora_openai_semantic_sim_matrix.rda")
 # results <- determine_optimal_clusters(object = openai_semantic_sim_matrix)
 # results$evaluation_plot
+# results$best_combination
+# results$cluster_result
+# save(results, file = "results.rda")
 ####
 # object is functional module object from overlap
 # load("demo_data/updated_object_results_for_genes_ora/gene_overlap_result/ora_enriched_modules.rda")
