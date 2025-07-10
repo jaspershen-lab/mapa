@@ -154,7 +154,6 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
   }
 }
 
-
 #' get_embedding: Internal function to retrieve embeddings from an API
 #'
 #' This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI or Gemini).
@@ -163,8 +162,9 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 #'
 #' @param chunk A character string representing the input text for which the embedding is required.
 #' @param api_key A string containing the API key required for authentication with the provider.
-#' @param model_name A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
+#' @param model_name A string specifying the embedding model to use (default is `"text-embedding-3-small"` for OpenAI, `"models/gemini-embedding-exp-03-07"` for Gemini).
 #' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param task_type A string specifying the task type for Gemini API (default is `"SEMANTIC_SIMILARITY"`). Only used when api_provider is "gemini".
 #'
 #' @return A numeric vector representing the embedding for the input text. If the API call fails after retries,
 #'         the function returns `NULL`.
@@ -176,79 +176,81 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small", api_provider = "openai") {
-  # Select URL based on API provider
-  url <- switch(
-    api_provider,
-    "openai" = "https://api.openai.com/v1/embeddings",
-    "gemini" = "https://api.gemini.com/v1/embeddings",
+get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "openai", task_type = "SEMANTIC_SIMILARITY") {
+
+  # 设置默认模型名称
+  if (is.null(model_name)) {
+    model_name <- switch(
+      api_provider,
+      "openai" = "text-embedding-3-small",
+      "gemini" = "models/gemini-embedding-exp-03-07",
+      stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
+    )
+  }
+
+  # 根据 API 提供者选择 URL 和构建请求体
+  if (api_provider == "openai") {
+    url <- "https://api.openai.com/v1/embeddings"
+    data <- list(
+      model = model_name,
+      input = chunk
+    )
+  } else if (api_provider == "gemini") {
+    url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/",
+                  gsub("^models/", "", model_name), ":embedContent")
+    data <- list(
+      model = model_name,
+      content = list(
+        parts = list(
+          list(text = chunk)
+        )
+      ),
+      taskType = task_type
+    )
+  } else {
     stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
-  )
+  }
 
-  # Body specifying model and text
-  data <- list(
-    model = model_name,  # Configurable model name
-    input = chunk        # Input text
-  )
-
-  # Request embedding vector
+  # 请求嵌入向量
   embedding <- tryCatch(
     expr = {
-      # Create request object
+      # 创建请求对象
       req <- httr2::request(url)
+
+      # 根据API提供者设置认证方式
+      if (api_provider == "openai") {
+        req <- req %>% httr2::req_auth_bearer_token(token = api_key)
+      } else if (api_provider == "gemini") {
+        req <- req %>% httr2::req_headers(`x-goog-api-key` = api_key)
+      }
+
+      # 执行请求
       resp <- req %>%
-        httr2::req_auth_bearer_token(token = api_key) %>%
         httr2::req_body_json(data = data) %>%
         httr2::req_retry(
           max_tries = 3,
           max_seconds = 60,
-          after = \(resp) is.null(resp) && resp$status_code != 200  # Retry condition
+          after = \(resp) is.null(resp) || httr2::resp_status(resp) != 200  # 修正重试条件
         ) %>%
         httr2::req_perform()
-      # Extract embedding vector
-      embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding   # Parse JSON response
+
+      # 根据API提供者解析响应
+      if (api_provider == "openai") {
+        embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding
+      } else if (api_provider == "gemini") {
+        embedding <- httr2::resp_body_json(resp)$embedding$values
+      }
+
       unlist(embedding)
     },
     error = function(e) {
-      # If failed, try truncating text and retry
-      est_tokens <- nchar(chunk) / 4
-      max_tokens <- 7000
-      if (est_tokens > max_tokens) {
-        max_chars <- max_tokens * 4
-        warning("Input too long, truncating to fit token limit.")
-        truncated_chunk <- substr(chunk, 1, max_chars)
-
-        # Retry with truncated text
-        data_truncated <- list(
-          model = model_name,
-          input = truncated_chunk
-        )
-
-        tryCatch(
-          expr = {
-            req <- httr2::request(url)
-            resp <- req %>%
-              httr2::req_auth_bearer_token(token = api_key) %>%
-              httr2::req_body_json(data = data_truncated) %>%
-              httr2::req_perform()
-            embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding
-            unlist(embedding)
-          },
-          error = function(e2) {
-            warning("Failed to get embedding even after truncation:", e2$message)
-            NULL
-          }
-        )
-      } else {
-        warning("Failed to get embedding:", e$message)
-        NULL
-      }
+      warning("Failed to get embedding after 3 retries for provider '", api_provider, "': ", e$message)
+      NULL
     }
   )
 
   return(embedding)
 }
-
 
 #' Clear the embedding_output directory
 #'

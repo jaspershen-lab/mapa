@@ -85,6 +85,7 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
     ## Generate query
     pathway_query <- paste(paste0("\"", pathway_names, "\""), collapse = " OR ")
     ## Perform PubMed search with query (gene_symbol AND pathway_names)
+    browser()
     gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
     ## Perform PubMed search with query (gene_name AND pathway_names)
     gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
