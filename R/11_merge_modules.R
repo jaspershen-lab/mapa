@@ -28,7 +28,6 @@
 #     object = gsea_enriched_modules,
 #     sim.cutoff = 0.5,
 #     measure_method = c("jaccard"),
-#     cluster_method = "girvan newman",
 #     path = "result",
 #     save_to_local = FALSE
 # )
@@ -40,8 +39,7 @@
 # enriched_functional_module_met <- merge_modules(
 #   object = merged_pathways,
 #   sim.cutoff = 0,
-#   measure_method = "jaccard",
-#   cluster_method = "girvan newman"
+#   measure_method = "jaccard"
 # )
 
 #' Identify Functional Modules Across Different Databases
@@ -53,12 +51,17 @@
 #' @param sim.cutoff A numerical value for similarity cutoff, default is 0.5. This is the similarity cutoff for pathways.
 #'  Only edges with similarity above the cutoff will be stored in the graph data.
 #' @param measure_method A character vector indicating the method for measuring similarity between modules, default is "jaccard".
-#' @param cluster_method Character, clustering method options:  "louvain" (default), "hierarchical",
-#'   "binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
-#'   "leading_eigen", "optimal".
-#' @param hclust.method Character, agglomeration method for hierarchical clustering including:
-#'   "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
-#'   Only used when `cluster_method = "hierarchical"`.
+#' @param cluster_method Character, clustering method options:
+#'        \itemize{
+#'          \item **Hierarchical** ‒ supply `"h_<agglom.method>"`, where
+#'            `<agglom.method>` is one of
+#'            `"ward.D"`, `"ward.D2"`, `"single"`, `"complete"`, `"average"`,
+#'            `"mcquitty"`, `"median"`, `"centroid"`.
+#'          \item `"binary_cut"`
+#'          \item Graph-based: `"louvain"`, `"walktrap"`, `"infomap"`,
+#'            `"edge_betweenness"`, `"fast_greedy"`, `"label_prop"`,
+#'            `"leading_eigen"`, `"optimal"`
+#'        }
 #' @param path A character string for the directory where to save results, default is "result".
 #' @param save_to_local Logical, if TRUE the results will be saved to local disk.
 #'
@@ -85,29 +88,23 @@ merge_modules <-
            sim.cutoff = 0.5,
            measure_method = c("jaccard"),
            cluster_method = "louvain",
-           hclust.method = NULL,
            path = "result",
            save_to_local = FALSE) {
 
     variable_info <- object@variable_info
 
     available_methods <- c(
-      "hierarchical",
-      "binary_cut",
-      "louvain",
-      "walktrap",
-      "infomap",
-      "edge_betweenness",
-      "fast_greedy",
-      "label_prop",
-      "leading_eigen",
+      "h_ward.D", "h_ward.D2", "h_single", "h_complete",
+      "h_average", "h_mcquitty", "h_median", "h_centroid",
+      "binary_cut", "louvain", "walktrap", "infomap",
+      "edge_betweenness", "fast_greedy", "label_prop", "leading_eigen",
       "optimal"
     )
-
     if (!(cluster_method %in% available_methods)) {
+      invalid_methods <- cluster_method
       stop(paste(
         "Invalid methods:",
-        paste(cluster_method, collapse = ", "),
+        paste(invalid_methods, collapse = ", "),
         "\nAvailable methods:",
         paste(available_methods, collapse = ", ")
       ))
@@ -425,7 +422,6 @@ merge_modules <-
         node_data = node_data,
         sim.cutoff = sim.cutoff,
         cluster_method = cluster_method,
-        hclust.method = hclust.method,
         save_to_local = save_to_local,
         path = file.path(path, "intermediate_data"),
         analysis_type = analysis_type
@@ -462,7 +458,7 @@ merge_modules <-
 
 #' Identify Functional Modules in a Similarity Matrix
 #'
-#' This function identifies functional modules from a similarity matrix and node data. It constructs a network graph, applies clustering algorithms, and generates module-level results, which can be saved locally. The function supports both pathway enrichment and gene set enrichment analysis (GSEA).
+#' This function identifies functional modules from a similarity matrix and node data.
 #'
 #' @param query_type Character, the category of biological entity to query. Must be either "gene" or "metabolite".
 #' @param variable_info A data frame containing mapping information between different ID types.
@@ -472,12 +468,17 @@ merge_modules <-
 #' @param node_data A data frame containing node information, such as module assignments and other relevant attributes. This parameter cannot be `NULL`.
 #' @param sim.cutoff A numerical value for similarity cutoff, default is 0.5. This is the similarity cutoff for pathways.
 #'  Only edges with similarity above the cutoff will be stored in the graph data.
-#' @param cluster_method Character, clustering method options:  "louvain" (default), "hierarchical",
-#'   "binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
-#'   "leading_eigen", "optimal".
-#' @param hclust.method Character, agglomeration method for hierarchical clustering including:
-#'   "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
-#'   Only used when `cluster_method = "hierarchical"`.
+#' @param cluster_method Character, clustering method options:
+#'        \itemize{
+#'          \item **Hierarchical** ‒ supply `"h_<agglom.method>"`, where
+#'            `<agglom.method>` is one of
+#'            `"ward.D"`, `"ward.D2"`, `"single"`, `"complete"`, `"average"`,
+#'            `"mcquitty"`, `"median"`, `"centroid"`.
+#'          \item `"binary_cut"`
+#'          \item Graph-based: `"louvain"`, `"walktrap"`, `"infomap"`,
+#'            `"edge_betweenness"`, `"fast_greedy"`, `"label_prop"`,
+#'            `"leading_eigen"`, `"optimal"`
+#'        }
 #' @param save_to_local Logical. Whether to save the resulting data to local files. Default is `FALSE`.
 #' @param path Character. The directory path where the results will be saved, if `save_to_local = TRUE`. Default is `"."` (the current working directory).
 #' @param analysis_type Character. Type of analysis to perform: either `"enrich_pathway"` or `"do_gsea"`. Default is `"enrich_pathway"`.
@@ -486,13 +487,6 @@ merge_modules <-
 #' \item{graph_data}{A `tidygraph` object representing the constructed network, including nodes and edges.}
 #' \item{functional_module_result}{A data frame with the identified functional modules and their associated attributes, such as p-values and pathway descriptions.}
 #' \item{result_with_module}{A data frame with the node data enriched with module information.}
-#'
-#' @details
-#' The function first constructs a graph using the similarity matrix and node data, then applies clustering algorithms to identify functional modules. The function supports three clustering methods:
-#' 1. Girvan-Newman: Community detection based on edge betweenness
-#' 2. Binary cut: Uses the simplifyEnrichment binary_cut algorithm
-#' 3. Hierarchical clustering: Groups pathways based on distance thresholds
-#' The module information is further processed to summarize results such as the number of nodes and enriched pathways for each module. If `save_to_local` is `TRUE`, the results are saved as files in the specified `path`.
 #'
 #' @noRd
 
@@ -503,7 +497,6 @@ identify_functional_modules <-
            node_data,
            sim.cutoff = 0.5,
            cluster_method = "louvain",
-           hclust.method = NULL,
            save_to_local = FALSE,
            path = ".",
            analysis_type = c("enrich_pathway", "do_gsea")) {
@@ -512,8 +505,28 @@ identify_functional_modules <-
       stop("query_type is required")
     }
 
+    available_methods <- c(
+      "h_ward.D", "h_ward.D2", "h_single", "h_complete",
+      "h_average", "h_mcquitty", "h_median", "h_centroid",
+      "binary_cut", "louvain", "walktrap", "infomap",
+      "edge_betweenness", "fast_greedy", "label_prop", "leading_eigen",
+      "optimal"
+    )
+    if (!(cluster_method %in% available_methods)) {
+      invalid_methods <- cluster_method
+      stop(paste(
+        "Invalid methods:",
+        paste(invalid_methods, collapse = ", "),
+        "\nAvailable methods:",
+        paste(available_methods, collapse = ", ")
+      ))
+    }
+    if (grepl("^h_", cluster_method)) {
+      hclust_method <- gsub("^h_", "", cluster_method[grepl("^h_", cluster_method)])
+      cluster_method <- c("hierarchical")
+    }
+
     query_type <- match.arg(query_type)
-    cluster_method <- match.arg(cluster_method)
     analysis_type <- match.arg(analysis_type)
 
     edge_data <-
@@ -582,7 +595,7 @@ identify_functional_modules <-
       switch(cluster_method,
              "hierarchical" = {
                merge_by_hierarchical(sim_matrix = sim_matrix_mat,
-                                     hclust.method = hclust.method,
+                                     hclust.method = hclust_method,
                                      sim.cutoff = sim.cutoff)
              },
              "binary_cut" = {

@@ -6,6 +6,7 @@
 \usage{
 embedding_local_corpus(
   embedding_model = "text-embedding-3-small",
+  api_provider = "openai",
   api_key = NULL,
   local_corpus_dir = "local_corpus",
   embedding_output_dir = "embedding_output",
@@ -14,6 +15,8 @@ embedding_local_corpus(
 }
 \arguments{
 \item{embedding_model}{A string specifying the embedding model to use. Default is \code{"text-embedding-3-small"}.}
+
+\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
 
 \item{api_key}{A character string containing the API key for the embedding service.}
 

@@ -7,6 +7,7 @@
 embedding_pubmed_search(
   pubmed_result,
   embedding_model = "text-embedding-3-small",
+  api_provider = "openai",
   api_key,
   embedding_output_dir
 )
@@ -16,6 +17,8 @@ embedding_pubmed_search(
 Each module contains a vector of PubMed IDs under the \code{PubmedIDs} field.}
 
 \item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
+
+\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
 
 \item{api_key}{Character string containing the API key for the embedding service.}
 

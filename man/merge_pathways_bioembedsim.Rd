@@ -8,7 +8,6 @@ merge_pathways_bioembedsim(
   object,
   sim.cutoff = 0.5,
   cluster_method = "louvain",
-  hclust.method = NULL,
   save_to_local = FALSE,
   path = "result"
 )
@@ -20,13 +19,17 @@ The object must have \code{enriched_pathway} and \code{sim_matrix} components.}
 \item{sim.cutoff}{A numerical value for similarity cutoff, default is 0.5. This is the similarity cutoff for pathways.
 Only edges with similarity above the cutoff will be stored in the graph data.}
 
-\item{cluster_method}{Character, clustering method options:  "louvain" (default), "hierarchical",
-"binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
-"leading_eigen", "optimal".}
-
-\item{hclust.method}{Character, agglomeration method for hierarchical clustering including:
-"ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
-Only used when \code{cluster_method = "hierarchical"}.}
+\item{cluster_method}{Character, clustering method options:
+\itemize{
+\item \strong{Hierarchical} ‒ supply \code{"h_<agglom.method>"}, where
+\verb{<agglom.method>} is one of
+\code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"},
+\code{"mcquitty"}, \code{"median"}, \code{"centroid"}.
+\item \code{"binary_cut"}
+\item Graph-based: \code{"louvain"}, \code{"walktrap"}, \code{"infomap"},
+\code{"edge_betweenness"}, \code{"fast_greedy"}, \code{"label_prop"},
+\code{"leading_eigen"}, \code{"optimal"}
+}}
 
 \item{save_to_local}{Logical, whether to save intermediate results locally (default: FALSE).}
 
@@ -44,20 +47,7 @@ The object will contain a new slot "merged_module" with:
 \description{
 Identifies functional modules by clustering pathways based on their biotext embedding similarity.
 This function groups related pathways into functional modules using various clustering
-methods including binary cut, Girvan-Newman, or hierarchical clustering.
-}
-\details{
-The function takes biotext embedding similarity scores between pathways
-and groups related pathways into functional modules.
-It supports three clustering methods:
-\enumerate{
-\item Binary cut: Uses the simplifyEnrichment binary_cut algorithm
-\item Girvan-Newman: Community detection based on edge betweenness
-\item Hierarchical clustering: Groups pathways based on distance thresholds
-}
-
-The function handles GO terms, KEGG pathways, and Reactome pathways, combining
-them into unified functional modules based on similarity.
+methods including binary cut, graph-based clustering, or hierarchical clustering.
 }
 \examples{
 \dontrun{
@@ -72,8 +62,7 @@ enriched_with_modules <- merge_pathways_bioembedsim(
 enriched_with_modules <- merge_pathways_bioembedsim(
   object = result,
   sim.cutoff = 0.5,
-  cluster_method = "hierarchical",
-  hclust.method = "complete"
+  cluster_method = "h_ward.D"
 )
 }
 

@@ -8,7 +8,6 @@
   object,
   sim.cutoff = 0.5,
   cluster_method = "louvain",
-  hclust.method = NULL,
   save_to_local = FALSE,
   path = "result",
   ...
@@ -19,13 +18,17 @@
 
 \item{sim.cutoff}{Numeric, similarity cutoff for clustering (default: 0.5).}
 
-\item{cluster_method}{Character, clustering method options:  "louvain" (default), "hierarchical",
-"binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
-"leading_eigen", "optimal".}
-
-\item{hclust.method}{Character, agglomeration method for hierarchical clustering including:
-"ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
-Only used when \code{cluster_method = "hierarchical"}.}
+\item{cluster_method}{Character, clustering method options:
+\itemize{
+\item \strong{Hierarchical} ‒ supply \code{"h_<agglom.method>"}, where
+\verb{<agglom.method>} is one of
+\code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"},
+\code{"mcquitty"}, \code{"median"}, \code{"centroid"}.
+\item \code{"binary_cut"}
+\item Graph-based: \code{"louvain"}, \code{"walktrap"}, \code{"infomap"},
+\code{"edge_betweenness"}, \code{"fast_greedy"}, \code{"label_prop"},
+\code{"leading_eigen"}, \code{"optimal"}
+}}
 
 \item{save_to_local}{Logical, save results to local files (default: FALSE).}
 

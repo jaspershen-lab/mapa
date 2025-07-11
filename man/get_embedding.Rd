@@ -7,8 +7,9 @@
 get_embedding(
   chunk,
   api_key,
-  model_name = "text-embedding-3-small",
-  api_provider = "openai"
+  model_name = NULL,
+  api_provider = "openai",
+  task_type = "SEMANTIC_SIMILARITY"
 )
 }
 \arguments{
@@ -16,9 +17,11 @@ get_embedding(
 
 \item{api_key}{A string containing the API key required for authentication with the provider.}
 
-\item{model_name}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
+\item{model_name}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"} for OpenAI, \code{"models/gemini-embedding-exp-03-07"} for Gemini).}
 
 \item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+
+\item{task_type}{A string specifying the task type for Gemini API (default is \code{"SEMANTIC_SIMILARITY"}). Only used when api_provider is "gemini".}
 }
 \value{
 A numeric vector representing the embedding for the input text. If the API call fails after retries,

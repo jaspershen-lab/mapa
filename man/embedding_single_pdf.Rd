@@ -7,7 +7,8 @@
 embedding_single_pdf(
   pdf_path,
   embedding_model = "text-embedding-3-small",
-  api_key
+  api_key,
+  api_provider = "openai"
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ embedding_single_pdf(
 \item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 
 \item{api_key}{A character string containing the API key for the embedding service.}
+
+\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
 }
 \value{
 A data frame containing the following columns:

@@ -17,7 +17,6 @@
 # enriched_functional_module <-
 #   merge_pathways_bioembedsim(
 #     object = openai_sim_matrix_met,
-#     cluster_method = "girvan newman",
 #     sim.cutoff = 0.5
 #   )
 
@@ -26,18 +25,23 @@
 #' @description
 #' Identifies functional modules by clustering pathways based on their biotext embedding similarity.
 #' This function groups related pathways into functional modules using various clustering
-#' methods including binary cut, Girvan-Newman, or hierarchical clustering.
+#' methods including binary cut, graph-based clustering, or hierarchical clustering.
 #'
 #' @param object An object containing functional enrichment result and similarity matrix.
 #'   The object must have `enriched_pathway` and `sim_matrix` components.
 #' @param sim.cutoff A numerical value for similarity cutoff, default is 0.5. This is the similarity cutoff for pathways.
 #'  Only edges with similarity above the cutoff will be stored in the graph data.
-#' @param cluster_method Character, clustering method options:  "louvain" (default), "hierarchical",
-#'   "binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
-#'   "leading_eigen", "optimal".
-#' @param hclust.method Character, agglomeration method for hierarchical clustering including:
-#'   "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
-#'   Only used when `cluster_method = "hierarchical"`.
+#' @param cluster_method Character, clustering method options:
+#'        \itemize{
+#'          \item **Hierarchical** ‒ supply `"h_<agglom.method>"`, where
+#'            `<agglom.method>` is one of
+#'            `"ward.D"`, `"ward.D2"`, `"single"`, `"complete"`, `"average"`,
+#'            `"mcquitty"`, `"median"`, `"centroid"`.
+#'          \item `"binary_cut"`
+#'          \item Graph-based: `"louvain"`, `"walktrap"`, `"infomap"`,
+#'            `"edge_betweenness"`, `"fast_greedy"`, `"label_prop"`,
+#'            `"leading_eigen"`, `"optimal"`
+#'        }
 #' @param save_to_local Logical, whether to save intermediate results locally (default: FALSE).
 #' @param path Character, directory to save results when save_to_local is TRUE (default: "result").
 #'
@@ -49,17 +53,6 @@
 #'     \item result_with_module: Data frame with raw results assigned to modules
 #'   }
 #'
-#' @details
-#' The function takes biotext embedding similarity scores between pathways
-#' and groups related pathways into functional modules.
-#' It supports three clustering methods:
-#'
-#' 1. Binary cut: Uses the simplifyEnrichment binary_cut algorithm
-#' 2. Girvan-Newman: Community detection based on edge betweenness
-#' 3. Hierarchical clustering: Groups pathways based on distance thresholds
-#'
-#' The function handles GO terms, KEGG pathways, and Reactome pathways, combining
-#' them into unified functional modules based on similarity.
 #'
 #' @examples
 #' \dontrun{
@@ -74,8 +67,7 @@
 #' enriched_with_modules <- merge_pathways_bioembedsim(
 #'   object = result,
 #'   sim.cutoff = 0.5,
-#'   cluster_method = "hierarchical",
-#'   hclust.method = "complete"
+#'   cluster_method = "h_ward.D"
 #' )
 #' }
 #'
@@ -94,30 +86,28 @@ merge_pathways_bioembedsim <-
   function(object,
            sim.cutoff = 0.5,
            cluster_method = "louvain",
-           hclust.method = NULL,
            save_to_local = FALSE,
            path = "result") {
 
     available_methods <- c(
-      "hierarchical",
-      "binary_cut",
-      "louvain",
-      "walktrap",
-      "infomap",
-      "edge_betweenness",
-      "fast_greedy",
-      "label_prop",
-      "leading_eigen",
+      "h_ward.D", "h_ward.D2", "h_single", "h_complete",
+      "h_average", "h_mcquitty", "h_median", "h_centroid",
+      "binary_cut", "louvain", "walktrap", "infomap",
+      "edge_betweenness", "fast_greedy", "label_prop", "leading_eigen",
       "optimal"
     )
-
     if (!(cluster_method %in% available_methods)) {
+      invalid_methods <- cluster_method
       stop(paste(
         "Invalid methods:",
-        paste(cluster_method, collapse = ", "),
+        paste(invalid_methods, collapse = ", "),
         "\nAvailable methods:",
         paste(available_methods, collapse = ", ")
       ))
+    }
+    if (grepl("^h_", cluster_method)) {
+      hclust_method <- gsub("^h_", "", cluster_method[grepl("^h_", cluster_method)])
+      cluster_method <- c("hierarchical")
     }
 
     message("Identifying funcitonal modules...")
@@ -210,12 +200,12 @@ merge_pathways_bioembedsim <-
     cluster_result <-
       switch(cluster_method,
              "hierarchical" = {
-               merge_by_hierarchical(sim_matrix = sim_matrix,
-                                     hclust.method = hclust.method,
+               merge_by_hierarchical(sim_matrix = object$sim_matrix,
+                                     hclust.method = hclust_method,
                                      sim.cutoff = sim.cutoff)
              },
              "binary_cut" = {
-               merge_by_binary_cut(sim_matrix = sim_matrix,
+               merge_by_binary_cut(sim_matrix = object$sim_matrix,
                                    sim.cutoff = sim.cutoff)
              },
              # Network-based methods
