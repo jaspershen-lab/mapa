@@ -118,6 +118,7 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #'   (character vectors defining molecules of interest).
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding generation service.
+#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
 #'
 #' @return A numeric vector representing the generated embedding for the module.
 #'
@@ -125,7 +126,7 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #'
 #' @keywords internal
 #基于pathway和gene为module生成embedding
-get_module_embedding <- function(module_list, api_key, embedding_model = "text-embedding-3-small"){
+ get_module_embedding <- function(module_list, api_key, embedding_model = "text-embedding-3-small", api_provider = "openai"){
   if ("GeneNames_vec" %in% names(module_list)) {
     module_str <- paste0(
       paste(module_list$PathwayNames, collapse = " "),
@@ -140,7 +141,7 @@ get_module_embedding <- function(module_list, api_key, embedding_model = "text-e
     )
   }
 
-  get_embedding(module_str, api_key, model_name = embedding_model)
+  get_embedding(module_str, api_key, model_name = embedding_model, api_provider)
 }
 
 
@@ -502,7 +503,7 @@ retrieve_strategy <- function(pubmed_result,
       final_result <- list()
     } else {
       cat("- Generating module embeddings...\n")
-      module_embedding <- get_module_embedding(module_list = module_list, embedding_model = embedding_model, api_key = api_key)
+      module_embedding <- get_module_embedding(module_list = module_list, embedding_model = embedding_model, api_key = api_key, api_provider = api_provider)
 
       cat("- Reading and calculating PubMed similarity...\n")
       pubmed_embeddings <- read_embeddings(save_dir = file.path(embedding_output_dir, module_name))

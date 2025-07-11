@@ -15,6 +15,7 @@
 #' Processes all PDF files in a specified local corpus directory by generating embeddings and saving them to the database.
 #'
 #' @param embedding_model A string specifying the embedding model to use. Default is `"text-embedding-3-small"`.
+#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
 #' @param api_key A character string containing the API key for the embedding service.
 #' @param local_corpus_dir A character string specifying the name of the directory where the local files
 #'        provided by users are saved. Defaults to "local_corpus".
@@ -53,6 +54,7 @@
 #' @keywords internal
 embedding_local_corpus <-
   function(embedding_model = "text-embedding-3-small",
+           api_provider = "openai",
            api_key = NULL,
            local_corpus_dir = "local_corpus",
            embedding_output_dir = "embedding_output",
@@ -78,7 +80,7 @@ embedding_local_corpus <-
 
   for (pdf_path in pdf_files) {
     print(paste("Embedding in progress for file:", pdf_path))
-    pdf_embeddings <- embedding_single_pdf(pdf_path, embedding_model = embedding_model, api_key)
+    pdf_embeddings <- embedding_single_pdf(pdf_path, embedding_model = embedding_model, api_provider, api_key)
     save_embedding(pdf_embeddings, embedding_output_dir = embedding_output_dir, save_dir = save_dir_local_corpus_embed)
   }
 }
@@ -90,7 +92,7 @@ embedding_local_corpus <-
 #' @param pdf_path A character string specifying the path to the PDF file.
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding service.
-#'
+#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
 #' @return A data frame containing the following columns:
 #' \item{paper_title}{The title of the PDF (derived from the file name).}
 #' \item{chunks}{The extracted text chunks from the PDF.}
@@ -128,7 +130,7 @@ embedding_local_corpus <-
 
 embedding_single_pdf <- function(pdf_path,
                                  embedding_model = "text-embedding-3-small",
-                                 api_key){
+                                 api_key,api_provider = "openai"){
   paper_title <- tools::file_path_sans_ext(basename(pdf_path))
   text_pages <- pdftools::pdf_text(pdf_path)
   full_text <- paste(text_pages, collapse = "\n")
@@ -143,14 +145,14 @@ embedding_single_pdf <- function(pdf_path,
     embeddings <- parallel::parLapply(cl, chunks,
                                       function(chunk) {
                                         Sys.sleep(1)
-                                        embedding <- get_embedding(chunk, api_key, model_name = embedding_model)
+                                        embedding <- get_embedding(chunk, api_key, model_name = embedding_model,api_provider)
                                         return(embedding)
                                       })
     parallel::stopCluster(cl) # Stop the clusters and close the parallel backend.
   } else if (.Platform$OS.type == "unix") {
     embeddings <- pbmclapply(chunks, function(chunk) {
       Sys.sleep(1)
-      embedding <- get_embedding(chunk, api_key, model_name = embedding_model)
+      embedding <- get_embedding(chunk, api_key, model_name = embedding_model, api_provider)
       return(embedding)
     }, mc.cores = detectCores()-1)
   }
@@ -332,7 +334,7 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
-#'
+#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
 #' @return No return value; function saves embeddings to disk in the specified output directory.
 #'
 #' @details
@@ -361,7 +363,7 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #'
 #' @keywords internal
 
-embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embedding-3-small", api_key, embedding_output_dir){
+embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embedding-3-small", api_provider = "openai", api_key, embedding_output_dir){
   module_names <- names(pubmed_result)
 
   for (module_name in module_names) {
@@ -370,7 +372,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
     cat(sprintf("Processing module: %s\n", module_name))
     cat(sprintf("Including PID number: %s\n", length(PID_list)))
     if (length(PID_list) != 0) {
-      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_key, embedding_output_dir)
+      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_key, embedding_output_dir, api_provider)
     }
   }
 }
@@ -384,6 +386,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
 #' @param module_name Character string specifying the name of the module (used for
 #'   organizing output files).
 #' @param PID_list Character vector containing PubMed IDs to process.
+#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
@@ -431,6 +434,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
 embedding_single_module_pubmed_search <- function(module_name,
                                                   PID_list,
                                                   embedding_model = "text-embedding-3-small",
+                                                  api_provider = "openai",
                                                   api_key,
                                                   embedding_output_dir) {
   # 将PID_list分成每组200个的批次
@@ -462,13 +466,13 @@ embedding_single_module_pubmed_search <- function(module_name,
     })
 
     embeddings <- parallel::parLapply(cl, abstracts, function(abstract) {
-      get_embedding(abstract, api_key, model_name = embedding_model)
+      get_embedding(abstract, api_key, model_name = embedding_model, api_provider)
     })
 
     parallel::stopCluster(cl)
   } else {
     embeddings <- pbmclapply(abstracts, function(abstract) {
-      get_embedding(abstract, api_key, model_name = embedding_model)
+      get_embedding(abstract, api_key,, model_name = embedding_model,api_provider)
     }, mc.cores = parallel::detectCores() - 1)
   }
 

@@ -171,6 +171,7 @@ llm_interpret_module <- function(object,
 
   if (!is.null(local_corpus_dir)) {
     embedding_local_corpus(embedding_model = embedding_model,
+                           api_provider =  api_provider,
                            api_key = api_key,
                            local_corpus_dir = local_corpus_dir,
                            embedding_output_dir = embedding_output_dir,
@@ -208,6 +209,7 @@ llm_interpret_module <- function(object,
   # 5. Save search results for each module as CSV.GZ files using embedding database
   embedding_pubmed_search(pubmed_result = pubmed_result,
                           embedding_model = embedding_model,
+                          api_provider =  api_provider,
                           api_key = api_key,
                           embedding_output_dir = embedding_output_dir)
 
