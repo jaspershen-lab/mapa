@@ -252,6 +252,12 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
   return(embedding)
 }
 
+# -------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------
+
+
 #' Clear the embedding_output directory
 #'
 #' This internal function checks for the existence of a specified directory.

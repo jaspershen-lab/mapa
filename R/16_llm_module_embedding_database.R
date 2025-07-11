@@ -372,7 +372,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
     cat(sprintf("Processing module: %s\n", module_name))
     cat(sprintf("Including PID number: %s\n", length(PID_list)))
     if (length(PID_list) != 0) {
-      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_provider, api_key, embedding_output_dir)
+      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_provider = api_provider, api_key = api_key, embedding_output_dir)
     }
   }
 }
@@ -460,7 +460,7 @@ embedding_single_module_pubmed_search <- function(module_name,
   # 并行处理embeddings生成
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(min(parallel::detectCores()-1, 10))
-    parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model"))
+    parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model"),envir = environment())
     parallel::clusterEvalQ(cl, {
       library(httr2)
     })
