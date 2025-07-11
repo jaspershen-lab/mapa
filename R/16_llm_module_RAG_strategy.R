@@ -472,6 +472,7 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
 #'
 #' @keywords internal
 #对于每个module进行检索，检索后通过GPT进行rerank然后顺便清洗一下
+
 retrieve_strategy <- function(pubmed_result,
                               model = "gpt-4o-mini-2024-07-18",
                               embedding_model = "text-embedding-3-small",

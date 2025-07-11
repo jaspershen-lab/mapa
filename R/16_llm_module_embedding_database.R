@@ -372,7 +372,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
     cat(sprintf("Processing module: %s\n", module_name))
     cat(sprintf("Including PID number: %s\n", length(PID_list)))
     if (length(PID_list) != 0) {
-      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_key, embedding_output_dir, api_provider)
+      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_provider, api_key, embedding_output_dir)
     }
   }
 }
@@ -472,7 +472,7 @@ embedding_single_module_pubmed_search <- function(module_name,
     parallel::stopCluster(cl)
   } else {
     embeddings <- pbmclapply(abstracts, function(abstract) {
-      get_embedding(abstract, api_key,, model_name = embedding_model,api_provider)
+      get_embedding(abstract, api_key, model_name = embedding_model,api_provider)
     }, mc.cores = parallel::detectCores() - 1)
   }
 
