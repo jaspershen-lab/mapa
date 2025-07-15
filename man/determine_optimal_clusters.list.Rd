@@ -8,51 +8,71 @@
   object,
   cutoff_range = c(0.2, 0.9),
   cutoff_increment = 0.05,
-  hclust_methods = "ward.D2",
-  methods = c("hierarchical", "binary_cut", "louvain"),
+  methods = c("h_ward.D", "binary_cut", "louvain"),
   ...
 )
 }
 \arguments{
-\item{object}{A \code{list} containing "enriched_pathway" (a \code{functional_module} object)
-and "sim_matrix" (a numeric matrix) components.}
+\item{object}{A \strong{list} with two named elements:
+\itemize{
+\item \strong{\code{enriched_pathway}} – a \emph{functional_module} object (output of
+\code{mapa::get_functional_modules()});
+\item \strong{\code{sim_matrix}} – a square numeric matrix whose row/column names are the
+pathway identifiers to be clustered.
+}}
 
-\item{cutoff_range}{A numeric vector of length two specifying the start and end
-of the similarity cutoff sequence. Values must be between 0 and 1.
-Defaults to \code{c(0.2, 0.9)}.}
+\item{cutoff_range}{Numeric vector of length 2 giving the lower and upper
+bounds of similarity thresholds to test (inclusive), constrained to \verb{[0, 1]}.
+Default: \code{c(0.2, 0.9)}.}
 
-\item{cutoff_increment}{A numeric value specifying the step size for the
-similarity cutoff sequence. Defaults to \code{0.05}.}
+\item{cutoff_increment}{Numeric step size used to generate the sequence inside
+\code{cutoff_range}. Default: \code{0.05}.}
 
-\item{hclust_methods}{A character vector specifying the agglomeration methods for
-hierarchical clustering. Can include: "ward.D", "ward.D2", "single",
-"complete", "average", "mcquitty", "median", "centroid".
-Defaults to "ward.D2". Each method is evaluated as a separate clustering approach.}
+\item{methods}{Character vector of clustering algorithms to evaluate.
+Recognised identifiers (any mix allowed):
+\itemize{
+\item \strong{Hierarchical} – prefix the agglomeration algorithm with \code{"h_"}:
+\code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"},
+\code{"mcquitty"}, \code{"median"}, \code{"centroid"}.
+\item \code{"binary_cut"}
+\item Graph-based: \code{"louvain"}, \code{"walktrap"}, \code{"infomap"},
+\code{"edge_betweenness"}, \code{"fast_greedy"}, \code{"label_prop"},
+\code{"leading_eigen"}, \code{"optimal"}
+}
+Default: \code{c("h_ward.D", "binary_cut", "louvain")}.}
 
-\item{methods}{A character vector specifying which clustering methods to evaluate.
-Options include: "hierarchical", "binary_cut", "louvain", "walktrap", "infomap",
-"edge_betweenness", "fast_greedy", "label_prop", "leading_eigen", "optimal".
-Defaults to \code{c("hierarchical", "binary_cut", "louvain")}.}
-
-\item{...}{Additional arguments (currently unused).}
+\item{...}{Reserved for future extensions; currently ignored.}
 }
 \value{
-A list containing \code{cluster_result}, \code{evaluation_plot}, and \code{best_combination}
-as described in the generic \code{determine_optimal_clusters} documentation.
+A \strong{list} with three components:
+\itemize{
+\item \strong{\code{cluster_result}} – a data frame summarising every tested
+method/cut-off pair with their modularity and silhouette scores;
+\item \strong{\code{evaluation_plot}} – a \code{ggplot2} object visualising the score landscape;
+\item \strong{\code{best_combination}} – the row of \code{cluster_result} that achieved the
+overall optimum.
+}
 }
 \description{
-This method identifies optimal clustering parameters using a pre-computed
-semantic similarity matrix, typically from biotext embeddings.
+Select the best clustering configuration when you already have a \emph{semantic}
+similarity matrix (derived from BioText embeddings).
 }
 \examples{
 \dontrun{
 biotext_results <- list(
-  enriched_pathway = my_pathway_results, # A functional_module object
+  enriched_pathway = my_pathway_results,  # functional_module object
   sim_matrix = embedding_similarity_matrix
 )
-result <- determine_optimal_clusters(biotext_results,
-                                     cutoff_increment = 0.01,
-                                     cutoff_range = c(0.4, 0.95))
+
+# Evaluate several graph-based algorithms on a finer cut-off grid
+res <- determine_optimal_clusters(
+  biotext_results,
+  cutoff_increment = 0.01,
+  cutoff_range = c(0.4, 0.95),
+  methods = c("louvain", "walktrap", "fast_greedy", "optimal")
+)
+
+res$best_combination
 }
 
 }

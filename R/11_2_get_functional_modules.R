@@ -12,8 +12,8 @@
 # setwd("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/")
 # load("openai_semantic_sim_matrix.rda")
 # biotext_functional_modules <- get_functional_modules(object = openai_semantic_sim_matrix,
-#                                                      sim.cutoff = 0.9,
-#                                                      cluster_method = "louvain")
+#                                                      sim.cutoff = 0.5,
+#                                                      cluster_method = "h_ward.D2")
 # save(biotext_functional_modules, file = "biotext_functional_modules.rda")
 
 #' Get Functional Modules from Pathway Similarity and Pathway Enrichment Results
@@ -78,12 +78,17 @@ get_functional_modules <- function(object, ...) {
 #' @param object A `functional_module` class object processed by `merge_pathways()` function.
 #' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.5).
 #' @param measure_method Character, similarity measure. Currently supports "jaccard" (default).
-#' @param cluster_method Character, clustering method options:  "louvain" (default), "hierarchical",
-#'   "binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
-#'   "leading_eigen", "optimal".
-#' @param hclust.method Character, agglomeration method for hierarchical clustering including:
-#'   "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
-#'   Only used when `cluster_method = "hierarchical"`.
+#' @param cluster_method Character, clustering method options:
+#'        \itemize{
+#'          \item **Hierarchical** ‒ supply `"h_<agglom.method>"`, where
+#'            `<agglom.method>` is one of
+#'            `"ward.D"`, `"ward.D2"`, `"single"`, `"complete"`, `"average"`,
+#'            `"mcquitty"`, `"median"`, `"centroid"`.
+#'          \item `"binary_cut"`
+#'          \item Graph-based: `"louvain"`, `"walktrap"`, `"infomap"`,
+#'            `"edge_betweenness"`, `"fast_greedy"`, `"label_prop"`,
+#'            `"leading_eigen"`, `"optimal"`
+#'        }
 #' @param path Character, directory path to save results (default: "result").
 #' @param save_to_local Logical, save results to local files (default: FALSE).
 #' @param ... Additional arguments (currently unused).
@@ -106,7 +111,6 @@ get_functional_modules.functional_module <- function(object,
                                                      sim.cutoff = 0.5,
                                                      measure_method = c("jaccard"),
                                                      cluster_method = "louvain",
-                                                     hclust.method = NULL,
                                                      path = "result",
                                                      save_to_local = FALSE,
                                                      ...) {
@@ -119,7 +123,6 @@ get_functional_modules.functional_module <- function(object,
     sim.cutoff = sim.cutoff,
     measure_method = measure_method,
     cluster_method = cluster_method,
-    hclust.method = hclust.method,
     path = path,
     save_to_local = save_to_local
   )
@@ -133,12 +136,17 @@ get_functional_modules.functional_module <- function(object,
 #'
 #' @param object A \code{list} containing "enriched_pathway" and "sim_matrix" components.
 #' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.5).
-#' @param cluster_method Character, clustering method options:  "louvain" (default), "hierarchical",
-#'   "binary_cut", "walktrap", "infomap", "edge_betweenness", "fast_greedy", "label_prop",
-#'   "leading_eigen", "optimal".
-#' @param hclust.method Character, agglomeration method for hierarchical clustering including:
-#'   "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid".
-#'   Only used when `cluster_method = "hierarchical"`.
+#' @param cluster_method Character, clustering method options:
+#'        \itemize{
+#'          \item **Hierarchical** ‒ supply `"h_<agglom.method>"`, where
+#'            `<agglom.method>` is one of
+#'            `"ward.D"`, `"ward.D2"`, `"single"`, `"complete"`, `"average"`,
+#'            `"mcquitty"`, `"median"`, `"centroid"`.
+#'          \item `"binary_cut"`
+#'          \item Graph-based: `"louvain"`, `"walktrap"`, `"infomap"`,
+#'            `"edge_betweenness"`, `"fast_greedy"`, `"label_prop"`,
+#'            `"leading_eigen"`, `"optimal"`
+#'        }
 #' @param save_to_local Logical, save results to local files (default: FALSE).
 #' @param path Character, directory path to save results (default: "result").
 #' @param ... Additional arguments (currently unused).
@@ -160,7 +168,6 @@ get_functional_modules.functional_module <- function(object,
 get_functional_modules.list <- function(object,
                                         sim.cutoff = 0.5,
                                         cluster_method = "louvain",
-                                        hclust.method = NULL,
                                         save_to_local = FALSE,
                                         path = "result",
                                         ...) {
@@ -174,7 +181,6 @@ get_functional_modules.list <- function(object,
       object = object,
       sim.cutoff = sim.cutoff,
       cluster_method = cluster_method,
-      hclust.method = hclust.method,
       save_to_local = save_to_local,
       path = path
     )
