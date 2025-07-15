@@ -15,7 +15,7 @@
 #' Processes all PDF files in a specified local corpus directory by generating embeddings and saving them to the database.
 #'
 #' @param embedding_model A string specifying the embedding model to use. Default is `"text-embedding-3-small"`.
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param api_key A character string containing the API key for the embedding service.
 #' @param local_corpus_dir A character string specifying the name of the directory where the local files
 #'        provided by users are saved. Defaults to "local_corpus".
@@ -92,7 +92,7 @@ embedding_local_corpus <-
 #' @param pdf_path A character string specifying the path to the PDF file.
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding service.
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @return A data frame containing the following columns:
 #' \item{paper_title}{The title of the PDF (derived from the file name).}
 #' \item{chunks}{The extracted text chunks from the PDF.}
@@ -334,7 +334,7 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @return No return value; function saves embeddings to disk in the specified output directory.
 #'
 #' @details
@@ -386,7 +386,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
 #' @param module_name Character string specifying the name of the module (used for
 #'   organizing output files).
 #' @param PID_list Character vector containing PubMed IDs to process.
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where

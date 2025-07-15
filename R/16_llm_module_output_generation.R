@@ -14,7 +14,7 @@
 #' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
 #' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #'
 #' @return A list containing two elements: \code{module_name} (the generated biological module name)
@@ -175,7 +175,7 @@ modify_prompt_for_format_output_generation <- function(gpt_response) {
 #' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
 #' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #' @return A list of results for each module, where each element is a list containing
 #' \code{module_name} and \code{summary}.

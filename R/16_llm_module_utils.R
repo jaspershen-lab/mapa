@@ -19,7 +19,7 @@
 #' @param temperature A numeric value between 0 and 1 to control the randomness of the response
 #'                    (default is `0.7`, where lower values produce more deterministic results).
 #' @param retry_attempts An integer specifying the maximum number of retry attempts if the API call fails (default is `3`).
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #'
 #' @return The generated text from the GPT model if the call is successful. If the call fails after the specified number
@@ -156,24 +156,26 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 
 #' get_embedding: Internal function to retrieve embeddings from an API
 #'
-#' This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI or Gemini).
+#' This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI, Gemini, or SiliconFlow).
 #' It supports error handling, retries, and flexible model configurations. The function returns the embedding
 #' vector for a given input text chunk.
 #'
 #' @param chunk A character string representing the input text for which the embedding is required.
 #' @param api_key A string containing the API key required for authentication with the provider.
-#' @param model_name A string specifying the embedding model to use (default is `"text-embedding-3-small"` for OpenAI, `"models/gemini-embedding-exp-03-07"` for Gemini).
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
-#' @param task_type A string specifying the task type for Gemini API (default is `"SEMANTIC_SIMILARITY"`). Only used when api_provider is "gemini".
+#' @param model_name A string specifying the embedding model to use.
+#'   - For OpenAI, default is `"text-embedding-3-small"`.
+#'   - For Gemini, default is `"models/gemini-embedding-exp-03-07"`.
+#'   - For SiliconFlow, default is `"BAAI/bge-large-zh-v1.5"`.
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param task_type A string specifying the task type for Gemini API (default is `"SEMANTIC_SIMILARITY"`). Only used when `api_provider` is "gemini".
 #'
 #' @return A numeric vector representing the embedding for the input text. If the API call fails after retries,
 #'         the function returns `NULL`.
 #'
-#'
 #' @note This function is for internal use only and supports retry logic for API failures. Ensure you have
 #'       valid API credentials and the provider's URL is correctly set.
 #'
-#' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
+#' @author Feifan Zhang <FEIFAN004@e.ntu.edu.sg>
 #'
 #' @keywords internal
 get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "openai", task_type = "SEMANTIC_SIMILARITY") {
@@ -184,13 +186,18 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
       api_provider,
       "openai" = "text-embedding-3-small",
       "gemini" = "models/gemini-embedding-exp-03-07",
-      stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
+      "siliconflow" = "Qwen/Qwen3-Embedding-8B", # 新增: SiliconFlow 的默认模型
+      stop("Invalid API provider. Please choose 'openai', 'gemini', or 'siliconflow'.")
     )
   }
 
   # 根据 API 提供者选择 URL 和构建请求体
-  if (api_provider == "openai") {
-    url <- "https://api.openai.com/v1/embeddings"
+  if (api_provider %in% c("openai", "siliconflow")) { # 修改: 将 openai 和 siliconflow 分组
+    url <- switch(
+      api_provider,
+      "openai" = "https://api.openai.com/v1/embeddings",
+      "siliconflow" = "https://api.siliconflow.cn/v1/embeddings" # 新增: SiliconFlow URL
+    )
     data <- list(
       model = model_name,
       input = chunk
@@ -208,7 +215,7 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
       taskType = task_type
     )
   } else {
-    stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
+    stop("Invalid API provider. Please choose 'openai', 'gemini', or 'siliconflow'.")
   }
 
   # 请求嵌入向量
@@ -218,7 +225,7 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
       req <- httr2::request(url)
 
       # 根据API提供者设置认证方式
-      if (api_provider == "openai") {
+      if (api_provider %in% c("openai", "siliconflow")) { # 修改: 为 siliconflow 使用 Bearer Token
         req <- req %>% httr2::req_auth_bearer_token(token = api_key)
       } else if (api_provider == "gemini") {
         req <- req %>% httr2::req_headers(`x-goog-api-key` = api_key)
@@ -230,12 +237,13 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
         httr2::req_retry(
           max_tries = 3,
           max_seconds = 60,
-          after = \(resp) is.null(resp) || httr2::resp_status(resp) != 200  # 修正重试条件
+          is_transient = \(resp) httr2::resp_status(resp) %in% c(429, 500, 503), # 改进重试条件
+          after = \(resp) httr2::resp_retry_after(resp)
         ) %>%
         httr2::req_perform()
 
       # 根据API提供者解析响应
-      if (api_provider == "openai") {
+      if (api_provider %in% c("openai", "siliconflow")) { # 修改: 为 siliconflow 使用相同的解析逻辑
         embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding
       } else if (api_provider == "gemini") {
         embedding <- httr2::resp_body_json(resp)$embedding$values
@@ -244,7 +252,7 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
       unlist(embedding)
     },
     error = function(e) {
-      warning("Failed to get embedding after 3 retries for provider '", api_provider, "': ", e$message)
+      warning("Failed to get embedding after retries for provider '", api_provider, "': ", e$message)
       NULL
     }
   )

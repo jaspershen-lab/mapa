@@ -118,7 +118,7 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #'   (character vectors defining molecules of interest).
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding generation service.
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #'
 #' @return A numeric vector representing the generated embedding for the module.
 #'
@@ -201,7 +201,7 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #'   (character vectors defining molecules of interest).
 #' @param api_key A character string containing the API key for the GPT service.
 #' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #' @return A list of results where each element is a list containing:
 #' \item{relevance_score}{A numeric value between 0 and 1, indicating the relevance of the chunk.}
@@ -436,7 +436,7 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
 #' @param embedding_output_dir A character string specifying the directory for embeddings.
 #' @param save_dir_local_corpus_embed A character string specifying the subdirectory for local
 #'   corpus embeddings (required if \code{local_corpus} is TRUE).
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #' @return A named list where each element corresponds to a module. Each module contains
 #'   a list of results with the following components:
