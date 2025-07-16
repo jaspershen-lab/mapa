@@ -30,7 +30,7 @@ Each message should be a list with \code{role} (e.g., "system", "user", or "assi
 
 \item{retry_attempts}{An integer specifying the maximum number of retry attempts if the API call fails (default is \code{3}).}
 
-\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 
 \item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
 }

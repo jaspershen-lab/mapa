@@ -24,7 +24,7 @@ GPT_process_chunk(
 
 \item{model}{A string specifying the GPT model to use (default is \code{"gpt-4o-mini-2024-07-18"}).}
 
-\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 
 \item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
 }

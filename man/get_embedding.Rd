@@ -17,18 +17,23 @@ get_embedding(
 
 \item{api_key}{A string containing the API key required for authentication with the provider.}
 
-\item{model_name}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"} for OpenAI, \code{"models/gemini-embedding-exp-03-07"} for Gemini).}
+\item{model_name}{A string specifying the embedding model to use.
+\itemize{
+\item For OpenAI, default is \code{"text-embedding-3-small"}.
+\item For Gemini, default is \code{"models/gemini-embedding-exp-03-07"}.
+\item For SiliconFlow, default is \code{"BAAI/bge-large-zh-v1.5"}.
+}}
 
-\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 
-\item{task_type}{A string specifying the task type for Gemini API (default is \code{"SEMANTIC_SIMILARITY"}). Only used when api_provider is "gemini".}
+\item{task_type}{A string specifying the task type for Gemini API (default is \code{"SEMANTIC_SIMILARITY"}). Only used when \code{api_provider} is "gemini".}
 }
 \value{
 A numeric vector representing the embedding for the input text. If the API call fails after retries,
 the function returns \code{NULL}.
 }
 \description{
-This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI or Gemini).
+This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI, Gemini, or SiliconFlow).
 It supports error handling, retries, and flexible model configurations. The function returns the embedding
 vector for a given input text chunk.
 }
@@ -37,6 +42,6 @@ This function is for internal use only and supports retry logic for API failures
 valid API credentials and the provider's URL is correctly set.
 }
 \author{
-Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
+Feifan Zhang \href{mailto:FEIFAN004@e.ntu.edu.sg}{FEIFAN004@e.ntu.edu.sg}
 }
 \keyword{internal}

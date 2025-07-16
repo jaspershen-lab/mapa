@@ -42,7 +42,7 @@ in the analysis (default is FALSE).}
 \item{save_dir_local_corpus_embed}{A character string specifying the subdirectory for local
 corpus embeddings (required if \code{local_corpus} is TRUE).}
 
-\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 
 \item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
 }

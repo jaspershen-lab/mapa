@@ -18,7 +18,7 @@ embedding_single_pdf(
 
 \item{api_key}{A character string containing the API key for the embedding service.}
 
-\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 }
 \value{
 A data frame containing the following columns:

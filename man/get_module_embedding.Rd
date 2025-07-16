@@ -20,7 +20,7 @@ get_module_embedding(
 
 \item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 
-\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 }
 \value{
 A numeric vector representing the generated embedding for the module.
