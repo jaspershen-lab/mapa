@@ -21,33 +21,38 @@
 #
 #
 # {
-  # include_functional_modules = TRUE
-  # llm_text = TRUE
-  # include_modules = TRUE
-  # include_pathways = TRUE
-  # include_molecules = TRUE
-  # functional_module_color = "#F05C3BFF"
-  # module_color = "#46732EFF"
-  # pathway_color = "#197EC0FF"
-  # molecule_color = "#3B4992FF"
-  # functional_module_text = TRUE
-  # module_text = FALSE
-  # pathway_text = TRUE
-  # molecule_text = TRUE
-  # functional_module_text_size = 3
-  # module_text_size = 3
-  # pathway_text_size = 3
-  # molecule_text_size = 3
-  # circular_plot = FALSE
-  # functional_module_arrange_position = TRUE
-  # module_arrange_position = TRUE
-  # pathway_arrange_position = TRUE
-  # molecule_arrange_position = TRUE
-  # functional_module_position_limits = c(0.3, 0.7)
-  # module_position_limits = c(0.2, 0.8)
-  # pathway_position_limits = c(0.1, 0.9)
-  # molecule_position_limits = c(0, 1)
-#   }
+# include_functional_modules = TRUE
+# llm_text = TRUE
+# include_modules = TRUE
+# include_pathways = TRUE
+# include_molecules = TRUE
+# include_variables = TRUE
+# functional_module_color = "#F05C3BFF"
+# module_color = "#46732EFF"
+# pathway_color = "#197EC0FF"
+# molecule_color = "#3B4992FF"
+# functional_module_text = TRUE
+# module_text = FALSE
+# pathway_text = TRUE
+# molecule_text = TRUE
+# variable_text = FALSE
+# functional_module_text_size = 3
+# module_text_size = 3
+# pathway_text_size = 3
+# molecule_text_size = 3
+# variable_text_size = 3
+# circular_plot = FALSE
+# functional_module_arrange_position = TRUE
+# module_arrange_position = TRUE
+# pathway_arrange_position = TRUE
+# molecule_arrange_position = TRUE
+# variable_arrange_position = TRUE
+# functional_module_position_limits = c(0.4, 0.6)
+# module_position_limits = c(0.3, 0.7)
+# pathway_position_limits = c(0.2, 0.8)
+# molecule_position_limits = c(0.1, 0.9)
+# variable_position_limits = c(0, 1)
+# }
 #
 # plot_relationship_network(
 #   object = object,
@@ -56,44 +61,50 @@
 #   include_modules = include_modules,
 #   include_pathways = include_pathways,
 #   include_molecules = include_molecules,
+#   include_variables = include_variables,
 #   functional_module_text = functional_module_text,
 #   module_text = module_text,
 #   pathway_text = pathway_text,
 #   molecule_text = molecule_text,
+#   variable_text = variable_text,
 #   functional_module_text_size = functional_module_text_size,
 #   module_text_size = module_text_size,
 #   pathway_text_size = pathway_text_size,
 #   molecule_text_size = molecule_text_size,
+#   variable_text_size = variable_text_size,
 #   circular_plot = circular_plot,
 #   functional_module_arrange_position = functional_module_arrange_position,
 #   module_arrange_position = module_arrange_position,
 #   pathway_arrange_position = pathway_arrange_position,
 #   molecule_arrange_position = molecule_arrange_position,
+#   variable_arrange_position = variable_arrange_position,
 #   functional_module_position_limits = functional_module_position_limits,
 #   module_position_limits = module_position_limits,
 #   pathway_position_limits = pathway_position_limits,
-#   molecule_position_limits = molecule_position_limits
+#   molecule_position_limits = molecule_position_limits,
+#   variable_position_limits = variable_position_limits
 # )
 
 #' Plot a multilevel relationship network
 #'
 #' `plot_relationship_network()` builds a tidygraph/ggplot representation of the
-#' relationships among *functional modules (→ modules) → pathways → molecules*
+#' relationships among *functional modules (→ modules) → pathways → molecules → variables*
 #' stored in a **functional_module** object.
 #'
 #' @inheritParams create_relation_network
-#' @param functional_module_color,module_color,pathway_color,molecule_color
-#'   Hex fill colours for the four node classes.
-#' @param functional_module_text,module_text,pathway_text,molecule_text
-#'   Logical; draw text labels for the corresponding class?
-#' @param functional_module_text_size,module_text_size,pathway_text_size,molecule_text_size
+#' @param functional_module_color,module_color,pathway_color,molecule_color,variable_color
+#'   Hex fill colours for the five node classes.
+#' @param functional_module_text,module_text,pathway_text,molecule_text,variable_text,llm_text
+#'   Logical; draw text labels for the corresponding class? `llm_text` determines
+#'   whether to use LLM-generated module names instead of standard module annotations.
+#' @param functional_module_text_size,module_text_size,pathway_text_size,molecule_text_size,variable_text_size
 #'   Numeric; text‐label size (pts) for each class.
 #' @param circular_plot  If `TRUE`, lay nodes out on concentric circles instead
-#'   of four horizontal tracks.
-#' @param functional_module_arrange_position,module_arrange_position,pathway_arrange_position,molecule_arrange_position
+#'   of five horizontal tracks.
+#' @param functional_module_arrange_position,module_arrange_position,pathway_arrange_position,molecule_arrange_position,variable_arrange_position
 #'   Logical; evenly space the x position of nodes in each class between the limits given in the
 #'   matching `*_position_limits`.
-#' @param functional_module_position_limits,module_position_limits,pathway_position_limits,molecule_position_limits
+#' @param functional_module_position_limits,module_position_limits,pathway_position_limits,molecule_position_limits,variable_position_limits
 #'   Numeric length-2 vectors (`[0,1]`) giving the left/right fraction of the x-axis used by each track.
 #'
 #' @return A **ggplot** object.
@@ -101,7 +112,6 @@
 #' @author Xiaotao Shen \email{shenxt1990@outlook.com}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @seealso [`create_relation_network()`]
 #'
 #' @examples
 #' \dontrun{
@@ -109,7 +119,8 @@
 #' plot_relationship_network(my_fmod,
 #'                           llm_text = TRUE,
 #'                           include_modules = FALSE,
-#'                           molecule_text   = TRUE)
+#'                           molecule_text   = TRUE,
+#'                           include_variables = TRUE)
 #'}
 #'
 #' @import ggplot2
@@ -127,28 +138,34 @@ plot_relationship_network <-
            include_modules = FALSE,
            include_pathways = TRUE,
            include_molecules = TRUE,
-           functional_module_color = "#F05C3BFF",
-           module_color = "#46732EFF",
-           pathway_color = "#197EC0FF",
-           molecule_color = "#3B4992FF",
+           include_variables = FALSE,
+           functional_module_color = "#DD4124FF",
+           module_color = "#0F7BA2FF",
+           pathway_color = "#43B284FF",
+           molecule_color = "#FAB255FF",
+           variable_color = "#CC79A7",
            functional_module_text = TRUE,
            llm_text = FALSE,
            module_text = FALSE,
            pathway_text = TRUE,
            molecule_text = FALSE,
+           variable_text = FALSE,
            functional_module_text_size = 3,
            module_text_size = 3,
            pathway_text_size = 3,
            molecule_text_size = 3,
+           variable_text_size = 3,
            circular_plot = FALSE,
            functional_module_arrange_position = TRUE,
            module_arrange_position = TRUE,
            pathway_arrange_position = TRUE,
            molecule_arrange_position = TRUE,
+           variable_arrange_position = TRUE,
            functional_module_position_limits = c(0, 1),
            module_position_limits = c(0, 1),
            pathway_position_limits = c(0, 1),
-           molecule_position_limits = c(0, 1)
+           molecule_position_limits = c(0, 1),
+           variable_position_limits = c(0, 1)
            ) {
     ###at least two classes of nodes
 
@@ -163,7 +180,8 @@ plot_relationship_network <-
         include_functional_modules,
         include_modules,
         include_pathways,
-        include_molecules
+        include_molecules,
+        include_variables
       )
     ) < 2) {
       stop("The network should includes at least two classes of nodes")
@@ -174,7 +192,8 @@ plot_relationship_network <-
         "Functional_module" = functional_module_color,
         "Module" = module_color,
         "Pathway" = pathway_color,
-        "Molecule" = molecule_color
+        "Molecule" = molecule_color,
+        "Variable" = variable_color
       )
 
     edge_color <-
@@ -184,7 +203,8 @@ plot_relationship_network <-
         "Functional_module-Molecule" = unname(node_color["Functional_module"]),
         "Module-Pathway" = unname(node_color["Module"]),
         "Module-Molecule" = unname(node_color["Module"]),
-        "Pathway-Molecule" = unname(node_color["Pathway"])
+        "Pathway-Molecule" = unname(node_color["Pathway"]),
+        "Molecule-Variable" = unname(node_color["Molecule"])
       )
 
     ###check object and variable_info
@@ -223,10 +243,12 @@ plot_relationship_network <-
         include_functional_modules = include_functional_modules,
         include_modules = include_modules,
         include_pathways = include_pathways,
-        include_molecules = include_molecules
+        include_molecules = include_molecules,
+        include_variables = include_variables,
+        variable_order = variable_order
       )
 
-    g <- total_graph
+    g <- total_graph$graph_data
     igraph::V(g)$type <- igraph::bipartite_mapping(g)$type
     coords <-
       ggraph::create_layout(g, layout = "bipartite")
@@ -240,11 +262,14 @@ plot_relationship_network <-
       coords$y[coords$class == "Module"] <- 1
       coords$y[coords$class == "Pathway"] <- 2
       coords$y[coords$class == "Molecule"] <- 3
+      coords$y[coords$class == "Variable"] <- 4
     } else{
-      coords$y[coords$class == "Functional_module"] <- 3
-      coords$y[coords$class == "Module"] <- 2
-      coords$y[coords$class == "Pathway"] <- 1
-      coords$y[coords$class == "Molecule"] <- 0
+      coords$y[coords$class == "Functional_module"] <- 4
+      coords$y[coords$class == "Module"] <- 3
+      coords$y[coords$class == "Pathway"] <- 2
+      coords$y[coords$class == "Molecule"] <- 1
+      coords$y[coords$class == "Variable"] <- 0
+      coords$y <- coords$y*0.5
     }
 
     # sort(coords$x[coords$class == "Functional_module"])
@@ -312,6 +337,21 @@ plot_relationship_network <-
         temp_coords
     }
 
+    if (variable_arrange_position & include_variables) {
+      temp_coords <-
+        coords %>%
+        dplyr::filter(class == "Variable")
+        # dplyr::arrange(x)
+      temp_coords$x <-
+        seq(
+          min(coords$x) + variable_position_limits[1] * max(coords$x),
+          variable_position_limits[2] * max(coords$x),
+          length.out = nrow(temp_coords)
+        )
+      coords[coords$class == "Variable", ] <-
+        temp_coords
+    }
+
     coords <-
       coords %>%
       dplyr::arrange(index)
@@ -356,7 +396,7 @@ plot_relationship_network <-
       ) +
       scale_fill_manual(values = node_color) +
       ggraph::scale_edge_color_manual(values = edge_color) +
-      scale_size_continuous(range = c(1, 8)) +
+      scale_size_continuous(range = c(2, 8)) +
       ggraph::theme_graph() +
       theme(
         plot.background = element_rect(fill = "transparent", color = NA),
@@ -370,24 +410,28 @@ plot_relationship_network <-
         class = c("Functional_module",
                   "Module",
                   "Pathway",
-                  "Molecule"),
+                  "Molecule",
+                  "Variable"),
         include = c(
           include_functional_modules,
           include_modules,
           include_pathways,
-          include_molecules
+          include_molecules,
+          include_variables
         ),
         text = c(
           functional_module_text,
           module_text,
           pathway_text,
-          molecule_text
+          molecule_text,
+          variable_text
         ),
         size = c(
           functional_module_text_size,
           module_text_size,
           pathway_text_size,
-          molecule_text
+          molecule_text_size,
+          variable_text_size
         )
       ) %>%
       dplyr::filter(include)
@@ -416,7 +460,8 @@ plot_relationship_network <-
           Functional_module = functional_module_text_size,
           Module = module_text_size,
           Pathway = pathway_text_size,
-          Molecule = molecule_text_size
+          Molecule = molecule_text_size,
+          Variable = variable_text_size
         )
 
       if (circular_plot) {
@@ -458,28 +503,28 @@ plot_relationship_network <-
 #' Build a relationship network from a *functional_module* object
 #'
 #' `create_relation_network()` converts the hierarchical links among functional
-#' modules, modules, pathways, and molecules in a **functional_module** object
+#' modules, modules, pathways, molecules, and variables in a **functional_module** object
 #' into a *tidygraph*.
-#' **Internal helper** for [plot_relationship_network()]; not intended for
-#' direct use by package users.
 #'
 #' @param object  A **functional_module** S4 object that has already been
 #'   processed by `merge_pathways()` and `merge_modules()`.
 #' @param llm_text  Use the `llm_module_name` (GPT annotation) column instead of
 #'   `module_annotation` for functional-module labels?
-#' @param include_functional_modules,include_modules,include_molecules,include_pathways,
-#'   include_molecules Logical; include the corresponding node class (at least
-#'   two must be `TRUE`).
+#' @param include_functional_modules,include_modules,include_pathways,include_molecules,include_variables
+#'   Logical; include the corresponding node class (at least two must be `TRUE`).
 #'
 #' @return A **tbl_graph** whose node tibble contains `node`, `annotation`,
 #'   `Count`, `class`, and whose edge tibble contains `from`, `to`, `class`
-#'   (e.g. `"Module-Pathway"`).
+#'   (e.g. `"Module-Pathway"`, `"Molecule-Variable"`).
 #'
 #' @author Xiaotao Shen \email{shenxt1990@outlook.com}
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @examples
 #' \dontrun{
-#' g <- create_relation_network(my_fmod, include_modules = FALSE)
+#' g <- create_relation_network(my_fmod,
+#'                              include_modules = FALSE,
+#'                              include_variables = TRUE)
 #' }
 #'
 #' @import dplyr
@@ -493,7 +538,8 @@ create_relation_network <-
            include_functional_modules = TRUE,
            include_modules = TRUE,
            include_pathways = TRUE,
-           include_molecules = TRUE
+           include_molecules = TRUE,
+           include_variables = TRUE
            ) {
     ###at least two classes of nodes
 
@@ -508,7 +554,8 @@ create_relation_network <-
         include_functional_modules,
         include_modules,
         include_pathways,
-        include_molecules
+        include_molecules,
+        include_variables
       )
     ) < 2) {
       stop("The network should includes at least two classes of nodes")
@@ -1056,7 +1103,7 @@ create_relation_network <-
           dplyr::select(node = hmdbid,
                         keggid,
                         variable_id) %>%
-          dplyr::mutate(annotation = variable_id,
+          dplyr::mutate(annotation = node,
                         Count = 1,
                         class = "Molecule")
       } else {
@@ -1064,7 +1111,7 @@ create_relation_network <-
           variable_info %>%
           dplyr::select(node = "keggid",
                         variable_id) %>%
-          dplyr::mutate(annotation = variable_id,
+          dplyr::mutate(annotation = node,
                         Count = 1,
                         class = "Molecule")
       }
@@ -1263,6 +1310,37 @@ create_relation_network <-
     #     variable_info$ensembl[match(edge_data6$to, variable_info$entrezid)]
     # }
 
+    ## 7. molecule vs variable ====
+    if (query_type == "gene") {
+      molecule_in_module <- strsplit(object@merged_module$functional_module_result$geneID, split = "/")[[1]]
+      edge_data7 <- object@variable_info |>
+        dplyr::filter(ensembl %in% molecule_in_module) |>
+        dplyr::select(from = ensembl,
+                      to = variable_id) |>
+        dplyr::mutate(class = "Molecule-Variable")
+    } else {
+      molecule_in_module <- strsplit(object@merged_module$functional_module_result$mapped_id, split = "/")[[1]]
+      if ("hmdbid" %in% colnames(object@variable_info)) {
+        edge_data7 <- object@variable_info |>
+          dplyr::filter(hmdbid %in% molecule_in_module) |>
+          dplyr::select(from = hmdbid,
+                        to = variable_id) |>
+          dplyr::mutate(class = "Molecule-Variable")
+      } else if (!("hmdbid" %in% colnames(object@variable_info))) {
+        edge_data7 <- object@variable_info |>
+          dplyr::filter(keggid %in% molecule_in_module) |>
+          dplyr::select(from = keggid,
+                        to = variable_id) |>
+          dplyr::mutate(class = "Molecule-Variable")
+      }
+    }
+
+    node_data4 <- object@variable_info |>
+      dplyr::select(node = variable_id,
+                    annotation = variable_id) |>
+      dplyr::mutate(Count = 1,
+                    class = "Variable")
+
     # Graph network ====
     edge_data <-
       rbind(edge_data1,
@@ -1270,14 +1348,18 @@ create_relation_network <-
             edge_data3,
             edge_data4,
             edge_data5,
-            edge_data6)
+            edge_data6,
+            edge_data7)
 
     if (sim_method == "get_bioembedsim()") {
       node_data <-
         node_data1 %>%
         dplyr::full_join(node_data3,
                          by = intersect(colnames(.),
-                                        colnames(node_data3)))
+                                        colnames(node_data3))) %>%
+        dplyr::full_join(node_data4,
+                         by = intersect(colnames(.),
+                                        colnames(node_data4)))
     } else {
       node_data <-
         node_data1 %>%
@@ -1286,7 +1368,10 @@ create_relation_network <-
                                         colnames(node_data2))) %>%
         dplyr::full_join(node_data3,
                          by = intersect(colnames(.),
-                                        colnames(node_data3)))
+                                        colnames(node_data3))) %>%
+        dplyr::full_join(node_data4,
+                         by = intersect(colnames(.),
+                                        colnames(node_data4)))
     }
 
     node_data <-
@@ -1357,6 +1442,15 @@ create_relation_network <-
         dplyr::filter(class != "Pathway-Molecule")
     }
 
+    if (!include_variables) {
+      temp_node_data <-
+        temp_node_data %>%
+        dplyr::filter(class != "Variable")
+      temp_edge_data <-
+        temp_edge_data %>%
+        dplyr::filter(class != "Molecule-Variable")
+    }
+
     ###remove some edges
     if (any(temp_edge_data$class == "Functional_module-Module")) {
       temp_edge_data <-
@@ -1384,11 +1478,13 @@ create_relation_network <-
         levels = c("Functional_module",
                    "Module",
                    "Pathway",
-                   "Molecule")[c(
+                   "Molecule",
+                   "Variable")[c(
                      include_functional_modules,
                      include_modules,
                      include_pathways,
-                     include_molecules
+                     include_molecules,
+                     include_variables
                    )]
       )
 
@@ -1404,5 +1500,10 @@ create_relation_network <-
       tidygraph::tbl_graph(nodes = temp_node_data,
                            edges = temp_edge_data,
                            directed = FALSE)
-    total_graph
+    # total_graph
+    return(list(
+      graph_data = total_graph,
+      node_data = temp_node_data,
+      edge_data = temp_edge_data
+    ))
   }

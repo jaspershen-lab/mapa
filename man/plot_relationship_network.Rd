@@ -11,60 +11,63 @@ plot_relationship_network(
   include_modules = FALSE,
   include_pathways = TRUE,
   include_molecules = TRUE,
-  functional_module_color = "#F05C3BFF",
-  module_color = "#46732EFF",
-  pathway_color = "#197EC0FF",
-  molecule_color = "#3B4992FF",
+  include_variables = FALSE,
+  functional_module_color = "#DD4124FF",
+  module_color = "#0F7BA2FF",
+  pathway_color = "#43B284FF",
+  molecule_color = "#FAB255FF",
+  variable_color = "#CC79A7",
   functional_module_text = TRUE,
   llm_text = FALSE,
   module_text = FALSE,
   pathway_text = TRUE,
   molecule_text = FALSE,
+  variable_text = FALSE,
   functional_module_text_size = 3,
   module_text_size = 3,
   pathway_text_size = 3,
   molecule_text_size = 3,
+  variable_text_size = 3,
   circular_plot = FALSE,
   functional_module_arrange_position = TRUE,
   module_arrange_position = TRUE,
   pathway_arrange_position = TRUE,
   molecule_arrange_position = TRUE,
+  variable_arrange_position = TRUE,
   functional_module_position_limits = c(0, 1),
   module_position_limits = c(0, 1),
   pathway_position_limits = c(0, 1),
-  molecule_position_limits = c(0, 1)
+  molecule_position_limits = c(0, 1),
+  variable_position_limits = c(0, 1)
 )
 }
 \arguments{
 \item{object}{A \strong{functional_module} S4 object that has already been
 processed by \code{merge_pathways()} and \code{merge_modules()}.}
 
-\item{include_functional_modules, include_modules, include_molecules, include_pathways}{include_molecules Logical; include the corresponding node class (at least
-two must be \code{TRUE}).}
+\item{include_functional_modules, include_modules, include_pathways, include_molecules, include_variables}{Logical; include the corresponding node class (at least two must be \code{TRUE}).}
 
-\item{functional_module_color, module_color, pathway_color, molecule_color}{Hex fill colours for the four node classes.}
+\item{functional_module_color, module_color, pathway_color, molecule_color, variable_color}{Hex fill colours for the five node classes.}
 
-\item{functional_module_text, module_text, pathway_text, molecule_text}{Logical; draw text labels for the corresponding class?}
+\item{functional_module_text, module_text, pathway_text, molecule_text, variable_text, llm_text}{Logical; draw text labels for the corresponding class? \code{llm_text} determines
+whether to use LLM-generated module names instead of standard module annotations.}
 
-\item{llm_text}{Use the \code{llm_module_name} (GPT annotation) column instead of
-\code{module_annotation} for functional-module labels?}
-
-\item{functional_module_text_size, module_text_size, pathway_text_size, molecule_text_size}{Numeric; text‐label size (pts) for each class.}
+\item{functional_module_text_size, module_text_size, pathway_text_size, molecule_text_size, variable_text_size}{Numeric; text‐label size (pts) for each class.}
 
 \item{circular_plot}{If \code{TRUE}, lay nodes out on concentric circles instead
-of four horizontal tracks.}
+of five horizontal tracks.}
 
-\item{functional_module_arrange_position, module_arrange_position, pathway_arrange_position, molecule_arrange_position}{Logical; evenly space the x position of nodes in each class between the limits given in the
+\item{functional_module_arrange_position, module_arrange_position, pathway_arrange_position, molecule_arrange_position, variable_arrange_position}{Logical; evenly space the x position of nodes in each class between the limits given in the
 matching \verb{*_position_limits}.}
 
-\item{functional_module_position_limits, module_position_limits, pathway_position_limits, molecule_position_limits}{Numeric length-2 vectors (\verb{[0,1]}) giving the left/right fraction of the x-axis used by each track.}
+\item{functional_module_position_limits, module_position_limits, pathway_position_limits, molecule_position_limits, variable_position_limits}{Numeric length-2 vectors (\verb{[0,1]}) giving the left/right fraction of the x-axis used by each track.}
 }
 \value{
 A \strong{ggplot} object.
 }
 \description{
 \code{plot_relationship_network()} builds a tidygraph/ggplot representation of the
-relationships among \emph{functional modules (→ modules) → pathways → molecules}
+relationships among \emph{functional modules (→ modules) → pathways → molecules → variables}
 stored in a \strong{functional_module} object.
 }
 \examples{
@@ -73,12 +76,10 @@ stored in a \strong{functional_module} object.
 plot_relationship_network(my_fmod,
                           llm_text = TRUE,
                           include_modules = FALSE,
-                          molecule_text   = TRUE)
+                          molecule_text   = TRUE,
+                          include_variables = TRUE)
 }
 
-}
-\seealso{
-\code{\link[=create_relation_network]{create_relation_network()}}
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
