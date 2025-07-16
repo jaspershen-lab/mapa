@@ -1,3 +1,8 @@
+# mapa 2.1.0
+
+* 1. Allow data visualization for expression data and functional module bipartite graph.
+* 2. Allow using SiliconFlow for text embedding and LLM interpretation.
+
 # mapa 2.0.0
 
 * 1. Enable to use both ChatGPT and Gemini models to perform llm interpretation.
