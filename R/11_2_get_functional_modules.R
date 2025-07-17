@@ -47,7 +47,7 @@
 #' # For traditional pathway enrichment results
 #' enriched_modules <- get_functional_modules(
 #'   object = my_functional_module_object,
-#'   sim.cutoff = 0.5,
+#'   sim.cutoff = 0.55,
 #'   cluster_method = "louvain"
 #' )
 #'
@@ -76,9 +76,9 @@ get_functional_modules <- function(object, ...) {
 #' and clustering pathways using the specified method.
 #'
 #' @param object A `functional_module` class object processed by `merge_pathways()` function.
-#' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.5).
+#' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.55).
 #' @param measure_method Character, similarity measure. Currently supports "jaccard" (default).
-#' @param cluster_method Character, clustering method options:
+#' @param cluster_method Character, clustering method options (default: "louvain"):
 #'        \itemize{
 #'          \item **Hierarchical** ‒ supply `"h_<agglom.method>"`, where
 #'            `<agglom.method>` is one of
@@ -108,7 +108,7 @@ get_functional_modules <- function(object, ...) {
 #' @export
 
 get_functional_modules.functional_module <- function(object,
-                                                     sim.cutoff = 0.5,
+                                                     sim.cutoff = 0.55,
                                                      measure_method = c("jaccard"),
                                                      cluster_method = "louvain",
                                                      path = "result",
@@ -135,8 +135,8 @@ get_functional_modules.functional_module <- function(object,
 #' from biotext embeddings.
 #'
 #' @param object A \code{list} containing "enriched_pathway" and "sim_matrix" components.
-#' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.5).
-#' @param cluster_method Character, clustering method options:
+#' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.55).
+#' @param cluster_method Character, clustering method options (default: "louvain"):
 #'        \itemize{
 #'          \item **Hierarchical** ‒ supply `"h_<agglom.method>"`, where
 #'            `<agglom.method>` is one of
@@ -166,7 +166,7 @@ get_functional_modules.functional_module <- function(object,
 #' @export
 
 get_functional_modules.list <- function(object,
-                                        sim.cutoff = 0.5,
+                                        sim.cutoff = 0.55,
                                         cluster_method = "louvain",
                                         save_to_local = FALSE,
                                         path = "result",
