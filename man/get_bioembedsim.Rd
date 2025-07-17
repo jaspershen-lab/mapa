@@ -6,7 +6,7 @@
 \usage{
 get_bioembedsim(
   object,
-  api_provider = c("openai", "gemini"),
+  api_provider = c("openai", "gemini", "siliconflow"),
   text_embedding_model = NULL,
   api_key = NULL,
   database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
@@ -28,10 +28,11 @@ get_bioembedsim(
 \item{object}{An object of class "functional_module", typically a result from enrich_pathway function.}
 
 \item{api_provider}{Character string specifying the API provider for text embeddings.
-Options are "openai" or "gemini".}
+Options are "openai", "gemini", or "siliconflow.}
 
 \item{text_embedding_model}{Character string specifying the embedding model to use
-(e.g., "text-embedding-3-small" for OpenAI or "text-embedding-004" for Gemini)}
+(e.g., "text-embedding-3-small" for OpenAI, "text-embedding-004" for Gemini, or
+"Qwen/Qwen3-Embedding-8B" for SiliconFlow)}
 
 \item{api_key}{Character string of the API key for the specified provider}
 

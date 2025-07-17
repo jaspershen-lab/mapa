@@ -59,9 +59,10 @@
 #'
 #' @param object An object of class "functional_module", typically a result from enrich_pathway function.
 #' @param api_provider Character string specifying the API provider for text embeddings.
-#'   Options are "openai" or "gemini".
+#'   Options are "openai", "gemini", or "siliconflow.
 #' @param text_embedding_model Character string specifying the embedding model to use
-#'   (e.g., "text-embedding-3-small" for OpenAI or "text-embedding-004" for Gemini)
+#'   (e.g., "text-embedding-3-small" for OpenAI, "text-embedding-004" for Gemini, or
+#'   "Qwen/Qwen3-Embedding-8B" for SiliconFlow)
 #' @param api_key Character string of the API key for the specified provider
 #' @param database Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
 #'   and/or "reactome". Multiple selections allowed.
@@ -124,7 +125,7 @@
 
 get_bioembedsim <-
   function(object,
-           api_provider = c("openai", "gemini"),
+           api_provider = c("openai", "gemini", "siliconflow"),
            text_embedding_model = NULL,
            api_key = NULL,
            database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
@@ -737,7 +738,7 @@ combine_info <- function(info) {
 
 
 # Step2: Get embeddings ====
-## Get the number of tokens in the text info ====
+## Get the number of tokens in the text info
 # # token_num <- rtiktoken::get_token_count(all_text_info$text_info, model = "text-embedding-3-small")
 # # barplot(token_num, ylim = c(0, 8500))
 # # abline(h = 8191, col = "red", lwd = 2)
@@ -759,7 +760,7 @@ combine_info <- function(info) {
 get_embedding_matrix <-
   function(
     text,
-    api_provider = c("openai", "gemini"),
+    api_provider = c("openai", "gemini", "siliconflow"),
     text_embedding_model,
     api_key) {
 
@@ -780,8 +781,8 @@ get_embedding_matrix <-
     embedding_matrix <-
       text %>%
       purrr::map_df(function(x) {
-        token_num <-
-          rtiktoken::get_token_count(text = x$text_info, model = "text-embedding-3-small")
+        # token_num <-
+        #   rtiktoken::get_token_count(text = x$text_info, model = "text-embedding-3-small")
         # max input for openai embedding model is 8191 (March 05, 2025)
         # if (include_gene_name == TRUE & token_num > 8000) {
         #   x$text_info <- sub(pattern = "\nAnnotated gene names.*$", "", x$text_info)
@@ -789,6 +790,22 @@ get_embedding_matrix <-
         # }
         embedding <-
           get_openai_embedding_internal(input_text = x$text_info, text_embedding_model = text_embedding_model, api_key = api_key) %>%
+          t() %>%
+          as.data.frame()
+        rownames(embedding) <- x$id
+
+        embedding
+      }) %>%
+      as.matrix()
+  } else if (api_provider == "siliconflow") {
+    embedding_matrix <-
+      text %>%
+      purrr::map_df(function(x) {
+        embedding <-
+          get_embedding(chunk = x$text_info,
+                        api_key = api_key,
+                        model_name = text_embedding_model,
+                        api_provider = api_provider) %>%
           t() %>%
           as.data.frame()
         rownames(embedding) <- x$id

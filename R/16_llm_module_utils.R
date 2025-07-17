@@ -177,7 +177,7 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
 #'
 #' @author Feifan Zhang <FEIFAN004@e.ntu.edu.sg>
 #'
-#' @keywords internal
+#' @export
 get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "openai", task_type = "SEMANTIC_SIMILARITY") {
 
   # 设置默认模型名称

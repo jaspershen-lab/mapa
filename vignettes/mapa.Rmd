@@ -112,8 +112,7 @@ enriched_modules
 results <- determine_optimal_clusters(object = enriched_modules,
                                       cutoff_increment = 0.1,
                                       cutoff_range = c(0.1, 0.9),
-                                      hclust_methods = "ward.D2",
-                                      methods = c("hierarchical", "binary_cut", "louvain"))
+                                      methods = c("h_ward.D", "binary_cut", "louvain"))
 ```
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
