@@ -1336,6 +1336,10 @@ unify_id_internal <- function(ids = NULL,
         if (stringr::str_detect(x, "^\\d+$")) {
           return(variable_info$ensembl[match(x, variable_info$entrezid)])
         }
+
+        if (x %in% variable_info$symbol) {
+          return(variable_info$ensembl[match(x, variable_info$symbol)])
+        }
       })
   } else if (query_type == "metabolite") {
     if ("hmdbid" %in% colnames(variable_info)) {

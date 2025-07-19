@@ -127,8 +127,13 @@ preprocess_module <- function(df,
       # GeneSymbols_vec <- gene_conversion$GeneSymbols_vec
       # GeneNames_vec <- gene_conversion$GeneNames_vec
 
-      suppressMessages(GeneSymbols_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first") %>% unname())
-      suppressMessages(GeneNames_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "GENENAME", keytype = "ENSEMBL", multiVals = "first") %>% unname())
+      if (is.na(GeneIDs_vec)) {
+        GeneSymbols_vec <- NA
+        GeneNames_vec <- NA
+      } else {
+        suppressMessages(GeneSymbols_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first") %>% unname())
+        suppressMessages(GeneNames_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "GENENAME", keytype = "ENSEMBL", multiVals = "first") %>% unname())
+      }
 
       result_list[[mod_raw]] <- list(
         PathwayNames = pthName_vec,
