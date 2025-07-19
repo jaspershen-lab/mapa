@@ -1329,16 +1329,16 @@ unify_id_internal <- function(ids = NULL,
           return(x)
         }
 
-        if (stringr::str_detect(x, "[A-Za-z]")) {
+        if (x %in% variable_info$symbol) {
+          return(variable_info$ensembl[match(x, variable_info$symbol)])
+        }
+
+        if (x %in% variable_info$uniprot) {
           return(variable_info$ensembl[match(x, variable_info$uniprot)])
         }
 
         if (stringr::str_detect(x, "^\\d+$")) {
           return(variable_info$ensembl[match(x, variable_info$entrezid)])
-        }
-
-        if (x %in% variable_info$symbol) {
-          return(variable_info$ensembl[match(x, variable_info$symbol)])
         }
       })
   } else if (query_type == "metabolite") {
