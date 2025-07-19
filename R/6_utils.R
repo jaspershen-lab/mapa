@@ -1358,6 +1358,9 @@ unify_id_internal <- function(ids = NULL,
       unified_ids <- ids
     }
   }
+
+  unified_ids <- unified_ids[!is.na(unified_ids)]
+
   return(unified_ids)
 }
 
