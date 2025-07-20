@@ -86,15 +86,23 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
     pathway_query <- paste(paste0("\"", pathway_names, "\""), collapse = " OR ")
 
     ## Perform PubMed search with query (gene_symbol AND pathway_names)
-    if (is.na(gene_symbols)) {
-      gene_symbol_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    if (length(gene_symbols) == 1) {
+      if (is.na(gene_symbols)) {
+        gene_symbol_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      } else {
+        gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      }
     } else {
       gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
     }
 
     ## Perform PubMed search with query (gene_name AND pathway_names)
-    if (is.na(gene_names)) {
-      gene_name_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    if (length(gene_names) == 1) {
+      if (is.na(gene_names)) {
+        gene_name_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      } else {
+        gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      }
     } else {
       gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
     }
@@ -147,8 +155,13 @@ perform_query <- function(query_terms,
                           retmax,
                           chunk_size) {
   search_ids <- c()
-  if (is.na(query_terms)) {
-    full_query <- paste("(", pathway_query, ")", sep = " ")
+
+  if (length(query_terms) == 1) {
+    if (is.na(query_terms)) {
+      full_query <- paste("(", pathway_query, ")", sep = " ")
+    } else {
+      full_query <- paste("(", paste(query_terms, collapse = " OR "), ")", "AND", "(", pathway_query, ")", sep = " ")
+    }
   } else {
     full_query <- paste("(", paste(query_terms, collapse = " OR "), ")", "AND", "(", pathway_query, ")", sep = " ")
   }
