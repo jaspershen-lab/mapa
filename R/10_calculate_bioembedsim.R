@@ -21,7 +21,7 @@
 # load("demo_data/updated_object_results_for_genes_ora/ora_enriched_pathways.rda")
 # setwd("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/")
 # openai_semantic_sim_matrix <-
-#   get_bioembedsim(object = enriched_pathways,
+#   get_bioembedsim(object = enrich_pathway_res,
 #                   api_provider = "openai",
 #                   text_embedding_model = "text-embedding-3-small",
 #                   api_key = api_key,
@@ -179,12 +179,20 @@ get_bioembedsim <-
         if (is.null(object@enrichment_go_result)) {
           stop("Please perform pathway enrichment based on GO database at first.")
         } else {
-          go_info <-
-            object@enrichment_go_result@result %>%
+          filtered_ids <- object@enrichment_go_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.go) %>%
             dplyr::filter(Count > count.cutoff.go) %>%
-            dplyr::pull(ID) %>%
-            get_go_info()
+            dplyr::pull(ID)
+
+          # Check if any pathways meet the criteria
+          if (length(filtered_ids) == 0) {
+            go_info <- NA
+            message("No GO pathways meet the specified criteria (p_adjust < ",
+                    p.adjust.cutoff.go, " and Count > ", count.cutoff.go,
+                    "). go_info set to NA.")
+          } else {
+            go_info <- get_go_info(filtered_ids)
+          }
           all_text_info <- c(all_text_info, go_info)
         }
       }
@@ -193,12 +201,20 @@ get_bioembedsim <-
         if (is.null(object@enrichment_kegg_result)) {
           stop("Please perform pathway enrichment based on KEGG database at first.")
         } else {
-          kegg_info <-
-            object@enrichment_kegg_result@result %>%
+          filtered_ids <- object@enrichment_kegg_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.kegg) %>%
             dplyr::filter(Count > count.cutoff.kegg) %>%
-            dplyr::pull(ID) %>%
-            get_kegg_pathway_info()
+            dplyr::pull(ID)
+
+          # Check if any pathways meet the criteria
+          if (length(filtered_ids) == 0) {
+            kegg_info <- NA
+            message("No KEGG pathways meet the specified criteria (p_adjust < ",
+                    p.adjust.cutoff.kegg, " and Count > ", count.cutoff.kegg,
+                    "). kegg_info set to NA.")
+          } else {
+            kegg_info <- get_kegg_pathway_info(filtered_ids)
+          }
           all_text_info <- c(all_text_info, kegg_info)
         }
       }
@@ -207,12 +223,20 @@ get_bioembedsim <-
         if (is.null(object@enrichment_reactome_result)) {
           stop("Please perform pathway enrichment based on Reactome database at first.")
         } else {
-          reactome_info <-
-            object@enrichment_reactome_result@result %>%
+          filtered_ids <- object@enrichment_reactome_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.reactome) %>%
             dplyr::filter(Count > count.cutoff.reactome) %>%
-            dplyr::pull(ID) %>%
-            get_reactome_pathway_info()
+            dplyr::pull(ID)
+
+          # Check if any pathways meet the criteria
+          if (length(filtered_ids) == 0) {
+            reactome_info <- NA
+            message("No Reactome pathways meet the specified criteria (p_adjust < ",
+                    p.adjust.cutoff.reactome, " and Count > ", count.cutoff.reactome,
+                    "). reactome_info set to NA.")
+          } else {
+            reactome_info <- get_reactome_pathway_info(filtered_ids)
+          }
           all_text_info <- c(all_text_info, reactome_info)
         }
       }
@@ -226,14 +250,18 @@ get_bioembedsim <-
             object@enrichment_metkegg_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.metkegg) %>%
             dplyr::filter(mapped_number > count.cutoff.metkegg)
-          for (i in 1:nrow(metkegg_enrichment_result)) {
-            entry <- metkegg_enrichment_result[i,]
-            all_info <- list(
-              "id" = entry$pathway_id,
-              "term_name" = entry$pathway_name,
-              "term_definition" = entry$describtion
-            )
-            metkegg_info <- c(metkegg_info, list(all_info))
+          if (nrow(metkegg_enrichment_result) == 0) {
+            metkegg_info <- NA
+          } else {
+            for (i in 1:nrow(metkegg_enrichment_result)) {
+              entry <- metkegg_enrichment_result[i,]
+              all_info <- list(
+                "id" = entry$pathway_id,
+                "term_name" = entry$pathway_name,
+                "term_definition" = entry$describtion
+              )
+              metkegg_info <- c(metkegg_info, list(all_info))
+            }
           }
           all_text_info <- c(all_text_info, metkegg_info)
         }
@@ -248,18 +276,26 @@ get_bioembedsim <-
             object@enrichment_hmdb_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.hmdb) %>%
             dplyr::filter(mapped_number > count.cutoff.hmdb)
-          for (i in 1:nrow(hmdb_enrichment_result)) {
-            entry <- hmdb_enrichment_result[i,]
-            all_info <- list(
-              "id" = entry$pathway_id,
-              "term_name" = entry$pathway_name,
-              "term_definition" = entry$describtion
-            )
-            hmdb_info <- c(hmdb_info, list(all_info))
+          if (nrow(hmdb_enrichment_result) == 0) {
+            hmdb_info <- NA
+          } else {
+            for (i in 1:nrow(hmdb_enrichment_result)) {
+              entry <- hmdb_enrichment_result[i,]
+              all_info <- list(
+                "id" = entry$pathway_id,
+                "term_name" = entry$pathway_name,
+                "term_definition" = entry$describtion
+              )
+              hmdb_info <- c(hmdb_info, list(all_info))
+            }
           }
           all_text_info <- c(all_text_info, hmdb_info)
         }
       }
+    }
+
+    if (all(is.na(unlist(all_text_info)))) {
+      stop("No pathways found for embedding calculation. Try: (1) increasing p.adjust.cutoff, (2) reducing count.cutoff.")
     }
 
     all_combined_info <- combine_info(info = all_text_info)
