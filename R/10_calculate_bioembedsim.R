@@ -298,6 +298,10 @@ get_bioembedsim <-
       stop("No pathways found for embedding calculation. Try: (1) increasing p.adjust.cutoff, (2) reducing count.cutoff.")
     }
 
+    if (any(is.na(unlist(all_text_info)))) {
+      all_text_info <- all_text_info[!is.na(all_text_info)]
+    }
+
     all_combined_info <- combine_info(info = all_text_info)
 
 
