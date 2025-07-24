@@ -6,7 +6,7 @@
 \usage{
 \method{get_functional_modules}{functional_module}(
   object,
-  sim.cutoff = 0.5,
+  sim.cutoff = 0.55,
   measure_method = c("jaccard"),
   cluster_method = "louvain",
   path = "result",
@@ -17,11 +17,11 @@
 \arguments{
 \item{object}{A \code{functional_module} class object processed by \code{merge_pathways()} function.}
 
-\item{sim.cutoff}{Numeric, similarity cutoff for clustering (default: 0.5).}
+\item{sim.cutoff}{Numeric, similarity cutoff for clustering (default: 0.55).}
 
 \item{measure_method}{Character, similarity measure. Currently supports "jaccard" (default).}
 
-\item{cluster_method}{Character, clustering method options:
+\item{cluster_method}{Character, clustering method options (default: "louvain"):
 \itemize{
 \item \strong{Hierarchical} ‒ supply \code{"h_<agglom.method>"}, where
 \verb{<agglom.method>} is one of

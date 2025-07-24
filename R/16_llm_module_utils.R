@@ -30,6 +30,7 @@
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
+
 #' @keywords internal
 gpt_api_call <- function(
     messages,
@@ -53,6 +54,7 @@ gpt_api_call <- function(
   }
 
   # 2. URL
+
   api_url <- switch(
     api_provider,
     "openai"      = "https://api.openai.com/v1/chat/completions",

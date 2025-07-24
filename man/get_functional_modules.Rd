@@ -37,7 +37,7 @@ clustering methods.
 # For traditional pathway enrichment results
 enriched_modules <- get_functional_modules(
   object = my_functional_module_object,
-  sim.cutoff = 0.5,
+  sim.cutoff = 0.55,
   cluster_method = "louvain"
 )
 

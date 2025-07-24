@@ -20,13 +20,28 @@
 # llm_interpreted_functional_module <-
 #   llm_interpret_module(
 #     object = biotext_functional_modules,
-#     module_content_number_cutoff = 2,
+#     module_content_number_cutoff = 1,
 #     api_provider = "openai",
 #     api_key = api_key,
 #     llm_model = "gpt-4o-mini-2024-07-18",
 #     embedding_model = "text-embedding-3-small",
 #     orgdb = org.Hs.eg.db,
 #     embedding_output_dir = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/embedding_output/"
+#   )
+
+# ah <- AnnotationHub::AnnotationHub()
+# mf.orgdb <- ah[["AH119900"]] #| Taxonomy ID: 9541
+#
+# llm_interpreted_functional_module <-
+#   llm_interpret_module(
+#     object = functional_module_res,
+#     module_content_number_cutoff = 1,
+#     api_provider = "openai",
+#     api_key = api_key,
+#     llm_model = "gpt-4o-mini-2024-07-18",
+#     embedding_model = "text-embedding-3-small",
+#     orgdb = mf.orgdb,
+#     embedding_output_dir = "demo_data/embedding_output/"
 #   )
 #
 # llm_interpreted_functional_module <-
