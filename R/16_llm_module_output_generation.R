@@ -137,6 +137,14 @@ single_module_generation <- function(module_related_paper,
   }
 }
 
+#' Check JSON Format Output Generation
+#'
+#' Validates if a response string contains valid JSON with required 'module_name' and 'summary' fields.
+#'
+#' @param response Character string containing JSON response to validate
+#' @return Logical. TRUE if valid JSON with both required fields, FALSE otherwise
+#' @export
+
 check_json_format_output_generation <- function(response) {
   tryCatch({
     result <- jsonlite::fromJSON(response)
@@ -148,6 +156,14 @@ check_json_format_output_generation <- function(response) {
   })
   return(FALSE)
 }
+
+#' Modify Prompt for Format Output Generation
+#'
+#' Creates structured messages to convert GPT responses into required JSON format.
+#'
+#' @param gpt_response Character string containing original GPT response to convert
+#' @return List of message objects formatted for chat-based AI models
+#' @export
 
 modify_prompt_for_format_output_generation <- function(gpt_response) {
   messages <- list(

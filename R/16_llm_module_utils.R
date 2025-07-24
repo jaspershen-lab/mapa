@@ -30,7 +30,7 @@
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
+#' @export
 gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", max_tokens = 1000,
                          temperature = 0.7, retry_attempts = 3, api_provider = "openai", thinkingBudget = 0) {
   # 根据 API 提供者选择 URL
