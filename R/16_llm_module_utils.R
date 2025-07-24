@@ -31,17 +31,39 @@
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", max_tokens = 1000,
-                         temperature = 0.7, retry_attempts = 3, api_provider = "openai", thinkingBudget = 0) {
-  # 根据 API 提供者选择 URL
+gpt_api_call <- function(
+    messages,
+    api_key,
+    model = NULL,
+    max_tokens = 1000,
+    temperature = 0.7,
+    retry_attempts = 3,
+    api_provider = "openai",
+    thinkingBudget = 0
+) {
+  # 1. 设置默认模型
+  if (is.null(model)) {
+    model <- switch(
+      api_provider,
+      "openai"      = "gpt-4o-mini-2024-07-18",
+      "gemini"      = "gemini-2.5-flash",
+      "siliconflow" = "Qwen/Qwen3-32B",
+      stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
+    )
+  }
+
+  # 2. URL
   api_url <- switch(
     api_provider,
-    "openai" = "https://api.openai.com/v1/chat/completions",
-    "gemini" = paste0("https://generativelanguage.googleapis.com/v1beta/models/", model, ":generateContent?key=", api_key),
-    stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
+    "openai"      = "https://api.openai.com/v1/chat/completions",
+    "gemini"      = paste0("https://generativelanguage.googleapis.com/v1beta/models/",
+                           model, ":generateContent?key=", api_key),
+    "siliconflow" = "https://api.siliconflow.cn/v1/chat/completions",
+    stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
   )
-  request_body <- NULL
-  if (api_provider == "openai") {
+
+  # 3. 构建请求体
+  if (api_provider %in% c("openai", "siliconflow")) {
     request_body <- jsonlite::toJSON(list(
       model = model,
       messages = messages,
@@ -50,106 +72,92 @@ gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", ma
       n = 1
     ), auto_unbox = TRUE)
   } else if (api_provider == "gemini") {
-    # Gemini API 的 messages 结构与 OpenAI 不同
-    # 它需要一个 'contents' 数组，每个元素包含 'parts' 数组，其中包含 'text'
-    # 假设 messages 是一个列表，每个元素是 {role: ..., content: ...}
-    # 我们需要将其转换为 Gemini 的格式
     gemini_contents <- lapply(messages, function(msg) {
-      if (msg$role == "user") { # Gemini API user role 是 parts 中的 text
-        return(list(parts = list(list(text = msg$content))))
-      } else if (msg$role == "assistant") { # Gemini API assistant role 是 model 中的 text
-        return(list(role = "model", parts = list(list(text = msg$content))))
+      if (msg$role == "user") {
+        list(parts = list(list(text = msg$content)))
+      } else if (msg$role == "assistant") {
+        list(role = "model", parts = list(list(text = msg$content)))
       } else {
-        # 对于其他角色，可以根据实际情况进行处理或忽略
-        return(NULL)
+        NULL
       }
     })
-    # 过滤掉 NULL 元素（如果存在）
     gemini_contents <- gemini_contents[!sapply(gemini_contents, is.null)]
+
+    gen_cfg <- list(
+      maxOutputTokens = max_tokens,
+      temperature = temperature
+    )
+    if (thinkingBudget > 0) {
+      gen_cfg$thinkingConfig <- list(thinkingBudget = thinkingBudget)
+    }
 
     request_body <- jsonlite::toJSON(list(
       contents = gemini_contents,
-      generationConfig = list( # Gemini 的额外配置
-        maxOutputTokens = max_tokens,
-        temperature = temperature,
-        thinkingConfig = list(
-          thinkingBudget = thinkingBudget # 设置思考预算为 0
-        )
-      )
-    ), auto_unbox = TRUE, null = "null") # auto_unbox = TRUE 用于将单元素向量转换为标量，null = "null" 处理空值
-
+      generationConfig = gen_cfg
+    ), auto_unbox = TRUE, null = "null")
   } else {
-    stop("Invalid API provider. Request body cannot be constructed.")
+    stop("Invalid api_provider.")
   }
 
-  # 初始化重试计数
   attempt <- 0
-
-  # 循环重试逻辑
   repeat {
     attempt <- attempt + 1
-
-    # 使用 curl 发送请求
     handle <- curl::new_handle()
 
-    # Gemini API 的 key 直接在 URL 中，OpenAI 的 key 在 Authorization header 中
-    if (api_provider == "openai") {
-      curl::handle_setheaders(handle,
-                              Authorization = paste("Bearer", api_key),
-                              `Content-Type` = "application/json")
+    if (api_provider %in% c("openai", "siliconflow")) {
+      curl::handle_setheaders(
+        handle,
+        Authorization = paste("Bearer", api_key),
+        `Content-Type` = "application/json"
+      )
     } else if (api_provider == "gemini") {
       curl::handle_setheaders(handle, `Content-Type` = "application/json")
-      # API Key 已经在 URL 中，所以这里不需要 Authorization header
     }
 
-    curl::handle_setopt(handle,
-                        url = api_url,
-                        postfields = request_body,
-                        customrequest = "POST",
-                        timeout = 100)
+    curl::handle_setopt(
+      handle,
+      url = api_url,
+      postfields = request_body,
+      customrequest = "POST",
+      timeout = 100
+    )
 
-    response <- tryCatch({
-      curl::curl_fetch_memory(api_url, handle)
-    }, error = function(e) {
-      # 捕获可能的网络请求错误
-      message(paste("Attempt", attempt, "failed with error:", e$message))
-      NULL
-    })
+    response <- tryCatch(
+      curl::curl_fetch_memory(api_url, handle),
+      error = function(e) {
+        message(sprintf("Attempt %d failed: %s", attempt, e$message))
+        NULL
+      }
+    )
 
-    # 如果请求失败，判断是否需要重试
     if (is.null(response)) {
       if (attempt >= retry_attempts) {
-        message("Max retries reached, returning error response.")
+        message("Max retries reached, returning NULL.")
         return(NULL)
       }
-      Sys.sleep(1) # 短暂等待后重试
-      next
+      Sys.sleep(1); next
     }
 
-    # 检查 HTTP 响应状态
     if (response$status_code == 200) {
-      # 如果成功返回，解析 JSON 内容
-      response_content <- jsonlite::fromJSON(rawToChar(response$content))
-
-      # 根据不同的 API 提供者解析响应
+      resp <- jsonlite::fromJSON(rawToChar(response$content))
       llm_output <- switch(
         api_provider,
-        "openai" = response_content[["choices"]][["message"]][["content"]],
-        "gemini" = response_content[["candidates"]][["content"]][["parts"]][[1]][["text"]],
-        stop("Invalid API provider. Cannot parse response.")
+        "openai" = resp$choices[[1]]$message$content,
+        "siliconflow" = resp[["choices"]][["message"]][["content"]],
+        "gemini" = resp[["candidates"]][["content"]][["parts"]][[1]][["text"]],
+        stop("Unexpected provider in parsing.")
       )
       return(llm_output)
     } else {
-      # 打印错误信息
-      message(paste("Attempt", attempt, "failed with status code:", response$status_code,
-                    "and message:", rawToChar(response$content)))
-
-      # 如果超过最大重试次数，停止执行
+      message(sprintf(
+        "Attempt %d failed with status %s: %s",
+        attempt, response$status_code, rawToChar(response$content)
+      ))
       if (attempt >= retry_attempts) {
-        warning("Failed to call LLM API after ", retry_attempts, " attempts. Last error status code: ", response$status_code)
+        warning("Failed after ", retry_attempts, " attempts.")
         return(NULL)
       }
-      Sys.sleep(1) # 短暂等待后重试
+      Sys.sleep(1)
     }
   }
 }
