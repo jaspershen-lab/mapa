@@ -6,7 +6,7 @@
 \usage{
 \method{get_functional_modules}{list}(
   object,
-  sim.cutoff = 0.5,
+  sim.cutoff = 0.55,
   cluster_method = "louvain",
   save_to_local = FALSE,
   path = "result",
@@ -16,9 +16,9 @@
 \arguments{
 \item{object}{A \code{list} containing "enriched_pathway" and "sim_matrix" components.}
 
-\item{sim.cutoff}{Numeric, similarity cutoff for clustering (default: 0.5).}
+\item{sim.cutoff}{Numeric, similarity cutoff for clustering (default: 0.55).}
 
-\item{cluster_method}{Character, clustering method options:
+\item{cluster_method}{Character, clustering method options (default: "louvain"):
 \itemize{
 \item \strong{Hierarchical} ‒ supply \code{"h_<agglom.method>"}, where
 \verb{<agglom.method>} is one of

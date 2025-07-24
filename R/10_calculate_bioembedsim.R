@@ -375,7 +375,43 @@ get_bioembedsim <-
 
 # Step1: Extract text info =====
 ## 1.1 Extract GO info (go_id, annotated gene IDs, name, definition, PMID)====
-### test: GO:0031954 -> 0PMID; GO:1902074 -> 1 PMID; GO:0000001 -> 2PMID
+
+#' Extract Gene Ontology (GO) Information
+#'
+#' Retrieves basic information for a list of Gene Ontology (GO) terms including
+#' GO ID, term name, and definition using the QuickGO API.
+#'
+#' @param go_ids A character vector of GO term identifiers (e.g., "GO:0031954",
+#'   "GO:1902074"). Each ID should follow the standard GO format.
+#'
+#' @return A list where each element corresponds to a GO term and contains:
+#'   \describe{
+#'     \item{id}{Character. The GO term identifier}
+#'     \item{term_name}{Character. The name/label of the GO term}
+#'     \item{term_definition}{Character. The definition text of the GO term}
+#'   }
+#'   Returns NULL for terms that cannot be retrieved from the API.
+#'
+#' @details The function processes GO IDs in chunks of 100 to avoid API limits.
+#'   It uses the QuickGO REST API (https://www.ebi.ac.uk/QuickGO/) to retrieve
+#'   term information. The function includes retry logic (up to 3 attempts) to
+#'   handle temporary API failures.
+#'
+#' @examples
+#' \dontrun{
+#' # Get information for multiple GO terms
+#' go_terms <- c("GO:0031954", "GO:1902074", "GO:0000001")
+#' go_info <- get_go_info(go_terms)
+#'
+#' # Access information for the first term
+#' go_info[[1]]$term_name
+#' go_info[[1]]$term_definition
+#' }
+#'
+#' @importFrom httr2 request req_headers req_retry req_perform resp_body_json
+#' @importFrom purrr map
+#'
+#' @export
 
 get_go_info <- function(go_ids) {
   #### Generate GO terms and annotated Entrez Gene identifiers dict
@@ -449,7 +485,23 @@ get_go_info <- function(go_ids) {
   return(go_info)
 }
 
-# Get core information about a list of terms based on their ids
+#' QuickGO API Interface
+#'
+#' A helper function that interfaces with the QuickGO REST API to retrieve
+#' Gene Ontology term information.
+#'
+#' @param go_ids A character vector of GO term identifiers to query.
+#'
+#' @return A list containing the parsed JSON response from the QuickGO API,
+#'   or NULL if the request fails after retries.
+#'
+#' @details This function constructs the appropriate URL for the QuickGO API,
+#'   sends the request with proper headers, and includes retry logic for
+#'   robustness. It's designed to be called internally by \code{get_go_info()}.
+#'
+#' @importFrom httr2 request req_headers req_retry req_perform resp_body_json
+#' @export
+
 quickgo_api <- function(go_ids) {
   url <- paste0("https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/", paste(go_ids, collapse = ","))
   tryCatch(
@@ -476,6 +528,45 @@ quickgo_api <- function(go_ids) {
 }
 
 ## 1.2 Extract KEGG info (pathway_id, name, definition(description), PMID) ====
+#' Extract KEGG Pathway Information
+#'
+#' Retrieves basic information for a list of KEGG pathway identifiers including
+#' pathway ID, name, and description using the KEGG REST API via KEGGREST package.
+#'
+#' @param kegg_ids A character vector of KEGG pathway identifiers (e.g., "hsa04010",
+#'   "hsa04110"). Should follow standard KEGG pathway naming conventions.
+#'
+#' @return A list where each element corresponds to a KEGG pathway and contains:
+#'   \describe{
+#'     \item{id}{Character. The KEGG pathway identifier}
+#'     \item{term_name}{Character. The pathway name (species suffix removed)}
+#'     \item{term_definition}{Character. The pathway description}
+#'   }
+#'   Returns NULL for pathways that cannot be retrieved from the API.
+#'
+#' @details The function processes KEGG IDs in chunks of 10 to avoid API limits.
+#'   It first attempts batch processing for each chunk. If batch processing fails,
+#'   it falls back to processing each ID individually with appropriate error handling.
+#'   Species-specific suffixes (e.g., "- Homo sapiens (human)") are automatically
+#'   removed from pathway names for cleaner output.
+#'
+#' @examples
+#' \dontrun{
+#' # Get information for KEGG pathways
+#' kegg_pathways <- c("hsa04010", "hsa04110", "hsa04210")
+#' kegg_info <- get_kegg_pathway_info(kegg_pathways)
+#'
+#' # Access pathway information
+#' kegg_info[[1]]$term_name
+#' kegg_info[[1]]$term_definition
+#' }
+#'
+#' @importFrom KEGGREST keggGet
+#' @importFrom purrr map
+#' @importFrom stringr str_match
+#'
+#' @export
+
 get_kegg_pathway_info <- function(kegg_ids){
   chunk_size <- 10
   chunks <- split(kegg_ids, ceiling(seq_along(kegg_ids) / chunk_size))
@@ -592,6 +683,41 @@ get_kegg_pathway_info <- function(kegg_ids){
 }
 
 ## 1.3 Extract Reactome info (pathway_id, name, definition, PMID) ====
+
+#' Extract Reactome Pathway Information
+#'
+#' Retrieves basic information for a list of Reactome pathway identifiers including
+#' pathway ID, name, and definition using the Reactome API via rbioapi package.
+#'
+#' @param reactome_ids A character vector of Reactome pathway stable identifiers
+#'   (e.g., "R-HSA-168256", "R-HSA-372790"). Should follow standard Reactome
+#'   stable ID format.
+#'
+#' @return A list where each element corresponds to a Reactome pathway and contains:
+#'   \describe{
+#'     \item{id}{Character. The Reactome stable identifier}
+#'     \item{term_name}{Character. The pathway display name}
+#'     \item{term_definition}{Character. The pathway summation text with HTML tags removed}
+#'   }
+#'   Returns NULL for pathways that cannot be retrieved from the API.
+#'
+#'
+#' @examples
+#' \dontrun{
+#' # Get information for Reactome pathways
+#' reactome_pathways <- c("R-HSA-168256", "R-HSA-372790")
+#' reactome_info <- get_reactome_pathway_info(reactome_pathways)
+#'
+#' # Access pathway information
+#' reactome_info[[1]]$term_name
+#' reactome_info[[1]]$term_definition
+#' }
+#'
+#' @importFrom rbioapi rba_reactome_query
+#' @importFrom purrr map
+#'
+#' @export
+
 get_reactome_pathway_info <- function(reactome_ids) {
   #### Initialize gene-related variables
   reactome2egs <- NULL
