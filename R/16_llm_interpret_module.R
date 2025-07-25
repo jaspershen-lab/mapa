@@ -14,6 +14,20 @@
 #     api_key = api_key,
 #     embedding_output_dir = "demo_data/debug_yijiang/embedding_ouput/"
 # )
+# load("demo_data/test.rda")
+# module_content_number_cutoff = 0
+# api_provider = "openai"
+# llm_model = "gpt-4o-mini-2024-07-18"
+# embedding_model = "text-embedding-3-small"
+# orgdb = org.Hs.eg.db
+# embedding_output_dir = "demo_data/debug_yijiang/embedding_ouput/"
+# test_llm_met <- llm_interpret_module(object = object,
+#                                      module_content_number_cutoff = 0,
+#                                      api_key = api_key,
+#                                      embedding_output_dir = "demo_data/debug_yijiang/embedding_ouput/")test_llm_met <- llm_interpret_module(object = object,
+#                                      module_content_number_cutoff = 0,
+#                                      api_key = api_key,
+#                                      embedding_output_dir = "demo_data/debug_yijiang/embedding_ouput/")
 
 # Gene
 # load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/biotext_functional_modules.rda")

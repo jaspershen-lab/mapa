@@ -116,8 +116,12 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
     pathway_query <- paste(pathway_names, collapse = " OR ")
 
     ## Perform PubMed search with query (met_name AND pathway_names)
-    if (is.na(met_names)) {
-      met_name_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    if (length(met_names) == 1) {
+      if (is.na(met_names)) {
+        met_name_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      } else {
+        met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      }
     } else {
       met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
     }
