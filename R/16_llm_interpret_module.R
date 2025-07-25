@@ -24,9 +24,6 @@
 # test_llm_met <- llm_interpret_module(object = object,
 #                                      module_content_number_cutoff = 0,
 #                                      api_key = api_key,
-#                                      embedding_output_dir = "demo_data/debug_yijiang/embedding_ouput/")test_llm_met <- llm_interpret_module(object = object,
-#                                      module_content_number_cutoff = 0,
-#                                      api_key = api_key,
 #                                      embedding_output_dir = "demo_data/debug_yijiang/embedding_ouput/")
 
 # Gene

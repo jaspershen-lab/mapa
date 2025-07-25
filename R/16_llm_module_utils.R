@@ -144,7 +144,7 @@ gpt_api_call <- function(
       resp <- jsonlite::fromJSON(rawToChar(response$content))
       llm_output <- switch(
         api_provider,
-        "openai" = resp$choices[[1]]$message$content,
+        "openai" = resp$choices$message$content,
         "siliconflow" = resp[["choices"]][["message"]][["content"]],
         "gemini" = resp[["candidates"]][["content"]][["parts"]][[1]][["text"]],
         stop("Unexpected provider in parsing.")

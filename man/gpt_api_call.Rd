@@ -7,7 +7,7 @@
 gpt_api_call(
   messages,
   api_key,
-  model = "gpt-4o-mini-2024-07-18",
+  model = NULL,
   max_tokens = 1000,
   temperature = 0.7,
   retry_attempts = 3,
@@ -50,3 +50,4 @@ in the code if necessary.
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }
+\keyword{internal}
