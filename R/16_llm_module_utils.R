@@ -31,7 +31,7 @@
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 
-#' @keywords internal
+#' @export
 gpt_api_call <- function(
     messages,
     api_key,
