@@ -123,6 +123,10 @@ merge_pathways_bioembedsim <-
       dplyr::mutate(across(c(from, to), as.character)) %>%
       dplyr::filter(from < to)
 
+    if (nrow(edge_data) == 0) {
+      stop("Only got one enriched pathways. Must have n >= 2 pathways to cluster.")
+    }
+
     ## Collect node data
     result <- data.frame()
 
@@ -211,93 +215,109 @@ merge_pathways_bioembedsim <-
              # Network-based methods
              "louvain" = {
                filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
-               if (nrow(filtered_edges) == 0) return(data.frame(node = node_data$node,
-                                                                module = paste("Functional_module", "1", sep = "_")))
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_louvain(graph_obj, weights = igraph::E(graph_obj)$sim)
 
-               graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
-                                                          vertices = node_data)
-               comm <- igraph::cluster_louvain(graph_obj, weights = igraph::E(graph_obj)$sim)
-
-               data.frame(node = node_data$node,
-                          module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
              },
              "walktrap" = {
                filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
-               if (nrow(filtered_edges) == 0) return(data.frame(node = node_data$node,
-                                                                module = paste("Functional_module", "1", sep = "_")))
-
-               graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
-                                                          vertices = node_data)
-               comm <- igraph::cluster_walktrap(graph_obj, weights = igraph::E(graph_obj)$sim)
-               data.frame(node = node_data$node,
-                          module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_walktrap(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
              },
              "infomap" = {
                filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
-               if (nrow(filtered_edges) == 0) return(data.frame(node = node_data$node,
-                                                                module = paste("Functional_module", "1", sep = "_")))
-
-               graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
-                                                          vertices = node_data)
-               comm <- igraph::cluster_infomap(graph_obj, e.weights = igraph::E(graph_obj)$sim)
-               data.frame(node = node_data$node,
-                          module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_infomap(graph_obj, e.weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
              },
              "edge_betweenness" = {
                # Use distance weights (1 - similarity) for edge betweenness
                filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ] |> dplyr::mutate(sim = 1 - sim)
-               if (nrow(filtered_edges) == 0) return(data.frame(node = node_data$node,
-                                                                module = paste("Functional_module", "1", sep = "_")))
-
-               graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
-                                                          vertices = node_data)
-               comm <- igraph::cluster_edge_betweenness(graph_obj, weights = igraph::E(graph_obj)$sim)
-               data.frame(node = node_data$node,
-                          module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_edge_betweenness(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
              },
              "fast_greedy" = {
                filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
-               if (nrow(filtered_edges) == 0) return(data.frame(node = node_data$node,
-                                                                module = paste("Functional_module", "1", sep = "_")))
-
-               graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
-                                                          vertices = node_data)
-               comm <- igraph::cluster_fast_greedy(graph_obj, weights = igraph::E(graph_obj)$sim)
-               data.frame(node = node_data$node,
-                          module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_fast_greedy(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
              },
              "label_prop" = {
                filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
-               if (nrow(filtered_edges) == 0) return(data.frame(node = node_data$node,
-                                                                module = paste("Functional_module", "1", sep = "_")))
-
-               graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
-                                                          vertices = node_data)
-               comm <- igraph::cluster_label_prop(graph_obj, weights = igraph::E(graph_obj)$sim)
-               data.frame(node = node_data$node,
-                          module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_label_prop(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
              },
              "leading_eigen" = {
                filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
-               if (nrow(filtered_edges) == 0) return(data.frame(node = node_data$node,
-                                                                module = paste("Functional_module", "1", sep = "_")))
-
-               graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
-                                                          vertices = node_data)
-               comm <- igraph::cluster_leading_eigen(graph_obj, weights = igraph::E(graph_obj)$sim)
-               data.frame(node = node_data$node,
-                          module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_leading_eigen(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
              },
              "optimal" = {
                filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
-               if (nrow(filtered_edges) == 0) return(data.frame(node = node_data$node,
-                                                                module = paste("Functional_module", "1", sep = "_")))
-
-               graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
-                                                          vertices = node_data)
-               comm <- igraph::cluster_optimal(graph_obj, weights = igraph::E(graph_obj)$sim)
-               data.frame(node = node_data$node,
-                          module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_optimal(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
              }
       )
 
