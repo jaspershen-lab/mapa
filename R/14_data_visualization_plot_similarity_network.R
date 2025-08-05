@@ -461,6 +461,10 @@ plot_similarity_network <-
 
     lay <- ggraph::create_layout(graph_data, layout = "fr")
 
+    colors <- colorRampPalette(c('#0ca9ce', '#78cfe5', '#c6ecf1', '#ff6f81', '#ff9c8f', '#ffc2c0','#d386bf',
+                                 '#cdb1d2', '#fae6f0', '#eb6fa6', '#ff88b5', '#00b1a5',"#ffa68f","#ffca75","#97bc83","#acd295",
+                                 "#00ada1","#009f93","#ace2da","#448c99","#00b3bc","#b8d8c9","#db888e","#e397a4","#ead0c7",
+                                 "#8f9898","#bfcfcb"))(length(unique(lay$module)))
     plot <-
       ggraph::ggraph(lay) +
       ggraph::geom_edge_link(
@@ -476,7 +480,8 @@ plot_similarity_network <-
         alpha = 1,
         show.legend = TRUE
       ) +
-      guides(fill = guide_legend(ncol = 1)) +
+      # guides(fill = guide_legend(ncol = 1)) +
+      scale_fill_manual(values = colors) +
       ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
       scale_size_continuous(range = c(1, 7)) +
       labs(size = if(analysis_type == "enrich_pathway") "-log10(FDR adjusted P-values)" else "abs(NES)") +
