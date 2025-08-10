@@ -244,8 +244,7 @@ plot_relationship_network <-
         include_modules = include_modules,
         include_pathways = include_pathways,
         include_molecules = include_molecules,
-        include_variables = include_variables,
-        variable_order = variable_order
+        include_variables = include_variables
       )
 
     g <- total_graph$graph_data
