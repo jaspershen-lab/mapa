@@ -453,36 +453,36 @@ plot_module_info <-
 
     lay <- ggraph::create_layout(graph_data, layout = "fr")
 
-    plot1 <-
-      ggraph::ggraph(lay) +
-      ggraph::geom_edge_link(
-        aes(width = sim),
-        color = "black",
-        alpha = 1,
-        show.legend = TRUE
-      ) +
-      ggraph::geom_node_point(
-        aes(fill = if(analysis_type == "enrich_pathway") -log(p_adjust, 10) else NES,
-            size = Count),
-        shape = 21,
-        alpha = 1,
-        show.legend = TRUE
-      ) +
-      guides(fill = guide_legend(ncol = 1)) +
-      ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
-      scale_size_continuous(range = c(3, 10)) +
-      labs(fill = if(analysis_type == "enrich_pathway") "-log10(FDR adjusted P-values)" else "NES") +
-      ggraph::theme_graph() +
-      theme(
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.background = element_rect(fill = "transparent", color = NA),
-        legend.position = "left",
-        legend.background = element_rect(fill = "transparent", color = NA),
-        plot.title = element_text(hjust = 0.5)
-      ) +
-      ggtitle(plot_title)
-
     if (level == "module") {
+      plot1 <-
+        ggraph::ggraph(lay) +
+        ggraph::geom_edge_link(
+          aes(width = sim),
+          color = "black",
+          alpha = 1,
+          show.legend = TRUE
+        ) +
+        ggraph::geom_node_point(
+          aes(fill = if(analysis_type == "enrich_pathway") -log(p_adjust, 10) else NES,
+              size = Count),
+          shape = 21,
+          alpha = 1,
+          show.legend = TRUE
+        ) +
+        guides(fill = guide_legend(ncol = 1)) +
+        ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
+        scale_size_continuous(range = c(3, 10)) +
+        labs(fill = if(analysis_type == "enrich_pathway") "-log10(FDR adjusted P-values)" else "NES") +
+        ggraph::theme_graph() +
+        theme(
+          plot.background = element_rect(fill = "transparent", color = NA),
+          panel.background = element_rect(fill = "transparent", color = NA),
+          legend.position = "left",
+          legend.background = element_rect(fill = "transparent", color = NA),
+          plot.title = element_text(hjust = 0.5)
+        ) +
+        ggtitle(plot_title)
+
       if (query_type == "gene") {
         plot1 <-
           plot1 +
@@ -505,10 +505,44 @@ plot_module_info <-
     }
 
     if (level == "functional_module") {
+      plot1 <-
+        ggraph::ggraph(lay) +
+        ggraph::geom_edge_link(
+          aes(width = sim),
+          color = "grey",
+          alpha = 1,
+          show.legend = TRUE
+        ) +
+        ggraph::geom_node_point(
+          aes(fill = if(analysis_type == "enrich_pathway") -log(p_adjust, 10) else NES,
+              size = Count, shape = database),
+          # shape = 21,
+          alpha = 1,
+          show.legend = TRUE
+        ) +
+        ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
+        scale_fill_gradientn(colors = c("#4576b6", "#f8f8c7", "#d93127")) +
+        # guides(fill = guide_legend(ncol = 1)) +
+        scale_shape_manual(values = c("GO" = 21,
+                                      "KEGG" = 24,
+                                      "Reactome" = 22,
+                                      "HMDB" = 21)) +
+        scale_size_continuous(range = c(3, 10)) +
+        labs(fill = if(analysis_type == "enrich_pathway") "-log10(FDR adjusted P-values)" else "NES") +
+        ggraph::theme_graph() +
+        theme(
+          plot.background = element_rect(fill = "transparent", color = NA),
+          panel.background = element_rect(fill = "transparent", color = NA),
+          legend.position = "left",
+          legend.background = element_rect(fill = "transparent", color = NA),
+          plot.title = element_text(hjust = 0.5)
+        )
+        # ggtitle(plot_title)
+
       if (llm_text) {
         node_tbl  <- as_tibble(lay)
         centroids <- node_tbl |>
-          summarise(cx = mean(x), cy = mean(y)) |>
+          summarise(cx = mean(x), cy = max(y)) |>
           dplyr::mutate(module = node_tbl$module[1])
         module_name_df <- object@merged_module$functional_module_result |> dplyr::select(module, llm_module_name)
         centroids <- centroids |> dplyr::left_join(module_name_df, by = "module")
@@ -520,30 +554,32 @@ plot_module_info <-
             aes(x = cx,
                 y = cy,
                 label = stringr::str_wrap(llm_module_name, 30)),
+            color = "red",
             check_overlap = TRUE,
             size = 3,
             repel = TRUE
-          )
+          ) +
+          ggtitle(plot_title)
+      }
+
+      if (sim_method == "get_bioembedsim()") {
+        plot1 <-
+          plot1 +
+          ggraph::geom_node_text(aes(x = x,
+                                     y = y,
+                                     label = stringr::str_wrap(if (query_type == "metabolite") pathway_name else Description, width = 30)),
+                                 check_overlap = TRUE,
+                                 size = 3,
+                                 repel = TRUE)  # Use repel to avoid overlapping
       } else {
-        if (sim_method == "get_bioembedsim()") {
-          plot1 <-
-            plot1 +
-            ggraph::geom_node_text(aes(x = x,
-                                       y = y,
-                                       label = stringr::str_wrap(if (query_type == "metabolite") pathway_name else Description, width = 30)),
-                                   check_overlap = TRUE,
-                                   size = 3,
-                                   repel = TRUE)  # Use repel to avoid overlapping
-        } else {
-          plot1 <-
-            plot1 +
-            ggraph::geom_node_text(aes(x = x,
-                                       y = y,
-                                       label = stringr::str_wrap(module_annotation, width = 30)),
-                                   check_overlap = TRUE,
-                                   size = 3,
-                                   repel = TRUE)  # Use repel to avoid overlapping
-        }
+        plot1 <-
+          plot1 +
+          ggraph::geom_node_text(aes(x = x,
+                                     y = y,
+                                     label = stringr::str_wrap(module_annotation, width = 30)),
+                                 check_overlap = TRUE,
+                                 size = 3,
+                                 repel = TRUE)  # Use repel to avoid overlapping
       }
     }
 
