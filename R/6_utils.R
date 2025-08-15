@@ -1337,7 +1337,7 @@ unify_id_internal <- function(ids = NULL,
           return(variable_info$ensembl[match(x, variable_info$uniprot)])
         }
 
-        if (stringr::str_detect(x, "^\\d+$")) {
+        if (x %in% variable_info$entrezid) {
           return(variable_info$ensembl[match(x, variable_info$entrezid)])
         }
       })
