@@ -89,8 +89,8 @@
 #'   embeddings. Default is `"text-embedding-3-small"`.
 #' @param api_key Character string. API key for OpenAI or other embedding service.
 #'   Currently, only OpenAI API keys are supported.
-#' @param api_provider Character string. The API provider to use, either `"openai"`
-#'   or `"gemini"`. Default is `"openai"`.
+#' @param api_provider Character string. The API provider to use, one of `"openai"`,
+#'   `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param embedding_output_dir Character string. Directory path where embedding
 #'   results will be saved. This directory will be cleared before processing.
 #' @param local_corpus_dir Character string. Optional directory path containing
