@@ -21,7 +21,7 @@
 # load("demo_data/updated_object_results_for_genes_ora/ora_enriched_pathways.rda")
 # setwd("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/")
 # openai_semantic_sim_matrix <-
-#   get_bioembedsim(object = enrich_pathway_res,
+#   get_bioembedsim(object = enriched_pathways,
 #                   api_provider = "openai",
 #                   text_embedding_model = "text-embedding-3-small",
 #                   api_key = api_key,
@@ -191,6 +191,7 @@ get_bioembedsim <-
                     p.adjust.cutoff.go, " and Count > ", count.cutoff.go,
                     "). go_info set to NA.")
           } else {
+            cat("Collecting pathway text information for GO terms from Gene Ontology database...")
             go_info <- get_go_info(filtered_ids)
           }
           all_text_info <- c(all_text_info, go_info)
@@ -213,6 +214,7 @@ get_bioembedsim <-
                     p.adjust.cutoff.kegg, " and Count > ", count.cutoff.kegg,
                     "). kegg_info set to NA.")
           } else {
+            cat("Collecting pathway text information for KEGG pathways from KEGG database...")
             kegg_info <- get_kegg_pathway_info(filtered_ids)
           }
           all_text_info <- c(all_text_info, kegg_info)
@@ -235,6 +237,7 @@ get_bioembedsim <-
                     p.adjust.cutoff.reactome, " and Count > ", count.cutoff.reactome,
                     "). reactome_info set to NA.")
           } else {
+            cat("Collecting pathway text information for Reactome pathways from Reactome database...")
             reactome_info <- get_reactome_pathway_info(filtered_ids)
           }
           all_text_info <- c(all_text_info, reactome_info)
@@ -313,6 +316,7 @@ get_bioembedsim <-
 
 
     ## Calculate pairwise cosine similarity
+    cat("Calculating cosine similairty ...")
     sim_matrix <- calculate_cosine_sim(m = embedding_matrix)
 
     ## Store parameters
