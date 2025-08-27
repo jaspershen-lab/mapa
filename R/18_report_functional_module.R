@@ -235,6 +235,7 @@ report_functional_module <-
       similarity_network_go <-
         plot_similarity_network(object = object,
                                 level = "module",
+                                degree_cutoff = 1,
                                 database = "go") +
         labs(title = "GO Modules")
 
@@ -255,6 +256,7 @@ report_functional_module <-
       similarity_network_kegg <-
         plot_similarity_network(object = object,
                                 level = "module",
+                                degree_cutoff = 1,
                                 database = "kegg") +
         labs(title = "KEGG Modules")
 
@@ -275,6 +277,7 @@ report_functional_module <-
       similarity_network_reactome <-
         plot_similarity_network(object = object,
                                 level = "module",
+                                degree_cutoff = 1,
                                 database = "reactome") +
         labs(title = "Reactome Modules")
 
@@ -295,6 +298,7 @@ report_functional_module <-
       similarity_network_hmdb <-
         plot_similarity_network(object = object,
                                 level = "module",
+                                degree_cutoff = 1,
                                 database = "hmdb") +
         labs(title = "HMDB Modules")
 
@@ -315,6 +319,7 @@ report_functional_module <-
       similarity_network_metkegg <-
         plot_similarity_network(object = object,
                                 level = "module",
+                                degree_cutoff = 1,
                                 database = "metkegg") +
         labs(title = "KEGG Modules")
 
@@ -334,6 +339,7 @@ report_functional_module <-
     similarity_network_function_module <-
       plot_similarity_network(object = object,
                               level = "functional_module",
+                              degree_cutoff = 1,
                               llm_text = llm_text) +
       labs(title = "Functional Modules")
 

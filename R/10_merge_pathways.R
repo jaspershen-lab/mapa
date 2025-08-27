@@ -18,9 +18,11 @@
 #   database = c("go", "kegg", "reactome"),
 #   sim.cutoff.go = 0.5,
 #   sim.cutoff.kegg = 0.5,
-#   measure.method.go = "Sim_Lin_1998",
+#   sim.cutoff.reactome = 0.5,
+#   measure.method.go = "Sim_XGraSM_2013",
 #   go.orgdb = org.Hs.eg.db,
-#   measure.method.kegg = "jaccard"
+#   measure.method.kegg = "jaccard",
+#   measure.method.reactome = "jaccard"
 # )
 # save(merged_pathways, file = "merged_pathways.rda")
 #
