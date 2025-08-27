@@ -26,9 +26,11 @@
 # )
 #
 # plot_similarity_network(
-#   object = llm_interpreted_enriched_functional_module,
-#   level = "functional_module",
-#   degree_cutoff = 0,
+#   object = llm_interpreted_functional_module,
+#   level = "module",
+#   degree_cutoff = 3,
+#   database = c("reactome"),
+#   text = FALSE,
 #   llm_text = TRUE,
 #   text_all = FALSE
 # )

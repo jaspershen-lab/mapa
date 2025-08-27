@@ -305,7 +305,7 @@ merge_modules <-
         module_result_kegg <-
           object@merged_pathway_kegg$module_result %>%
           dplyr::arrange(dplyr::desc(abs(NES))) %>%
-          dplyr::mutate(database = "KEGG") %>%
+          dplyr::mutate(database = "metKEGG") %>%
           dplyr::select(
             module_annotation,
             module,
@@ -334,13 +334,13 @@ merge_modules <-
         module_result_metkegg <-
           object@merged_pathway_metkegg$module_result %>%
           dplyr::arrange(p_adjust) %>%
-          dplyr::mutate(database = "KEGG") %>%
+          dplyr::mutate(database = "metKEGG") %>%
           dplyr::filter(!is.na(module_annotation))
       } else{
         module_result_kegg <-
           object@merged_pathway_kegg$module_result %>%
           dplyr::arrange(dplyr::desc(abs(NES))) %>%
-          dplyr::mutate(database = "KEGG") %>%
+          dplyr::mutate(database = "metKEGG") %>%
           dplyr::select(
             module_annotation,
             module,
