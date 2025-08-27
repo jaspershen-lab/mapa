@@ -15,7 +15,7 @@
 #   functional_module_annotation
 # object <- enriched_functional_module_met
 #
-# object <- llm_interpreted_enriched_functional_module
+# object <- llm_interpreted_functional_module
 # object@merged_module$functional_module_result <-
 #   head(object@merged_module$functional_module_result, 2)
 #
@@ -1232,17 +1232,23 @@ create_relation_network <-
 
     ## 6. module vs molecule ====
     if (analysis_type == "do_gsea" && include_modules) {
-      object@merged_pathway_go$module_result <-
-        object@merged_pathway_go$module_result %>%
-        dplyr::mutate(geneID = core_enrichment)
+      if (!is.null(object@merged_pathway_go$module_result)) {
+        object@merged_pathway_go$module_result <-
+          object@merged_pathway_go$module_result %>%
+          dplyr::mutate(geneID = core_enrichment)
+      }
 
-      object@merged_pathway_kegg$module_result <-
-        object@merged_pathway_kegg$module_result %>%
-        dplyr::mutate(geneID = core_enrichment)
+      if (!is.null(object@merged_pathway_kegg$module_result)) {
+        object@merged_pathway_kegg$module_result <-
+          object@merged_pathway_kegg$module_result %>%
+          dplyr::mutate(geneID = core_enrichment)
+      }
 
-      object@merged_pathway_reactome$module_result <-
-        object@merged_pathway_reactome$module_result %>%
-        dplyr::mutate(geneID = core_enrichment)
+      if (!is.null(object@merged_pathway_reactome$module_result)) {
+        object@merged_pathway_reactome$module_result <-
+          object@merged_pathway_reactome$module_result %>%
+          dplyr::mutate(geneID = core_enrichment)
+      }
     }
 
     edge_data6 <-
