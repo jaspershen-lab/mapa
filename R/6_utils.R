@@ -1532,3 +1532,62 @@ calculate_silhouette <- function(sim_matrix, clusters) {
     return(NA_real_)
   })
 }
+
+
+#' Parse tidymass_parameter Object to Data Frame
+#'
+#' This function takes a `tidymass_parameter` object and converts it into a data frame for easier manipulation and reporting.
+#' This is a modified version of the original function that excludes the "by" parameter from the do_gsea() output.
+#'
+#' @param object A `tidymass_parameter` object to be parsed.
+#'
+#' @return A data frame containing the package name, function name, parameters (excluding "by" for gsea output), and the time when the function was called.
+#'
+#' @note This function excludes parameters named "by" from the final output, unlike the original implementation.
+#'
+#' @references
+#' Original function adapted from the massdataset package:
+#' Shen, X., Yan, H., Wang, C. et al. TidyMass an object-oriented reproducible analysis framework for LC–MS data. Nat Commun 13, 4365 (2022).
+#' Author: Xiaotao Shen \email{shenxt1990@@outlook.com}
+#'
+#' @export
+
+mapa_parse_tidymass_parameter <-
+  function(object) {
+    if (!is(object, class2 = "tidymass_parameter")) {
+      stop("only support tidymass_parameter class.\n")
+    }
+
+    if (is.null(names(object@parameter))) {
+      names(object@parameter) = paste("parameter",
+                                      seq_along(object@parameter),
+                                      sep = "_")
+    }
+
+    result <-
+      data.frame(
+        pacakge_name = object@pacakge_name,
+        function_name = object@function_name,
+        parameter = purrr::map2(names(object@parameter),
+                                object@parameter,
+                                function(name, value) {
+                                  if (name == "by") {
+                                    return(NULL)
+                                  }
+                                  if (length(value) > 5) {
+                                    value = head(value, 5)
+                                    value = paste(c(value, "..."), collapse = ',')
+                                  } else{
+                                    value = paste(value, collapse = ',')
+                                  }
+                                  paste(name, value, sep = ":")
+                                }) %>%
+          purrr::compact() %>%
+          unlist(),
+        time = object@time,
+        check.names = FALSE
+      )
+
+    return(result)
+
+  }

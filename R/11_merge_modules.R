@@ -300,7 +300,8 @@ merge_modules <-
           object@merged_pathway_hmdb$module_result %>%
           dplyr::arrange(p_adjust) %>%
           dplyr::mutate(database = "HMDB") %>%
-          dplyr::filter(!is.na(module_annotation))
+          dplyr::filter(!is.na(module_annotation)) %>%
+          dplyr::select(-module_content_number)
       } else{
         module_result_kegg <-
           object@merged_pathway_kegg$module_result %>%
@@ -335,7 +336,8 @@ merge_modules <-
           object@merged_pathway_metkegg$module_result %>%
           dplyr::arrange(p_adjust) %>%
           dplyr::mutate(database = "metKEGG") %>%
-          dplyr::filter(!is.na(module_annotation))
+          dplyr::filter(!is.na(module_annotation)) %>%
+          dplyr::select(-module_content_number)
       } else{
         module_result_kegg <-
           object@merged_pathway_kegg$module_result %>%

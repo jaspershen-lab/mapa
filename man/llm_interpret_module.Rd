@@ -71,8 +71,8 @@ filtering for relevance. Default is \code{5}.}
 \item{output_prompt}{Logical. Whether to include the LLM prompt in the final
 annotation results. Default is \code{TRUE}.}
 
-\item{api_provider}{Character string. The API provider to use, either \code{"openai"}
-or \code{"gemini"}. Default is \code{"openai"}.}
+\item{api_provider}{Character string. The API provider to use, one of \code{"openai"},
+\code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 
 \item{thinkingBudget}{Integer. The "thinking budget" parameter specific to
 the Gemini API, controlling the depth of reasoning. Default is \code{0}.}

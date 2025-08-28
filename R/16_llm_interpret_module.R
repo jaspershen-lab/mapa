@@ -8,11 +8,12 @@
 # Metabolite
 # llm_interpreted_enriched_functional_module <-
 #   llm_interpret_module(
-#     object = object,
+#     object = enriched_functional_module_res,
+#     module_content_number_cutoff = 1,
 #     llm_model = "gpt-4o-mini-2024-07-18",
 #     embedding_model = "text-embedding-3-small",
 #     api_key = api_key,
-#     embedding_output_dir = "demo_data/debug_yijiang/embedding_ouput/"
+#     embedding_output_dir = "demo_data/embedding_output"
 # )
 # load("demo_data/test.rda")
 # module_content_number_cutoff = 0
