@@ -38,11 +38,11 @@
 #                   api_key = api_key,
 #                   save_to_local = FALSE)
 # For metabolites
-# openai_sim_matrix_met <-
+# sim_matrix_met <-
 #   get_bioembedsim(object = enriched_pathways,
-#                   api_provider = "openai",
-#                   database = c("metkegg"),
-#                   text_embedding_model = "text-embedding-3-small",
+#                   api_provider = "siliconflow",
+#                   database = c("hmdb", "metkegg"),
+#                   text_embedding_model = "Qwen3-Embedding-4B",
 #                   api_key = api_key,
 #                   count.cutoff.metkegg = 0,
 #                   save_to_local = FALSE)
