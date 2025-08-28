@@ -81,8 +81,7 @@ for each module and displayed as a row annotation (only when
 LLM‑generated summaries, otherwise from concatenated pathway
 descriptions. Defaults to \code{FALSE}.}
 
-\item{functional_module_position_limits, }{pathway_position_limits,
-molecule_position_limits Numeric length‑2 vectors setting the
+\item{functional_module_position_limits, pathway_position_limits, molecule_position_limits}{Numeric length‑2 vectors setting the
 relative x‑axis span for the respective node types. Defaults are
 \code{c(0.2, 0.8)}, \code{c(0.1, 0.9)} and \code{c(0, 1)}.}
 

@@ -42,7 +42,7 @@
 #   get_bioembedsim(object = enriched_pathways,
 #                   api_provider = "siliconflow",
 #                   database = c("hmdb", "metkegg"),
-#                   text_embedding_model = "Qwen3-Embedding-4B",
+#                   text_embedding_model = "Qwen/Qwen3-Embedding-4B",
 #                   api_key = api_key,
 #                   count.cutoff.metkegg = 0,
 #                   save_to_local = FALSE)

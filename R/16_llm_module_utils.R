@@ -192,6 +192,7 @@ gpt_api_call <- function(
 #' @author Feifan Zhang <FEIFAN004@e.ntu.edu.sg>
 #'
 #' @export
+
 get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "openai", task_type = "SEMANTIC_SIMILARITY") {
 
   # 设置默认模型名称
@@ -310,9 +311,9 @@ test_siliconflow_url <- function(api_key) {
   url <- "https://api.siliconflow.cn/v1/models"
 
   res <- tryCatch({
-    GET(
+    httr::GET(
       url,
-      add_headers(Authorization = paste("Bearer", api_key))
+      httr::add_headers(Authorization = paste("Bearer", api_key))
     )
   }, error = function(e) {
     message("Failed in default siliconflow url: ", e$message)
@@ -321,22 +322,15 @@ test_siliconflow_url <- function(api_key) {
 
   if (is.null(res)) return(FALSE)
 
-  if (status_code(res) == 200) {
+  if (httr::status_code(res) == 200) {
     content <- content(res, "text", encoding = "UTF-8")
     parsed <- fromJSON(content, flatten = TRUE)
     return(TRUE)
   } else {
-    message("Failed:", status_code(res))
+    # message("Failed:", httr::status_code(res))
     return(FALSE)
   }
 }
-
-
-
-# -------------------------------------------------------------------------
-
-
-# -------------------------------------------------------------------------
 
 
 #' Clear the embedding_output directory

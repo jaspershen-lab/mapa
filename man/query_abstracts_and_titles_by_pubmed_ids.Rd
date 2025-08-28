@@ -7,11 +7,11 @@
 query_abstracts_and_titles_by_pubmed_ids(pmid_list, retries = 2, pause = 1)
 }
 \arguments{
+\item{pmid_list}{A character vector containing PubMed IDs to query.}
+
 \item{retries}{An integer specifying the number of retry attempts for failed queries (default is 2).}
 
 \item{pause}{A numeric value specifying the time in seconds to pause between retries (default is 1).}
-
-\item{PID_list}{A character vector containing PubMed IDs to query.}
 }
 \value{
 A named list where each element corresponds to a PubMed ID. Each element is a list containing:
@@ -35,7 +35,7 @@ The function ensures robust error handling and provides meaningful messages in c
 \dontrun{
 # Example: Query titles and abstracts for a list of PubMed IDs
 PID_list <- c("12345678", "23456789")
-results <- query_abstracts_and_titles_by_pubmed_ids(PID_list)
+results <- query_abstracts_and_titles_by_pubmed_ids(pmid_list)
 print(results)
 }
 

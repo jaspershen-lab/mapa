@@ -67,8 +67,8 @@
 #'   LLM‑generated summaries, otherwise from concatenated pathway
 #'   descriptions. Defaults to `FALSE`.
 #'
-#' @param functional_module_position_limits, pathway_position_limits,
-#'   molecule_position_limits Numeric length‑2 vectors setting the
+#' @param functional_module_position_limits,pathway_position_limits,molecule_position_limits
+#'   Numeric length‑2 vectors setting the
 #'   relative x‑axis span for the respective node types. Defaults are
 #'   `c(0.2, 0.8)`, `c(0.1, 0.9)` and `c(0, 1)`.
 #'

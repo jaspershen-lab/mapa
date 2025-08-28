@@ -491,7 +491,7 @@ embedding_single_module_pubmed_search <- function(module_name,
 #' @description
 #' Queries PubMed for titles and abstracts using a list of PubMed IDs (PIDs).
 #'
-#' @param PID_list A character vector containing PubMed IDs to query.
+#' @param pmid_list A character vector containing PubMed IDs to query.
 #' @param retries An integer specifying the number of retry attempts for failed queries (default is 2).
 #' @param pause A numeric value specifying the time in seconds to pause between retries (default is 1).
 #'
@@ -513,7 +513,7 @@ embedding_single_module_pubmed_search <- function(module_name,
 #' \dontrun{
 #' # Example: Query titles and abstracts for a list of PubMed IDs
 #' PID_list <- c("12345678", "23456789")
-#' results <- query_abstracts_and_titles_by_pubmed_ids(PID_list)
+#' results <- query_abstracts_and_titles_by_pubmed_ids(pmid_list)
 #' print(results)
 #' }
 #'
