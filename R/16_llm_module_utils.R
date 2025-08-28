@@ -63,7 +63,11 @@ gpt_api_call <- function(
     "siliconflow" = "https://api.siliconflow.cn/v1/chat/completions",
     stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
   )
-
+  if (api_provider == "siliconflow") {
+    if (!test_siliconflow_url(api_key)) {
+      url <- "https://api.siliconflow.com/v1/chat/completions"
+    }
+  }
   # 3. 构建请求体
   if (api_provider %in% c("openai", "siliconflow")) {
     request_body <- jsonlite::toJSON(list(
@@ -228,6 +232,12 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
     stop("Invalid API provider. Please choose 'openai', 'gemini', or 'siliconflow'.")
   }
 
+  if (api_provider == "siliconflow") {
+    if (!test_siliconflow_url(api_key)) {
+      url <- "https://api.siliconflow.com/v1/embeddings"
+    }
+  }
+
   # 请求嵌入向量
   embedding <- tryCatch(
     expr = {
@@ -269,6 +279,59 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
 
   return(embedding)
 }
+
+#' test_siliconflow_url: Internal function to validate SiliconFlow API endpoint
+#'
+#' This internal function tests whether the default SiliconFlow API endpoint
+#' (`https://api.siliconflow.cn/v1/models`) is reachable and the provided API key
+#' is valid. It performs a simple GET request and returns a logical flag indicating
+#' the accessibility of the API.
+#'
+#' @param api_key A string containing the API key required for authentication with
+#'   the SiliconFlow API.
+#'
+#' @return A logical value:
+#'   - `TRUE` if the API endpoint is reachable and authentication succeeds.
+#'   - `FALSE` otherwise, with error messages printed for debugging.
+#'
+#' @note This function is for internal use only. It is intended to verify the
+#'       connectivity and authentication to the SiliconFlow API before making
+#'       embedding requests.
+#'
+#' @author Feifan Zhang <FEIFAN004@e.ntu.edu.sg>
+#'
+#' @examples
+#' \dontrun{
+#' test_siliconflow_url("<your_api_key>")
+#' }
+#'
+#' @export
+test_siliconflow_url <- function(api_key) {
+  url <- "https://api.siliconflow.cn/v1/models"
+
+  res <- tryCatch({
+    GET(
+      url,
+      add_headers(Authorization = paste("Bearer", api_key))
+    )
+  }, error = function(e) {
+    message("Failed in default siliconflow url: ", e$message)
+    return(NULL)
+  })
+
+  if (is.null(res)) return(FALSE)
+
+  if (status_code(res) == 200) {
+    content <- content(res, "text", encoding = "UTF-8")
+    parsed <- fromJSON(content, flatten = TRUE)
+    return(TRUE)
+  } else {
+    message("Failed:", status_code(res))
+    return(FALSE)
+  }
+}
+
+
 
 # -------------------------------------------------------------------------
 
