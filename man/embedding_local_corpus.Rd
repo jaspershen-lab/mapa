@@ -21,13 +21,13 @@ embedding_local_corpus(
 \item{api_key}{A character string containing the API key for the embedding service.}
 
 \item{local_corpus_dir}{A character string specifying the name of the directory where the local files
-provided by users are saved. Defaults to "local_corpus".}
+provided by users are saved. Defaults to "local_corpus" in the current working directory.}
 
 \item{embedding_output_dir}{A character string specifying the directory where the intermediate embedding results
 will be saved. Defaults to "embedding_output".}
 
-\item{save_dir_local_corpus_embed}{A character string specifying the directory where the embedding data will be saved.
-Defaults to "local".}
+\item{save_dir_local_corpus_embed}{A character string specifying the subdirectory where the local corpus embedding data
+will be saved. Defaults to "local".}
 }
 \value{
 Nothing. The function processes and saves the embeddings to the specified save directory.

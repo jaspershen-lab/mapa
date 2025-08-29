@@ -18,11 +18,11 @@
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param api_key A character string containing the API key for the embedding service.
 #' @param local_corpus_dir A character string specifying the name of the directory where the local files
-#'        provided by users are saved. Defaults to "local_corpus".
+#'        provided by users are saved. Defaults to "local_corpus" in the current working directory.
 #' @param embedding_output_dir A character string specifying the directory where the intermediate embedding results
 #'        will be saved. Defaults to "embedding_output".
-#' @param save_dir_local_corpus_embed A character string specifying the directory where the embedding data will be saved.
-#'        Defaults to "local".
+#' @param save_dir_local_corpus_embed A character string specifying the subdirectory where the local corpus embedding data
+#'        will be saved. Defaults to "local".
 #'
 #' @return Nothing. The function processes and saves the embeddings to the specified save directory.
 #'
@@ -63,9 +63,9 @@ embedding_local_corpus <-
     stop("Please provide api key to do embedding.")
   }
 
-  current_dir <- getwd()
+  # current_dir <- getwd()
   ## get file path where user store their uploaded pdf file.
-  local_corpus_dir <- file.path(current_dir, local_corpus_dir)
+  # local_corpus_dir <- file.path(current_dir, local_corpus_dir)
   files <- list.files(local_corpus_dir, full.names = TRUE)
 
   if (length(files) == 0) {

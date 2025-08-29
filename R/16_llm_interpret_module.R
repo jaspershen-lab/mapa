@@ -201,7 +201,7 @@ llm_interpret_module <- function(object,
   # }
   if (!is.null(local_corpus_dir)) {
     local_corpus <- TRUE
-    save_dir_local_corpus_embed = "local"
+    save_dir_local_corpus_embed <- file.path(local_corpus_dir, "local_corpus_embedding_output")
   } else {
     local_corpus <- FALSE
   }
