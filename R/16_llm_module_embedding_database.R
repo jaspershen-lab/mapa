@@ -80,7 +80,8 @@ embedding_local_corpus <-
 
   for (pdf_path in pdf_files) {
     print(paste("Embedding in progress for file:", pdf_path))
-    pdf_embeddings <- embedding_single_pdf(pdf_path, embedding_model = embedding_model, api_provider, api_key)
+    pdf_embeddings <- embedding_single_pdf(pdf_path = pdf_path, embedding_model = embedding_model,
+                                           api_key = api_key, api_provider = api_provider)
     save_embedding(pdf_embeddings, embedding_output_dir = embedding_output_dir, save_dir = save_dir_local_corpus_embed)
   }
 }

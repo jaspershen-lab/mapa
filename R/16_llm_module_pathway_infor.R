@@ -84,8 +84,11 @@ preprocess_module <- function(df,
     # functional_module_result for metabolites
     query_type <- "metabolite"
     df <- df %>%
-      dplyr::rename(queryid = mapped_id) %>%
-      dplyr::rename(pathway_id = node)
+      dplyr::rename(queryid = mapped_id)
+    if ("node" %in% colnames(df)) {
+      df <- df %>%
+        dplyr::rename(pathway_id = node)
+    }
   }
 
   required_cols <- c("Description", "queryid", "module", "pathway_id")
