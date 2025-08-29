@@ -3,15 +3,23 @@
 # load("enriched_functional_module.rda")
 #
 # table(enriched_functional_module@merged_pathway_kegg$result_with_module$module)
-#
+# object <- llm_interpreted_enriched_functional_module
+# {
+#   object = object
+#   # level = "module"
+#   # database = "kegg"
+#   # module_id = "kegg_Module_1"
+#   level = "functional_module"
+#   module_id = "Functional_module_2"
+# }
 # plot <-
 #   plot_module_info(
-#     object = enriched_functional_module,
+#     object = object,
 #     # level = "module",
 #     # database = "kegg",
 #     # module_id = "kegg_Module_1"
 #     level = "functional_module",
-#     module_id = "Functional_module_10"
+#     module_id = "Functional_module_2"
 #   )
 #
 # plot[[1]]
