@@ -7,7 +7,7 @@
 # library(ReactomePA)
 # library(igraph)
 #
-# load("enriched_functional_module.rda")
+# load("demo_data/gene_ora_res/llm_interpreted_functional_module.rda")
 #
 # object <-
 #   enriched_functional_module
@@ -402,7 +402,8 @@ plot_relationship_network <-
         panel.background = element_rect(fill = "transparent", color = NA),
         legend.position = "right",
         legend.background = element_rect(fill = "transparent", color = NA)
-      )
+      ) +
+      guides(edge_color = "none")
 
     text_parameter <-
       data.frame(
