@@ -10,19 +10,29 @@
 # {
 #   object = enriched_functional_module_res
 #   module_content_number_cutoff = 1
-#   llm_model = "gpt-4o-mini-2024-07-18"
-#   embedding_model = "text-embedding-3-small"
+#   llm_model = "Qwen/Qwen3-8B"
+#   embedding_model = "Qwen/Qwen3-Embedding-0.6B"
 #   api_key = api_key
 #   local_corpus_dir = "demo_data/local_corpus"
 #   embedding_output_dir = "demo_data/embedding_output"
+#   phenotype = NULL
+#   chunk_size = 5
+#   years = 5
+#   retmax = 10
+#   similarity_filter_num = 20
+#   GPT_filter_num = 5
+#   output_prompt = TRUE
+#   api_provider = "siliconflow"
+#   thinkingBudget = 0
 # }
 # llm_interpreted_enriched_functional_module <-
 #   llm_interpret_module(
 #     object = enriched_functional_module_res,
 #     module_content_number_cutoff = 1,
-#     llm_model = "gpt-4o-mini-2024-07-18",
-#     embedding_model = "text-embedding-3-small",
+#     llm_model = "Qwen/Qwen3-8B",
+#     embedding_model = "Qwen/Qwen3-Embedding-0.6B",
 #     api_key = api_key,
+#     api_provider = "siliconflow",
 #     local_corpus_dir = "demo_data/local_corpus",
 #     embedding_output_dir = "demo_data/embedding_output"
 # )
@@ -257,6 +267,7 @@ llm_interpret_module <- function(object,
                                      model = llm_model,
                                      embedding_model = embedding_model,
                                      api_key = api_key,
+                                     api_provider = api_provider,
                                      similarity_filter_num = similarity_filter_num,
                                      GPT_filter_num = GPT_filter_num,
                                      local_corpus = local_corpus,
