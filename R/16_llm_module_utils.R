@@ -243,7 +243,8 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
   embedding <- tryCatch(
     expr = {
       # 创建请求对象
-      req <- httr2::request(url)
+      req <- httr2::request(url) %>%
+        httr2::req_method("POST")
 
       # 根据API提供者设置认证方式
       if (api_provider %in% c("openai", "siliconflow")) { # 修改: 为 siliconflow 使用 Bearer Token
@@ -254,6 +255,10 @@ get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "ope
 
       # 执行请求
       resp <- req %>%
+        httr2::req_headers(
+          "Content-Type" = "application/json",
+          "Accept" = "application/json"
+        ) %>%
         httr2::req_body_json(data = data) %>%
         httr2::req_retry(
           max_tries = 3,

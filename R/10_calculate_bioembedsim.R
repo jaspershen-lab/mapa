@@ -38,6 +38,7 @@
 #                   api_key = api_key,
 #                   save_to_local = FALSE)
 # For metabolites
+# load("demo_data/met_ora_res/met_enriched_pathways.rda")
 # sim_matrix_met <-
 #   get_bioembedsim(object = enriched_pathways,
 #                   api_provider = "siliconflow",
@@ -511,7 +512,8 @@ quickgo_api <- function(go_ids) {
   tryCatch(
     expr = {
       # Create a request object
-      req <- httr2::request(url)
+      req <- httr2::request(url) %>%
+        httr2::req_method("POST")
 
       resp <- req %>%
         httr2::req_headers("Accept" = "application/json") %>%
@@ -1030,7 +1032,8 @@ get_openai_embedding_internal <-
     embedding <- tryCatch(
       expr = {
         # Create a request object
-        req <- httr2::request(url)
+        req <- httr2::request(url) %>%
+          httr2::req_method("POST")
 
         resp <- req %>%
           httr2::req_auth_bearer_token(token = api_key) %>%
@@ -1063,7 +1066,8 @@ get_gemini_embedding_internal <-
   embedding <- tryCatch(
     expr = {
       # Create a request object
-      req <- httr2::request(url)
+      req <- httr2::request(url) %>%
+        httr2::req_method("POST")
 
       # Get response
       resp <- req %>%
@@ -1126,6 +1130,7 @@ gemini_api_call <-
 
     # Create and send the request using httr2
     response <- httr2::request(url) %>%
+      httr2::req_method("POST") %>%
       httr2::req_headers("Content-Type" = "application/json") %>%
       httr2::req_body_json(request_body) %>%
       httr2::req_perform()
