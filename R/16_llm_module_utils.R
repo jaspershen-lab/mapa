@@ -65,7 +65,7 @@ gpt_api_call <- function(
   )
   if (api_provider == "siliconflow") {
     if (!test_siliconflow_url(api_key)) {
-      url <- "https://api.siliconflow.com/v1/chat/completions"
+      api_url <- "https://api.siliconflow.com/v1/chat/completions"
     }
   }
   # 3. 构建请求体
