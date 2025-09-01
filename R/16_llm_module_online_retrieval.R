@@ -22,7 +22,7 @@
 pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10) {
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(min(detectCores()-1, 10))  # Creates clusters based on available cores
-    parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search"))
+    parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search", "perform_query","test_siliconflow_url"))
     parallel::clusterExport(cl, varlist = c("chunk_size", "years", "retmax"), envir = environment())
     parallel::clusterEvalQ(cl, {
       library(rentrez)

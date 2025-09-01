@@ -271,13 +271,14 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
                            envir = environment())
 
     # 导出工具函数
-    parallel::clusterExport(cl, c("process_chunk", "gpt_api_call"),
+    parallel::clusterExport(cl, c("process_chunk", "gpt_api_call","test_siliconflow_url","extract_and_parse_json"),
                            envir = environment())
 
     # 加载必要的包
     parallel::clusterEvalQ(cl, {
       library(jsonlite)
       library(curl)
+      library(httr)
       source("R/16_llm_module_utils.R")  # 导入包含 gpt_api_call 的文件
     })
 

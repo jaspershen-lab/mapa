@@ -139,9 +139,9 @@ embedding_single_pdf <- function(pdf_path,
 
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(min(detectCores()-1, 10)) # Creates four clusters
-    parallel::clusterExport(cl, varlist = c("chunks", "api_key", "embedding_model", "get_embedding"), envir = environment()) # Export the variables into the global environment of newly created clusters so that they can use them
+    parallel::clusterExport(cl, varlist = c("chunks", "api_key", "embedding_model", "get_embedding","test_siliconflow_url"), envir = environment()) # Export the variables into the global environment of newly created clusters so that they can use them
     parallel::clusterEvalQ(cl, {
-      library(httr2)
+      library(httr2);library(httr); library(jsonlite)
     })
     embeddings <- parallel::parLapply(cl, chunks,
                                       function(chunk) {
@@ -460,20 +460,20 @@ embedding_single_module_pubmed_search <- function(module_name,
 
   # 并行处理embeddings生成
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(parallel::detectCores()-1, 10))
-    parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model"),envir = environment())
+    cl <- parallel::makeCluster(min(parallel::detectCores() -1, 10))
+    parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model","test_siliconflow_url"),envir = environment())
     parallel::clusterEvalQ(cl, {
-      library(httr2)
+      library(httr2);library(httr); library(jsonlite)
     })
 
     embeddings <- parallel::parLapply(cl, abstracts, function(abstract) {
-      get_embedding(abstract, api_key, model_name = embedding_model, api_provider)
+      get_embedding(abstract, api_key, model_name = embedding_model, api_provider= api_provider)
     })
 
     parallel::stopCluster(cl)
   } else {
     embeddings <- pbmclapply(abstracts, function(abstract) {
-      get_embedding(abstract, api_key, model_name = embedding_model,api_provider)
+      get_embedding(abstract, api_key, model_name = embedding_model,api_provider= api_provider)
     }, mc.cores = parallel::detectCores() - 1)
   }
 
