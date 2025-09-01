@@ -6,7 +6,7 @@
 # source('R/16_llm_module_output_generation.R')
 
 # Metabolite
-# load("demo_data/met_ora_res/met_enriched_functional_module.rda")
+# load("demo_data/met_ora_res/met_simcluster_enriched_functional_module.rda")
 # {
 #   object = enriched_functional_module_res
 #   module_content_number_cutoff = 1
