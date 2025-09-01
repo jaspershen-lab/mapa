@@ -21,7 +21,7 @@ get_embedding(
 \itemize{
 \item For OpenAI, default is \code{"text-embedding-3-small"}.
 \item For Gemini, default is \code{"models/gemini-embedding-exp-03-07"}.
-\item For SiliconFlow, default is \code{"BAAI/bge-large-zh-v1.5"}.
+\item For SiliconFlow, default is \code{"Qwen/Qwen3-Embedding-8B"}.
 }}
 
 \item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}

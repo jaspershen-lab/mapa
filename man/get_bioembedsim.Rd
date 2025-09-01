@@ -31,7 +31,7 @@ get_bioembedsim(
 Options are "openai", "gemini", or "siliconflow.}
 
 \item{text_embedding_model}{Character string specifying the embedding model to use
-(e.g., "text-embedding-3-small" for OpenAI, "text-embedding-004" for Gemini, or
+(e.g., "text-embedding-3-small" for OpenAI, "models/text-embedding-004" for Gemini, or
 "Qwen/Qwen3-Embedding-8B" for SiliconFlow)}
 
 \item{api_key}{Character string of the API key for the specified provider}
@@ -103,7 +103,7 @@ sim_matrix <- get_bioembedsim(
 sim_matrix <- get_bioembedsim(
   object = my_enrichment_object,
   api_provider = "gemini",
-  text_embedding_model = "text-embedding-004",
+  text_embedding_model = "models/text-embedding-004",
   api_key = "your_gemini_key",
   database = "reactome"
 )

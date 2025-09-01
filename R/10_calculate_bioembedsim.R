@@ -62,7 +62,7 @@
 #' @param api_provider Character string specifying the API provider for text embeddings.
 #'   Options are "openai", "gemini", or "siliconflow.
 #' @param text_embedding_model Character string specifying the embedding model to use
-#'   (e.g., "text-embedding-3-small" for OpenAI, "text-embedding-004" for Gemini, or
+#'   (e.g., "text-embedding-3-small" for OpenAI, "models/text-embedding-004" for Gemini, or
 #'   "Qwen/Qwen3-Embedding-8B" for SiliconFlow)
 #' @param api_key Character string of the API key for the specified provider
 #' @param database Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
@@ -110,7 +110,7 @@
 #' sim_matrix <- get_bioembedsim(
 #'   object = my_enrichment_object,
 #'   api_provider = "gemini",
-#'   text_embedding_model = "text-embedding-004",
+#'   text_embedding_model = "models/text-embedding-004",
 #'   api_key = "your_gemini_key",
 #'   database = "reactome"
 #' )
@@ -923,7 +923,7 @@ combine_info <- function(info) {
 #                           api_key = api_key)
 #
 # # Test google gemini embedding model
-# gemini_embedding_model <- "text-embedding-004"
+# gemini_embedding_model <- "models/text-embedding-004"
 # M <- get_embedding_matrix(text = all_combined_info[c(1:10)],
 #                           api_provider = "gemini",
 #                           text_embedding_model = gemini_embedding_model,
@@ -1059,9 +1059,9 @@ get_openai_embedding_internal <-
 }
 
 get_gemini_embedding_internal <-
-  function(input_text, text_embedding_model = "text-embedding-004", api_key) {
+  function(input_text, text_embedding_model = "models/text-embedding-004", api_key) {
 
-  url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/", text_embedding_model, ":embedContent?key=", api_key)
+  url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/", gsub("^models/", "", text_embedding_model), ":embedContent?key=", api_key)
 
   embedding <- tryCatch(
     expr = {
@@ -1101,7 +1101,7 @@ get_gemini_embedding_internal <-
 
 gemini_api_call <-
   function(input_text,
-           model = "gemini-1.5-flash",
+           model = "models/gemini-1.5-flash",
            api_key,
            temperature = 1,
            topK = 40,
@@ -1109,7 +1109,7 @@ gemini_api_call <-
            maxOutputTokens = 8192,
            responseMimeType = "text/plain") {
     # Construct the full URL with the API key and model as query parameters
-    url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/", model, ":generateContent?key=", api_key)
+    url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/", gsub("^models/", "", model), ":generateContent?key=", api_key)
 
     # Create the request body
     request_body <- list(

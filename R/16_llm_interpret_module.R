@@ -71,8 +71,8 @@
 #     module_content_number_cutoff = 2,
 #     api_provider = "gemini",
 #     api_key = api_key,
-#     llm_model = "gemini-1.5-flash",
-#     embedding_model = "text-embedding-004",
+#     llm_model = "models/gemini-1.5-flash",
+#     embedding_model = "models/text-embedding-004",
 #     orgdb = org.Hs.eg.db,
 #     embedding_output_dir = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/embedding_output/"
 #   )

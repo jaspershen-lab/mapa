@@ -47,7 +47,7 @@ gpt_api_call <- function(
     model <- switch(
       api_provider,
       "openai"      = "gpt-4o-mini-2024-07-18",
-      "gemini"      = "gemini-2.5-flash",
+      "gemini"      = "models/gemini-2.5-flash",
       "siliconflow" = "Qwen/Qwen3-32B",
       stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
     )
@@ -59,7 +59,7 @@ gpt_api_call <- function(
     api_provider,
     "openai"      = "https://api.openai.com/v1/chat/completions",
     "gemini"      = paste0("https://generativelanguage.googleapis.com/v1beta/models/",
-                           model, ":generateContent?key=", api_key),
+                           gsub("^models/", "", model), ":generateContent?key=", api_key),
     "siliconflow" = "https://api.siliconflow.cn/v1/chat/completions",
     stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
   )
@@ -179,7 +179,7 @@ gpt_api_call <- function(
 #' @param model_name A string specifying the embedding model to use.
 #'   - For OpenAI, default is `"text-embedding-3-small"`.
 #'   - For Gemini, default is `"models/gemini-embedding-exp-03-07"`.
-#'   - For SiliconFlow, default is `"BAAI/bge-large-zh-v1.5"`.
+#'   - For SiliconFlow, default is `"Qwen/Qwen3-Embedding-8B"`.
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param task_type A string specifying the task type for Gemini API (default is `"SEMANTIC_SIMILARITY"`). Only used when `api_provider` is "gemini".
 #'
