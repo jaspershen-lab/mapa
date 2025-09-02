@@ -18,12 +18,34 @@
 # library(rtiktoken)
 # For genes
 ## ORA
-# load("demo_data/updated_object_results_for_genes_ora/ora_enriched_pathways.rda")
+# load("demo_data/gene_ora_res/enriched_pathways.rda")
 # setwd("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/")
+# {
+  # object = enriched_pathways
+  # # api_provider = "openai"
+  # api_provider = "siliconflow"
+  # # text_embedding_model = "text-embedding-3-small"
+  # text_embedding_model = "Qwen/Qwen3-Embedding-4B"
+  # api_key = api_key
+  # database = c("go", "kegg", "reactome")
+  # save_to_local = FALSE
+  # p.adjust.cutoff.go = 0.05
+  # p.adjust.cutoff.kegg = 0.05
+  # p.adjust.cutoff.reactome = 0.05
+  # p.adjust.cutoff.hmdb = 0.05
+  # p.adjust.cutoff.metkegg = 0.05
+  # count.cutoff.go = 5
+  # count.cutoff.kegg = 5
+  # count.cutoff.reactome = 5
+  # count.cutoff.hmdb = 5
+  # count.cutoff.metkegg = 5
+# }
 # openai_semantic_sim_matrix <-
 #   get_bioembedsim(object = enriched_pathways,
-#                   api_provider = "openai",
-#                   text_embedding_model = "text-embedding-3-small",
+#                   # api_provider = "openai",
+#                   api_provider = "siliconflow",
+#                   # text_embedding_model = "text-embedding-3-small",
+#                   text_embedding_model = "Qwen/Qwen3-Embedding-4B",
 #                   api_key = api_key,
 #                   database = c("go", "kegg", "reactome"),
 #                   save_to_local = FALSE)
@@ -192,7 +214,7 @@ get_bioembedsim <-
                     p.adjust.cutoff.go, " and Count > ", count.cutoff.go,
                     "). go_info set to NA.")
           } else {
-            cat("Collecting pathway text information for GO terms from Gene Ontology database...")
+            message("Collecting pathway text information for GO terms from Gene Ontology database...")
             go_info <- get_go_info(filtered_ids)
           }
           all_text_info <- c(all_text_info, go_info)
@@ -215,7 +237,7 @@ get_bioembedsim <-
                     p.adjust.cutoff.kegg, " and Count > ", count.cutoff.kegg,
                     "). kegg_info set to NA.")
           } else {
-            cat("Collecting pathway text information for KEGG pathways from KEGG database...")
+            message("Collecting pathway text information for KEGG pathways from KEGG database...")
             kegg_info <- get_kegg_pathway_info(filtered_ids)
           }
           all_text_info <- c(all_text_info, kegg_info)
@@ -238,7 +260,7 @@ get_bioembedsim <-
                     p.adjust.cutoff.reactome, " and Count > ", count.cutoff.reactome,
                     "). reactome_info set to NA.")
           } else {
-            cat("Collecting pathway text information for Reactome pathways from Reactome database...")
+            message("Collecting pathway text information for Reactome pathways from Reactome database...")
             reactome_info <- get_reactome_pathway_info(filtered_ids)
           }
           all_text_info <- c(all_text_info, reactome_info)
@@ -317,7 +339,7 @@ get_bioembedsim <-
 
 
     ## Calculate pairwise cosine similarity
-    cat("Calculating cosine similairty ...")
+    cat("Calculating cosine similairty ...\n")
     sim_matrix <- calculate_cosine_sim(m = embedding_matrix)
 
     ## Store parameters
@@ -362,7 +384,7 @@ get_bioembedsim <-
     slot(object, "process_info") <-
       process_info
 
-    message("Biotext embedding and similarity calculation finished")
+    message("Biotext embedding and similarity calculation finished.\n")
 
     ## Save similarity matrix as intermediate data
     if (save_to_local) {
@@ -512,8 +534,7 @@ quickgo_api <- function(go_ids) {
   tryCatch(
     expr = {
       # Create a request object
-      req <- httr2::request(url) %>%
-        httr2::req_method("POST")
+      req <- httr2::request(url)
 
       resp <- req %>%
         httr2::req_headers("Accept" = "application/json") %>%

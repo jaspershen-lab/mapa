@@ -132,8 +132,7 @@ quickgo_api <- function(go_ids) {
   tryCatch(
     expr = {
       # Create a request object
-      req <- httr2::request(url) %>%
-        httr2::req_method("POST")
+      req <- httr2::request(url)
 
       resp <- req %>%
         httr2::req_headers("Accept" = "application/json") %>%

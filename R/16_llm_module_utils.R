@@ -193,6 +193,7 @@ gpt_api_call <- function(
 #'
 #' @export
 
+
 get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "openai", task_type = "SEMANTIC_SIMILARITY") {
 
   # 设置默认模型名称
