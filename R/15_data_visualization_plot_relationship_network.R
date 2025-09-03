@@ -9,12 +9,6 @@
 #
 # load("demo_data/gene_ora_res/llm_interpreted_functional_module.rda")
 #
-# object <-
-#   enriched_functional_module
-# object <-
-#   functional_module_annotation
-# object <- enriched_functional_module_met
-#
 # object <- llm_interpreted_functional_module
 # object@merged_module$functional_module_result <-
 #   head(object@merged_module$functional_module_result, 2)
@@ -23,14 +17,15 @@
 # {
 # include_functional_modules = TRUE
 # llm_text = TRUE
-# include_modules = TRUE
+# include_modules = FALSE
 # include_pathways = TRUE
 # include_molecules = TRUE
-# include_variables = TRUE
-# functional_module_color = "#F05C3BFF"
-# module_color = "#46732EFF"
-# pathway_color = "#197EC0FF"
-# molecule_color = "#3B4992FF"
+# include_variables = FALSE
+# functional_module_color = "#DD4124FF"
+# module_color = "#0F7BA2FF"
+# pathway_color = "#43B284FF"
+# molecule_color = "#FAB255FF"
+# variable_color = "#CC79A7"
 # functional_module_text = TRUE
 # module_text = FALSE
 # pathway_text = TRUE
@@ -257,18 +252,20 @@ plot_relationship_network <-
       coords$x + 1
 
     if (circular_plot) {
-      coords$y[coords$class == "Functional_module"] <- 0
-      coords$y[coords$class == "Module"] <- 1
-      coords$y[coords$class == "Pathway"] <- 2
-      coords$y[coords$class == "Molecule"] <- 3
-      coords$y[coords$class == "Variable"] <- 4
-    } else{
-      coords$y[coords$class == "Functional_module"] <- 4
-      coords$y[coords$class == "Module"] <- 3
-      coords$y[coords$class == "Pathway"] <- 2
-      coords$y[coords$class == "Molecule"] <- 1
-      coords$y[coords$class == "Variable"] <- 0
-      coords$y <- coords$y*0.5
+      level <- 0
+      if (include_functional_modules) { coords$y[coords$class == "Functional_module"] <- level; level <- level + 1 }
+      if (include_modules) { coords$y[coords$class == "Module"] <- level; level <- level + 1 }
+      if (include_pathways) { coords$y[coords$class == "Pathway"] <- level; level <- level + 1 }
+      if (include_molecules) { coords$y[coords$class == "Molecule"] <- level; level <- level + 1 }
+      if (include_variables) { coords$y[coords$class == "Variable"] <- level }
+    } else {
+      level <- sum(c(include_functional_modules, include_modules, include_pathways, include_molecules, include_variables)) - 1
+      if (include_functional_modules) { coords$y[coords$class == "Functional_module"] <- level; level <- level - 1 }
+      if (include_modules) { coords$y[coords$class == "Module"] <- level; level <- level - 1 }
+      if (include_pathways) { coords$y[coords$class == "Pathway"] <- level; level <- level - 1 }
+      if (include_molecules) { coords$y[coords$class == "Molecule"] <- level; level <- level - 1 }
+      if (include_variables) { coords$y[coords$class == "Variable"] <- level }
+      coords$y <- coords$y * 0.5
     }
 
     # sort(coords$x[coords$class == "Functional_module"])
@@ -495,6 +492,7 @@ plot_relationship_network <-
             size = functional_module_text_size,
             show.legend = FALSE
           )
+        plot <- plot + coord_cartesian(clip = "off") + theme(aspect.ratio = 1)
       }
     }
     plot

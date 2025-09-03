@@ -332,6 +332,7 @@ get_bioembedsim <-
 
 
     ## Get embedding matrix
+    message("Getting pathway text embeddings ...")
     embedding_matrix <- get_embedding_matrix(text = all_combined_info,
                                              api_provider = api_provider,
                                              text_embedding_model = text_embedding_model,
@@ -339,7 +340,7 @@ get_bioembedsim <-
 
 
     ## Calculate pairwise cosine similarity
-    cat("Calculating cosine similairty ...\n")
+    message("Calculating cosine similairty ...")
     sim_matrix <- calculate_cosine_sim(m = embedding_matrix)
 
     ## Store parameters
