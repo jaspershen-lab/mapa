@@ -18,6 +18,7 @@ plot_relationship_heatmap(
   show_cluster_tree = TRUE,
   wordcloud = TRUE,
   llm_text = FALSE,
+  plot_widths = c(1, 2),
   functional_module_position_limits = c(0.2, 0.8),
   pathway_position_limits = c(0.1, 0.9),
   molecule_position_limits = c(0, 1),
@@ -36,7 +37,9 @@ plot_relationship_heatmap(
   max_font_size = 12,
   text_box_color = "grey",
   text_box_fill = "white",
-  text_box_width = 4
+  text_box_width = 4,
+  heatmap_height_ratios = c(1, 100),
+  network_height_ratios = NULL
 )
 }
 \arguments{
@@ -81,6 +84,9 @@ for each module and displayed as a row annotation (only when
 LLM‑generated summaries, otherwise from concatenated pathway
 descriptions. Defaults to \code{FALSE}.}
 
+\item{plot_widths}{Numeric length‑2 vector specifying the relative
+widths of the network plot and heatmap. Defaults to \code{c(1, 2)}.}
+
 \item{functional_module_position_limits, pathway_position_limits, molecule_position_limits}{Numeric length‑2 vectors setting the
 relative x‑axis span for the respective node types. Defaults are
 \code{c(0.2, 0.8)}, \code{c(0.1, 0.9)} and \code{c(0, 1)}.}
@@ -106,6 +112,16 @@ sizes scaled between \code{min_font_size} (8) and \code{max_font_size} (12).}
 \item{text_box_color, text_box_fill, text_box_width}{Appearance of the
 annotation box that contains each word‑cloud. Defaults are
 \code{"grey"}, \code{"white"}, and \code{4} cm.}
+
+\item{heatmap_height_ratios}{Numeric length‑2 vector controlling the
+relative heights of the heatmap components (spacing vs heatmap)
+Defaults to \code{c(1, 100)}. Used for vertical alignment with the relationship plot.}
+
+\item{network_height_ratios}{Optional numeric length‑2 vector controlling
+the relative heights of the relationship network plot components (relationship plot vs spacing).
+If \code{NULL} (default), automatically calculated based on
+the number of rows in heatmap and modules. Used for vertical
+alignment with the heatmap plot.}
 }
 \value{
 A \strong{patchwork} object combining the network graph and

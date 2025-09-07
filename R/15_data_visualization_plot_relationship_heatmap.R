@@ -4,20 +4,60 @@
 # source("R/6_utils.R")
 # source("R/15_data_visualization_plot_relationship_network.R")
 #
-# load("demo_data/input_data.rda")
-# load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/llm_interpreted_functional_module_cutoff_2.rda")
-# expression_data <- input_data |>
-#   dplyr::select(-variable_id, -score, -fdr, -class,
-#                 -symbol, -uniprot, -entrezid) |>
-#   dplyr::rename(id = ensembl)
+# load("demo_data/gene_ora_res/expression_data.rda")
+# load("demo_data/gene_ora_res/llm_interpreted_functional_module.rda")
 # object <- llm_interpreted_functional_module
 #
 # module_content_number_cutoff = 2
 # module_ids = NULL
 #
-# module_ids = c("Functional_module_52", "Functional_module_69", "Functional_module_70", "Functional_module_138", "Functional_module_221")
+# module_ids = c("Functional_module_48", "Functional_module_61", "Functional_module_65", "Functional_module_72", "Functional_module_75")
+# module_ids = c("Functional_module_48", "Functional_module_61", "Functional_module_65")
+# module_ids = c("Functional_module_48", "Functional_module_61")
+# module_ids = c("Functional_module_48")
 # module_content_number_cutoff = NULL
 
+# {
+#   object <- llm_interpreted_functional_module
+#   # level = "pathway"
+#   level = "molecule"
+#   expression_data = expression_data
+#   # module_content_number_cutoff = module_content_number_cutoff
+#   module_ids = module_ids
+#   scale_expression_data = TRUE
+#   dist_method = "euclidean"
+#   hclust_method = "complete"
+#   cluster_rows = FALSE
+#   show_cluster_tree = TRUE
+#   wordcloud = TRUE
+#   llm_text = FALSE
+#   functional_module_position_limits = c(0.2, 0.8)
+#   pathway_position_limits = c(0.1, 0.9)
+#   molecule_position_limits = c(0, 1)
+#   functional_module_color = "#DD4124FF"
+#   pathway_color = "#43B284FF"
+#   molecule_color = "#FAB255FF"
+#   functional_module_text = TRUE
+#   pathway_text = TRUE
+#   molecule_text = FALSE
+#   text_size = 3
+#   text_col = c("#FE9B00FF", "#D8443CFF", "#9B3441FF", "#DE597CFF",
+#                "#E87B89FF", "#E6A2A6FF", "#AA7AA1FF", "#9F5691FF",
+#                "#633372FF", "#1F6E9CFF", "#2B9B81FF", "#92C051FF" )
+#   num_text_show = 15
+#   min_font_size = 8
+#   max_font_size = 12
+#   text_box_color = "grey"
+#   text_box_fill = "white"
+#   text_box_width = 4
+# }
+
+# plot_relationship_heatmap(
+#   object = llm_interpreted_functional_module,
+#   level = "pathway",
+#   expression_data = expression_data,
+#   module_ids = module_ids
+# )
 
 #' Plot a Combined Relationship Network, Heatmap, and Word Cloud
 #'
@@ -63,6 +103,9 @@
 #'   for each module and displayed as a row annotation (only when
 #'   `level = "pathway"`).
 #'
+#' @param plot_widths Numeric length‑2 vector specifying the relative
+#'   widths of the network plot and heatmap. Defaults to `c(1, 2)`.
+#'
 #' @param llm_text Logical; if `TRUE`, the word‑cloud is built from
 #'   LLM‑generated summaries, otherwise from concatenated pathway
 #'   descriptions. Defaults to `FALSE`.
@@ -93,6 +136,16 @@
 #' @param text_box_color,text_box_fill,text_box_width Appearance of the
 #'   annotation box that contains each word‑cloud. Defaults are
 #'   `"grey"`, `"white"`, and `4` cm.
+#'
+#' @param heatmap_height_ratios Numeric length‑2 vector controlling the
+#'   relative heights of the heatmap components (spacing vs heatmap)
+#'   Defaults to `c(1, 100)`. Used for vertical alignment with the relationship plot.
+#'
+#' @param network_height_ratios Optional numeric length‑2 vector controlling
+#'   the relative heights of the relationship network plot components (relationship plot vs spacing).
+#'   If `NULL` (default), automatically calculated based on
+#'   the number of rows in heatmap and modules. Used for vertical
+#'   alignment with the heatmap plot.
 #'
 #' @return A **patchwork** object combining the network graph and
 #'   heat‑map, ready for further composition or direct plotting.
@@ -165,6 +218,7 @@ plot_relationship_heatmap <-
            show_cluster_tree = TRUE,
            wordcloud = TRUE,
            llm_text = FALSE,
+           plot_widths = c(1,2),
            functional_module_position_limits = c(0.2, 0.8),
            pathway_position_limits = c(0.1, 0.9),
            molecule_position_limits = c(0, 1),
@@ -183,7 +237,9 @@ plot_relationship_heatmap <-
            max_font_size = 12,
            text_box_color = "grey",
            text_box_fill = "white",
-           text_box_width = 4) {
+           text_box_width = 4,
+           heatmap_height_ratios = c(1,100),
+           network_height_ratios = NULL) {
 
     level <- match.arg(level)
 
@@ -349,8 +405,8 @@ plot_relationship_heatmap <-
     coords$x <- coords$x + 1
 
     if (level == "molecule") {
-      coords$y[coords$class == "Functional_module"] <- 3
-      coords$y[coords$class == "Pathway"] <- 2
+      coords$y[coords$class == "Functional_module"] <- 2.5
+      coords$y[coords$class == "Pathway"] <- 1.5
       coords$y[coords$class == "Molecule"] <- 1
       coords$y <- coords$y * 0.5
 
@@ -377,7 +433,7 @@ plot_relationship_heatmap <-
         )
 
     } else if (level == "pathway") {
-      coords$y[coords$class == "Functional_module"] <- 2
+      coords$y[coords$class == "Functional_module"] <- 1.25
       coords$y[coords$class == "Pathway"] <- 1
       coords$y <- coords$y * 0.5
 
@@ -496,7 +552,7 @@ plot_relationship_heatmap <-
               y = y * 0.85,
               label = ifelse(
                 class %in% text_parameter$class[text_parameter$text],
-                stringr::str_wrap(annotation, 20),
+                stringr::str_wrap(annotation, 40),
                 NA
               )
             ),
@@ -629,7 +685,7 @@ plot_relationship_heatmap <-
           show_colnames = TRUE,
           show_rownames = FALSE,
           right_annotation = row_ha,
-          angle_col = "45",
+          angle_col = "90",
           border_color = "white",
           border = TRUE,
           heatmap_legend_param = list(title = "Value",
@@ -639,19 +695,31 @@ plot_relationship_heatmap <-
 
     # 7. Combine heatmap and network ====
     heatmap_ggplot <- ggplotify::as.ggplot(heatmap_plot) +
-      theme(plot.margin = margin(l = 0))
-
-    place_holder_ratio = 0.1
+      theme(plot.margin = margin(0, 0, 0, 0))
 
     reversed_plot <- plot +
       coord_flip() +
       scale_y_reverse() +
-      theme(plot.margin = margin(r = 0))
+      theme(plot.margin = margin(0, 0, 0, 0))
+
+    place_holder_plot <- ggplot() +
+      annotate("text", x = 0, y = 0, label = "Plot Place holder",
+               size = 0.5, fontface = "bold", color = "white") +
+      theme_void() +
+      theme(plot.margin = margin(0, 0, 0, 0))
+
+    if (is.null(network_height_ratios)) {
+      add_place_holder_1 <- reversed_plot/place_holder_plot + plot_layout(heights = c(nrow(heatmap_matrix), length(module_ids)))
+    } else {
+      add_place_holder_1 <- reversed_plot/place_holder_plot + plot_layout(heights = network_height_ratios)
+    }
+
+    add_place_holder_2 <- place_holder_plot/heatmap_ggplot + plot_layout(heights = heatmap_height_ratios)
 
     combined_plot <-
-      reversed_plot + heatmap_ggplot +
-      patchwork::plot_layout(ncol = 2,
-                             widths = c(1, 2),
+      (add_place_holder_1 | add_place_holder_2) +
+      patchwork::plot_layout(ncol = 2, nrow = 1,
+                             widths = plot_widths,
                              guides = "collect")
 
     return(combined_plot)
