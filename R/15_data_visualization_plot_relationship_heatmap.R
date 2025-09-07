@@ -7,6 +7,8 @@
 # load("demo_data/gene_ora_res/expression_data.rda")
 # load("demo_data/gene_ora_res/llm_interpreted_functional_module.rda")
 # object <- llm_interpreted_functional_module
+# load("demo_data/gene_ora_res/enriched_functional_module.rda")
+# object <- enriched_functional_module_res
 #
 # module_content_number_cutoff = 2
 # module_ids = NULL
@@ -15,8 +17,9 @@
 # module_ids = c("Functional_module_48", "Functional_module_61", "Functional_module_65")
 # module_ids = c("Functional_module_48", "Functional_module_61")
 # module_ids = c("Functional_module_48")
+# module_ids = c("Functional_module_2")
 # module_content_number_cutoff = NULL
-
+#
 # {
 #   object <- llm_interpreted_functional_module
 #   # level = "pathway"
@@ -50,13 +53,16 @@
 #   text_box_color = "grey"
 #   text_box_fill = "white"
 #   text_box_width = 4
+#   heatmap_height_ratios = c(1,100)
+#   network_height_ratios = NULL
 # }
 
 # plot_relationship_heatmap(
-#   object = llm_interpreted_functional_module,
+#   object = enriched_functional_module_res,
 #   level = "pathway",
 #   expression_data = expression_data,
-#   module_ids = module_ids
+#   module_ids = module_ids,
+#   llm_text = FALSE
 # )
 
 #' Plot a Combined Relationship Network, Heatmap, and Word Cloud
@@ -350,6 +356,10 @@ plot_relationship_heatmap <-
       }
     }
 
+    if (nrow(heatmap_matrix) == 0) {
+      stop("No expression data available for your selected modules.")
+    }
+
     # 3. Create graph object and layout ====
     if (level == "molecule") {
       if (cluster_rows) {
@@ -376,11 +386,20 @@ plot_relationship_heatmap <-
       }
 
     } else if (level == "pathway") {
-      pathway_in_module <-
-        object@merged_module$functional_module_result |>
-        dplyr::select(module, node) |>
-        tidyr::separate_rows(node, sep = ";")
-      fm_order <- unique(pathway_in_module$module)
+      if ("noded" %in% colnames(object@merged_module$functional_module_result)) {
+        pathway_in_module <-
+          object@merged_module$functional_module_result |>
+          dplyr::select(module, node) |>
+          tidyr::separate_rows(node, sep = ";")
+        fm_order <- unique(pathway_in_module$module)
+      } else if ("pathway_id" %in% colnames(object@merged_module$functional_module_result)) {
+        pathway_in_module <-
+          object@merged_module$functional_module_result |>
+          dplyr::select(module, pathway_id) |>
+          tidyr::separate_rows(pathway_id, sep = ";") |>
+          dplyr::rename(node = pathway_id)
+        fm_order <- unique(pathway_in_module$module)
+      }
 
       node_dt_fm <- node_data |> dplyr::filter(class == "Functional_module")
       node_dt_fm <- node_dt_fm[rev(match(fm_order, node_dt_fm$node)), ]
