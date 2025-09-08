@@ -203,6 +203,7 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
+#' @param thread number of thread.
 #' @return A list of results where each element is a list containing:
 #' \item{relevance_score}{A numeric value between 0 and 1, indicating the relevance of the chunk.}
 #' \item{cleaned_text}{A character string with unrelated information (such as author names,
@@ -250,7 +251,7 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini-2024-07-18",  api_provider = "openai",  thinkingBudget = 0) {
+GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini-2024-07-18",  api_provider = "openai",  thinkingBudget = 0, thread = 10) {
   # 初始化结果列表
   reranked_results <- list()
 
@@ -264,7 +265,7 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
 
   # 根据操作系统选择不同的并行处理方式
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(detectCores()-1, 10))
+    cl <- parallel::makeCluster(thread)
 
     # 导出所有必需的变量到集群
     parallel::clusterExport(cl, c("chunks", "pathways", "molecules", "api_key", "model"),
@@ -296,7 +297,7 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
                                   molecules = molecules,
                                   api_key = api_key,
                                   model = model,
-                                  mc.cores = detectCores()-1,
+                                  mc.cores = thread,
                                   api_provider = api_provider,
                                   thinkingBudget = thinkingBudget
                                   )
@@ -439,6 +440,7 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
 #'   corpus embeddings (required if \code{local_corpus} is TRUE).
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
+#' @param thread number of thread
 #' @return A named list where each element corresponds to a module. Each module contains
 #'   a list of results with the following components:
 #' \item{title}{The title of the filtered document.}
@@ -484,7 +486,8 @@ retrieve_strategy <- function(pubmed_result,
                               embedding_output_dir = NULL,
                               save_dir_local_corpus_embed = NULL,
                               api_provider = "openai",
-                              thinkingBudget = 0) {
+                              thinkingBudget = 0,
+                              thread = thread) {
   result <- list()
 
   cat("Starting to process all modules...\n")
@@ -584,7 +587,7 @@ retrieve_strategy <- function(pubmed_result,
       cat("- Processing document content using GPT...\n")
       combined_GPT_result <- GPT_process_chunk(combined_chunks, module_list, api_key, model = model,
                                                api_provider = api_provider,
-                                               thinkingBudget = thinkingBudget)
+                                               thinkingBudget = thinkingBudget, thread = thread)
 
       cat("- Filtering the most relevant results...\n")
       # 筛选 GPT 结果 Top N（由 GPT_filter_num 决定）

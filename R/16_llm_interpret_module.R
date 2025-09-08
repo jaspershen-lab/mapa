@@ -123,6 +123,7 @@
 #'   annotation results. Default is `TRUE`.
 #' @param thinkingBudget Integer. The "thinking budget" parameter specific to
 #'   the Gemini API, controlling the depth of reasoning. Default is `0`.
+#' @param thread num of thread
 #'
 #' @return
 #' A `functional_module` class object with updated slots:
@@ -183,7 +184,8 @@ llm_interpret_module <- function(object,
                                  orgdb = org.Hs.eg.db,
                                  output_prompt = TRUE,
                                  api_provider = "openai",
-                                 thinkingBudget = 0) {
+                                 thinkingBudget = 0,
+                                 thread = 10) {
 
   # 1. Collect functional module result
   if (!is(object, "functional_module")) {
@@ -224,7 +226,8 @@ llm_interpret_module <- function(object,
                            api_key = api_key,
                            local_corpus_dir = local_corpus_dir,
                            embedding_output_dir = embedding_output_dir,
-                           save_dir_local_corpus_embed = save_dir_local_corpus_embed)
+                           save_dir_local_corpus_embed = save_dir_local_corpus_embed,
+                           thread = thread)
   }
 
   # 3. Extract pathway description, molecule name, and pmid of references
@@ -235,7 +238,8 @@ llm_interpret_module <- function(object,
   pubmed_result <- pubmed_search(processed_data = processed_data,
                                  chunk_size = chunk_size,
                                  years = years,
-                                 retmax = retmax)
+                                 retmax = retmax,
+                                 thread = thread)
 
   # Reference paper PMID save to PubmedIDs
   for (module in names(pubmed_result)) {
@@ -260,7 +264,8 @@ llm_interpret_module <- function(object,
                           embedding_model = embedding_model,
                           api_provider =  api_provider,
                           api_key = api_key,
-                          embedding_output_dir = embedding_output_dir)
+                          embedding_output_dir = embedding_output_dir,
+                          thread = thread)
 
   # 6. Retrieve and rank related papers using RAG strategy
   related_paper <- retrieve_strategy(pubmed_result = pubmed_result,
@@ -272,7 +277,8 @@ llm_interpret_module <- function(object,
                                      GPT_filter_num = GPT_filter_num,
                                      local_corpus = local_corpus,
                                      embedding_output_dir = embedding_output_dir,
-                                     save_dir_local_corpus_embed = save_dir_local_corpus_embed)
+                                     save_dir_local_corpus_embed = save_dir_local_corpus_embed,
+                                     thread = thread)
 
   paper_result <- Map(function(x, y) {
     # Customize operations for each pair of related data

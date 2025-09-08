@@ -23,6 +23,7 @@
 #'        will be saved. Defaults to "embedding_output".
 #' @param save_dir_local_corpus_embed A character string specifying the subdirectory where the local corpus embedding data
 #'        will be saved. Defaults to "local".
+#' @param thread number of thread
 #'
 #' @return Nothing. The function processes and saves the embeddings to the specified save directory.
 #'
@@ -58,7 +59,7 @@ embedding_local_corpus <-
            api_key = NULL,
            local_corpus_dir = "local_corpus",
            embedding_output_dir = "embedding_output",
-           save_dir_local_corpus_embed = "local") {
+           save_dir_local_corpus_embed = "local", thread = 10) {
   if (is.null(api_key)) {
     stop("Please provide api key to do embedding.")
   }
@@ -81,7 +82,7 @@ embedding_local_corpus <-
   for (pdf_path in pdf_files) {
     print(paste("Embedding in progress for file:", pdf_path))
     pdf_embeddings <- embedding_single_pdf(pdf_path = pdf_path, embedding_model = embedding_model,
-                                           api_key = api_key, api_provider = api_provider)
+                                           api_key = api_key, api_provider = api_provider, thread = thread )
     save_embedding(pdf_embeddings, embedding_output_dir = embedding_output_dir, save_dir = save_dir_local_corpus_embed)
   }
 }
@@ -94,6 +95,8 @@ embedding_local_corpus <-
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding service.
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thread number of threads
+#'
 #' @return A data frame containing the following columns:
 #' \item{paper_title}{The title of the PDF (derived from the file name).}
 #' \item{chunks}{The extracted text chunks from the PDF.}
@@ -131,14 +134,14 @@ embedding_local_corpus <-
 
 embedding_single_pdf <- function(pdf_path,
                                  embedding_model = "text-embedding-3-small",
-                                 api_key,api_provider = "openai"){
+                                 api_key,api_provider = "openai", thread = 10){
   paper_title <- tools::file_path_sans_ext(basename(pdf_path))
   text_pages <- pdftools::pdf_text(pdf_path)
   full_text <- paste(text_pages, collapse = "\n")
   chunks <- split_into_chunks(full_text)
 
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(detectCores()-1, 10)) # Creates four clusters
+    cl <- parallel::makeCluster(thread) # Creates four clusters
     parallel::clusterExport(cl, varlist = c("chunks", "api_key", "embedding_model", "get_embedding","test_siliconflow_url"), envir = environment()) # Export the variables into the global environment of newly created clusters so that they can use them
     parallel::clusterEvalQ(cl, {
       library(httr2);library(httr); library(jsonlite)
@@ -155,7 +158,7 @@ embedding_single_pdf <- function(pdf_path,
       Sys.sleep(1)
       embedding <- get_embedding(chunk, api_key, model_name = embedding_model, api_provider)
       return(embedding)
-    }, mc.cores = detectCores()-1)
+    }, mc.cores = thread)
   }
   chunks_matrix <- do.call(rbind, chunks)
 
@@ -336,6 +339,8 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thread number of thread
+#'
 #' @return No return value; function saves embeddings to disk in the specified output directory.
 #'
 #' @details
@@ -364,7 +369,7 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #'
 #' @keywords internal
 
-embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embedding-3-small", api_provider = "openai", api_key, embedding_output_dir){
+embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embedding-3-small", api_provider = "openai", api_key, embedding_output_dir,thread){
   module_names <- names(pubmed_result)
 
   for (module_name in module_names) {
@@ -373,7 +378,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
     cat(sprintf("Processing module: %s\n", module_name))
     cat(sprintf("Including PID number: %s\n", length(PID_list)))
     if (length(PID_list) != 0) {
-      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_provider = api_provider, api_key = api_key, embedding_output_dir)
+      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_provider = api_provider, api_key = api_key, embedding_output_dir = embedding_output_dir, thread = thread)
     }
   }
 }
@@ -392,6 +397,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
+#' @param thread number of thread
 #'
 #' @return No return value; function saves embeddings to disk in module-specific directory.
 #'
@@ -437,7 +443,7 @@ embedding_single_module_pubmed_search <- function(module_name,
                                                   embedding_model = "text-embedding-3-small",
                                                   api_provider = "openai",
                                                   api_key,
-                                                  embedding_output_dir) {
+                                                  embedding_output_dir, thread = 10) {
   # 将PID_list分成每组200个的批次
   batch_size <- 200
   PID_batches <- split(PID_list, ceiling(seq_along(PID_list)/batch_size))
@@ -460,7 +466,7 @@ embedding_single_module_pubmed_search <- function(module_name,
 
   # 并行处理embeddings生成
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(parallel::detectCores() -1, 10))
+    cl <- parallel::makeCluster(thread)
     parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model","test_siliconflow_url"),envir = environment())
     parallel::clusterEvalQ(cl, {
       library(httr2);library(httr); library(jsonlite)
@@ -474,7 +480,7 @@ embedding_single_module_pubmed_search <- function(module_name,
   } else {
     embeddings <- pbmclapply(abstracts, function(abstract) {
       get_embedding(abstract, api_key, model_name = embedding_model,api_provider= api_provider)
-    }, mc.cores = parallel::detectCores() - 1)
+    }, mc.cores = thread)
   }
 
   embedding_df <- data.frame(

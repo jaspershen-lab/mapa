@@ -8,6 +8,7 @@
 #' @param chunk_size An integer specifying the size of query chunks (default is 5).
 #' @param years An integer specifying how many years to look back in the search (default is 5).
 #' @param retmax An integer specifying the maximum number of results to retrieve (default is 10).
+#' @param thread number of thread
 #'
 #' @return A named list similar to \code{processed_data}, but with an added \code{PubmedIDs}
 #'   field for each module, containing the retrieved PubMed IDs.
@@ -19,9 +20,9 @@
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10) {
+pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(detectCores()-1, 10))  # Creates clusters based on available cores
+    cl <- parallel::makeCluster(thread)  # Creates clusters based on available cores
     parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search", "perform_query","test_siliconflow_url"))
     parallel::clusterExport(cl, varlist = c("chunk_size", "years", "retmax"), envir = environment())
     parallel::clusterEvalQ(cl, {
@@ -41,7 +42,7 @@ pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10
       module <- processed_data[[module_name]]
       result <- process_module(module_name, module, chunk_size, years, retmax)
       return(result)
-    }, mc.cores = parallel::detectCores() - 1)
+    }, mc.cores = thread)
   }
 
   for (result in results) {
