@@ -58,11 +58,11 @@
 # }
 
 # plot_relationship_heatmap(
-#   object = enriched_functional_module_res,
+#   object = llm_interpreted_functional_module,
 #   level = "pathway",
 #   expression_data = expression_data,
 #   module_ids = module_ids,
-#   llm_text = FALSE
+#   llm_text = TRUE
 # )
 
 #' Plot a Combined Relationship Network, Heatmap, and Word Cloud
@@ -386,7 +386,7 @@ plot_relationship_heatmap <-
       }
 
     } else if (level == "pathway") {
-      if ("noded" %in% colnames(object@merged_module$functional_module_result)) {
+      if ("node" %in% colnames(object@merged_module$functional_module_result)) {
         pathway_in_module <-
           object@merged_module$functional_module_result |>
           dplyr::select(module, node) |>
