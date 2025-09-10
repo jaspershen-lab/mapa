@@ -21,7 +21,8 @@ llm_interpret_module(
   orgdb = org.Hs.eg.db,
   output_prompt = TRUE,
   api_provider = "openai",
-  thinkingBudget = 0
+  thinkingBudget = 0,
+  thread = 10
 )
 }
 \arguments{
@@ -76,6 +77,9 @@ annotation results. Default is \code{TRUE}.}
 
 \item{thinkingBudget}{Integer. The "thinking budget" parameter specific to
 the Gemini API, controlling the depth of reasoning. Default is \code{0}.}
+
+\item{thread}{Integer. Number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 A \code{functional_module} class object with updated slots:

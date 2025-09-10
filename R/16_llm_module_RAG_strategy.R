@@ -203,7 +203,8 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
-#' @param thread number of thread.
+#' @param thread Integer. Number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #' @return A list of results where each element is a list containing:
 #' \item{relevance_score}{A numeric value between 0 and 1, indicating the relevance of the chunk.}
 #' \item{cleaned_text}{A character string with unrelated information (such as author names,
@@ -440,7 +441,8 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
 #'   corpus embeddings (required if \code{local_corpus} is TRUE).
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
-#' @param thread number of thread
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #' @return A named list where each element corresponds to a module. Each module contains
 #'   a list of results with the following components:
 #' \item{title}{The title of the filtered document.}

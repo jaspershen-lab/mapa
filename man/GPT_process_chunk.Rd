@@ -10,7 +10,8 @@ GPT_process_chunk(
   api_key,
   model = "gpt-4o-mini-2024-07-18",
   api_provider = "openai",
-  thinkingBudget = 0
+  thinkingBudget = 0,
+  thread = 10
 )
 }
 \arguments{
@@ -27,6 +28,9 @@ GPT_process_chunk(
 \item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 
 \item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
+
+\item{thread}{Integer. Number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 A list of results where each element is a list containing:

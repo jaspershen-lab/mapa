@@ -33,8 +33,9 @@
 #     embedding_model = "Qwen/Qwen3-Embedding-0.6B",
 #     api_key = api_key,
 #     api_provider = "siliconflow",
-#     local_corpus_dir = "demo_data/local_corpus",
-#     embedding_output_dir = "demo_data/embedding_output"
+#     local_corpus_dir = "demo_data/local_corpus/",
+#     embedding_output_dir = "demo_data/embedding_output/",
+#     thread = 4
 # )
 # Gene
 # load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/biotext_functional_modules.rda")
@@ -123,7 +124,8 @@
 #'   annotation results. Default is `TRUE`.
 #' @param thinkingBudget Integer. The "thinking budget" parameter specific to
 #'   the Gemini API, controlling the depth of reasoning. Default is `0`.
-#' @param thread num of thread
+#' @param thread Integer. Number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return
 #' A `functional_module` class object with updated slots:

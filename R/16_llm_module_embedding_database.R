@@ -23,7 +23,8 @@
 #'        will be saved. Defaults to "embedding_output".
 #' @param save_dir_local_corpus_embed A character string specifying the subdirectory where the local corpus embedding data
 #'        will be saved. Defaults to "local".
-#' @param thread number of thread
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return Nothing. The function processes and saves the embeddings to the specified save directory.
 #'
@@ -95,7 +96,8 @@ embedding_local_corpus <-
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding service.
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
-#' @param thread number of threads
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return A data frame containing the following columns:
 #' \item{paper_title}{The title of the PDF (derived from the file name).}
@@ -339,7 +341,8 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
-#' @param thread number of thread
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return No return value; function saves embeddings to disk in the specified output directory.
 #'
@@ -397,7 +400,8 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
-#' @param thread number of thread
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return No return value; function saves embeddings to disk in module-specific directory.
 #'

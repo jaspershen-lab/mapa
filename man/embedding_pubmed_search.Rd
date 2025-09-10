@@ -9,7 +9,8 @@ embedding_pubmed_search(
   embedding_model = "text-embedding-3-small",
   api_provider = "openai",
   api_key,
-  embedding_output_dir
+  embedding_output_dir,
+  thread
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ Each module contains a vector of PubMed IDs under the \code{PubmedIDs} field.}
 
 \item{embedding_output_dir}{Character string specifying the base directory where
 embedding results will be saved.}
+
+\item{thread}{An integer specifying the number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 No return value; function saves embeddings to disk in the specified output directory.

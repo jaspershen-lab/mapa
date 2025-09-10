@@ -10,7 +10,8 @@ embedding_local_corpus(
   api_key = NULL,
   local_corpus_dir = "local_corpus",
   embedding_output_dir = "embedding_output",
-  save_dir_local_corpus_embed = "local"
+  save_dir_local_corpus_embed = "local",
+  thread = 10
 )
 }
 \arguments{
@@ -28,6 +29,9 @@ will be saved. Defaults to "embedding_output".}
 
 \item{save_dir_local_corpus_embed}{A character string specifying the subdirectory where the local corpus embedding data
 will be saved. Defaults to "local".}
+
+\item{thread}{An integer specifying the number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 Nothing. The function processes and saves the embeddings to the specified save directory.

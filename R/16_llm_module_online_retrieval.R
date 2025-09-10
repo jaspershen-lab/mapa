@@ -8,7 +8,8 @@
 #' @param chunk_size An integer specifying the size of query chunks (default is 5).
 #' @param years An integer specifying how many years to look back in the search (default is 5).
 #' @param retmax An integer specifying the maximum number of results to retrieve (default is 10).
-#' @param thread number of thread
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return A named list similar to \code{processed_data}, but with an added \code{PubmedIDs}
 #'   field for each module, containing the retrieved PubMed IDs.
