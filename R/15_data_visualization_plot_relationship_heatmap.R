@@ -21,12 +21,12 @@
 # module_content_number_cutoff = NULL
 #
 # {
-#   object <- openai_module_annotation_res
+#   object <- enriched_functional_module_res
 #   level = "pathway"
 #   # level = "molecule"
 #   expression_data = expression_dt
-#   # module_content_number_cutoff = module_content_number_cutoff
-#   module_ids = module_ids
+#   module_content_number_cutoff = 1
+#   # module_ids = module_ids
 #   scale_expression_data = TRUE
 #   dist_method = "euclidean"
 #   hclust_method = "complete"
@@ -54,15 +54,17 @@
 #   text_box_fill = "white"
 #   text_box_width = 4
 #   heatmap_height_ratios = c(1,100)
+#   plot_widths = c(1,2)
 #   network_height_ratios = NULL
 # }
 
 # plot_relationship_heatmap(
-#   object = openai_module_annotation_res,
-#   level = "pathway",
+#   object = enriched_functional_module_res,
+#   level = "molecule",
 #   expression_data = expression_data,
-#   module_ids = module_ids,
-#   llm_text = TRUE
+#   # module_ids = module_ids,
+#   module_content_number_cutoff = 3,
+#   llm_text = FALSE
 # )
 
 #' Plot a Combined Relationship Network, Heatmap, and Word Cloud
@@ -317,9 +319,55 @@ plot_relationship_heatmap <-
             object@merged_module$result_with_module |>
             dplyr::rename(geneID = core_enrichment)
         }
+
+        if (object@process_info$merge_pathways@function_name == "merge_pathways()") {
+          pathway_module_pairs <-
+            object@merged_module$result_with_module |>
+            dplyr::select(pathway_id, module) |>
+            tidyr::separate_rows(pathway_id, sep = ";") |>
+            dplyr::filter(pathway_id %in% pathways)
+
+          go_pathway_module_pairs <- NULL
+          kegg_pathway_module_pairs <- NULL
+          reactome_pathway_module_pairs <- NULL
+
+          if (!is.null(object@enrichment_go_result)) {
+            if (nrow(object@enrichment_go_result@result) > 0) {
+              go_pathway_module_pairs <-
+                object@enrichment_go_result@result |>
+                dplyr::filter(ID %in% pathway_module_pairs$pathway_id) |>
+                dplyr::select(ID, geneID)
+            }
+          }
+
+          if (!is.null(object@enrichment_kegg_result)) {
+            if (nrow(object@enrichment_kegg_result@result) > 0) {
+              kegg_pathway_module_pairs <-
+                object@enrichment_kegg_result@result |>
+                dplyr::filter(ID %in% pathway_module_pairs$pathway_id) |>
+                dplyr::select(ID, geneID)
+            }
+          }
+
+          if (!is.null(object@enrichment_reactome_result)) {
+            if (nrow(object@enrichment_reactome_result@result) > 0) {
+              reactome_pathway_module_pairs <-
+                object@enrichment_reactome_result@result |>
+                dplyr::filter(ID %in% pathway_module_pairs$pathway_id) |>
+                dplyr::select(ID, geneID)
+            }
+          }
+
+          pathway_molecule_pairs <-
+            rbind(go_pathway_module_pairs, kegg_pathway_module_pairs, reactome_pathway_module_pairs) |>
+            dplyr::rename(node = ID)
+        } else if (object@process_info$merge_pathways@function_name == "get_bioembedsim()") {
+          pathway_molecule_pairs <-
+            object@merged_module$result_with_module |>
+            dplyr::filter(node %in% pathways)
+        }
         mapped_molecules <-
-          object@merged_module$result_with_module |>
-          dplyr::filter(node %in% pathways) |>
+          pathway_molecule_pairs |>
           dplyr::select(node, geneID) |>
           tidyr::separate_rows(geneID, sep = "/") |>
           dplyr::mutate(id = unify_id_internal(
@@ -338,9 +386,46 @@ plot_relationship_heatmap <-
           as.matrix()
 
       } else if (query_type == "metabolite") {
+        if (object@process_info$merge_pathways@function_name == "merge_pathways()") {
+          pathway_module_pairs <-
+            object@merged_module$result_with_module |>
+            dplyr::select(pathway_id, module) |>
+            tidyr::separate_rows(pathway_id, sep = ";") |>
+            dplyr::filter(pathway_id %in% pathways)
+
+          smpdb_pathway_module_pairs <- NULL
+          kegg_pathway_module_pairs <- NULL
+
+          if (!is.null(object@enrichment_hmdb_result)) {
+            if (nrow(object@enrichment_hmdb_result@result) > 0) {
+              smpdb_pathway_module_pairs <-
+                object@enrichment_hmdb_result@result |>
+                dplyr::filter(pathway_id %in% pathway_module_pairs$pathway_id) |>
+                dplyr::select(pathway_id, mapped_id)
+            }
+          }
+
+          if (!is.null(object@enrichment_metkegg_result)) {
+            if (nrow(object@enrichment_metkegg_result@result) > 0) {
+              kegg_pathway_module_pairs <-
+                object@enrichment_metkegg_result@result |>
+                dplyr::filter(pathway_id %in% pathway_module_pairs$pathway_id) |>
+                dplyr::select(pathway_id, mapped_id)
+            }
+          }
+
+          pathway_molecule_pairs <-
+            rbind(smpdb_pathway_module_pairs, kegg_pathway_module_pairs) |>
+            dplyr::rename(node = pathway_id)
+
+        } else if (object@process_info$merge_pathways@function_name == "get_bioembedsim()") {
+          pathway_molecule_pairs <-
+            object@merged_module$result_with_module |>
+            dplyr::filter(node %in% pathways)
+        }
+
         mapped_molecules <-
-          object@merged_module$result_with_module |>
-          dplyr::filter(node %in% pathways) |>
+          pathway_molecule_pairs |>
           dplyr::select(node, mapped_id) |>
           tidyr::separate_rows(mapped_id, sep = "/") |>
           dplyr::rename(id = mapped_id)
