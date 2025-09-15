@@ -1,7 +1,10 @@
 ---
-title: "Module Annotation for Pathway enrichment Analysis result"
+title: "Functional Module Identification and Annotation for Pathway Analysis Results Using Large Language Models"
+subtitle: "Detailed tutorial available at: http://www.shen-lab.org/mapa-tutorial/"
 author:
-- name: Xiaotao Shen (https://jaspershen.github.io/)
+- name: Xiaotao Shen
+- name: Yifei Ge
+
 date: "Created on 2021-12-04 and updated on `r Sys.Date()`"
 output:
   html_document:
@@ -28,8 +31,7 @@ knitr::opts_chunk$set(
 set.seed(123)
 ```
 
-
-# Load demo data
+# Load Demo Data
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 library(mapa)
@@ -37,31 +39,38 @@ if(!require(massdataset)){
   remotes::install_gitlab("tidymass/massdataset")
 }
 
-data("demo_data", package = "mapa")
-load("demo_data.rda")
-str(demo_data)
+data("demo_data_ora.rda", package = "mapa")
+load("demo_data_ora.rda")
+str(demo_data_ora)
 ```
 
-# Pathway enrichment
+# Data Preprocessing
+
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE, error=TRUE}
 variable_info <-
-  demo_data %>%
-  massdataset::activate_mass_dataset(what = "variable_info") %>%
-  dplyr::filter(fdr < 0.05 & score > 0) %>%
-  massdataset::extract_variable_info()
+  convert_id(
+    data = demo_data_ora,
+    query_type = "gene",
+    from_id_type = "symbol",
+    organism = "org.Mm.eg.db"
+  )
+```
 
+# Pathway Enrichment
+
+```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE, error=TRUE}
 enriched_pathways <-
   enrich_pathway(
     variable_info = variable_info,
     query_type = "gene",
     database = c("go", "kegg", "reactome"),
     save_to_local = FALSE,
-    go.orgdb = org.Hs.eg.db,
-    go.keytype = "ENSEMBL",
+    go.orgdb = "org.Mm.eg.db",
+    go.keytype = "ENTREZID",
     go.ont = "ALL",
-    kegg.organism = "hsa",
+    kegg.organism = "mmu",
     kegg.keytype = "kegg",
-    reactome.organism = "human",
+    reactome.organism = "mouse",
     pvalueCutoff = 0.05,
     pAdjustMethod = "BH",
     qvalueCutoff = 0.2,
@@ -77,15 +86,15 @@ enriched_pathways <-
 enriched_pathways
 ```
 
-# Merge pathways to get the modules
+# Pathway Similarity Calculation
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
-enriched_modules <-
+sim_res <-
   merge_pathways(
     object = enriched_pathways,
     database = c("go", "kegg", "reactome"),
     p.adjust.cutoff.go = 0.05,
-    go.orgdb = org.Hs.eg.db,
+    go.orgdb = "org.Mm.eg.db",
     p.adjust.cutoff.kegg = 0.05,
     p.adjust.cutoff.reactome = 0.05,
     count.cutoff.go = 5,
@@ -103,41 +112,23 @@ enriched_modules <-
 ```
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
-enriched_modules
+sim_res
 ```
 
-# Determine optimal clustering parameters
-
-```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
-results <- determine_optimal_clusters(object = enriched_modules,
-                                      cutoff_increment = 0.1,
-                                      cutoff_range = c(0.1, 0.9),
-                                      methods = c("h_ward.D", "binary_cut", "louvain"))
-```
-
-```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
-results$evaluation_plot
-```
-
-```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
-results$best_combination
-```
-
-# Merge modules to get functional modules according to the optimal clustering parameters
+# Module Identification
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 enriched_functional_module <-
   get_functional_modules(
-    object = enriched_modules,
-    sim.cutoff = 0.9,
-    measure_method = c("jaccard"),
+    object = sim_res,
+    sim.cutoff = 0.55,
     cluster_method = "louvain",
     path = "result",
     save_to_local = FALSE
   )
 ```
 
-# Assess clustering quality
+# Quality Assessment
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 assess_result <- assess_clustering_quality(object = enriched_functional_module)
@@ -147,12 +138,14 @@ assess_result <- assess_clustering_quality(object = enriched_functional_module)
 assess_result$evaluation_plot
 ```
 
-# Check the enriched pathways/modules
+# Data Visualization
+
+## Enriched pathway barplot at different levels
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 plot_pathway_bar(
   object = enriched_functional_module,
-  top_n = 20,
+  top_n = 15,
   level = "pathway",
   database = "go",
   x_axis_name = "RichFactor",
@@ -161,67 +154,46 @@ plot_pathway_bar(
 
 plot_pathway_bar(
   object = enriched_functional_module,
-  top_n = 20,
+  top_n = 10,
   level = "pathway",
   database = "kegg",
   x_axis_name = "RichFactor",
   line_type = "meteor"
 )
 
-plot_pathway_bar(
-  object = enriched_functional_module,
-  top_n = 20,
-  level = "pathway",
-  database = "reactome",
-  x_axis_name = "RichFactor",
-  line_type = "straight"
-)
-
 plot_pathway_bar(object = enriched_functional_module,
-                 top_n = 20,
+                 top_n = 15,
                  level = "module",
                  x_axis_name = "RichFactor",
                  line_type = "straight")
 
 plot_pathway_bar(object = enriched_functional_module,
-                 top_n = 20,
+                 top_n = 15,
                  level = "functional_module",
                  x_axis_name = "qscore",
                  line_type = "straight")
 
-
 ```
 
-# Check the individual module
+## Detailed information for each module
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
-plot <-
-  plot_module_info(
+plot_module_info(
     object = enriched_functional_module,
     level = "module",
     database = "go",
-    module_id = "go_Module_3"
+    module_id = "go_Module_1"
   )
 
-plot_module_info(
-  object = enriched_functional_module,
-  level = "module",
-  database = "reactome",
-  module_id = "reactome_Module_7"
-)
-
-
-enriched_functional_module@merged_module$functional_module_result$module
+# enriched_functional_module@merged_module$functional_module_result$module
 
 plot_module_info(object = enriched_functional_module,
                  level = "functional_module",
-                 module_id = "Functional_module_12")
-
-# export_module_info_plot(object = object, path = "result2")
+                 module_id = "Functional_module_10")
 
 ```
 
-# The whole similary network
+## Functional Module Similarity Network
 
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 
@@ -229,21 +201,13 @@ plot_similarity_network(
   object = enriched_functional_module,
   level = "module",
   database = "go",
-  degree_cutoff = 5
-)
-
-plot_similarity_network(
-  object = enriched_functional_module,
-  level = "module",
-  degree_cutoff = 2,
-  database = "reactome",
-  text_all = TRUE
+  degree_cutoff = 1
 )
 
 plot_similarity_network(
   object = enriched_functional_module,
   level = "functional_module",
-  degree_cutoff = 3
+  degree_cutoff = 1
 )
 ```
 
@@ -300,10 +264,9 @@ plot_relationship_network(
 
 # Export results as excel
 
-```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
+```{r,eval=FALSE,warning=FALSE, R.options="", message=FALSE, cache=TRUE}
 export_functional_module(object = enriched_functional_module)
 ```
-
 
 # Session information
 

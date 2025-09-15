@@ -21,10 +21,10 @@
 # module_content_number_cutoff = NULL
 #
 # {
-#   object <- llm_interpreted_functional_module
-#   # level = "pathway"
-#   level = "molecule"
-#   expression_data = expression_data
+#   object <- openai_module_annotation_res
+#   level = "pathway"
+#   # level = "molecule"
+#   expression_data = expression_dt
 #   # module_content_number_cutoff = module_content_number_cutoff
 #   module_ids = module_ids
 #   scale_expression_data = TRUE
@@ -33,7 +33,7 @@
 #   cluster_rows = FALSE
 #   show_cluster_tree = TRUE
 #   wordcloud = TRUE
-#   llm_text = FALSE
+#   llm_text = TRUE
 #   functional_module_position_limits = c(0.2, 0.8)
 #   pathway_position_limits = c(0.1, 0.9)
 #   molecule_position_limits = c(0, 1)
@@ -58,7 +58,7 @@
 # }
 
 # plot_relationship_heatmap(
-#   object = llm_interpreted_functional_module,
+#   object = openai_module_annotation_res,
 #   level = "pathway",
 #   expression_data = expression_data,
 #   module_ids = module_ids,
@@ -312,6 +312,11 @@ plot_relationship_heatmap <-
 
       query_type <- object@process_info$merge_pathways@parameter$query_type
       if (query_type == "gene") {
+        if ("core_enrichment" %in% colnames(object@merged_module$result_with_module)) {
+          object@merged_module$result_with_module <-
+            object@merged_module$result_with_module |>
+            dplyr::rename(geneID = core_enrichment)
+        }
         mapped_molecules <-
           object@merged_module$result_with_module |>
           dplyr::filter(node %in% pathways) |>

@@ -1315,35 +1315,40 @@ create_relation_network <-
     # }
 
     ## 7. molecule vs variable ====
-    if (query_type == "gene") {
-      molecule_in_module <- strsplit(object@merged_module$functional_module_result$geneID, split = "/")[[1]]
-      edge_data7 <- object@variable_info |>
-        dplyr::filter(ensembl %in% molecule_in_module) |>
-        dplyr::select(from = ensembl,
-                      to = variable_id) |>
-        dplyr::mutate(class = "Molecule-Variable")
-    } else {
-      molecule_in_module <- strsplit(object@merged_module$functional_module_result$mapped_id, split = "/")[[1]]
-      if ("hmdbid" %in% colnames(object@variable_info)) {
+    if ("variable_id" %in% colnames(object@variable_info)) {
+      if (query_type == "gene") {
+        molecule_in_module <- strsplit(object@merged_module$functional_module_result$geneID, split = "/")[[1]]
         edge_data7 <- object@variable_info |>
-          dplyr::filter(hmdbid %in% molecule_in_module) |>
-          dplyr::select(from = hmdbid,
+          dplyr::filter(ensembl %in% molecule_in_module) |>
+          dplyr::select(from = ensembl,
                         to = variable_id) |>
           dplyr::mutate(class = "Molecule-Variable")
-      } else if (!("hmdbid" %in% colnames(object@variable_info))) {
-        edge_data7 <- object@variable_info |>
-          dplyr::filter(keggid %in% molecule_in_module) |>
-          dplyr::select(from = keggid,
-                        to = variable_id) |>
-          dplyr::mutate(class = "Molecule-Variable")
+      } else {
+        molecule_in_module <- strsplit(object@merged_module$functional_module_result$mapped_id, split = "/")[[1]]
+        if ("hmdbid" %in% colnames(object@variable_info)) {
+          edge_data7 <- object@variable_info |>
+            dplyr::filter(hmdbid %in% molecule_in_module) |>
+            dplyr::select(from = hmdbid,
+                          to = variable_id) |>
+            dplyr::mutate(class = "Molecule-Variable")
+        } else if (!("hmdbid" %in% colnames(object@variable_info))) {
+          edge_data7 <- object@variable_info |>
+            dplyr::filter(keggid %in% molecule_in_module) |>
+            dplyr::select(from = keggid,
+                          to = variable_id) |>
+            dplyr::mutate(class = "Molecule-Variable")
+        }
       }
-    }
 
-    node_data4 <- object@variable_info |>
-      dplyr::select(node = variable_id,
-                    annotation = variable_id) |>
-      dplyr::mutate(Count = 1,
-                    class = "Variable")
+      node_data4 <- object@variable_info |>
+        dplyr::select(node = variable_id,
+                      annotation = variable_id) |>
+        dplyr::mutate(Count = 1,
+                      class = "Variable")
+    } else {
+      edge_data7 <- data.frame(from = NA_character_, to = NA_character_, class = NA_character_)
+      node_data4 <- data.frame(node = NA_character_, annotation = NA_character_, Count = NA_real_, class = NA_character_)
+    }
 
     # Graph network ====
     edge_data <-
