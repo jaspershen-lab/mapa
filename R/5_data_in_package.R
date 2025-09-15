@@ -55,80 +55,73 @@
 #'
 "demo_data_gsea"
 
-#' #' Enriched Functional Module Dataset generated from embedding
-#' #'
-#' #' A dataset containing results from pathway enrichment analysis and functional module detection.
-#' #' The dataset represents a formally structured S4 object of class 'functional_module' from the mapa package,
-#' #' containing detailed information about functional modules, pathway enrichment, and their relationships.
-#' #'
-#' #' @format An S4 object of class 'functional_module'
-#' #' @source Generated using the mapa package's pathway enrichment and functional module detection functions.
-#' #' @examples
-#' #' # Access basic information about the genes
-#' #' head(enriched_functional_module@variable_info)
-#' #'
-#' #' # Explore GO enrichment results
-#' #' head(enriched_functional_module@enrichment_go_result@result)
-#' #'
-#' #' # View KEGG pathway enrichment results
-#' #' head(enriched_functional_module@enrichment_kegg_result@result)
-#' #'
-#' #' # Get functional module information
-#' #' head(enriched_functional_module@merged_module$functional_module_result)
-#' "embedding_enriched_functional_module"
+#' Demo Dataset for Metabolite Enrichment Analysis
 #'
-#' #' Enriched Functional Module Dataset generated mainly by gene overlap
-#' #'
-#' #' A dataset containing results from pathway enrichment analysis and functional module detection.
-#' #' The dataset represents a formally structured S4 object of class 'functional_module' from the mapa package,
-#' #' containing detailed information about functional modules, pathway enrichment, and their relationships.
-#' #'
-#' #' @format An S4 object of class 'functional_module'
-#' #' @source Generated using the mapa package's pathway enrichment and functional module detection functions.
-#' #' @examples
-#' #' # Access basic information about the genes
-#' #' head(gene_overlap_enriched_functional_module@variable_info)
-#' #'
-#' #' # Explore GO enrichment results
-#' #' head(gene_overlap_enriched_functional_module@enrichment_go_result@result)
-#' #'
-#' #' # View KEGG pathway enrichment results
-#' #' head(gene_overlap_enriched_functional_module@enrichment_kegg_result@result)
-#' #'
-#' #' # Get functional module information
-#' #' head(gene_overlap_enriched_functional_module@merged_module$functional_module_result)
-#' "gene_overlap_enriched_functional_module"
+#' Significantly altered metabolites identified through untargeted metabolomics
+#' analysis. Contains 106 metabolite features with their corresponding KEGG IDs,
+#' FDR values, suitable for metabolite pathway enrichment
+#' analysis.
 #'
-#' #' Enriched Functional Module Dataset generated mainly by metabolite overlap
-#' #'
-#' #' A dataset containing results from pathway enrichment analysis and functional module detection.
-#' #' The dataset represents a formally structured S4 object of class 'functional_module' from the mapa package,
-#' #' containing detailed information about functional modules, pathway enrichment, and their relationships.
-#' #'
-#' #' @format An S4 object of class 'functional_module'
-#' #' @source Generated using the mapa package's pathway enrichment and functional module detection functions.
-#' #' @examples
-#' #' # Access basic information about the metabolites
-#' #' head(enriched_functional_module_met@variable_info)
-#' #'
-#' #' # Explore HMDB enrichment results
-#' #' head(enriched_functional_module_met@enrichment_hmdb_result@result)
-#' #'
-#' #' # View KEGG pathway enrichment results
-#' #' head(enriched_functional_module_met@enrichment_metkegg_result@result)
-#' #'
-#' #' # Get functional module information
-#' #' head(enriched_functional_module_met@merged_module$functional_module_result)
-#' "enriched_functional_module_met"
+#' @format A tibble with 106 rows and 4 columns:
+#' \describe{
+#'   \item{variable_id}{Unique metabolite feature identifiers}
+#'   \item{keggid}{KEGG compound identifiers}
+#'   \item{fdr}{False discovery rates from statistical testing}
+#'   \item{score}{fold-change scores}
+#' }
+#'
+#'
+#' @examples
+#' data(demo_data_met)
+#' head(demo_data_met)
+#'
+"demo_data_met"
+
+#' Demo Expression Dataset for Relationship Heatmap Visualization
+#'
+#' Gene expression data from muscle tissue of aging mice (6 vs 30 months,
+#' male C57BL/6). Contains 65 genes with expression values across 8 samples
+#' (4 samples per age group). This dataset is designed to work with the
+#' analysis results from \code{demo_data_ora} to create integrated relationship
+#' heatmaps using \code{plot_relationship_heatmap()}.
+#'
+#' @format A tibble with 65 rows and 9 columns:
+#' \describe{
+#'   \item{id}{ENSEMBL gene identifiers}
+#'   \item{6mo-1, 6mo-2, 6mo-3, 6mo-4}{Expression values for 6-month-old samples}
+#'   \item{30mo-1, 30mo-2, 30mo-3, 30mo-4}{Expression values for 30-month-old samples}
+#' }
+#'
+#' @source
+#' Takasugi, M., et al. An atlas of the aging mouse proteome reveals the
+#' features of age-related post-transcriptional dysregulation.
+#' \emph{Nat Commun} \strong{15}, 8520 (2024).
+#' \doi{10.1038/s41467-024-52845-x}
+#'
+"ora_expression_dt"
 
 
-#' #' @title enriched_pathways
-#' #'
-#' #' @description enriched_pathways
-#' #' @name enriched_pathways
-#' #' @format An enriched_functional_module object.
-#' #' @docType data
-#' #' @keywords data
-#' #' @examples
-#' #' data(enriched_pathways)
-#' "enriched_pathways"
+#' Demo Expression Dataset for Relationship Heatmap Visualization
+#'
+#' Gene expression data from liver tissue of aging mice (6 vs 30 months,
+#' male C57BL/6). Contains 5,167 genes with expression values across 8 samples
+#' (4 samples per age group). This dataset is designed to work with the
+#' analysis results from \code{demo_data_gsea} to create integrated relationship
+#' heatmaps using \code{plot_relationship_heatmap()}.
+#'
+#' @format A tibble with 5,167 rows and 9 columns:
+#' \describe{
+#'   \item{id}{ENSEMBL gene identifiers}
+#'   \item{6mo-1, 6mo-2, 6mo-3, 6mo-4}{Expression values for 6-month-old samples}
+#'   \item{30mo-1, 30mo-2, 30mo-3, 30mo-4}{Expression values for 30-month-old samples}
+#' }
+#'
+#' @source
+#' Takasugi, M., et al. An atlas of the aging mouse proteome reveals the
+#' features of age-related post-transcriptional dysregulation.
+#' \emph{Nat Commun} \strong{15}, 8520 (2024).
+#' \doi{10.1038/s41467-024-52845-x}
+#'
+"gsea_expression_dt"
+
+
