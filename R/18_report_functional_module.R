@@ -2,13 +2,12 @@
 # setwd(r4projects::get_project_wd())
 # setwd("demo_data/")
 #
-# load("enriched_functional_module.rda")
-# load("interpretation_result.rda")
+# load("demo_data/demo_mouse/liver/gsea_res/openai_module_annotation_res.rda")
 #
 # report_functional_module(
-#   object = met_object,
-#   degree_cutoff = 0,
-#   path = "demo_data/embedding_output/",
+#   object = openai_module_annotation_res,
+#   degree_cutoff = 1,
+#   path = "demo_data/demo_mouse/liver/gsea_res/",
 #   type = "html"
 # )
 
