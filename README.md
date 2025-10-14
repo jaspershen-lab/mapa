@@ -40,26 +40,27 @@ Please see the `Help documents`.
 # Need help?
 
 If you have any questions about `mapa`, please don’t hesitate to
-email me (<shenxt1990@outlook.com>) or reach out me via the social medias below.
+email me (<xiaotao.shen@outlook.com>) or reach out me via the social medias below.
 
 <i class="fa fa-weixin"></i>
-[shenxt1990](https://www.shenxt.info/files/wechat_QR.jpg)
+[jaspershen1990](https://www.jaspershenlab.com/image/wechat_QR.jpg)
 
-<i class="fa fa-envelope"></i> <shenxt@stanford.edu>
+📩 <shenxt@stanford.edu>
 
 <i class="fa fa-twitter"></i>
-[Twitter](https://twitter.com/JasperShen1990)
+[Twitter](https://twitter.com/xiaotaoshen1990)
 
-<i class="fa fa-map-marker-alt"></i> [M339, Alway Buidling, Cooper Lane,
-Palo Alto, CA
-94304](https://www.google.com/maps/place/Alway+Building/@37.4322345,-122.1770883,17z/data=!3m1!4b1!4m5!3m4!1s0x808fa4d335c3be37:0x9057931f3b312c29!8m2!3d37.4322345!4d-122.1748996)
+<i class="fa fa-home"></i>
+[Shen Lab website](https://www.shen-lab.org/)
+
+<i class="fa fa-map-marker-alt"></i> [59 Nanyang Dr, Singapore, Singapore 636921](https://www.google.com/maps/place/Alway+Building/@37.4322345,-122.1770883,17z/data=!3m1!4b1!4m5!3m4!1s0x808fa4d335c3be37:0x9057931f3b312c29!8m2!3d37.4322345!4d-122.1748996)
 
 # Citation
 
 If you use `mapa` in your publications, please cite this paper:
 
-Shen, X., Yan, H., Wang, C. et al. TidyMass an object-oriented reproducible analysis framework for LC–MS data. Nat Commun 13, 4365 (2022). 
+Yifei Ge, Feifan Zhang, Yijiang Liu, Chao Jiang, Peng Gao, Nguan Soon Tan, Sai Zhang, Yuchen Shen, Qianyi Zhou, Xin Zhou, Chuchu Wang, Xiaotao Shen. Leveraging Large Language Models for Redundancy-Aware Pathway Analysis and Deep Biological Interpretation. 
 
-[Weblink](https://www.nature.com/articles/s41467-022-32155-w)
+[Weblink](https://www.biorxiv.org/content/10.1101/2025.08.23.671949v1.abstract)
 
 Thanks very much!
