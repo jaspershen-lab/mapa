@@ -8,8 +8,7 @@ merge_modules(
   object,
   sim.cutoff = 0.5,
   measure_method = c("jaccard"),
-  cluster_method = c("girvan newman", "binary cut", "hierarchical"),
-  hclust.method = NULL,
+  cluster_method = "louvain",
   path = "result",
   save_to_local = FALSE
 )
@@ -17,21 +16,22 @@ merge_modules(
 \arguments{
 \item{object}{An S4 object, expected to be processed by \code{merge_pathways()}.}
 
-\item{sim.cutoff}{A numerical value for similarity cutoff, default is 0.5.
-For binary cut and hierarchical clustering, sim.cutoff is the cutoff for cutting the dendrogram.
-For Girvan-Newman, sim.cutoff is the similarity cutoff for pathways. Only edges with similarity above the cutoff will be stored in the graph data.}
+\item{sim.cutoff}{A numerical value for similarity cutoff, default is 0.5. This is the similarity cutoff for pathways.
+Only edges with similarity above the cutoff will be stored in the graph data.}
 
 \item{measure_method}{A character vector indicating the method for measuring similarity between modules, default is "jaccard".}
 
-\item{cluster_method}{Character, method for clustering pathways. Options are:
+\item{cluster_method}{Character, clustering method options:
 \itemize{
-\item "binary cut": Uses simplifyEnrichment binary_cut algorithm
-\item "girvan newman": Uses Girvan-Newman community detection (default)
-\item "hierarchical": Uses hierarchical clustering
+\item \strong{Hierarchical} ‒ supply \code{"h_<agglom.method>"}, where
+\verb{<agglom.method>} is one of
+\code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"},
+\code{"mcquitty"}, \code{"median"}, \code{"centroid"}.
+\item \code{"binary_cut"}
+\item Graph-based: \code{"louvain"}, \code{"walktrap"}, \code{"infomap"},
+\code{"edge_betweenness"}, \code{"fast_greedy"}, \code{"label_prop"},
+\code{"leading_eigen"}, \code{"optimal"}
 }}
-
-\item{hclust.method}{Character, the agglomeration method for hierarchical clustering.
-Only used when cluster_method is "hierarchical". See \code{\link[stats]{hclust}} for options.}
 
 \item{path}{A character string for the directory where to save results, default is "result".}
 

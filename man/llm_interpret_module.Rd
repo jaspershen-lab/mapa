@@ -2,7 +2,7 @@
 % Please edit documentation in R/16_llm_interpret_module.R
 \name{llm_interpret_module}
 \alias{llm_interpret_module}
-\title{Interpret Functional Module using LLM Integrated with RAG Strategy}
+\title{Interpret Functional Modules using LLM with RAG Strategy}
 \usage{
 llm_interpret_module(
   object,
@@ -19,61 +19,111 @@ llm_interpret_module(
   similarity_filter_num = 20,
   GPT_filter_num = 5,
   orgdb = org.Hs.eg.db,
-  output_prompt = TRUE
+  output_prompt = TRUE,
+  api_provider = "openai",
+  thinkingBudget = 0,
+  thread = 10
 )
 }
 \arguments{
-\item{object}{A functional_module class object.}
+\item{object}{A \code{functional_module} class object that has been processed with
+\code{get_functional_modules()} function.}
 
-\item{module_content_number_cutoff}{Integer. Only modules with content number greater than this value will be processed. Default is 1.}
+\item{module_content_number_cutoff}{Integer. Only modules with content number
+greater than this value will be processed. Must be smaller than the maximum
+module content number in the results. Default is \code{1}.}
 
-\item{llm_model}{A string specifying the GPT model to use. Default is \code{"gpt-4o-mini-2024-07-18"}.}
+\item{llm_model}{Character string. The LLM model to use for text generation.
+Default is \code{"gpt-4o-mini-2024-07-18"}.}
 
-\item{embedding_model}{A string specifying the embedding model to use. Default is \code{"text-embedding-3-small"}.}
+\item{embedding_model}{Character string. The embedding model to use for text
+embeddings. Default is \code{"text-embedding-3-small"}.}
 
-\item{api_key}{Character string. API key for OpenAI or other embedding service. (Currently, only API key for OpenAI can be used)}
+\item{api_key}{Character string. API key for OpenAI or other embedding service.
+Currently, only OpenAI API keys are supported.}
 
-\item{embedding_output_dir}{Character string. Directory where embedding results will be saved.}
+\item{embedding_output_dir}{Character string. Directory path where embedding
+results will be saved. This directory will be cleared before processing.}
 
-\item{local_corpus_dir}{Character string. Directory containing local files provided by users. Default is NULL.}
+\item{local_corpus_dir}{Character string. Optional directory path containing
+local files provided by users for additional context. If provided, these files
+will be embedded and used in the RAG process. Default is \code{NULL}.}
 
-\item{phenotype}{Character string. Phenotype or disease to focus on. Default is NULL.}
+\item{phenotype}{Character string. Optional phenotype or disease name to focus
+the literature search and interpretation on. Default is \code{NULL}.}
 
-\item{chunk_size}{Integer. Chunk size for processing data. Default is 5.}
+\item{chunk_size}{Integer. Chunk size for processing data in batches. Default is \code{5}.}
 
-\item{years}{Integer. Number of recent years to search in PubMed. Default is 5.}
+\item{years}{Integer. Number of recent years to include in PubMed search.
+Default is \code{5}.}
 
-\item{retmax}{Integer. Maximum number of records to return from PubMed. Default is 10.}
+\item{retmax}{Integer. Maximum number of records to return from each PubMed
+search query. Default is \code{10}.}
 
-\item{similarity_filter_num}{Integer. Number of papers to filter based on similarity. Default is 20.}
+\item{similarity_filter_num}{Integer. Number of papers to filter based on
+embedding similarity scores. Default is \code{20}.}
 
-\item{GPT_filter_num}{Integer. Number of papers to filter using GPT. Default is 5.}
+\item{GPT_filter_num}{Integer. Number of papers to retain after LLM-based
+filtering for relevance. Default is \code{5}.}
 
-\item{orgdb}{Object. Organism database for gene annotation, default is org.Hs.eg.db. Only used for gene enrichment results.}
+\item{orgdb}{Object. Organism database for gene annotation. Default is
+\code{org.Hs.eg.db}. Only used for gene enrichment results.}
 
-\item{output_prompt}{Logical. Whether to output prompt in final annotation result. Default is TRUE.}
+\item{output_prompt}{Logical. Whether to include the LLM prompt in the final
+annotation results. Default is \code{TRUE}.}
+
+\item{api_provider}{Character string. The API provider to use, one of \code{"openai"},
+\code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
+
+\item{thinkingBudget}{Integer. The "thinking budget" parameter specific to
+the Gemini API, controlling the depth of reasoning. Default is \code{0}.}
+
+\item{thread}{Integer. Number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
-A functional_module class object with updated slots:
-\itemize{
-\item \code{llm_module_interpretation}: Contains the final results with module names and study summaries
-\item \code{merged_module$functional_module_result}: Updated with LLM-generated module names in the \code{llm_module_name} column
-\item \code{process_info}: Updated with parameters and timestamp for this operation
+A \code{functional_module} class object with updated slots:
+\describe{
+\item{\code{llm_module_interpretation}}{List containing the final results with
+LLM-generated module names and study summaries for each processed module}
+\item{\code{merged_module$functional_module_result}}{Updated data frame with a new
+\code{llm_module_name} column containing LLM-generated module names}
+\item{\code{process_info}}{Updated with parameters and timestamp for this operation}
 }
 }
 \description{
-This function processes functional module results by retrieving
-relevant papers using a Retrieval-Augmented Generation (RAG) strategy. It includes pathway
-description extraction, PubMed searching, embedding of search results, and retrieving
-related papers with ranking. Finally, input the functional module information and
-abstract and title of retrieved and filtered papers into LLM to generate a name and a summary
-for each functional module.
+This function processes functional module results by retrieving relevant scientific
+literature using a Retrieval-Augmented Generation (RAG) strategy. The process includes
+pathway description extraction, PubMed searching, embedding of search results, and
+retrieving related papers with ranking. Finally, functional module information and
+abstracts/titles of retrieved papers are input into an LLM to generate meaningful
+names and summaries for each functional module.
 }
-\note{
-\itemize{
-\item The object must be processed with \code{merge_modules()} function before using this function
-\item Only modules with content number greater than \code{module_content_number_cutoff} will be processed
+\examples{
+\dontrun{
+# Basic usage with OpenAI
+result <- llm_interpret_module(
+  object = my_functional_module,
+  api_key = "your_openai_api_key",
+  embedding_output_dir = "/path/to/embedding/output"
+)
+
+# Advanced usage with local corpus and specific phenotype
+result <- llm_interpret_module(
+  object = my_functional_module,
+  module_content_number_cutoff = 2,
+  llm_model = "gpt-4o",
+  api_key = "your_openai_api_key",
+  embedding_output_dir = "/path/to/embedding/output",
+  local_corpus_dir = "/path/to/local/papers",
+  phenotype = "Alzheimer's disease",
+  years = 3,
+  retmax = 15,
+  similarity_filter_num = 30,
+  GPT_filter_num = 8
+)
 }
+
 }
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}

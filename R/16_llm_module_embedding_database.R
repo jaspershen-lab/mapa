@@ -15,13 +15,16 @@
 #' Processes all PDF files in a specified local corpus directory by generating embeddings and saving them to the database.
 #'
 #' @param embedding_model A string specifying the embedding model to use. Default is `"text-embedding-3-small"`.
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param api_key A character string containing the API key for the embedding service.
 #' @param local_corpus_dir A character string specifying the name of the directory where the local files
-#'        provided by users are saved. Defaults to "local_corpus".
+#'        provided by users are saved. Defaults to "local_corpus" in the current working directory.
 #' @param embedding_output_dir A character string specifying the directory where the intermediate embedding results
 #'        will be saved. Defaults to "embedding_output".
-#' @param save_dir_local_corpus_embed A character string specifying the directory where the embedding data will be saved.
-#'        Defaults to "local".
+#' @param save_dir_local_corpus_embed A character string specifying the subdirectory where the local corpus embedding data
+#'        will be saved. Defaults to "local".
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return Nothing. The function processes and saves the embeddings to the specified save directory.
 #'
@@ -53,17 +56,18 @@
 #' @keywords internal
 embedding_local_corpus <-
   function(embedding_model = "text-embedding-3-small",
+           api_provider = "openai",
            api_key = NULL,
            local_corpus_dir = "local_corpus",
            embedding_output_dir = "embedding_output",
-           save_dir_local_corpus_embed = "local") {
+           save_dir_local_corpus_embed = "local", thread = 10) {
   if (is.null(api_key)) {
     stop("Please provide api key to do embedding.")
   }
 
-  current_dir <- getwd()
+  # current_dir <- getwd()
   ## get file path where user store their uploaded pdf file.
-  local_corpus_dir <- file.path(current_dir, local_corpus_dir)
+  # local_corpus_dir <- file.path(current_dir, local_corpus_dir)
   files <- list.files(local_corpus_dir, full.names = TRUE)
 
   if (length(files) == 0) {
@@ -78,7 +82,8 @@ embedding_local_corpus <-
 
   for (pdf_path in pdf_files) {
     print(paste("Embedding in progress for file:", pdf_path))
-    pdf_embeddings <- embedding_single_pdf(pdf_path, embedding_model = embedding_model, api_key)
+    pdf_embeddings <- embedding_single_pdf(pdf_path = pdf_path, embedding_model = embedding_model,
+                                           api_key = api_key, api_provider = api_provider, thread = thread )
     save_embedding(pdf_embeddings, embedding_output_dir = embedding_output_dir, save_dir = save_dir_local_corpus_embed)
   }
 }
@@ -90,6 +95,9 @@ embedding_local_corpus <-
 #' @param pdf_path A character string specifying the path to the PDF file.
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding service.
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return A data frame containing the following columns:
 #' \item{paper_title}{The title of the PDF (derived from the file name).}
@@ -128,31 +136,31 @@ embedding_local_corpus <-
 
 embedding_single_pdf <- function(pdf_path,
                                  embedding_model = "text-embedding-3-small",
-                                 api_key){
+                                 api_key,api_provider = "openai", thread = 10){
   paper_title <- tools::file_path_sans_ext(basename(pdf_path))
   text_pages <- pdftools::pdf_text(pdf_path)
   full_text <- paste(text_pages, collapse = "\n")
   chunks <- split_into_chunks(full_text)
 
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(detectCores()-1, 10)) # Creates four clusters
-    parallel::clusterExport(cl, varlist = c("chunks", "api_key", "embedding_model", "get_embedding"), envir = environment()) # Export the variables into the global environment of newly created clusters so that they can use them
+    cl <- parallel::makeCluster(thread) # Creates four clusters
+    parallel::clusterExport(cl, varlist = c("chunks", "api_key", "embedding_model", "get_embedding","test_siliconflow_url"), envir = environment()) # Export the variables into the global environment of newly created clusters so that they can use them
     parallel::clusterEvalQ(cl, {
-      library(httr2)
+      library(httr2);library(httr); library(jsonlite)
     })
     embeddings <- parallel::parLapply(cl, chunks,
                                       function(chunk) {
                                         Sys.sleep(1)
-                                        embedding <- get_embedding(chunk, api_key, model_name = embedding_model)
+                                        embedding <- get_embedding(chunk, api_key, model_name = embedding_model,api_provider)
                                         return(embedding)
                                       })
     parallel::stopCluster(cl) # Stop the clusters and close the parallel backend.
   } else if (.Platform$OS.type == "unix") {
     embeddings <- pbmclapply(chunks, function(chunk) {
       Sys.sleep(1)
-      embedding <- get_embedding(chunk, api_key, model_name = embedding_model)
+      embedding <- get_embedding(chunk, api_key, model_name = embedding_model, api_provider)
       return(embedding)
-    }, mc.cores = detectCores()-1)
+    }, mc.cores = thread)
   }
   chunks_matrix <- do.call(rbind, chunks)
 
@@ -332,6 +340,9 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return No return value; function saves embeddings to disk in the specified output directory.
 #'
@@ -361,7 +372,7 @@ save_embedding <- function(embedding_df, embedding_output_dir = "embedding_outpu
 #'
 #' @keywords internal
 
-embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embedding-3-small", api_key, embedding_output_dir){
+embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embedding-3-small", api_provider = "openai", api_key, embedding_output_dir,thread){
   module_names <- names(pubmed_result)
 
   for (module_name in module_names) {
@@ -370,7 +381,7 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
     cat(sprintf("Processing module: %s\n", module_name))
     cat(sprintf("Including PID number: %s\n", length(PID_list)))
     if (length(PID_list) != 0) {
-      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_key, embedding_output_dir)
+      embedding_single_module_pubmed_search(module_name, PID_list, embedding_model = embedding_model, api_provider = api_provider, api_key = api_key, embedding_output_dir = embedding_output_dir, thread = thread)
     }
   }
 }
@@ -384,10 +395,13 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
 #' @param module_name Character string specifying the name of the module (used for
 #'   organizing output files).
 #' @param PID_list Character vector containing PubMed IDs to process.
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key Character string containing the API key for the embedding service.
 #' @param embedding_output_dir Character string specifying the base directory where
 #'   embedding results will be saved.
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return No return value; function saves embeddings to disk in module-specific directory.
 #'
@@ -431,10 +445,11 @@ embedding_pubmed_search <- function(pubmed_result, embedding_model = "text-embed
 embedding_single_module_pubmed_search <- function(module_name,
                                                   PID_list,
                                                   embedding_model = "text-embedding-3-small",
+                                                  api_provider = "openai",
                                                   api_key,
-                                                  embedding_output_dir) {
-  # 将PID_list分成每组5个的批次
-  batch_size <- 5
+                                                  embedding_output_dir, thread = 10) {
+  # 将PID_list分成每组200个的批次
+  batch_size <- 200
   PID_batches <- split(PID_list, ceiling(seq_along(PID_list)/batch_size))
 
   # 按批次获取摘要和标题
@@ -442,7 +457,7 @@ embedding_single_module_pubmed_search <- function(module_name,
   for(batch in PID_batches) {
     batch_results <- query_abstracts_and_titles_by_pubmed_ids(batch)
     abstracts_and_titles_list <- c(abstracts_and_titles_list, batch_results)
-    Sys.sleep(1)  # 添加短暂延迟以避免API限制
+    Sys.sleep(2)  # 添加短暂延迟以避免API限制
   }
 
   # 提取所有标题和摘要
@@ -455,21 +470,21 @@ embedding_single_module_pubmed_search <- function(module_name,
 
   # 并行处理embeddings生成
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(parallel::detectCores()-1, 10))
-    parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model"))
+    cl <- parallel::makeCluster(thread)
+    parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model","test_siliconflow_url"),envir = environment())
     parallel::clusterEvalQ(cl, {
-      library(httr2)
+      library(httr2);library(httr); library(jsonlite)
     })
 
     embeddings <- parallel::parLapply(cl, abstracts, function(abstract) {
-      get_embedding(abstract, api_key, model_name = embedding_model)
+      get_embedding(abstract, api_key, model_name = embedding_model, api_provider= api_provider)
     })
 
     parallel::stopCluster(cl)
   } else {
     embeddings <- pbmclapply(abstracts, function(abstract) {
-      get_embedding(abstract, api_key, model_name = embedding_model)
-    }, mc.cores = parallel::detectCores() - 1)
+      get_embedding(abstract, api_key, model_name = embedding_model,api_provider= api_provider)
+    }, mc.cores = thread)
   }
 
   embedding_df <- data.frame(
@@ -487,7 +502,7 @@ embedding_single_module_pubmed_search <- function(module_name,
 #' @description
 #' Queries PubMed for titles and abstracts using a list of PubMed IDs (PIDs).
 #'
-#' @param PID_list A character vector containing PubMed IDs to query.
+#' @param pmid_list A character vector containing PubMed IDs to query.
 #' @param retries An integer specifying the number of retry attempts for failed queries (default is 2).
 #' @param pause A numeric value specifying the time in seconds to pause between retries (default is 1).
 #'
@@ -498,8 +513,8 @@ embedding_single_module_pubmed_search <- function(module_name,
 #' @details
 #' This function performs the following steps for each PubMed ID:
 #' \itemize{
-#'   \item Queries PubMed for the title and abstract using \code{\link{retrieve_abstr_ttl}}.
-#'   \item Handles errors and retries the query up to \code{retries} times in case of failure.
+#'   \item Queries PubMed for the title and abstract.
+#'   \item Handles errors and retries the query up to `retries` times in case of failure.
 #'   \item Returns a default error message if all retry attempts fail.
 #' }
 #'
@@ -509,62 +524,125 @@ embedding_single_module_pubmed_search <- function(module_name,
 #' \dontrun{
 #' # Example: Query titles and abstracts for a list of PubMed IDs
 #' PID_list <- c("12345678", "23456789")
-#' results <- query_abstracts_and_titles_by_pubmed_ids(PID_list)
+#' results <- query_abstracts_and_titles_by_pubmed_ids(pmid_list)
 #' print(results)
 #' }
 #'
-#' @seealso \code{\link{retrieve_abstr_ttl}}
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-query_abstracts_and_titles_by_pubmed_ids <- function(PID_list, retries = 2, pause = 1) {
-  if (is.null(PID_list) || length(PID_list) == 0) {
+query_abstracts_and_titles_by_pubmed_ids <- function(pmid_list, retries = 2, pause = 1) {
+  if (is.null(pmid_list) || length(pmid_list) == 0) {
     stop("Invalid PubMed ID list provided.")
   }
 
-  # 将PID_list逐个处理
-  results <- list()
-  for (pmid in PID_list) {
-    attempt <- 1
-    while (attempt <= retries) {
-      tryCatch({
-        # 调用 retrieve_abstr_ttl 函数获取标题和摘要
-        abstr_ttl <- retrieve_abstr_ttl(pmid, retries, pause)
+  # Convert single PMID to vector
+  if (length(pmid_list) == 1) {
+    pmid_list <- as.character(pmid_list)
+  }
 
-        if (abstr_ttl == "") {
+  attempt <- 1
+  while (attempt <= retries) {
+    tryCatch({
+      # Fetch data for multiple PMIDs at once
+      html_result <- rentrez::entrez_fetch(
+        db = "pubmed",
+        id = pmid_list,  # Pass the entire list
+        rettype = "abstract",
+        retmode = "html"
+      )
+
+      # Parse HTML
+      parsed_html <- rvest::read_html(html_result)
+
+      # Get all article nodes
+      articles <- parsed_html %>% rvest::html_nodes("pubmedarticle")
+
+      # Process each article
+      results <- list()
+      for (i in seq_along(articles)) {
+        article <- articles[[i]]
+
+        # Get PMID
+        pmid <- article %>%
+          rvest::html_node("pmid") %>%
+          rvest::html_text(trim = TRUE)
+
+        # Check if it's a Review article
+        publication_types <- article %>%
+          rvest::html_nodes("publicationtype") %>%
+          rvest::html_text()
+
+        if ("Review" %in% publication_types) {
           results[[pmid]] <- list(
-            title = sprintf("Error: No abstract found for PubMed ID %s", pmid),
-            abstract = sprintf("Error: No abstract found for PubMed ID %s", pmid)
+            title = sprintf("Skipped: PubMed ID %s is a review article", pmid),
+            abstract = sprintf("Skipped: PubMed ID %s is a review article", pmid)
+          )
+          next
+        }
+
+        # Get title
+        title <- article %>%
+          rvest::html_node("articletitle") %>%
+          rvest::html_text(trim = TRUE)
+
+        # Get abstract
+        abstract <- article %>%
+          rvest::html_node("abstract") %>%
+          rvest::html_text(trim = TRUE)
+
+        # Handle missing data
+        if (is.na(title)) title <- sprintf("No title found for PubMed ID %s", pmid)
+        if (is.na(abstract)) {
+          results[[pmid]] <- list(
+            title = title,
+            abstract = sprintf("No abstract found for PubMed ID %s", pmid)
           )
         } else {
-          # 拆分标题和摘要
-          title <- sub("^Title: (.+?)\\nAbstract:.*$", "\\1", abstr_ttl)
-          abstract <- sub("^Title: .+?\\nAbstract: (.+)$", "\\1", abstr_ttl)
-
           results[[pmid]] <- list(
             title = title,
             abstract = abstract
           )
         }
-        break
-      }, error = function(e) {
-        warning(sprintf("Attempt %d failed for PubMed ID: %s. Error: %s",
-                        attempt, pmid, e))
-        Sys.sleep(pause)
-      })
-      attempt <- attempt + 1
-    }
+      }
 
-    if (attempt > retries) {
-      results[[pmid]] <- list(
-        title = sprintf("Error: Failed to retrieve title for PubMed ID %s after %d attempts. Probably because this is a review.", pmid, retries),
-        abstract = sprintf("Error: Failed to retrieve abstract for PubMed ID %s after %d attempts. Probably because this is a review.", pmid, retries)
-      )
-    }
+      # Check for missing PMIDs
+      retrieved_pmids <- names(results)
+      missing_pmids <- setdiff(as.character(pmid_list), retrieved_pmids)
+
+      # Add error messages for missing PMIDs
+      for (missing_pmid in missing_pmids) {
+        results[[missing_pmid]] <- list(
+          title = sprintf("Error: No data found for PubMed ID %s", missing_pmid),
+          abstract = sprintf("Error: No data found for PubMed ID %s", missing_pmid)
+        )
+      }
+
+      return(results)
+    }, error = function(e) {
+      warning(sprintf("Attempt %d failed for PubMed IDs: %s. Error: %s",
+                      attempt, paste(pmid_list, collapse = ", "), e$message))
+      Sys.sleep(pause)
+    })
+    attempt <- attempt + 1
   }
 
-  return(results)
+  # If all attempts failed
+  warning(sprintf("All attempts failed for PubMed IDs: %s",
+                  paste(pmid_list, collapse = ", ")))
+
+  # Return error information
+  error_results <- list()
+  for (pmid in pmid_list) {
+    error_results[[as.character(pmid)]] <- list(
+      title = sprintf("Error: Failed to retrieve title for PubMed ID %s after %d attempts",
+                      pmid, retries),
+      abstract = sprintf("Error: Failed to retrieve abstract for PubMed ID %s after %d attempts",
+                         pmid, retries)
+    )
+  }
+  return(error_results)
 }
 
 #' Get Dataset Dimensions

@@ -8,6 +8,8 @@
 #' @param chunk_size An integer specifying the size of query chunks (default is 5).
 #' @param years An integer specifying how many years to look back in the search (default is 5).
 #' @param retmax An integer specifying the maximum number of results to retrieve (default is 10).
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
 #' @return A named list similar to \code{processed_data}, but with an added \code{PubmedIDs}
 #'   field for each module, containing the retrieved PubMed IDs.
@@ -19,10 +21,10 @@
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10) {
+pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(detectCores()-1, 10))  # Creates clusters based on available cores
-    parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search"))
+    cl <- parallel::makeCluster(thread)  # Creates clusters based on available cores
+    parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search", "perform_query","test_siliconflow_url"))
     parallel::clusterExport(cl, varlist = c("chunk_size", "years", "retmax"), envir = environment())
     parallel::clusterEvalQ(cl, {
       library(rentrez)
@@ -41,7 +43,7 @@ pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10
       module <- processed_data[[module_name]]
       result <- process_module(module_name, module, chunk_size, years, retmax)
       return(result)
-    }, mc.cores = parallel::detectCores() - 1)
+    }, mc.cores = thread)
   }
 
   for (result in results) {
@@ -84,10 +86,28 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
     gene_names <- module$GeneNames_vec
     ## Generate query
     pathway_query <- paste(paste0("\"", pathway_names, "\""), collapse = " OR ")
+
     ## Perform PubMed search with query (gene_symbol AND pathway_names)
-    gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    if (length(gene_symbols) == 1) {
+      if (is.na(gene_symbols)) {
+        gene_symbol_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      } else {
+        gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      }
+    } else {
+      gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    }
+
     ## Perform PubMed search with query (gene_name AND pathway_names)
-    gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    if (length(gene_names) == 1) {
+      if (is.na(gene_names)) {
+        gene_name_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      } else {
+        gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      }
+    } else {
+      gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    }
 
     pmids <- unique(c(gene_symbol_ids, gene_name_ids))
 
@@ -98,7 +118,15 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
     pathway_query <- paste(pathway_names, collapse = " OR ")
 
     ## Perform PubMed search with query (met_name AND pathway_names)
-    met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    if (length(met_names) == 1) {
+      if (is.na(met_names)) {
+        met_name_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      } else {
+        met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+      }
+    } else {
+      met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
+    }
 
     pmids <- met_name_ids
   }
@@ -133,7 +161,17 @@ perform_query <- function(query_terms,
                           retmax,
                           chunk_size) {
   search_ids <- c()
-  full_query <- paste("(", paste(query_terms, collapse = " OR "), ")", "AND", "(", pathway_query, ")", sep = " ")
+
+  if (length(query_terms) == 1) {
+    if (is.na(query_terms)) {
+      full_query <- paste("(", pathway_query, ")", sep = " ")
+    } else {
+      full_query <- paste("(", paste(query_terms, collapse = " OR "), ")", "AND", "(", pathway_query, ")", sep = " ")
+    }
+  } else {
+    full_query <- paste("(", paste(query_terms, collapse = " OR "), ")", "AND", "(", pathway_query, ")", sep = " ")
+  }
+
   result <- safe_entrez_search(db = "pubmed", term = full_query, retmax = retmax, years = years)
 
   if (!is.null(result)) {

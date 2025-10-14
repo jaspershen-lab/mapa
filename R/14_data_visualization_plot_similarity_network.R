@@ -7,14 +7,14 @@
 #
 # object <-
 #   enriched_functional_module
-#
+# load("demo_data/pregnancy_data/results/result_overlap/sim_cluster_result.rda")
 # plot_similarity_network(
-#   object = enriched_functional_module,
+#   object = sim_cluster_result,
 #   level = "module",
-#   database = "reactome",
-#   degree_cutoff = 0
+#   database = "hmdb",
+#   degree_cutoff = 0,
+#   text = TRUE
 # )
-
 # library(showtext)
 # showtext_auto(enable = TRUE)
 #
@@ -26,9 +26,11 @@
 # )
 #
 # plot_similarity_network(
-#   object = llm_interpreted_enriched_functional_module,
-#   level = "functional_module",
-#   degree_cutoff = 0,
+#   object = llm_interpreted_functional_module,
+#   level = "module",
+#   degree_cutoff = 3,
+#   database = c("reactome"),
+#   text = FALSE,
 #   llm_text = TRUE,
 #   text_all = FALSE
 # )
@@ -421,11 +423,19 @@ plot_similarity_network <-
           df <- igraph::as_data_frame(graph_data, what = "vertices")
 
           if (analysis_type == "enrich_pathway") {
-            df |>
-              dplyr::group_by(module) |>
-              dplyr::arrange(p_adjust, desc(Count), .by_group = TRUE) |>
-              dplyr::slice_head(n = 1) |>
-              dplyr::pull(label)
+            if ("Count" %in% colnames(df)) {
+              df |>
+                dplyr::group_by(module) |>
+                dplyr::arrange(p_adjust, desc(Count), .by_group = TRUE) |>
+                dplyr::slice_head(n = 1) |>
+                dplyr::pull(label)
+            } else {
+              df |>
+                dplyr::group_by(module) |>
+                dplyr::arrange(p_adjust, desc(mapped_number), .by_group = TRUE) |>
+                dplyr::slice_head(n = 1) |>
+                dplyr::pull(label)
+            }
           } else {
             df |>
               dplyr::group_by(module) |>
@@ -453,6 +463,10 @@ plot_similarity_network <-
 
     lay <- ggraph::create_layout(graph_data, layout = "fr")
 
+    colors <- colorRampPalette(c('#0ca9ce', '#78cfe5', '#c6ecf1', '#ff6f81', '#ff9c8f', '#ffc2c0','#d386bf',
+                                 '#cdb1d2', '#fae6f0', '#eb6fa6', '#ff88b5', '#00b1a5',"#ffa68f","#ffca75","#97bc83","#acd295",
+                                 "#00ada1","#009f93","#ace2da","#448c99","#00b3bc","#b8d8c9","#db888e","#e397a4","#ead0c7",
+                                 "#8f9898","#bfcfcb"))(length(unique(lay$module)))
     plot <-
       ggraph::ggraph(lay) +
       ggraph::geom_edge_link(
@@ -468,7 +482,8 @@ plot_similarity_network <-
         alpha = 1,
         show.legend = TRUE
       ) +
-      guides(fill = guide_legend(ncol = 1)) +
+      # guides(fill = guide_legend(ncol = 1)) +
+      scale_fill_manual(values = colors) +
       ggraph::scale_edge_width_continuous(range = c(0.1, 2)) +
       scale_size_continuous(range = c(1, 7)) +
       labs(size = if(analysis_type == "enrich_pathway") "-log10(FDR adjusted P-values)" else "abs(NES)") +

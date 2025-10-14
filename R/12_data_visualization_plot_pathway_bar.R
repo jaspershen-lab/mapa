@@ -41,73 +41,25 @@
 #
 ######GSEA analysis
 # setwd(r4projects::get_project_wd())
-# setwd("demo_data/covid_data/")
-# load("result/enriched_functional_module")
-#
-# object <-
-#   enriched_functional_module
-#
-# object <- gsea_enriched_functional_module
-#
-#
-# library(showtext)
-# showtext_auto(enable = TRUE)
-#
+# load("demo_data/demo_mouse/liver/gsea_res/openai_enriched_functional_module.rda")
 # plot_pathway_bar(
-#   object = object,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "pathway",
-#   line_type = "straight"
-# )
-#
-# plot_pathway_bar(
-#   object = object,
-#   top_n = 10,
-#   y_label_width = 30,
-#   level = "module",
-#   line_type = "meteor"
-# )
-#
-# plot_pathway_bar(
-#   object = functional_module_annotation,
+#   object = openai_module_annotation_res,
 #   top_n = 10,
 #   y_label_width = 30,
 #   level = "functional_module",
-#   # level = "module",
-#   line_type = "straight",
-#   llm_text = TRUE
+#   line_type = "straight"
 # )
 #
 # Metabolite enrichment result
-# plot_pathway_bar(object =  enriched_functional_module_met,
+# plot_pathway_bar(object = llm_interpreted_functional_module,
 #                  top_n = 5,
 #                  x_axis_name = "qscore",
 #                  # level = "pathway",
-#                  level = "functional_module",
+#                  # level = "functional_module",
 #                  line_type = "straight",
 #                  p.adjust.cutoff = 0.05,
 #                  count.cutoff = 0,
-#                  database = c("kegg", "hmdb"))
-
-# plot_pathway_bar(object = llm_interpreted_enriched_functional_module,
-#                  top_n = 5,
-#                  x_axis_name = "qscore",
-#                  level = "pathway",
-#                  line_type = "straight",
-#                  p.adjust.cutoff = 0.05,
-#                  count.cutoff = 5,
-#                  database = c("metkegg"))
-
-# plot_pathway_bar(object = llm_interpreted_enriched_functional_module,
-#                  top_n = 5,
-#                  x_axis_name = "qscore",
-#                  level = "functional_module",
-#                  llm_text = TRUE,
-#                  line_type = "straight",
-#                  p.adjust.cutoff = 0.05,
-#                  count.cutoff = 5,
-#                  database = c("hmdb", "kegg"))
+#                  database = c("metkegg", "smpdb"))
 
 #' Plot enrichment results as a horizontal bar chart
 #'
@@ -139,7 +91,7 @@
 #' @param count.cutoff  Minimum gene/metabolite count to keep (default `5`).
 #' @param database_color  Named vector mapping databases to fill colours.
 #' @param database  Character vector of databases to include; values are
-#'   case-insensitive versions of `"go"`, `"kegg"`, `"reactome"`, `"hmdb"`, `"metkegg"`.
+#'   case-insensitive versions of `"go"`, `"kegg"`, `"reactome"`, `"smpdb"`, `"metkegg"`.
 #'
 #' @return A **ggplot** object.
 #'
@@ -183,9 +135,9 @@ plot_pathway_bar <-
                GO = "#eeca40",
                KEGG = "#fd7541",
                Reactome = "#23b9c7",
-               HMDB = "#7998ad"
+               SMPDB = "#7998ad"
              ),
-           database = c("go", "kegg", "reactome", "hmdb", "metkegg")) {
+           database = c("go", "kegg", "reactome", "smpdb", "metkegg")) {
 
     level <- match.arg(level)
     sim_method <- object@process_info$merge_pathways@function_name
@@ -282,30 +234,9 @@ plot_pathway_bar <-
     if (level == "pathway") {
       ## For gene enrichment analysis
       if (query_type == "gene") {
-        enrichment_go_result <-
-          tryCatch(
-            object@enrichment_go_result@result |>
-              dplyr::mutate(class = "GO"),
-            error = function(e) {
-              NULL
-            }
-          )
-        enrichment_kegg_result <-
-          tryCatch(
-            object@enrichment_kegg_result@result |>
-              dplyr::mutate(class = "KEGG"),
-            error = function(e) {
-              NULL
-            }
-          )
-        enrichment_reactome_result <-
-          tryCatch(
-            object@enrichment_reactome_result@result |>
-              dplyr::mutate(class = "Reactome"),
-            error = function(e) {
-              NULL
-            }
-          )
+        enrichment_go_result <- extract_res(object@enrichment_go_result@result, db_name = "GO")
+        enrichment_kegg_result <- extract_res(object@enrichment_kegg_result@result, db_name = "KEGG")
+        enrichment_reactome_result <- extract_res(object@enrichment_reactome_result@result, db_name = "Reactome")
 
         if (is.null(enrichment_go_result) &
             is.null(enrichment_kegg_result) &
@@ -358,23 +289,9 @@ plot_pathway_bar <-
           }
         }
       } else if (query_type == "metabolite") {
-        enrichment_hmdb_result <-
-          tryCatch(
-            object@enrichment_hmdb_result@result |>
-              dplyr::mutate(class = "HMDB"),
-            error = function(e) {
-              NULL
-            }
-          )
+        enrichment_hmdb_result <- extract_res(object@enrichment_hmdb_result@result, db_name = "SMPDB")
 
-        enrichment_metkegg_result <-
-          tryCatch(
-            object@enrichment_metkegg_result@result |>
-              dplyr::mutate(class = "KEGG"),
-            error = function(e) {
-              NULL
-            }
-          )
+        enrichment_metkegg_result <- extract_res(object@enrichment_metkegg_result@result, db_name = "KEGG")
 
         if (is.null(enrichment_hmdb_result) &
             is.null(enrichment_metkegg_result)) {
@@ -401,31 +318,9 @@ plot_pathway_bar <-
             length(object@merged_pathway_reactome) == 0) {
           stop("Please use the merge_pathways() function to process first")
         } else{
-          module_result_go <-
-            tryCatch(
-              object@merged_pathway_go$module_result |>
-                dplyr::mutate(class = "GO"),
-              error = function(e) {
-                NULL
-              }
-            )
-          module_result_kegg <-
-            tryCatch(
-              object@merged_pathway_kegg$module_result |>
-                dplyr::mutate(class = "KEGG"),
-              error = function(e) {
-                NULL
-              }
-            )
-
-          module_result_reactome <-
-            tryCatch(
-              object@merged_pathway_reactome$module_result |>
-                dplyr::mutate(class = "Reactome"),
-              error = function(e) {
-                NULL
-              }
-            )
+          module_result_go <- extract_res(object@merged_pathway_go$module_result, db_name = "GO")
+          module_result_kegg <- extract_res(object@merged_pathway_kegg$module_result, db_name = "KEGG")
+          module_result_reactome <- extract_res(object@merged_pathway_reactome$module_result, db_name = "Reactome")
 
           if (!is.null(module_result_reactome)) {
             if (!is.null(module_result_kegg)) {
@@ -469,22 +364,8 @@ plot_pathway_bar <-
             length(object@merged_pathway_metkegg) == 0) {
           stop("Please use the merge_pathways() function to process first")
         } else {
-          module_result_hmdb <-
-            tryCatch(
-              object@merged_pathway_hmdb$module_result|>
-                dplyr::mutate(class = "HMDB"),
-              error = function(e) {
-                NULL
-              }
-            )
-          module_result_metkegg <-
-            tryCatch(
-              object@merged_pathway_metkegg$module_result |>
-                dplyr::mutate(class = "KEGG"),
-              error = function(e) {
-                NULL
-              }
-            )
+          module_result_hmdb <- extract_res(object@merged_pathway_hmdb$module_result, db_name = "SMPDB")
+          module_result_metkegg <- extract_res(object@merged_pathway_metkegg$module_result, db_name = "KEGG")
 
           temp_data <-
             rbind(module_result_hmdb, module_result_metkegg)
@@ -528,7 +409,7 @@ plot_pathway_bar <-
                   stringr::str_detect(modules, "^go_Module") ~ "GO",
                   stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
                   stringr::str_detect(modules, "^reactome_Module") ~ "Reactome",
-                  stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB",
+                  stringr::str_detect(modules, "^hmdb_Module") ~ "SMPDB",
                   stringr::str_detect(modules, "^metkegg_Module") ~ "KEGG"
                 ))
                 paste(dbs, collapse = "/")
@@ -548,7 +429,7 @@ plot_pathway_bar <-
                   stringr::str_detect(modules, "^go_Module") ~ "GO",
                   stringr::str_detect(modules, "^kegg_Module") ~ "KEGG",
                   stringr::str_detect(modules, "^reactome_Module") ~ "Reactome",
-                  stringr::str_detect(modules, "^hmdb_Module") ~ "HMDB",
+                  stringr::str_detect(modules, "^hmdb_Module") ~ "SMPDB",
                   stringr::str_detect(modules, "^metkegg_Module") ~ "KEGG"
                 ))
                 paste(dbs, collapse = "/")
@@ -570,9 +451,9 @@ plot_pathway_bar <-
                 modules <- stringr::str_split(x, ";")[[1]]
                 dbs <- unique(dplyr::case_when(
                   stringr::str_detect(modules, "GO") ~ "GO",
-                  stringr::str_detect(modules, "hsa") ~ "KEGG",
-                  stringr::str_detect(modules, "R-HSA") ~ "Reactome",
-                  stringr::str_detect(modules, "SMP") ~ "HMDB",
+                  # stringr::str_detect(modules, "hsa") ~ "KEGG",
+                  stringr::str_detect(modules, "R-") ~ "Reactome",
+                  stringr::str_detect(modules, "SMP") ~ "SMPDB",
                   TRUE ~ "KEGG"
                 ))
                 paste(dbs, collapse = "/")
@@ -590,9 +471,9 @@ plot_pathway_bar <-
                 modules <- stringr::str_split(x, ";")[[1]]
                 dbs <- unique(dplyr::case_when(
                   stringr::str_detect(modules, "GO") ~ "GO",
-                  stringr::str_detect(modules, "hsa") ~ "KEGG",
-                  stringr::str_detect(modules, "R-HSA") ~ "Reactome",
-                  stringr::str_detect(modules, "SMP") ~ "HMDB",
+                  # stringr::str_detect(modules, "hsa") ~ "KEGG",
+                  stringr::str_detect(modules, "R-") ~ "Reactome",
+                  stringr::str_detect(modules, "SMP") ~ "SMPDB",
                   TRUE ~ "KEGG"
                 ))
                 paste(dbs, collapse = "/")
@@ -609,7 +490,7 @@ plot_pathway_bar <-
     database2[database2 == "go"] <- "GO"
     database2[database2 == "kegg"] <- "KEGG"
     database2[database2 == "reactome"] <- "Reactome"
-    database2[database2 == "hmdb"] <- "HMDB"
+    database2[database2 == "smpdb"] <- "SMPDB"
     database2[database2 == "metkegg"] <- "KEGG"
 
     ### Select the database of the representative pathway (min adjusted p value) in the module to color the module
@@ -720,7 +601,7 @@ plot4pathway_enrichment <-
              c(GO = "#eeca40",
                KEGG = "#fd7541",
                Reactome = "#23b9c7",
-               HMDB = "#7998ad")
+               SMPDB = "#7998ad")
              ) {
     line_type <-
       match.arg(line_type)
@@ -1075,3 +956,14 @@ plot4pathway_enrichment <-
     plot
 
   }
+
+
+extract_res <- function(expr, db_name) {
+  tryCatch({
+    result <- expr |> dplyr::mutate(class = db_name)
+    if(nrow(result) == 0) NULL else result
+  }, error = function(e) {
+    NULL
+  })
+}
+

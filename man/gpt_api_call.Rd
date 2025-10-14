@@ -7,11 +7,12 @@
 gpt_api_call(
   messages,
   api_key,
-  model = "gpt-4o-mini-2024-07-18",
+  model = NULL,
   max_tokens = 1000,
   temperature = 0.7,
   retry_attempts = 3,
-  api_provider = "openai"
+  api_provider = "openai",
+  thinkingBudget = 0
 )
 }
 \arguments{
@@ -29,14 +30,16 @@ Each message should be a list with \code{role} (e.g., "system", "user", or "assi
 
 \item{retry_attempts}{An integer specifying the maximum number of retry attempts if the API call fails (default is \code{3}).}
 
-\item{api_provider}{A string indicating the API provider, either \code{"openai"} or \code{"gemini"} (default is \code{"openai"}).}
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
+
+\item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
 }
 \value{
 The generated text from the GPT model if the call is successful. If the call fails after the specified number
 of retries, the function returns \code{NULL}.
 }
 \description{
-This internal function is designed to interact with GPT-based APIs (such as OpenAI's GPT or a hypothetical Gemini API).
+This internal function is designed to interact with GPT-based APIs (such as OpenAI's GPT or the Gemini API).
 It handles HTTP requests, retries failed attempts, and parses responses.
 This function is not intended for direct use by package users.
 }
@@ -47,4 +50,3 @@ in the code if necessary.
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }
-\keyword{internal}

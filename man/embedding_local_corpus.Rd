@@ -6,25 +6,32 @@
 \usage{
 embedding_local_corpus(
   embedding_model = "text-embedding-3-small",
+  api_provider = "openai",
   api_key = NULL,
   local_corpus_dir = "local_corpus",
   embedding_output_dir = "embedding_output",
-  save_dir_local_corpus_embed = "local"
+  save_dir_local_corpus_embed = "local",
+  thread = 10
 )
 }
 \arguments{
 \item{embedding_model}{A string specifying the embedding model to use. Default is \code{"text-embedding-3-small"}.}
 
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
+
 \item{api_key}{A character string containing the API key for the embedding service.}
 
 \item{local_corpus_dir}{A character string specifying the name of the directory where the local files
-provided by users are saved. Defaults to "local_corpus".}
+provided by users are saved. Defaults to "local_corpus" in the current working directory.}
 
 \item{embedding_output_dir}{A character string specifying the directory where the intermediate embedding results
 will be saved. Defaults to "embedding_output".}
 
-\item{save_dir_local_corpus_embed}{A character string specifying the directory where the embedding data will be saved.
-Defaults to "local".}
+\item{save_dir_local_corpus_embed}{A character string specifying the subdirectory where the local corpus embedding data
+will be saved. Defaults to "local".}
+
+\item{thread}{An integer specifying the number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 Nothing. The function processes and saves the embeddings to the specified save directory.

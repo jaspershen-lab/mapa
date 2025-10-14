@@ -2,12 +2,12 @@
 # setwd(r4projects::get_project_wd())
 # setwd("demo_data/")
 #
-# load("enriched_functional_module.rda")
-# load("interpretation_result.rda")
+# load("demo_data/demo_mouse/liver/gsea_res/openai_module_annotation_res.rda")
 #
 # report_functional_module(
-#   object = enriched_functional_module,
-#   path = ".",
+#   object = openai_module_annotation_res,
+#   degree_cutoff = 1,
+#   path = "demo_data/demo_mouse/liver/gsea_res/",
 #   type = "html"
 # )
 
@@ -27,6 +27,8 @@
 #' @param type A character vector specifying the format of the report.
 #'             Can be 'html', 'pdf', 'md', 'word', or 'all' to generate the report
 #'             in all three formats. Default is 'html'.
+#' @param degree_cutoff A numeric value specifying the minimum degree for network
+#'                     analysis. Default is 1. Must be 0 or a positive number.
 #'
 #' @return This function does not return a value but generates a report in the
 #'         specified format(s) and saves it to the given path.
@@ -43,13 +45,13 @@
 #' @importFrom rmarkdown draft render html_document pdf_document word_document
 #' @importFrom ggplot2 ggsave
 #' @importFrom dplyr bind_rows arrange
-#' @importFrom massdataset parse_tidymass_parameter
 #'
 #' @export
 
 report_functional_module <-
   function(object,
            path = ".",
+           degree_cutoff = 1,
            type = c("html", "pdf", "word", "md", "all")) {
 
     if (identical(type, "pdf") && Sys.which("pdflatex") == "") {
@@ -120,11 +122,11 @@ report_functional_module <-
       object@process_info %>%
       lapply(function(x) {
         if (length(x) == 1) {
-          massdataset::parse_tidymass_parameter(object = x)
+          mapa_parse_tidymass_parameter(object = x)
         } else{
           x %>%
             lapply(function(y) {
-              massdataset::parse_tidymass_parameter(object = y)
+              mapa_parse_tidymass_parameter(object = y)
             }) %>%
             dplyr::bind_rows()
         }
@@ -232,122 +234,162 @@ report_functional_module <-
     message("Saving similarity networks ...")
 
     if (length(object@merged_pathway_go) != 0) {
-      similarity_network_go <-
-        plot_similarity_network(object = object,
-                                level = "module",
-                                database = "go") +
-        labs(title = "GO Modules")
+      if (sum(object@merged_pathway_go$module_result$module_content_number > degree_cutoff) > 0) {
+        similarity_network_go <-
+          plot_similarity_network(object = object,
+                                  level = "module",
+                                  degree_cutoff = degree_cutoff,
+                                  database = "go") +
+          labs(title = "GO Modules")
 
-      tryCatch({
-        ggplot2::ggsave(
-          filename = file.path(output_path, "similarity_network_go.png"),
-          plot = similarity_network_go,
-          width = 8,
-          height = 6
-        )
-        message("Plot similarity_network_go.png saved successfully to: ", file.path(output_path, "similarity_network_go.png"), "!")
-      }, error = function(e) {
-        message("Error saving plot: ", e$message)
-      })
+        tryCatch({
+          ggplot2::ggsave(
+            filename = file.path(output_path, "similarity_network_go.png"),
+            plot = similarity_network_go,
+            width = 8,
+            height = 6
+          )
+          message("Plot similarity_network_go.png saved successfully to: ", file.path(output_path, "similarity_network_go.png"), "!")
+        }, error = function(e) {
+          message("Error saving plot: ", e$message)
+        })
+      } else {
+        message("GO similarity network plot not generated: No modules with content number > ", degree_cutoff)
+      }
+    } else {
+      message("GO similarity network plot not generated: No GO pathway data available")
     }
 
     if (length(object@merged_pathway_kegg) != 0) {
-      similarity_network_kegg <-
-        plot_similarity_network(object = object,
-                                level = "module",
-                                database = "kegg") +
-        labs(title = "KEGG Modules")
+      if (sum(object@merged_pathway_kegg$module_result$module_content_number > degree_cutoff) > 0) {
+        similarity_network_kegg <-
+          plot_similarity_network(object = object,
+                                  level = "module",
+                                  degree_cutoff = degree_cutoff,
+                                  database = "kegg") +
+          ggplot2::labs(title = "KEGG Modules")
 
-      tryCatch({
-        ggplot2::ggsave(
-          filename = file.path(output_path, "similarity_network_kegg.png"),
-          plot = similarity_network_kegg,
-          width = 8,
-          height = 6
-        )
-        message("Plot similarity_network_kegg.png saved successfully to: ", file.path(output_path, "similarity_network_kegg.png"), "!")
-      }, error = function(e) {
-        message("Error saving plot: ", e$message)
-      })
+        tryCatch({
+          ggplot2::ggsave(
+            filename = file.path(output_path, "similarity_network_kegg.png"),
+            plot = similarity_network_kegg,
+            width = 8,
+            height = 6
+          )
+          message("Plot similarity_network_kegg.png saved successfully to: ", file.path(output_path, "similarity_network_kegg.png"), "!")
+        }, error = function(e) {
+          message("Error saving plot: ", e$message)
+        })
+      } else {
+        message("KEGG similarity network plot not generated: No modules with content number > ", degree_cutoff)
+      }
+    } else {
+      message("KEGG similarity network plot not generated: No KEGG pathway data available")
     }
 
     if (length(object@merged_pathway_reactome) != 0) {
-      similarity_network_reactome <-
-        plot_similarity_network(object = object,
-                                level = "module",
-                                database = "reactome") +
-        labs(title = "Reactome Modules")
+      if (sum(object@merged_pathway_reactome$module_result$module_content_number > degree_cutoff) > 0) {
+        similarity_network_reactome <-
+          plot_similarity_network(object = object,
+                                  level = "module",
+                                  degree_cutoff = degree_cutoff,
+                                  database = "reactome") +
+          ggplot2::labs(title = "Reactome Modules")
 
-      tryCatch({
-        ggplot2::ggsave(
-          filename = file.path(output_path, "similarity_network_reactome.png"),
-          plot = similarity_network_reactome,
-          width = 8,
-          height = 6
-        )
-        message("Plot similarity_network_reactome.png saved successfully to: ", file.path(output_path, "similarity_network_reactome.png"), "!")
-      }, error = function(e) {
-        message("Error saving plot: ", e$message)
-      })
+        tryCatch({
+          ggplot2::ggsave(
+            filename = file.path(output_path, "similarity_network_reactome.png"),
+            plot = similarity_network_reactome,
+            width = 8,
+            height = 6
+          )
+          message("Plot similarity_network_reactome.png saved successfully to: ", file.path(output_path, "similarity_network_reactome.png"), "!")
+        }, error = function(e) {
+          message("Error saving plot: ", e$message)
+        })
+      } else {
+        message("Reactome similarity network plot not generated: No modules with content number > ", degree_cutoff)
+      }
+    } else {
+      message("Reactome similarity network plot not generated: No Reactome pathway data available")
     }
 
     if (length(object@merged_pathway_hmdb) != 0) {
-      similarity_network_hmdb <-
-        plot_similarity_network(object = object,
-                                level = "module",
-                                database = "hmdb") +
-        labs(title = "HMDB Modules")
+      if (sum(object@merged_pathway_hmdb$module_result$module_content_number > degree_cutoff) > 0) {
+        similarity_network_hmdb <-
+          plot_similarity_network(object = object,
+                                  level = "module",
+                                  degree_cutoff = degree_cutoff,
+                                  database = "hmdb") +
+          ggplot2::labs(title = "HMDB Modules")
 
-      tryCatch({
-        ggplot2::ggsave(
-          filename = file.path(output_path, "similarity_network_hmdb.png"),
-          plot = similarity_network_hmdb,
-          width = 8,
-          height = 6
-        )
-        message("Plot similarity_network_hmdb.png saved successfully to: ", file.path(output_path, "similarity_network_hmdb.png"), "!")
-      }, error = function(e) {
-        message("Error saving plot: ", e$message)
-      })
+        tryCatch({
+          ggplot2::ggsave(
+            filename = file.path(output_path, "similarity_network_hmdb.png"),
+            plot = similarity_network_hmdb,
+            width = 8,
+            height = 6
+          )
+          message("Plot similarity_network_hmdb.png saved successfully to: ", file.path(output_path, "similarity_network_hmdb.png"), "!")
+        }, error = function(e) {
+          message("Error saving plot: ", e$message)
+        })
+      } else {
+        message("HMDB similarity network plot not generated: No modules with content number > ", degree_cutoff)
+      }
+    } else {
+      message("HMDB similarity network plot not generated: No HMDB pathway data available")
     }
 
     if (length(object@merged_pathway_metkegg) != 0) {
-      similarity_network_metkegg <-
+      if (sum(object@merged_pathway_metkegg$module_result$module_content_number > degree_cutoff) > 0) {
+        similarity_network_metkegg <-
+          plot_similarity_network(object = object,
+                                  level = "module",
+                                  degree_cutoff = degree_cutoff,
+                                  database = "metkegg") +
+          ggplot2::labs(title = "KEGG Modules")
+
+        tryCatch({
+          ggplot2::ggsave(
+            filename = file.path(output_path, "similarity_network_metkegg.png"),
+            plot = similarity_network_metkegg,
+            width = 8,
+            height = 6
+          )
+          message("Plot similarity_network_metkegg.png saved successfully to: ", file.path(output_path, "similarity_network_metkegg.png"), "!")
+        }, error = function(e) {
+          message("Error saving plot: ", e$message)
+        })
+      } else {
+        message("MetKEGG similarity network plot not generated: No modules with content number > ", degree_cutoff)
+      }
+    } else {
+      message("MetKEGG similarity network plot not generated: No MetKEGG pathway data available")
+    }
+
+    if (sum(object@merged_module$functional_module_result$module_content_number > degree_cutoff) > 0) {
+      similarity_network_function_module <-
         plot_similarity_network(object = object,
-                                level = "module",
-                                database = "metkegg") +
-        labs(title = "KEGG Modules")
+                                level = "functional_module",
+                                degree_cutoff = degree_cutoff,
+                                llm_text = llm_text) +
+        labs(title = "Functional Modules")
 
       tryCatch({
         ggplot2::ggsave(
-          filename = file.path(output_path, "similarity_network_metkegg.png"),
-          plot = similarity_network_metkegg,
+          filename = file.path(output_path, "similarity_network_function_module.png"),
+          plot = similarity_network_function_module,
           width = 8,
           height = 6
         )
-        message("Plot similarity_network_metkegg.png saved successfully to: ", file.path(output_path, "similarity_network_metkegg.png"), "!")
+        message("Plot similarity_network_function_module.png saved successfully to: ", file.path(output_path, "similarity_network_function_module.png"), "!")
       }, error = function(e) {
         message("Error saving plot: ", e$message)
       })
+    } else {
+      message("Functional module similarity network plot not generated: No modules with content number > ", degree_cutoff)
     }
-
-    similarity_network_function_module <-
-      plot_similarity_network(object = object,
-                              level = "functional_module",
-                              llm_text = llm_text) +
-      labs(title = "Functional Modules")
-
-    tryCatch({
-      ggplot2::ggsave(
-        filename = file.path(output_path, "similarity_network_function_module.png"),
-        plot = similarity_network_function_module,
-        width = 8,
-        height = 6
-      )
-      message("Plot similarity_network_function_module.png saved successfully to: ", file.path(output_path, "similarity_network_function_module.png"), "!")
-    }, error = function(e) {
-      message("Error saving plot: ", e$message)
-    })
 
     ## Module network analysis ====
     # functional_module_id <-
@@ -423,8 +465,8 @@ report_functional_module <-
         params = list(text_data = NULL)
       )
       file.rename(
-        from = file.path(output_path, "mapa.template.pdf"),
-        to = file.path(output_path, "mapa_report.pdf")
+        from = file.path(output_path, "mapa.template.docx"),
+        to = file.path(output_path, "mapa_report.docx")
       )
     }
 

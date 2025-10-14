@@ -70,176 +70,174 @@ database_color =
     Reactome = "#2CA02CFF"
   )
 
-remove_words <-
-  c(
-    "to",
-    "of",
-    "in",
-    "type",
-    "pathway",
-    "IX",
-    "part",
-    "positive",
-    "negative",
-    "life",
-    "control",
-    "quality",
-    "body",
-    "late",
-    "cell",
-    "species",
-    "cells",
-    "or",
-    "levels",
-    "as",
-    "on",
-    "by",
-    "small",
-    "other",
-    "involved",
-    "alpha",
-    "specific",
-    "number",
-    "through",
-    "outer",
-    "large",
-    "rough",
-    "early",
-    "via",
-    "smooth",
-    "system",
-    "into",
-    "entry",
-    "and",
-    "T",
-    "based",
-    "within",
-    "from",
-    "built",
-    "mediated",
-    "-",
-    "_",
-    "animal",
-    "the",
-    "free",
-    "a",
-    "pool",
-    "60S",
-    "40S",
-    "and",
-    "chain",
-    "Decay",
-    "enhanced",
-    "independent",
-    "joining",
-    "4",
-    "2",
-    "up",
-    "take",
-    "release",
-    'Like',
-    "presentation",
-    "Class",
-    "I",
-    "mediated",
-    "exchange",
-    "&",
-    "events",
-    "B",
-    "an",
-    "",
-    "at",
-    "B",
-    "Base",
-    "c",
-    "E",
-    "during",
-    "for",
-    "Major",
-    "NOTCH",
-    "Of",
-    "Opening",
-    "Pathway",
-    "processing",
-    "free",
-    letters,
-    LETTERS,
-    "family",
-    "them",
-    "ii",
-    "class",
-    1:7,
-    "group",
-    "phase",
-    "ar",
-    "orc",
-    "new",
-    "ap",
-    "ends",
-    "sars-cov-2",
-    "upon",
-    "ix",
-    "major",
-    "System",
-    "with",
-    "affected",
-    "along",
-    "AP",
-    "AR",
-    "associated",
-    "Associated",
-    "association",
-    "containing",
-    "down",
-    "Ends",
-    "II",
-    "SARS-CoV",
-    "ARS-CoV-2-host",
-    "positively",
-    "Network",
-    "virus",
-    "regulation",
-    "Processing",
-    "protein",
-    "Protein",
-    "Nonsense",
-    "Nonsense-Mediated",
-    "production",
-    "pathways",
-    "multiple",
-    "scanning",
-    "site",
-    "The",
-    "start",
-    "pattern",
-    "Processing",
-    "Phase",
-    "Packaging",
-    "human",
-    "Human",
-    "gene",
-    "genome",
-    "foam",
-    "classical",
-    "beta",
-    "2A",
-    "11",
-    "17",
-    1:100,
-    "5'-3'",
-    "A-I",
-    "absence",
-    "break",
-    "end",
-    "second",
-    "zone",
-    "activity",
-    "binding",
-    "response",
-    "receptor",
-    "signaling",
-    "process"
-  )
+remove_words <- c(
+  # === EMPTY STRINGS AND SYMBOLS ===
+  "",
+  "-",
+  "_",
+  "&",
+
+  # === NUMBERS AND RANGES ===
+  as.character(1:100),
+
+  # === ALPHANUMERIC CODES ===
+  "2A",
+  # "40S",
+  # "60S",
+  "5'-3'",
+  "A-I",
+
+  # === SINGLE LETTERS ===
+  LETTERS,
+  letters,
+  # === ROMAN NUMERALS ===
+  "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x",
+  "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
+  "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx",
+  "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX",
+
+  # === PREPOSITIONS AND CONJUNCTIONS ===
+  "and",
+  "as",
+  "at",
+  "by",
+  "during",
+  "for",
+  "from",
+  "in",
+  "into",
+  "of",
+  "on",
+  "or",
+  "through",
+  "to",
+  "upon",
+  "via",
+  "with", "within",
+  "between",
+
+  # === ARTICLES AND DETERMINERS ===
+  "a",
+  "an",
+  "the", "The",
+  "This", "this", "them",
+  "That", "that", "which",
+  "such", "other", "both",
+  "it", "their", "Their",
+  "study", "studies", "article",
+
+  # === DESCRIPTIVE ADJECTIVES ===
+  "early", "late",
+  "small", "large",
+  "major", "Major",
+  "multiple",
+  # "negative",
+  "new",
+  "outer",
+  # "positive", "positively",
+  "rough", "smooth",
+  "specific",
+  "free",
+  "overall", "additionally",
+  "particularly",
+  "important", "importantly", "critical",
+
+  # === DIRECTIONAL/POSITIONAL WORDS ===
+  "along",
+  "down",
+  "ends", "Ends",
+  "up",
+
+  # === BIOLOGICAL TERMS - GENERAL ===
+  "animal",
+  "body",
+  "cell", "cells",
+  "gene", "genome",
+  "human", "Human",
+  "life",
+  "species",
+
+  # === BIOLOGICAL TERMS - MOLECULAR ===
+  "alpha",
+  "beta",
+  "chain",
+  "protein", "Protein",
+  # "receptor",
+
+  # === BIOLOGICAL PROCESSES ===
+  "activity",
+  # "binding",
+  "process", "processing", "Processing",
+  # "production",
+  # "regulation",
+  # "response",
+  # "signaling",
+
+  # === BIOLOGICAL SYSTEMS/STRUCTURES ===
+  "pathway", "Pathway", "pathways",
+  "system", "System", "module",
+
+  # === CLASSIFICATION TERMS ===
+  "class", "Class", "classical",
+  "family", "group", "type", "role",
+
+  # === BIOLOGICAL STATES/CONDITIONS ===
+  "affected",
+  "Associated", "associated", "association",
+  "base", "build",
+  "contain",
+  "enhance",
+  "independent",
+  "involve", "include",
+  "mediate", "control",
+
+  # === PHASES/STAGES ===
+  "Phase", "phase",
+  "start",
+  "end",
+  "second",
+
+  # === BIOLOGICAL CONCEPTS ===
+  "absence",
+  "break",
+  "Decay",
+  "entry",
+  "events",
+  "exchange",
+  "joining",
+  "levels",
+  "Network", "network",
+  "number",
+  "Opening",
+  "Packaging",
+  "part",
+  "pattern",
+  "pool",
+  "presentation",
+  "quality",
+  "release",
+  "scanning",
+  "site", "zone",
+  "take",
+
+  # === SPECIFIC BIOLOGICAL ENTITIES ===
+  "AP", "ap",
+  "AR", "ar",
+  # "ARS-CoV-2-host",
+  "Base", "foam",
+  "Nonsense",
+  "Nonsense-Mediated",
+  "NOTCH",
+  "orc",
+  # "SARS-CoV",
+  # "sars-cov-2",
+  # "virus"
+
+  # === non-biological VERBs ===
+  "be", "is", "are", "have",
+  "can", "reveal", "suggest", "understand", "underscore",
+  "state", "show", "highlight", "inform", "illustrate"
+)
 
 
 
@@ -1331,11 +1329,15 @@ unify_id_internal <- function(ids = NULL,
           return(x)
         }
 
-        if (stringr::str_detect(x, "[A-Za-z]")) {
+        if (x %in% variable_info$symbol) {
+          return(variable_info$ensembl[match(x, variable_info$symbol)])
+        }
+
+        if (x %in% variable_info$uniprot) {
           return(variable_info$ensembl[match(x, variable_info$uniprot)])
         }
 
-        if (stringr::str_detect(x, "^\\d+$")) {
+        if (x %in% variable_info$entrezid) {
           return(variable_info$ensembl[match(x, variable_info$entrezid)])
         }
       })
@@ -1356,6 +1358,9 @@ unify_id_internal <- function(ids = NULL,
       unified_ids <- ids
     }
   }
+
+  unified_ids <- unified_ids[!is.na(unified_ids)]
+
   return(unified_ids)
 }
 
@@ -1419,36 +1424,10 @@ extract_llm_module_data <- function(llm_module_interpretation) {
 merge_by_binary_cut <- function(sim_matrix,
                                 sim.cutoff) {
   requireNamespace("flexclust", quietly = TRUE)
-  clusters <- simplifyEnrichment::binary_cut(mat = sim_matrix, cutoff = sim.cutoff)
+  clusters <- simplifyEnrichment::binary_cut(mat = sim_matrix, cutoff = 1 - sim.cutoff)
   cluster_result <-
     data.frame(node = rownames(sim_matrix),
                module = paste("Functional_module", as.character(clusters), sep = "_"))
-
-  return(cluster_result)
-}
-
-merge_by_Girvan_Newman <- function(edge_data,
-                                   node_data,
-                                   sim.cutoff) {
-  ## Filter graph data according to sim.cutoff
-  edge_data <-
-    edge_data |>
-    dplyr::filter(sim > sim.cutoff)
-  ## Create tidygraph object
-  graph_data <-
-    tidygraph::tbl_graph(nodes = node_data,
-                         edges = edge_data,
-                         directed = FALSE,
-                         node_key = "node") |>
-    dplyr::mutate(degree = tidygraph::centrality_degree())
-
-  ## Perform clustering
-  subnetwork <-
-    suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data, weights = abs(igraph::edge_attr(graph_data, "sim"))))
-  ## Assign functional module label for pathways
-  cluster_result <-
-    data.frame(node = node_data$node,
-               module = paste("Functional_module", as.character(igraph::membership(subnetwork)), sep = "_"))
 
   return(cluster_result)
 }
@@ -1462,7 +1441,7 @@ merge_by_hierarchical <- function(sim_matrix,
   ## Perform hierarchical clustering
   hc <- hclust(cosine_dist_obj, method = hclust.method)
 
-  clusters <- cutree(hc, h = sim.cutoff)
+  clusters <- cutree(hc, h = 1 - sim.cutoff)
   cluster_result <-
     data.frame(node = hc$labels,
                module = paste("Functional_module", as.character(clusters), sep = "_"))
@@ -1470,21 +1449,145 @@ merge_by_hierarchical <- function(sim_matrix,
   return(cluster_result)
 }
 
-calculate_modularity <- function(graph_obj, clusters) {
+# merge_by_Girvan_Newman <- function(edge_data,
+#                                    node_data,
+#                                    sim.cutoff) {
+#   ## Filter graph data according to sim.cutoff
+#   edge_data <-
+#     edge_data |>
+#     dplyr::filter(sim > sim.cutoff)
+#   ## Create tidygraph object
+#   graph_data <-
+#     tidygraph::tbl_graph(nodes = node_data,
+#                          edges = edge_data,
+#                          directed = FALSE,
+#                          node_key = "node") |>
+#     dplyr::mutate(degree = tidygraph::centrality_degree())
+#
+#   ## Perform clustering
+#   subnetwork <-
+#     suppressWarnings(igraph::cluster_edge_betweenness(graph = graph_data, weights = abs(igraph::edge_attr(graph_data, "sim"))))
+#   ## Assign functional module label for pathways
+#   cluster_result <-
+    # data.frame(node = node_data$node,
+    #            module = paste("Functional_module", as.character(igraph::membership(subnetwork)), sep = "_"))
+#
+#   return(cluster_result)
+# }
+
+calculate_modularity <- function(sim_matrix, edge_data, sim.cutoff, clusters) {
   tryCatch({
-    igraph::modularity(x = graph_obj,
-                       membership = clusters)
+    filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+    # Handle case where all nodes are in the same cluster
+    if (length(unique(clusters)) <= 1) {
+      return(0)
+    }
+    graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                               vertices = rownames(sim_matrix))
+    igraph::modularity(graph_obj, clusters)
   }, error = function(e) {
-    NA_real_
+    warning(paste("Modularity calculation failed:", e$message))
+    return(NA)
   })
 }
 
-calculate_silhouette <- function(dist_obj, clusters) {
+# calculate_silhouette <- function(sim_matrix, clusters) {
+#   dist_matrix <- 1 - sim_matrix
+#   dist_obj <- as.dist(dist_matrix)
+#   tryCatch({
+#     if (length(unique(clusters)) < 2 || length(unique(clusters)) > (nrow(sim_matrix) - 1)) return(NA_real_)
+#
+#     sil <- cluster::silhouette(clusters, dist_obj)
+#     mean(sil[, "sil_width"])
+#   }, error = function(e) {
+#     warning(paste("Silhouette calculation failed:", e$message))
+#     return(NA)
+#   })
+# }
+
+calculate_silhouette <- function(sim_matrix, clusters) {
+
+  cluster_counts <- table(clusters)
+  non_singleton_clusters <- names(cluster_counts[cluster_counts > 1])
+
+  # If there are fewer than two non-singleton clusters, silhouette score is not meaningful
+  if (length(non_singleton_clusters) < 2) {
+    warning("Cannot calculate silhouette score with fewer than two non-singleton clusters.")
+    return(NA_real_)
+  }
+
+  indices_to_keep <- which(clusters %in% non_singleton_clusters)
+
+  clusters_filtered <- clusters[indices_to_keep]
+  sim_matrix_filtered <- sim_matrix[indices_to_keep, indices_to_keep, drop = FALSE]
+
+  dist_matrix <- 1 - sim_matrix_filtered
+  dist_obj <- as.dist(dist_matrix)
+
   tryCatch({
-    if (length(unique(clusters)) < 2) return(NA_real_)
-    sil <- cluster::silhouette(clusters, dist_obj)
+    sil <- cluster::silhouette(clusters_filtered, dist_obj)
     mean(sil[, "sil_width"])
   }, error = function(e) {
-    NA_real_
+    warning(paste("Silhouette calculation failed after removing singletons:", e$message))
+    return(NA_real_)
   })
 }
+
+
+#' Parse tidymass_parameter Object to Data Frame
+#'
+#' This function takes a `tidymass_parameter` object and converts it into a data frame for easier manipulation and reporting.
+#' This is a modified version of the original function that excludes the "by" parameter from the do_gsea() output.
+#'
+#' @param object A `tidymass_parameter` object to be parsed.
+#'
+#' @return A data frame containing the package name, function name, parameters (excluding "by" for gsea output), and the time when the function was called.
+#'
+#' @note This function excludes parameters named "by" from the final output, unlike the original implementation.
+#'
+#' @references
+#' Original function adapted from the massdataset package:
+#' Shen, X., Yan, H., Wang, C. et al. TidyMass an object-oriented reproducible analysis framework for LC–MS data. Nat Commun 13, 4365 (2022).
+#' Author: Xiaotao Shen \email{shenxt1990@@outlook.com}
+#'
+#' @export
+
+mapa_parse_tidymass_parameter <-
+  function(object) {
+    if (!is(object, class2 = "tidymass_parameter")) {
+      stop("only support tidymass_parameter class.\n")
+    }
+
+    if (is.null(names(object@parameter))) {
+      names(object@parameter) = paste("parameter",
+                                      seq_along(object@parameter),
+                                      sep = "_")
+    }
+
+    result <-
+      data.frame(
+        pacakge_name = object@pacakge_name,
+        function_name = object@function_name,
+        parameter = purrr::map2(names(object@parameter),
+                                object@parameter,
+                                function(name, value) {
+                                  if (name == "by") {
+                                    return(NULL)
+                                  }
+                                  if (length(value) > 5) {
+                                    value = head(value, 5)
+                                    value = paste(c(value, "..."), collapse = ',')
+                                  } else{
+                                    value = paste(value, collapse = ',')
+                                  }
+                                  paste(name, value, sep = ":")
+                                }) %>%
+          purrr::compact() %>%
+          unlist(),
+        time = object@time,
+        check.names = FALSE
+      )
+
+    return(result)
+
+  }

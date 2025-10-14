@@ -7,6 +7,7 @@
 report_functional_module(
   object,
   path = ".",
+  degree_cutoff = 1,
   type = c("html", "pdf", "word", "md", "all")
 )
 }
@@ -16,6 +17,9 @@ generate a report based on this object.}
 
 \item{path}{A character string specifying the directory path where the report
 and associated files will be saved. Defaults to the current directory.}
+
+\item{degree_cutoff}{A numeric value specifying the minimum degree for network
+analysis. Default is 1. Must be 0 or a positive number.}
 
 \item{type}{A character vector specifying the format of the report.
 Can be 'html', 'pdf', 'md', 'word', or 'all' to generate the report

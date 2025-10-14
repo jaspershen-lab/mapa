@@ -431,107 +431,29 @@ get_smpdb_info <- function(smpdb_ids) {
 #'
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @keywords internal
-get_ttl_abstr <- function(data) {
-  data %>%
-    purrr::map(
-      function(x) {
-        # Format text info
-        if (nchar(x$PMID) == 0){
-          text_info <- sprintf("ID: %s\nName: %s\nDefinition: %s\nAnnotated Gene names: %s", x$id, x$term_name, x$term_definition, x$annotated_genename)
-
-        } else {
-          ttls_abstrs <-
-            stringr::str_split(x$PMID, ",")[[1]] %>%
-            purrr::map_chr(~ retrieve_abstr_ttl(pmid = .x)) %>%
-            paste(., collapse = "\n")
-          text_info <- sprintf("ID: %s\nName: %s\nDefinition: %s\nAnnotated Gene names: %s\nReference:\n%s", x$id, x$term_name, x$term_definition, x$annotated_genename, ttls_abstrs)
-        }
-
-        text <- list(
-          "id" = x$id,
-          "text_info" = text_info
-        )
-      })
-}
-
-#' Retrieve title and abstract for a PubMed ID
-#'
-#' This internal function retrieves the title and abstract for a given PubMed ID.
-#' It also filters out review articles.
-#'
-#' @param pmid A character string with the PubMed ID
-#' @param retries Number of retries when fetching fails (default: 2)
-#' @param pause Time in seconds to pause between retries (default: 1)
-#'
-#' @return A formatted string containing the title and abstract, or an empty string if retrieval fails
-#'
-#' @importFrom rentrez entrez_fetch
-#' @importFrom rvest read_html html_nodes html_node html_text
-#'
-#' @author Yifei Ge \email{yifeii.ge@outlook.com}
-#'
-#' @keywords internal
-retrieve_abstr_ttl <- function(pmid, retries = 2, pause = 1) {
-  attempt <- 1
-  while (attempt <= retries) {
-    tryCatch({
-      # Fetch html data containing title and abstract
-      html_result <-
-        rentrez::entrez_fetch(
-          db = "pubmed",
-          id = pmid,
-          rettype = "abstract",
-          retmode = "html"
-        )
-
-      # Parse html
-      parsed_html <- rvest::read_html(html_result)
-
-      # Remove Review articles
-      publication_type <- parsed_html %>%
-        rvest::html_nodes("publicationtype") %>%
-        rvest::html_text()
-      if ("Review" %in% publication_type) {
-        return("")
-      }
-
-      # Get title
-      title <- parsed_html %>%
-        rvest::html_node("articletitle") %>%
-        rvest::html_text(trim = TRUE)
-
-      # Get abstract
-      abstract <- parsed_html %>%
-        rvest::html_node("abstract") %>%
-        rvest::html_text(trim = TRUE)
-
-      if (is.na(abstract)) {
-        return("")
-      } else {
-        return(sprintf("Title: %s\nAbstract: %s", title, abstract))
-      }
-    }, error = function(e) {
-      warning(sprintf("Attempt %d failed for PubMed IDs: %s. Error: %s",
-                      attempt, paste(pmids, collapse = ", "), e))
-    })
-
-    Sys.sleep(pause)
-    attempt <- attempt + 1
-  }
-
-  warning(sprintf("All attempts failed for PubMed IDs: %s",
-                  paste(pmids, collapse = ", ")))
-  return(lapply(pmids, function(PID) {
-    list(
-      title = sprintf("Error: Failed to retrieve title for PubMed ID %s after %d attempts",
-                      PID, retries),
-      abstract = sprintf("Error: Failed to retrieve abstract for PubMed ID %s after %d attempts",
-                         PID, retries)
-    )
-  }))
-}
-
+#' @noRd
+# get_ttl_abstr <- function(data) {
+#   data %>%
+#     purrr::map(
+#       function(x) {
+#         # Format text info
+#         if (nchar(x$PMID) == 0){
+#           text_info <- sprintf("ID: %s\nName: %s\nDefinition: %s\nAnnotated Gene names: %s", x$id, x$term_name, x$term_definition, x$annotated_genename)
+#
+#         } else {
+#           ttls_abstrs <-
+#             stringr::str_split(x$PMID, ",")[[1]] %>%
+#             purrr::map_chr(~ retrieve_abstr_ttl(pmid = .x)) %>%
+#             paste(., collapse = "\n")
+#           text_info <- sprintf("ID: %s\nName: %s\nDefinition: %s\nAnnotated Gene names: %s\nReference:\n%s", x$id, x$term_name, x$term_definition, x$annotated_genename, ttls_abstrs)
+#         }
+#
+#         text <- list(
+#           "id" = x$id,
+#           "text_info" = text_info
+#         )
+#       })
+# }
 
 
 

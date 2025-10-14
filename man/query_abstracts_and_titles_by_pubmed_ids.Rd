@@ -4,10 +4,10 @@
 \alias{query_abstracts_and_titles_by_pubmed_ids}
 \title{Retrieve Titles and Abstracts by PubMed IDs}
 \usage{
-query_abstracts_and_titles_by_pubmed_ids(PID_list, retries = 2, pause = 1)
+query_abstracts_and_titles_by_pubmed_ids(pmid_list, retries = 2, pause = 1)
 }
 \arguments{
-\item{PID_list}{A character vector containing PubMed IDs to query.}
+\item{pmid_list}{A character vector containing PubMed IDs to query.}
 
 \item{retries}{An integer specifying the number of retry attempts for failed queries (default is 2).}
 
@@ -24,7 +24,7 @@ Queries PubMed for titles and abstracts using a list of PubMed IDs (PIDs).
 \details{
 This function performs the following steps for each PubMed ID:
 \itemize{
-\item Queries PubMed for the title and abstract using \code{\link{retrieve_abstr_ttl}}.
+\item Queries PubMed for the title and abstract.
 \item Handles errors and retries the query up to \code{retries} times in case of failure.
 \item Returns a default error message if all retry attempts fail.
 }
@@ -35,13 +35,11 @@ The function ensures robust error handling and provides meaningful messages in c
 \dontrun{
 # Example: Query titles and abstracts for a list of PubMed IDs
 PID_list <- c("12345678", "23456789")
-results <- query_abstracts_and_titles_by_pubmed_ids(PID_list)
+results <- query_abstracts_and_titles_by_pubmed_ids(pmid_list)
 print(results)
 }
 
-}
-\seealso{
-\code{\link{retrieve_abstr_ttl}}
+
 }
 \author{
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}

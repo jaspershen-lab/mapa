@@ -4,7 +4,13 @@
 \alias{pubmed_search}
 \title{Search PubMed for All Modules and Add PubMed IDs}
 \usage{
-pubmed_search(processed_data, chunk_size = 5, years = 5, retmax = 10)
+pubmed_search(
+  processed_data,
+  chunk_size = 5,
+  years = 5,
+  retmax = 10,
+  thread = 10
+)
 }
 \arguments{
 \item{processed_data}{A named list where each element corresponds to a module.}
@@ -14,6 +20,9 @@ pubmed_search(processed_data, chunk_size = 5, years = 5, retmax = 10)
 \item{years}{An integer specifying how many years to look back in the search (default is 5).}
 
 \item{retmax}{An integer specifying the maximum number of results to retrieve (default is 10).}
+
+\item{thread}{An integer specifying the number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 A named list similar to \code{processed_data}, but with an added \code{PubmedIDs}

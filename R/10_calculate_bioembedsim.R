@@ -1,8 +1,6 @@
 # setwd(r4projects::get_project_wd())
 # source("R/6_utils.R")
 # source("R/8_functional_module_class.R")
-# load("data/enriched_pathways.rda")
-# object <- enriched_pathways
 # library(dplyr)
 # library(purrr)
 # library(httr2)
@@ -20,13 +18,38 @@
 # library(rtiktoken)
 # For genes
 ## ORA
+# load("demo_data/gene_ora_res/enriched_pathways.rda")
+# setwd("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/")
+# {
+  # object = enriched_pathways
+  # # api_provider = "openai"
+  # api_provider = "siliconflow"
+  # # text_embedding_model = "text-embedding-3-small"
+  # text_embedding_model = "Qwen/Qwen3-Embedding-4B"
+  # api_key = api_key
+  # database = c("go", "kegg", "reactome")
+  # save_to_local = FALSE
+  # p.adjust.cutoff.go = 0.05
+  # p.adjust.cutoff.kegg = 0.05
+  # p.adjust.cutoff.reactome = 0.05
+  # p.adjust.cutoff.hmdb = 0.05
+  # p.adjust.cutoff.metkegg = 0.05
+  # count.cutoff.go = 5
+  # count.cutoff.kegg = 5
+  # count.cutoff.reactome = 5
+  # count.cutoff.hmdb = 5
+  # count.cutoff.metkegg = 5
+# }
 # openai_semantic_sim_matrix <-
 #   get_bioembedsim(object = enriched_pathways,
-#                   api_provider = "openai",
-#                   text_embedding_model = "text-embedding-3-small",
+#                   # api_provider = "openai",
+#                   api_provider = "siliconflow",
+#                   # text_embedding_model = "text-embedding-3-small",
+#                   text_embedding_model = "Qwen/Qwen3-Embedding-4B",
 #                   api_key = api_key,
 #                   database = c("go", "kegg", "reactome"),
 #                   save_to_local = FALSE)
+# save(openai_semantic_sim_matrix, file = "openai_semantic_sim_matrix.rda")
 # gemini_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "gemini",  text_embedding_model = "text-embedding-004", api_key = api_key)
 ## GSEA
 # openai_semantic_sim_matrix <-
@@ -37,11 +60,12 @@
 #                   api_key = api_key,
 #                   save_to_local = FALSE)
 # For metabolites
-# openai_sim_matrix_met <-
+# load("demo_data/met_ora_res/met_enriched_pathways.rda")
+# sim_matrix_met <-
 #   get_bioembedsim(object = enriched_pathways,
-#                   api_provider = "openai",
-#                   database = c("metkegg"),
-#                   text_embedding_model = "text-embedding-3-small",
+#                   api_provider = "siliconflow",
+#                   database = c("hmdb", "metkegg"),
+#                   text_embedding_model = "Qwen/Qwen3-Embedding-4B",
 #                   api_key = api_key,
 #                   count.cutoff.metkegg = 0,
 #                   save_to_local = FALSE)
@@ -58,9 +82,10 @@
 #'
 #' @param object An object of class "functional_module", typically a result from enrich_pathway function.
 #' @param api_provider Character string specifying the API provider for text embeddings.
-#'   Options are "openai" or "gemini".
+#'   Options are "openai", "gemini", or "siliconflow.
 #' @param text_embedding_model Character string specifying the embedding model to use
-#'   (e.g., "text-embedding-3-small" for OpenAI or "text-embedding-004" for Gemini)
+#'   (e.g., "text-embedding-3-small" for OpenAI, "models/text-embedding-004" for Gemini, or
+#'   "Qwen/Qwen3-Embedding-8B" for SiliconFlow)
 #' @param api_key Character string of the API key for the specified provider
 #' @param database Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
 #'   and/or "reactome". Multiple selections allowed.
@@ -107,7 +132,7 @@
 #' sim_matrix <- get_bioembedsim(
 #'   object = my_enrichment_object,
 #'   api_provider = "gemini",
-#'   text_embedding_model = "text-embedding-004",
+#'   text_embedding_model = "models/text-embedding-004",
 #'   api_key = "your_gemini_key",
 #'   database = "reactome"
 #' )
@@ -123,7 +148,7 @@
 
 get_bioembedsim <-
   function(object,
-           api_provider = c("openai", "gemini"),
+           api_provider = c("openai", "gemini", "siliconflow"),
            text_embedding_model = NULL,
            api_key = NULL,
            database = c("go", "kegg", "reactome", "hmdb", "metkegg"),
@@ -177,12 +202,21 @@ get_bioembedsim <-
         if (is.null(object@enrichment_go_result)) {
           stop("Please perform pathway enrichment based on GO database at first.")
         } else {
-          go_info <-
-            object@enrichment_go_result@result %>%
+          filtered_ids <- object@enrichment_go_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.go) %>%
             dplyr::filter(Count > count.cutoff.go) %>%
-            dplyr::pull(ID) %>%
-            get_go_info()
+            dplyr::pull(ID)
+
+          # Check if any pathways meet the criteria
+          if (length(filtered_ids) == 0) {
+            go_info <- NA
+            message("No GO pathways meet the specified criteria (p_adjust < ",
+                    p.adjust.cutoff.go, " and Count > ", count.cutoff.go,
+                    "). go_info set to NA.")
+          } else {
+            message("Collecting pathway text information for GO terms from Gene Ontology database...")
+            go_info <- get_go_info(filtered_ids)
+          }
           all_text_info <- c(all_text_info, go_info)
         }
       }
@@ -191,12 +225,21 @@ get_bioembedsim <-
         if (is.null(object@enrichment_kegg_result)) {
           stop("Please perform pathway enrichment based on KEGG database at first.")
         } else {
-          kegg_info <-
-            object@enrichment_kegg_result@result %>%
+          filtered_ids <- object@enrichment_kegg_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.kegg) %>%
             dplyr::filter(Count > count.cutoff.kegg) %>%
-            dplyr::pull(ID) %>%
-            get_kegg_pathway_info()
+            dplyr::pull(ID)
+
+          # Check if any pathways meet the criteria
+          if (length(filtered_ids) == 0) {
+            kegg_info <- NA
+            message("No KEGG pathways meet the specified criteria (p_adjust < ",
+                    p.adjust.cutoff.kegg, " and Count > ", count.cutoff.kegg,
+                    "). kegg_info set to NA.")
+          } else {
+            message("Collecting pathway text information for KEGG pathways from KEGG database...")
+            kegg_info <- get_kegg_pathway_info(filtered_ids)
+          }
           all_text_info <- c(all_text_info, kegg_info)
         }
       }
@@ -205,12 +248,21 @@ get_bioembedsim <-
         if (is.null(object@enrichment_reactome_result)) {
           stop("Please perform pathway enrichment based on Reactome database at first.")
         } else {
-          reactome_info <-
-            object@enrichment_reactome_result@result %>%
+          filtered_ids <- object@enrichment_reactome_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.reactome) %>%
             dplyr::filter(Count > count.cutoff.reactome) %>%
-            dplyr::pull(ID) %>%
-            get_reactome_pathway_info()
+            dplyr::pull(ID)
+
+          # Check if any pathways meet the criteria
+          if (length(filtered_ids) == 0) {
+            reactome_info <- NA
+            message("No Reactome pathways meet the specified criteria (p_adjust < ",
+                    p.adjust.cutoff.reactome, " and Count > ", count.cutoff.reactome,
+                    "). reactome_info set to NA.")
+          } else {
+            message("Collecting pathway text information for Reactome pathways from Reactome database...")
+            reactome_info <- get_reactome_pathway_info(filtered_ids)
+          }
           all_text_info <- c(all_text_info, reactome_info)
         }
       }
@@ -224,14 +276,18 @@ get_bioembedsim <-
             object@enrichment_metkegg_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.metkegg) %>%
             dplyr::filter(mapped_number > count.cutoff.metkegg)
-          for (i in 1:nrow(metkegg_enrichment_result)) {
-            entry <- metkegg_enrichment_result[i,]
-            all_info <- list(
-              "id" = entry$pathway_id,
-              "term_name" = entry$pathway_name,
-              "term_definition" = entry$describtion
-            )
-            metkegg_info <- c(metkegg_info, list(all_info))
+          if (nrow(metkegg_enrichment_result) == 0) {
+            metkegg_info <- NA
+          } else {
+            for (i in 1:nrow(metkegg_enrichment_result)) {
+              entry <- metkegg_enrichment_result[i,]
+              all_info <- list(
+                "id" = entry$pathway_id,
+                "term_name" = entry$pathway_name,
+                "term_definition" = entry$describtion
+              )
+              metkegg_info <- c(metkegg_info, list(all_info))
+            }
           }
           all_text_info <- c(all_text_info, metkegg_info)
         }
@@ -246,24 +302,37 @@ get_bioembedsim <-
             object@enrichment_hmdb_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.hmdb) %>%
             dplyr::filter(mapped_number > count.cutoff.hmdb)
-          for (i in 1:nrow(hmdb_enrichment_result)) {
-            entry <- hmdb_enrichment_result[i,]
-            all_info <- list(
-              "id" = entry$pathway_id,
-              "term_name" = entry$pathway_name,
-              "term_definition" = entry$describtion
-            )
-            hmdb_info <- c(hmdb_info, list(all_info))
+          if (nrow(hmdb_enrichment_result) == 0) {
+            hmdb_info <- NA
+          } else {
+            for (i in 1:nrow(hmdb_enrichment_result)) {
+              entry <- hmdb_enrichment_result[i,]
+              all_info <- list(
+                "id" = entry$pathway_id,
+                "term_name" = entry$pathway_name,
+                "term_definition" = entry$describtion
+              )
+              hmdb_info <- c(hmdb_info, list(all_info))
+            }
           }
           all_text_info <- c(all_text_info, hmdb_info)
         }
       }
     }
 
+    if (all(is.na(unlist(all_text_info)))) {
+      stop("No pathways found for embedding calculation. Try: (1) increasing p.adjust.cutoff, (2) reducing count.cutoff.")
+    }
+
+    if (any(is.na(unlist(all_text_info)))) {
+      all_text_info <- all_text_info[!is.na(all_text_info)]
+    }
+
     all_combined_info <- combine_info(info = all_text_info)
 
 
     ## Get embedding matrix
+    message("Getting pathway text embeddings ...")
     embedding_matrix <- get_embedding_matrix(text = all_combined_info,
                                              api_provider = api_provider,
                                              text_embedding_model = text_embedding_model,
@@ -271,6 +340,7 @@ get_bioembedsim <-
 
 
     ## Calculate pairwise cosine similarity
+    message("Calculating cosine similairty ...")
     sim_matrix <- calculate_cosine_sim(m = embedding_matrix)
 
     ## Store parameters
@@ -315,7 +385,7 @@ get_bioembedsim <-
     slot(object, "process_info") <-
       process_info
 
-    message("Biotext embedding and similarity calculation finished")
+    message("Biotext embedding and similarity calculation finished.\n")
 
     ## Save similarity matrix as intermediate data
     if (save_to_local) {
@@ -333,7 +403,43 @@ get_bioembedsim <-
 
 # Step1: Extract text info =====
 ## 1.1 Extract GO info (go_id, annotated gene IDs, name, definition, PMID)====
-### test: GO:0031954 -> 0PMID; GO:1902074 -> 1 PMID; GO:0000001 -> 2PMID
+
+#' Extract Gene Ontology (GO) Information
+#'
+#' Retrieves basic information for a list of Gene Ontology (GO) terms including
+#' GO ID, term name, and definition using the QuickGO API.
+#'
+#' @param go_ids A character vector of GO term identifiers (e.g., "GO:0031954",
+#'   "GO:1902074"). Each ID should follow the standard GO format.
+#'
+#' @return A list where each element corresponds to a GO term and contains:
+#'   \describe{
+#'     \item{id}{Character. The GO term identifier}
+#'     \item{term_name}{Character. The name/label of the GO term}
+#'     \item{term_definition}{Character. The definition text of the GO term}
+#'   }
+#'   Returns NULL for terms that cannot be retrieved from the API.
+#'
+#' @details The function processes GO IDs in chunks of 100 to avoid API limits.
+#'   It uses the QuickGO REST API (https://www.ebi.ac.uk/QuickGO/) to retrieve
+#'   term information. The function includes retry logic (up to 3 attempts) to
+#'   handle temporary API failures.
+#'
+#' @examples
+#' \dontrun{
+#' # Get information for multiple GO terms
+#' go_terms <- c("GO:0031954", "GO:1902074", "GO:0000001")
+#' go_info <- get_go_info(go_terms)
+#'
+#' # Access information for the first term
+#' go_info[[1]]$term_name
+#' go_info[[1]]$term_definition
+#' }
+#'
+#' @importFrom httr2 request req_headers req_retry req_perform resp_body_json
+#' @importFrom purrr map
+#'
+#' @export
 
 get_go_info <- function(go_ids) {
   #### Generate GO terms and annotated Entrez Gene identifiers dict
@@ -407,7 +513,23 @@ get_go_info <- function(go_ids) {
   return(go_info)
 }
 
-# Get core information about a list of terms based on their ids
+#' QuickGO API Interface
+#'
+#' A helper function that interfaces with the QuickGO REST API to retrieve
+#' Gene Ontology term information.
+#'
+#' @param go_ids A character vector of GO term identifiers to query.
+#'
+#' @return A list containing the parsed JSON response from the QuickGO API,
+#'   or NULL if the request fails after retries.
+#'
+#' @details This function constructs the appropriate URL for the QuickGO API,
+#'   sends the request with proper headers, and includes retry logic for
+#'   robustness. It's designed to be called internally by \code{get_go_info()}.
+#'
+#' @importFrom httr2 request req_headers req_retry req_perform resp_body_json
+#' @export
+
 quickgo_api <- function(go_ids) {
   url <- paste0("https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/", paste(go_ids, collapse = ","))
   tryCatch(
@@ -434,6 +556,45 @@ quickgo_api <- function(go_ids) {
 }
 
 ## 1.2 Extract KEGG info (pathway_id, name, definition(description), PMID) ====
+#' Extract KEGG Pathway Information
+#'
+#' Retrieves basic information for a list of KEGG pathway identifiers including
+#' pathway ID, name, and description using the KEGG REST API via KEGGREST package.
+#'
+#' @param kegg_ids A character vector of KEGG pathway identifiers (e.g., "hsa04010",
+#'   "hsa04110"). Should follow standard KEGG pathway naming conventions.
+#'
+#' @return A list where each element corresponds to a KEGG pathway and contains:
+#'   \describe{
+#'     \item{id}{Character. The KEGG pathway identifier}
+#'     \item{term_name}{Character. The pathway name (species suffix removed)}
+#'     \item{term_definition}{Character. The pathway description}
+#'   }
+#'   Returns NULL for pathways that cannot be retrieved from the API.
+#'
+#' @details The function processes KEGG IDs in chunks of 10 to avoid API limits.
+#'   It first attempts batch processing for each chunk. If batch processing fails,
+#'   it falls back to processing each ID individually with appropriate error handling.
+#'   Species-specific suffixes (e.g., "- Homo sapiens (human)") are automatically
+#'   removed from pathway names for cleaner output.
+#'
+#' @examples
+#' \dontrun{
+#' # Get information for KEGG pathways
+#' kegg_pathways <- c("hsa04010", "hsa04110", "hsa04210")
+#' kegg_info <- get_kegg_pathway_info(kegg_pathways)
+#'
+#' # Access pathway information
+#' kegg_info[[1]]$term_name
+#' kegg_info[[1]]$term_definition
+#' }
+#'
+#' @importFrom KEGGREST keggGet
+#' @importFrom purrr map
+#' @importFrom stringr str_match
+#'
+#' @export
+
 get_kegg_pathway_info <- function(kegg_ids){
   chunk_size <- 10
   chunks <- split(kegg_ids, ceiling(seq_along(kegg_ids) / chunk_size))
@@ -550,6 +711,41 @@ get_kegg_pathway_info <- function(kegg_ids){
 }
 
 ## 1.3 Extract Reactome info (pathway_id, name, definition, PMID) ====
+
+#' Extract Reactome Pathway Information
+#'
+#' Retrieves basic information for a list of Reactome pathway identifiers including
+#' pathway ID, name, and definition using the Reactome API via rbioapi package.
+#'
+#' @param reactome_ids A character vector of Reactome pathway stable identifiers
+#'   (e.g., "R-HSA-168256", "R-HSA-372790"). Should follow standard Reactome
+#'   stable ID format.
+#'
+#' @return A list where each element corresponds to a Reactome pathway and contains:
+#'   \describe{
+#'     \item{id}{Character. The Reactome stable identifier}
+#'     \item{term_name}{Character. The pathway display name}
+#'     \item{term_definition}{Character. The pathway summation text with HTML tags removed}
+#'   }
+#'   Returns NULL for pathways that cannot be retrieved from the API.
+#'
+#'
+#' @examples
+#' \dontrun{
+#' # Get information for Reactome pathways
+#' reactome_pathways <- c("R-HSA-168256", "R-HSA-372790")
+#' reactome_info <- get_reactome_pathway_info(reactome_pathways)
+#'
+#' # Access pathway information
+#' reactome_info[[1]]$term_name
+#' reactome_info[[1]]$term_definition
+#' }
+#'
+#' @importFrom rbioapi rba_reactome_query
+#' @importFrom purrr map
+#'
+#' @export
+
 get_reactome_pathway_info <- function(reactome_ids) {
   #### Initialize gene-related variables
   reactome2egs <- NULL
@@ -736,7 +932,7 @@ combine_info <- function(info) {
 
 
 # Step2: Get embeddings ====
-## Get the number of tokens in the text info ====
+## Get the number of tokens in the text info
 # # token_num <- rtiktoken::get_token_count(all_text_info$text_info, model = "text-embedding-3-small")
 # # barplot(token_num, ylim = c(0, 8500))
 # # abline(h = 8191, col = "red", lwd = 2)
@@ -749,7 +945,7 @@ combine_info <- function(info) {
 #                           api_key = api_key)
 #
 # # Test google gemini embedding model
-# gemini_embedding_model <- "text-embedding-004"
+# gemini_embedding_model <- "models/text-embedding-004"
 # M <- get_embedding_matrix(text = all_combined_info[c(1:10)],
 #                           api_provider = "gemini",
 #                           text_embedding_model = gemini_embedding_model,
@@ -758,7 +954,7 @@ combine_info <- function(info) {
 get_embedding_matrix <-
   function(
     text,
-    api_provider = c("openai", "gemini"),
+    api_provider = c("openai", "gemini", "siliconflow"),
     text_embedding_model,
     api_key) {
 
@@ -779,8 +975,8 @@ get_embedding_matrix <-
     embedding_matrix <-
       text %>%
       purrr::map_df(function(x) {
-        token_num <-
-          rtiktoken::get_token_count(text = x$text_info, model = "text-embedding-3-small")
+        # token_num <-
+        #   rtiktoken::get_token_count(text = x$text_info, model = "text-embedding-3-small")
         # max input for openai embedding model is 8191 (March 05, 2025)
         # if (include_gene_name == TRUE & token_num > 8000) {
         #   x$text_info <- sub(pattern = "\nAnnotated gene names.*$", "", x$text_info)
@@ -788,6 +984,22 @@ get_embedding_matrix <-
         # }
         embedding <-
           get_openai_embedding_internal(input_text = x$text_info, text_embedding_model = text_embedding_model, api_key = api_key) %>%
+          t() %>%
+          as.data.frame()
+        rownames(embedding) <- x$id
+
+        embedding
+      }) %>%
+      as.matrix()
+  } else if (api_provider == "siliconflow") {
+    embedding_matrix <-
+      text %>%
+      purrr::map_df(function(x) {
+        embedding <-
+          get_embedding(chunk = x$text_info,
+                        api_key = api_key,
+                        model_name = text_embedding_model,
+                        api_provider = api_provider) %>%
           t() %>%
           as.data.frame()
         rownames(embedding) <- x$id
@@ -842,7 +1054,8 @@ get_openai_embedding_internal <-
     embedding <- tryCatch(
       expr = {
         # Create a request object
-        req <- httr2::request(url)
+        req <- httr2::request(url) %>%
+          httr2::req_method("POST")
 
         resp <- req %>%
           httr2::req_auth_bearer_token(token = api_key) %>%
@@ -868,14 +1081,15 @@ get_openai_embedding_internal <-
 }
 
 get_gemini_embedding_internal <-
-  function(input_text, text_embedding_model = "text-embedding-004", api_key) {
+  function(input_text, text_embedding_model = "models/text-embedding-004", api_key) {
 
-  url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/", text_embedding_model, ":embedContent?key=", api_key)
+  url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/", gsub("^models/", "", text_embedding_model), ":embedContent?key=", api_key)
 
   embedding <- tryCatch(
     expr = {
       # Create a request object
-      req <- httr2::request(url)
+      req <- httr2::request(url) %>%
+        httr2::req_method("POST")
 
       # Get response
       resp <- req %>%
@@ -909,7 +1123,7 @@ get_gemini_embedding_internal <-
 
 gemini_api_call <-
   function(input_text,
-           model = "gemini-1.5-flash",
+           model = "models/gemini-1.5-flash",
            api_key,
            temperature = 1,
            topK = 40,
@@ -917,7 +1131,7 @@ gemini_api_call <-
            maxOutputTokens = 8192,
            responseMimeType = "text/plain") {
     # Construct the full URL with the API key and model as query parameters
-    url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/", model, ":generateContent?key=", api_key)
+    url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/", gsub("^models/", "", model), ":generateContent?key=", api_key)
 
     # Create the request body
     request_body <- list(
@@ -938,6 +1152,7 @@ gemini_api_call <-
 
     # Create and send the request using httr2
     response <- httr2::request(url) %>%
+      httr2::req_method("POST") %>%
       httr2::req_headers("Content-Type" = "application/json") %>%
       httr2::req_body_json(request_body) %>%
       httr2::req_perform()

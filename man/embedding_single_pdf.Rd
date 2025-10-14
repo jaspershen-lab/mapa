@@ -7,7 +7,9 @@
 embedding_single_pdf(
   pdf_path,
   embedding_model = "text-embedding-3-small",
-  api_key
+  api_key,
+  api_provider = "openai",
+  thread = 10
 )
 }
 \arguments{
@@ -16,6 +18,11 @@ embedding_single_pdf(
 \item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 
 \item{api_key}{A character string containing the API key for the embedding service.}
+
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
+
+\item{thread}{An integer specifying the number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 A data frame containing the following columns:

@@ -1,13 +1,13 @@
-# object <- openai_semantic_sim_matrix
-# sim_matrix <- object$sim_matrix
-# sim.cutoff <- 0.8
-# hclust.method <- "complete"
+# setwd(r4projects::get_project_wd())
+# library(mapa)
+# source("R/6_utils.R")
 
 # For gene
+# load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/ora_openai_semantic_sim_matrix.rda")
 # enriched_functional_module <-
 #   merge_pathways_bioembedsim(
 #     object = openai_semantic_sim_matrix,
-#     cluster_method = "girvan newman",
+#     # cluster_method = "edge_betweenness",
 #     sim.cutoff = 0.5,
 #     save_to_local = FALSE
 # )
@@ -17,7 +17,6 @@
 # enriched_functional_module <-
 #   merge_pathways_bioembedsim(
 #     object = openai_sim_matrix_met,
-#     cluster_method = "girvan newman",
 #     sim.cutoff = 0.5
 #   )
 
@@ -26,22 +25,23 @@
 #' @description
 #' Identifies functional modules by clustering pathways based on their biotext embedding similarity.
 #' This function groups related pathways into functional modules using various clustering
-#' methods including binary cut, Girvan-Newman, or hierarchical clustering.
+#' methods including binary cut, graph-based clustering, or hierarchical clustering.
 #'
 #' @param object An object containing functional enrichment result and similarity matrix.
 #'   The object must have `enriched_pathway` and `sim_matrix` components.
-#' @param sim.cutoff Numeric, similarity cutoff for clustering (default: 0.5).
-#'   For binary cut and hierarchical clustering, sim.cutoff is the cutoff for cutting the dendrogram.
-#'   For Girvan-Newman, sim.cutoff is the similarity cutoff for pathways. Only edges with similarity above the cutoff will be stored in the graph data.
-
-#' @param cluster_method Character, method for clustering pathways. Options are:
-#'   \itemize{
-#'     \item "binary cut": Uses simplifyEnrichment binary_cut algorithm
-#'     \item "girvan newman": Uses Girvan-Newman community detection
-#'     \item "hierarchical": Uses hierarchical clustering
-#'   }
-#' @param hclust.method Character, the agglomeration method for hierarchical clustering.
-#'   Only used when cluster_method is "hierarchical". See \code{\link[stats]{hclust}} for options.
+#' @param sim.cutoff A numerical value for similarity cutoff, default is 0.5. This is the similarity cutoff for pathways.
+#'  Only edges with similarity above the cutoff will be stored in the graph data.
+#' @param cluster_method Character, clustering method options:
+#'        \itemize{
+#'          \item **Hierarchical** ‒ supply `"h_<agglom.method>"`, where
+#'            `<agglom.method>` is one of
+#'            `"ward.D"`, `"ward.D2"`, `"single"`, `"complete"`, `"average"`,
+#'            `"mcquitty"`, `"median"`, `"centroid"`.
+#'          \item `"binary_cut"`
+#'          \item Graph-based: `"louvain"`, `"walktrap"`, `"infomap"`,
+#'            `"edge_betweenness"`, `"fast_greedy"`, `"label_prop"`,
+#'            `"leading_eigen"`, `"optimal"`
+#'        }
 #' @param save_to_local Logical, whether to save intermediate results locally (default: FALSE).
 #' @param path Character, directory to save results when save_to_local is TRUE (default: "result").
 #'
@@ -53,17 +53,6 @@
 #'     \item result_with_module: Data frame with raw results assigned to modules
 #'   }
 #'
-#' @details
-#' The function takes biotext embedding similarity scores between pathways
-#' and groups related pathways into functional modules.
-#' It supports three clustering methods:
-#'
-#' 1. Binary cut: Uses the simplifyEnrichment binary_cut algorithm
-#' 2. Girvan-Newman: Community detection based on edge betweenness
-#' 3. Hierarchical clustering: Groups pathways based on distance thresholds
-#'
-#' The function handles GO terms, KEGG pathways, and Reactome pathways, combining
-#' them into unified functional modules based on similarity.
 #'
 #' @examples
 #' \dontrun{
@@ -71,23 +60,14 @@
 #' enriched_with_modules <- merge_pathways_bioembedsim(
 #'   object = result,
 #'   sim.cutoff = 0.6,
-#'   cluster_method = "binary cut"
+#'   cluster_method = "binary_cut"
 #' )
 #'
 #' # Using hierarchical clustering with complete linkage
 #' enriched_with_modules <- merge_pathways_bioembedsim(
 #'   object = result,
 #'   sim.cutoff = 0.5,
-#'   cluster_method = "hierarchical",
-#'   hclust.method = "complete"
-#' )
-#'
-#' # Save results to local directory
-#' enriched_with_modules <- merge_pathways_bioembedsim(
-#'   object = result,
-#'   cluster_method = "girvan newman",
-#'   save_to_local = TRUE,
-#'   path = "project/results"
+#'   cluster_method = "h_ward.D"
 #' )
 #' }
 #'
@@ -105,12 +85,30 @@
 merge_pathways_bioembedsim <-
   function(object,
            sim.cutoff = 0.5,
-           cluster_method = c("binary cut", "girvan newman", "hierarchical"),
-           hclust.method = NULL,
+           cluster_method = "louvain",
            save_to_local = FALSE,
            path = "result") {
 
-    cluster_method <- match.arg(cluster_method)
+    available_methods <- c(
+      "h_ward.D", "h_ward.D2", "h_single", "h_complete",
+      "h_average", "h_mcquitty", "h_median", "h_centroid",
+      "binary_cut", "louvain", "walktrap", "infomap",
+      "edge_betweenness", "fast_greedy", "label_prop", "leading_eigen",
+      "optimal"
+    )
+    if (!(cluster_method %in% available_methods)) {
+      invalid_methods <- cluster_method
+      stop(paste(
+        "Invalid methods:",
+        paste(invalid_methods, collapse = ", "),
+        "\nAvailable methods:",
+        paste(available_methods, collapse = ", ")
+      ))
+    }
+    if (grepl("^h_", cluster_method)) {
+      hclust_method <- gsub("^h_", "", cluster_method[grepl("^h_", cluster_method)])
+      cluster_method <- c("hierarchical")
+    }
 
     message("Identifying funcitonal modules...")
 
@@ -124,6 +122,10 @@ merge_pathways_bioembedsim <-
       dplyr::rename(from = Var1, to = Var2) %>%
       dplyr::mutate(across(c(from, to), as.character)) %>%
       dplyr::filter(from < to)
+
+    if (nrow(edge_data) == 0) {
+      stop("Only got one enriched pathways. Must have n >= 2 pathways to cluster.")
+    }
 
     ## Collect node data
     result <- data.frame()
@@ -184,52 +186,153 @@ merge_pathways_bioembedsim <-
     }
 
     ## Get clustering results ====
-    cluster_result <- switch(cluster_method,
-                             "binary cut" = merge_by_binary_cut(
-                               sim_matrix = object$sim_matrix,
-                               sim.cutoff = sim.cutoff
-                             ),
-                             "girvan newman" = merge_by_Girvan_Newman(
-                               edge_data = edge_data,
-                               node_data = node_data,
-                               sim.cutoff = sim.cutoff
-                             ),
-                             "hierarchical" = merge_by_hierarchical(
-                               sim_matrix = object$sim_matrix,
-                               hclust.method = hclust.method,
-                               sim.cutoff = sim.cutoff
-                             ))
+    # cluster_result <- switch(cluster_method,
+    #                          "binary cut" = merge_by_binary_cut(
+    #                            sim_matrix = object$sim_matrix,
+    #                            sim.cutoff = sim.cutoff
+    #                          ),
+    #                          "girvan newman" = merge_by_Girvan_Newman(
+    #                            edge_data = edge_data,
+    #                            node_data = node_data,
+    #                            sim.cutoff = sim.cutoff
+    #                          ),
+    #                          "hierarchical" = merge_by_hierarchical(
+    #                            sim_matrix = object$sim_matrix,
+    #                            hclust.method = hclust.method,
+    #                            sim.cutoff = sim.cutoff
+    #                          ))
+    cluster_result <-
+      switch(cluster_method,
+             "hierarchical" = {
+               merge_by_hierarchical(sim_matrix = object$sim_matrix,
+                                     hclust.method = hclust_method,
+                                     sim.cutoff = sim.cutoff)
+             },
+             "binary_cut" = {
+               merge_by_binary_cut(sim_matrix = object$sim_matrix,
+                                   sim.cutoff = sim.cutoff)
+             },
+             # Network-based methods
+             "louvain" = {
+               filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_louvain(graph_obj, weights = igraph::E(graph_obj)$sim)
+
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
+             },
+             "walktrap" = {
+               filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_walktrap(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
+             },
+             "infomap" = {
+               filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_infomap(graph_obj, e.weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
+             },
+             "edge_betweenness" = {
+               # Use distance weights (1 - similarity) for edge betweenness
+               filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ] |> dplyr::mutate(sim = 1 - sim)
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_edge_betweenness(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
+             },
+             "fast_greedy" = {
+               filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_fast_greedy(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
+             },
+             "label_prop" = {
+               filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_label_prop(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
+             },
+             "leading_eigen" = {
+               filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_leading_eigen(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
+             },
+             "optimal" = {
+               filtered_edges <- edge_data[edge_data$sim >= sim.cutoff, ]
+               if (nrow(filtered_edges) == 0) {
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", seq_len(nrow(node_data)), sep = "_"))
+               } else {
+                 graph_obj <- igraph::graph_from_data_frame(filtered_edges, directed = FALSE,
+                                                            vertices = node_data)
+                 comm <- igraph::cluster_optimal(graph_obj, weights = igraph::E(graph_obj)$sim)
+                 data.frame(node = node_data$node,
+                            module = paste("Functional_module", as.character(igraph::membership(comm)), sep = "_"))
+               }
+             }
+      )
 
     ## Create and update graph data with clustering result ====
-    if (cluster_method == "girvan newman") {
-      ## Filter graph data according to sim.cutoff
-      edge_data <-
-        edge_data %>%
-        dplyr::filter(sim > sim.cutoff)
-      ## Create and update tidygraph object
-      graph_data <-
-        tidygraph::tbl_graph(nodes = node_data,
-                             edges = edge_data,
-                             directed = FALSE,
-                             node_key = "node") %>%
-        dplyr::mutate(degree = tidygraph::centrality_degree()) %>%
-        dplyr::left_join(cluster_result)
-    } else {
-      ## Create and update tidygraph object
-      graph_data <-
-        tidygraph::tbl_graph(nodes = node_data,
-                             edges = edge_data,
-                             directed = FALSE,
-                             node_key = "node") %>%
-        dplyr::left_join(cluster_result) %>%
-        activate(edges) %>%
-        filter(
-          ## Get the module attribute for the from node
-          tidygraph::.N()$module[from] == tidygraph::.N()$module[to]
-        ) %>%
-        activate(nodes) %>%
-        dplyr::mutate(degree = tidygraph::centrality_degree())
-    }
+    edge_data <-
+      edge_data |>
+      dplyr::filter(sim > sim.cutoff)
+    ## Create and update tidygraph object
+    graph_data <-
+      tidygraph::tbl_graph(nodes = node_data,
+                           edges = edge_data,
+                           directed = FALSE,
+                           node_key = "node") |>
+      dplyr::mutate(degree = tidygraph::centrality_degree()) |>
+      dplyr::left_join(cluster_result)
 
     ## Get result with module ====
     result_with_module <-
@@ -566,7 +669,7 @@ merge_pathways_bioembedsim <-
       function_name = "get_bioembedsim() and merge_pathways_bioembedsim()",
       parameter = list(
         sim.cutoff = sim.cutoff,
-        measure_method = cluster_method
+        clustering_method = cluster_method
       ),
       time = Sys.time()
     )

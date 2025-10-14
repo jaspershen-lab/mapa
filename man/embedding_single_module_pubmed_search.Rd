@@ -8,8 +8,10 @@ embedding_single_module_pubmed_search(
   module_name,
   PID_list,
   embedding_model = "text-embedding-3-small",
+  api_provider = "openai",
   api_key,
-  embedding_output_dir
+  embedding_output_dir,
+  thread = 10
 )
 }
 \arguments{
@@ -20,10 +22,15 @@ organizing output files).}
 
 \item{embedding_model}{A string specifying the embedding model to use (default is \code{"text-embedding-3-small"}).}
 
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
+
 \item{api_key}{Character string containing the API key for the embedding service.}
 
 \item{embedding_output_dir}{Character string specifying the base directory where
 embedding results will be saved.}
+
+\item{thread}{An integer specifying the number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 No return value; function saves embeddings to disk in module-specific directory.

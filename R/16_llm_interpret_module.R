@@ -6,61 +6,162 @@
 # source('R/16_llm_module_output_generation.R')
 
 # Metabolite
+# load("demo_data/met_ora_res/met_simcluster_enriched_functional_module.rda")
+# {
+#   object = enriched_functional_module_res
+#   module_content_number_cutoff = 1
+#   llm_model = "Qwen/Qwen3-8B"
+#   embedding_model = "Qwen/Qwen3-Embedding-0.6B"
+#   api_key = api_key
+#   local_corpus_dir = "demo_data/local_corpus"
+#   embedding_output_dir = "demo_data/embedding_output"
+#   phenotype = NULL
+#   chunk_size = 5
+#   years = 5
+#   retmax = 10
+#   similarity_filter_num = 20
+#   GPT_filter_num = 5
+#   output_prompt = TRUE
+#   api_provider = "siliconflow"
+#   thinkingBudget = 0
+# }
 # llm_interpreted_enriched_functional_module <-
 #   llm_interpret_module(
-#     object = object,
-#     llm_model = "gpt-4o-mini-2024-07-18",
-#     embedding_model = "text-embedding-3-small",
+#     object = enriched_functional_module_res,
+#     module_content_number_cutoff = 1,
+#     llm_model = "Qwen/Qwen3-8B",
+#     embedding_model = "Qwen/Qwen3-Embedding-0.6B",
 #     api_key = api_key,
-#     embedding_output_dir = "demo_data/debug_yijiang/embedding_ouput/"
+#     api_provider = "siliconflow",
+#     local_corpus_dir = "demo_data/local_corpus/",
+#     embedding_output_dir = "demo_data/embedding_output/",
+#     thread = 4
 # )
-
 # Gene
+# load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/biotext_functional_modules.rda")
 # llm_interpreted_functional_module <-
 #   llm_interpret_module(
-#     object = enriched_functional_module,
+#     object = biotext_functional_modules,
+#     module_content_number_cutoff = 1,
+#     api_provider = "openai",
 #     api_key = api_key,
+#     llm_model = "gpt-4o-mini-2024-07-18",
+#     embedding_model = "text-embedding-3-small",
 #     orgdb = org.Hs.eg.db,
 #     embedding_output_dir = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/embedding_output/"
-# )
+#   )
 
-#' Interpret Functional Module using LLM Integrated with RAG Strategy
+# ah <- AnnotationHub::AnnotationHub()
+# mf.orgdb <- ah[["AH119900"]] #| Taxonomy ID: 9541
+#
+# llm_interpreted_functional_module <-
+#   llm_interpret_module(
+#     object = functional_module_res,
+#     module_content_number_cutoff = 1,
+#     api_provider = "openai",
+#     api_key = api_key,
+#     llm_model = "gpt-4o-mini-2024-07-18",
+#     embedding_model = "text-embedding-3-small",
+#     orgdb = mf.orgdb,
+#     embedding_output_dir = "demo_data/embedding_output/"
+#   )
+#
+# llm_interpreted_functional_module <-
+#   llm_interpret_module(
+#     object = biotext_functional_modules,
+#     module_content_number_cutoff = 2,
+#     api_provider = "gemini",
+#     api_key = api_key,
+#     llm_model = "models/gemini-1.5-flash",
+#     embedding_model = "models/text-embedding-004",
+#     orgdb = org.Hs.eg.db,
+#     embedding_output_dir = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/embedding_output/"
+#   )
+# save(llm_interpreted_functional_module, file = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/llm_interpreted_functional_module_cutoff_2.rda")
+
+#' Interpret Functional Modules using LLM with RAG Strategy
 #'
-#' @description This function processes functional module results by retrieving
-#'   relevant papers using a Retrieval-Augmented Generation (RAG) strategy. It includes pathway
-#'   description extraction, PubMed searching, embedding of search results, and retrieving
-#'   related papers with ranking. Finally, input the functional module information and
-#'   abstract and title of retrieved and filtered papers into LLM to generate a name and a summary
-#'   for each functional module.
+#' @description
+#' This function processes functional module results by retrieving relevant scientific
+#' literature using a Retrieval-Augmented Generation (RAG) strategy. The process includes
+#' pathway description extraction, PubMed searching, embedding of search results, and
+#' retrieving related papers with ranking. Finally, functional module information and
+#' abstracts/titles of retrieved papers are input into an LLM to generate meaningful
+#' names and summaries for each functional module.
 #'
-#' @param object A functional_module class object.
-#' @param module_content_number_cutoff Integer. Only modules with content number greater than this value will be processed. Default is 1.
-#' @param llm_model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
-#' @param embedding_model A string specifying the embedding model to use. Default is `"text-embedding-3-small"`.
-#' @param api_key Character string. API key for OpenAI or other embedding service. (Currently, only API key for OpenAI can be used)
-#' @param embedding_output_dir Character string. Directory where embedding results will be saved.
-#' @param local_corpus_dir Character string. Directory containing local files provided by users. Default is NULL.
-#' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
-#' @param chunk_size Integer. Chunk size for processing data. Default is 5.
-#' @param years Integer. Number of recent years to search in PubMed. Default is 5.
-#' @param retmax Integer. Maximum number of records to return from PubMed. Default is 10.
-#' @param similarity_filter_num Integer. Number of papers to filter based on similarity. Default is 20.
-#' @param GPT_filter_num Integer. Number of papers to filter using GPT. Default is 5.
-#' @param orgdb Object. Organism database for gene annotation, default is org.Hs.eg.db. Only used for gene enrichment results.
-#' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
+#' @param object A `functional_module` class object that has been processed with
+#'   `get_functional_modules()` function.
+#' @param module_content_number_cutoff Integer. Only modules with content number
+#'   greater than this value will be processed. Must be smaller than the maximum
+#'   module content number in the results. Default is `1`.
+#' @param llm_model Character string. The LLM model to use for text generation.
+#'   Default is `"gpt-4o-mini-2024-07-18"`.
+#' @param embedding_model Character string. The embedding model to use for text
+#'   embeddings. Default is `"text-embedding-3-small"`.
+#' @param api_key Character string. API key for OpenAI or other embedding service.
+#'   Currently, only OpenAI API keys are supported.
+#' @param api_provider Character string. The API provider to use, one of `"openai"`,
+#'   `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param embedding_output_dir Character string. Directory path where embedding
+#'   results will be saved. This directory will be cleared before processing.
+#' @param local_corpus_dir Character string. Optional directory path containing
+#'   local files provided by users for additional context. If provided, these files
+#'   will be embedded and used in the RAG process. Default is `NULL`.
+#' @param phenotype Character string. Optional phenotype or disease name to focus
+#'   the literature search and interpretation on. Default is `NULL`.
+#' @param chunk_size Integer. Chunk size for processing data in batches. Default is `5`.
+#' @param years Integer. Number of recent years to include in PubMed search.
+#'   Default is `5`.
+#' @param retmax Integer. Maximum number of records to return from each PubMed
+#'   search query. Default is `10`.
+#' @param similarity_filter_num Integer. Number of papers to filter based on
+#'   embedding similarity scores. Default is `20`.
+#' @param GPT_filter_num Integer. Number of papers to retain after LLM-based
+#'   filtering for relevance. Default is `5`.
+#' @param orgdb Object. Organism database for gene annotation. Default is
+#'   `org.Hs.eg.db`. Only used for gene enrichment results.
+#' @param output_prompt Logical. Whether to include the LLM prompt in the final
+#'   annotation results. Default is `TRUE`.
+#' @param thinkingBudget Integer. The "thinking budget" parameter specific to
+#'   the Gemini API, controlling the depth of reasoning. Default is `0`.
+#' @param thread Integer. Number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #'
-#' @return A functional_module class object with updated slots:
-#'   \itemize{
-#'     \item \code{llm_module_interpretation}: Contains the final results with module names and study summaries
-#'     \item \code{merged_module$functional_module_result}: Updated with LLM-generated module names in the \code{llm_module_name} column
-#'     \item \code{process_info}: Updated with parameters and timestamp for this operation
-#'   }
+#' @return
+#' A `functional_module` class object with updated slots:
+#' \describe{
+#'   \item{`llm_module_interpretation`}{List containing the final results with
+#'     LLM-generated module names and study summaries for each processed module}
+#'   \item{`merged_module$functional_module_result`}{Updated data frame with a new
+#'     `llm_module_name` column containing LLM-generated module names}
+#'   \item{`process_info`}{Updated with parameters and timestamp for this operation}
+#' }
 #'
-#' @note
-#'   \itemize{
-#'     \item The object must be processed with \code{merge_modules()} function before using this function
-#'     \item Only modules with content number greater than \code{module_content_number_cutoff} will be processed
-#'   }
+#'
+#' @examples
+#' \dontrun{
+#' # Basic usage with OpenAI
+#' result <- llm_interpret_module(
+#'   object = my_functional_module,
+#'   api_key = "your_openai_api_key",
+#'   embedding_output_dir = "/path/to/embedding/output"
+#' )
+#'
+#' # Advanced usage with local corpus and specific phenotype
+#' result <- llm_interpret_module(
+#'   object = my_functional_module,
+#'   module_content_number_cutoff = 2,
+#'   llm_model = "gpt-4o",
+#'   api_key = "your_openai_api_key",
+#'   embedding_output_dir = "/path/to/embedding/output",
+#'   local_corpus_dir = "/path/to/local/papers",
+#'   phenotype = "Alzheimer's disease",
+#'   years = 3,
+#'   retmax = 15,
+#'   similarity_filter_num = 30,
+#'   GPT_filter_num = 8
+#' )
+#'}
 #'
 #' @importFrom dplyr filter mutate left_join
 #'
@@ -83,7 +184,10 @@ llm_interpret_module <- function(object,
                                  similarity_filter_num = 20,
                                  GPT_filter_num = 5,
                                  orgdb = org.Hs.eg.db,
-                                 output_prompt = TRUE) {
+                                 output_prompt = TRUE,
+                                 api_provider = "openai",
+                                 thinkingBudget = 0,
+                                 thread = 10) {
 
   # 1. Collect functional module result
   if (!is(object, "functional_module")) {
@@ -110,7 +214,7 @@ llm_interpret_module <- function(object,
   # }
   if (!is.null(local_corpus_dir)) {
     local_corpus <- TRUE
-    save_dir_local_corpus_embed = "local"
+    save_dir_local_corpus_embed <- file.path(local_corpus_dir, "local_corpus_embedding_output")
   } else {
     local_corpus <- FALSE
   }
@@ -120,10 +224,12 @@ llm_interpret_module <- function(object,
 
   if (!is.null(local_corpus_dir)) {
     embedding_local_corpus(embedding_model = embedding_model,
+                           api_provider =  api_provider,
                            api_key = api_key,
                            local_corpus_dir = local_corpus_dir,
                            embedding_output_dir = embedding_output_dir,
-                           save_dir_local_corpus_embed = save_dir_local_corpus_embed)
+                           save_dir_local_corpus_embed = save_dir_local_corpus_embed,
+                           thread = thread)
   }
 
   # 3. Extract pathway description, molecule name, and pmid of references
@@ -134,7 +240,8 @@ llm_interpret_module <- function(object,
   pubmed_result <- pubmed_search(processed_data = processed_data,
                                  chunk_size = chunk_size,
                                  years = years,
-                                 retmax = retmax)
+                                 retmax = retmax,
+                                 thread = thread)
 
   # Reference paper PMID save to PubmedIDs
   for (module in names(pubmed_result)) {
@@ -157,19 +264,23 @@ llm_interpret_module <- function(object,
   # 5. Save search results for each module as CSV.GZ files using embedding database
   embedding_pubmed_search(pubmed_result = pubmed_result,
                           embedding_model = embedding_model,
+                          api_provider =  api_provider,
                           api_key = api_key,
-                          embedding_output_dir = embedding_output_dir)
+                          embedding_output_dir = embedding_output_dir,
+                          thread = thread)
 
   # 6. Retrieve and rank related papers using RAG strategy
   related_paper <- retrieve_strategy(pubmed_result = pubmed_result,
                                      model = llm_model,
                                      embedding_model = embedding_model,
                                      api_key = api_key,
+                                     api_provider = api_provider,
                                      similarity_filter_num = similarity_filter_num,
                                      GPT_filter_num = GPT_filter_num,
                                      local_corpus = local_corpus,
                                      embedding_output_dir = embedding_output_dir,
-                                     save_dir_local_corpus_embed = save_dir_local_corpus_embed)
+                                     save_dir_local_corpus_embed = save_dir_local_corpus_embed,
+                                     thread = thread)
 
   paper_result <- Map(function(x, y) {
     # Customize operations for each pair of related data
@@ -182,7 +293,9 @@ llm_interpret_module <- function(object,
                                          phenotype = phenotype,
                                          model = llm_model,
                                          api_key = api_key,
-                                         output_prompt = output_prompt)
+                                         output_prompt = output_prompt,
+                                         api_provider = api_provider,
+                                         thinkingBudget = thinkingBudget)
 
   # 8. Store the final result in the object's llm_module_interpretation slot
   object@llm_module_interpretation <- final_result

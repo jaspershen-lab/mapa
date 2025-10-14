@@ -14,6 +14,8 @@
 #' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
 #' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #'
 #' @return A list containing two elements: \code{module_name} (the generated biological module name)
 #' and \code{summary} (the research summary).
@@ -29,7 +31,9 @@ single_module_generation <- function(module_related_paper,
                                      phenotype = NULL,
                                      model = "gpt-4o-mini-2024-07-18",
                                      api_key,
-                                     output_prompt = TRUE) {
+                                     output_prompt = TRUE,
+                                     api_provider = "openai",
+                                     thinkingBudget = 0) {
   pathway_info <- paste(module_info[["PathwayNames"]], "(", module_info[["PathwayDescription"]], ")", collapse = "; ")
   if ("GeneNames_vec" %in% names(module_info)) {
     gene_names <- paste(module_info[["GeneNames_vec"]], collapse = ", ")
@@ -82,14 +86,14 @@ single_module_generation <- function(module_related_paper,
   )
 
 
-  gpt_response <- gpt_api_call(messages, api_key, model = model)
+  gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
 
-  if (!check_json_format(gpt_response)) {
-    gpt_response <- gpt_api_call(messages, api_key, model = model)
-    if (!check_json_format(gpt_response)) {
-      prompt <- modify_prompt_for_format(messages)
-      gpt_response <- gpt_api_call(prompt, api_key, model = model)
-      if (!check_json_format(gpt_response)) {
+  if (!check_json_format_output_generation(gpt_response)) {
+    gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
+    if (!check_json_format_output_generation(gpt_response)) {
+      prompt <- modify_prompt_for_format_output_generation(gpt_response)
+      gpt_response <- gpt_api_call(prompt, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
+      if (!check_json_format_output_generation(gpt_response)) {
         print(gpt_response)
         gpt_response <- '{"module_name": "Default Module Name", "summary": "Unable to process the request."}'
       }
@@ -133,7 +137,15 @@ single_module_generation <- function(module_related_paper,
   }
 }
 
-check_json_format <- function(response) {
+#' Check JSON Format Output Generation
+#'
+#' Validates if a response string contains valid JSON with required 'module_name' and 'summary' fields.
+#'
+#' @param response Character string containing JSON response to validate
+#' @return Logical. TRUE if valid JSON with both required fields, FALSE otherwise
+#' @export
+
+check_json_format_output_generation <- function(response) {
   tryCatch({
     result <- jsonlite::fromJSON(response)
     if (!is.null(result$module_name) && !is.null(result$summary)) {
@@ -145,28 +157,27 @@ check_json_format <- function(response) {
   return(FALSE)
 }
 
-modify_prompt_for_format <- function(messages) {
-  # 找到用户输入消息
-  user_message_index <- which(sapply(messages, function(msg) msg$role == "user"))
+#' Modify Prompt for Format Output Generation
+#'
+#' Creates structured messages to convert GPT responses into required JSON format.
+#'
+#' @param gpt_response Character string containing original GPT response to convert
+#' @return List of message objects formatted for chat-based AI models
+#' @export
 
-  if (length(user_message_index) > 0) {
-    # 修改用户输入消息的内容
-    user_message_index <- user_message_index[1]  # 假定只有一个用户输入消息
-    original_content <- messages[[user_message_index]]$content
-
-    # 添加格式说明到用户输入消息
-    messages[[user_message_index]]$content <- paste0(
-      original_content,
-      "\n\nIf your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
+modify_prompt_for_format_output_generation <- function(gpt_response) {
+  messages <- list(
+    list(role = "system", content = "You are an efficient and insightful assistant to a molecular biologist."),
+    list(role = "user", content = paste0(
+      "Please convert the following response to the required JSON format:\n\n",
+      gpt_response,
+      "\n\nReturn a valid JSON structure like this:\n",
       "{\n",
       "  \"module_name\": \"<biological module name>\",\n",
       "  \"summary\": \"<summary of the current research>\"\n",
       "}"
-    )
-  } else {
-    warning("No user message found in the provided messages.")
-  }
-
+    ))
+  )
   return(messages)
 }
 
@@ -180,7 +191,8 @@ modify_prompt_for_format <- function(messages) {
 #' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
 #' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
-#'
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #' @return A list of results for each module, where each element is a list containing
 #' \code{module_name} and \code{summary}.
 #'
@@ -197,7 +209,9 @@ module_name_generation <- function(paper_result,
                                    phenotype = NULL,
                                    model = "gpt-4o-mini-2024-07-18",
                                    api_key,
-                                   output_prompt = TRUE) {
+                                   output_prompt = TRUE,
+                                   api_provider = "openai",
+                                   thinkingBudget = 0) {
   for (module_index in seq_along(paper_result)) {
     module_list <- paper_result[[module_index]]
 
@@ -209,7 +223,7 @@ module_name_generation <- function(paper_result,
                                              phenotype = phenotype,
                                              model = model,
                                              api_key = api_key,
-                                             output_prompt = output_prompt)
+                                             output_prompt = output_prompt, api_provider = api_provider, thinkingBudget = thinkingBudget)
 
     # 将结果直接存入 paper_result
     paper_result[[module_index]][["generated_name"]] <- final_result

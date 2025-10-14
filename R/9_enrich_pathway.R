@@ -6,7 +6,7 @@
 # library(org.Hs.eg.db)
 # library(ReactomePA)
 # library(metpath)
-#
+
 # setwd("demo_data/")
 # load("demo_data.rda")
 # variable_info <-
@@ -90,7 +90,7 @@
 #' @param save_to_local Logical, if TRUE the results will be saved to local disk.
 #' @param path Character, the directory where to save the results if save_to_local is TRUE.
 #'
-#' @param go.orgdb Object, the OrgDb object required for GO enrichment (e.g., org.Hs.eg.db).
+#' @param go.orgdb  OrgDb object or character string naming the *OrgDb* annotation package required for GO enrichment (e.g., org.Hs.eg.db or "org.Hs.eg.db").
 #'   See Bioconductor OrgDb packages for available organisms.
 #' @param go.keytype Character, the key type to be used for GO enrichment. Default is "ENTREZID".
 #'   See available keytypes in your OrgDb with `keytypes(OrgDb)`.
@@ -208,7 +208,7 @@ enrich_pathway <-
            save_to_local = FALSE,
            path = "result",
            # GO-specific parameters
-           go.orgdb = NULL,
+           go.orgdb = org.Hs.eg.db,
            go.keytype = "ENTREZID",
            go.ont = "ALL",
            go.universe = NULL,
@@ -531,6 +531,10 @@ enrich_pathway <-
       })
     }
 
+    if (!is.character(go.orgdb)) {
+      go.orgdb <- deparse(substitute(go.orgdb))
+    }
+
     parameter = new(
       Class = "tidymass_parameter",
       pacakge_name = "mapa",
@@ -540,7 +544,7 @@ enrich_pathway <-
         database = database,
         save_to_local = save_to_local,
         path = path,
-        go.orgdb = deparse(substitute(go.orgdb)),
+        go.orgdb = go.orgdb,
         go.keytype = go.keytype,
         go.ont = go.ont,
         go.universe = if(is.null(go.universe)) NULL else "provided",

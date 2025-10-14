@@ -7,173 +7,279 @@
 
 #' gpt_api_call: Function for calling GPT model APIs (supports OpenAI and Gemini providers)
 #'
-#' This internal function is designed to interact with GPT-based APIs (such as OpenAI's GPT or a hypothetical Gemini API).
+#' This internal function is designed to interact with GPT-based APIs (such as OpenAI's GPT or the Gemini API).
 #' It handles HTTP requests, retries failed attempts, and parses responses.
 #' This function is not intended for direct use by package users.
 #'
 #' @param messages A list of messages to send to the GPT model, usually representing the conversation history.
-#'                 Each message should be a list with `role` (e.g., "system", "user", or "assistant") and `content`.
+#'                  Each message should be a list with `role` (e.g., "system", "user", or "assistant") and `content`.
 #' @param api_key A string containing the API key required for authentication.
 #' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
 #' @param max_tokens An integer indicating the maximum number of tokens to generate in the response (default is `1000`).
 #' @param temperature A numeric value between 0 and 1 to control the randomness of the response
 #'                    (default is `0.7`, where lower values produce more deterministic results).
 #' @param retry_attempts An integer specifying the maximum number of retry attempts if the API call fails (default is `3`).
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #'
 #' @return The generated text from the GPT model if the call is successful. If the call fails after the specified number
-#'         of retries, the function returns `NULL`.
+#'          of retries, the function returns `NULL`.
 #'
 #' @note Ensure you have a valid API key and the correct endpoint for your chosen provider. For Gemini, update the URL
 #'       in the code if necessary.
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-gpt_api_call <- function(messages, api_key, model = "gpt-4o-mini-2024-07-18", max_tokens = 1000,
-                         temperature = 0.7, retry_attempts = 3, api_provider = "openai") {
-  # 根据 API 提供者选择 URL
+
+#' @export
+gpt_api_call <- function(
+    messages,
+    api_key,
+    model = NULL,
+    max_tokens = 1000,
+    temperature = 0.7,
+    retry_attempts = 3,
+    api_provider = "openai",
+    thinkingBudget = 0
+) {
+  # 1. 设置默认模型
+  if (is.null(model)) {
+    model <- switch(
+      api_provider,
+      "openai"      = "gpt-4o-mini-2024-07-18",
+      "gemini"      = "models/gemini-2.5-flash",
+      "siliconflow" = "Qwen/Qwen3-32B",
+      stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
+    )
+  }
+
+  # 2. URL
+
   api_url <- switch(
     api_provider,
-    "openai" = "https://api.openai.com/v1/chat/completions",
-    "gemini" = "https://api.gemini.com/v1/chat/completions", # 假设 Gemini 的 URL
-    stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
+    "openai"      = "https://api.openai.com/v1/chat/completions",
+    "gemini"      = paste0("https://generativelanguage.googleapis.com/v1beta/models/",
+                           gsub("^models/", "", model), ":generateContent?key=", api_key),
+    "siliconflow" = "https://api.siliconflow.cn/v1/chat/completions",
+    stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
   )
-
-  # 构造 HTTP 请求的 body
-  request_body <- jsonlite::toJSON(list(
-    model = model,
-    messages = messages,
-    max_tokens = max_tokens,
-    temperature = temperature,
-    n = 1
-  ), auto_unbox = TRUE)
-
-  # 初始化重试计数
-  attempt <- 0
-
-  # 循环重试逻辑
-  repeat {
-    attempt <- attempt + 1
-
-
-    # 使用 curl 发送请求
-    handle <- curl::new_handle()
-    curl::handle_setopt(handle,
-                        url = api_url,
-                        postfields = request_body,
-                        customrequest = "POST",
-                        timeout = 100)
-    curl::handle_setheaders(handle,
-                            Authorization = paste("Bearer", api_key),
-                            `Content-Type` = "application/json")
-
-    response <- tryCatch({
-      curl::curl_fetch_memory(api_url, handle)
-    }, error = function(e) {
-      # 捕获可能的网络请求错误
-      message(paste("Attempt", attempt, "failed with error:", e$message))
-      NULL
-    })
-
-
-
-    # 如果请求失败，判断是否需要重试
-    if (is.null(response)) {
-      if (attempt >= retry_attempts) {
-        message("Max retries reached, returning error response.")
-        return(NULL)
+  if (api_provider == "siliconflow") {
+    if (!test_siliconflow_url(api_key)) {
+      api_url <- "https://api.siliconflow.com/v1/chat/completions"
+    }
+  }
+  # 3. 构建请求体
+  if (api_provider %in% c("openai", "siliconflow")) {
+    request_body <- jsonlite::toJSON(list(
+      model = model,
+      messages = messages,
+      max_tokens = max_tokens,
+      temperature = temperature,
+      n = 1
+    ), auto_unbox = TRUE)
+  } else if (api_provider == "gemini") {
+    gemini_contents <- lapply(messages, function(msg) {
+      if (msg$role == "user") {
+        list(parts = list(list(text = msg$content)))
+      } else if (msg$role == "assistant") {
+        list(role = "model", parts = list(list(text = msg$content)))
+      } else {
+        NULL
       }
-      next
+    })
+    gemini_contents <- gemini_contents[!sapply(gemini_contents, is.null)]
+
+    gen_cfg <- list(
+      maxOutputTokens = max_tokens,
+      temperature = temperature
+    )
+    if (thinkingBudget > 0) {
+      gen_cfg$thinkingConfig <- list(thinkingBudget = thinkingBudget)
     }
 
-    # 检查 HTTP 响应状态
-    if (response$status_code == 200) {
-      # 如果成功返回，解析 JSON 内容
-      response_content <- jsonlite::fromJSON(rawToChar(response$content))
+    request_body <- jsonlite::toJSON(list(
+      contents = gemini_contents,
+      generationConfig = gen_cfg
+    ), auto_unbox = TRUE, null = "null")
+  } else {
+    stop("Invalid api_provider.")
+  }
 
-      # 根据不同的 API 提供者解析响应
-      gpt_output <- switch(
-        api_provider,
-        "openai" = response_content[["choices"]][["message"]][["content"]],
-        "gemini" = response_content$choices[[1]]$text, # 假设 Gemini 的字段是 "text"
-        stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
+  attempt <- 0
+  repeat {
+    attempt <- attempt + 1
+    handle <- curl::new_handle()
+
+    if (api_provider %in% c("openai", "siliconflow")) {
+      curl::handle_setheaders(
+        handle,
+        Authorization = paste("Bearer", api_key),
+        `Content-Type` = "application/json"
       )
+    } else if (api_provider == "gemini") {
+      curl::handle_setheaders(handle, `Content-Type` = "application/json")
+    }
 
-      return(gpt_output)
-    } else {
-      # 打印错误信息
-      message(paste("Attempt", attempt, "failed with status code:", response$status_code,
-                    "and message:", rawToChar(response$content)))
+    curl::handle_setopt(
+      handle,
+      url = api_url,
+      postfields = request_body,
+      customrequest = "POST",
+      timeout = 100
+    )
 
-      # 如果超过最大重试次数，停止执行
+    response <- tryCatch(
+      curl::curl_fetch_memory(api_url, handle),
+      error = function(e) {
+        message(sprintf("Attempt %d failed: %s", attempt, e$message))
+        NULL
+      }
+    )
+
+    if (is.null(response)) {
       if (attempt >= retry_attempts) {
-        warning("Failed to call GPT API after ", retry_attempts, " attempts. Last error status code: ", response$status_code)
+        message("Max retries reached, returning NULL.")
         return(NULL)
       }
+      Sys.sleep(1); next
+    }
+
+    if (response$status_code == 200) {
+      resp <- jsonlite::fromJSON(rawToChar(response$content))
+      llm_output <- switch(
+        api_provider,
+        "openai" = resp$choices$message$content,
+        "siliconflow" = resp[["choices"]][["message"]][["content"]],
+        "gemini" = resp[["candidates"]][["content"]][["parts"]][[1]][["text"]],
+        stop("Unexpected provider in parsing.")
+      )
+      return(llm_output)
+    } else {
+      message(sprintf(
+        "Attempt %d failed with status %s: %s",
+        attempt, response$status_code, rawToChar(response$content)
+      ))
+      if (attempt >= retry_attempts) {
+        warning("Failed after ", retry_attempts, " attempts.")
+        return(NULL)
+      }
+      Sys.sleep(1)
     }
   }
 }
 
-
 #' get_embedding: Internal function to retrieve embeddings from an API
 #'
-#' This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI or Gemini).
+#' This internal function retrieves text embeddings from a specified API provider (e.g., OpenAI, Gemini, or SiliconFlow).
 #' It supports error handling, retries, and flexible model configurations. The function returns the embedding
 #' vector for a given input text chunk.
 #'
 #' @param chunk A character string representing the input text for which the embedding is required.
 #' @param api_key A string containing the API key required for authentication with the provider.
-#' @param model_name A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
-#' @param api_provider A string indicating the API provider, either `"openai"` or `"gemini"` (default is `"openai"`).
+#' @param model_name A string specifying the embedding model to use.
+#'   - For OpenAI, default is `"text-embedding-3-small"`.
+#'   - For Gemini, default is `"models/gemini-embedding-exp-03-07"`.
+#'   - For SiliconFlow, default is `"Qwen/Qwen3-Embedding-8B"`.
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param task_type A string specifying the task type for Gemini API (default is `"SEMANTIC_SIMILARITY"`). Only used when `api_provider` is "gemini".
 #'
 #' @return A numeric vector representing the embedding for the input text. If the API call fails after retries,
 #'         the function returns `NULL`.
 #'
-#'
 #' @note This function is for internal use only and supports retry logic for API failures. Ensure you have
 #'       valid API credentials and the provider's URL is correctly set.
 #'
-#' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
+#' @author Feifan Zhang <FEIFAN004@e.ntu.edu.sg>
 #'
-#' @keywords internal
-get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small", api_provider = "openai") {
-  # 根据 API 提供者选择 URL
-  url <- switch(
-    api_provider,
-    "openai" = "https://api.openai.com/v1/embeddings",
-    "gemini" = "https://api.gemini.com/v1/embeddings",
-    stop("Invalid API provider. Please choose 'openai' or 'gemini'.")
-  )
+#' @export
 
-  # Body specifying model and text
-  data <- list(
-    model = model_name,  # 可配置的模型名称
-    input = chunk        # 输入文本
-  )
+
+get_embedding <- function(chunk, api_key, model_name = NULL, api_provider = "openai", task_type = "SEMANTIC_SIMILARITY") {
+
+  # 设置默认模型名称
+  if (is.null(model_name)) {
+    model_name <- switch(
+      api_provider,
+      "openai" = "text-embedding-3-small",
+      "gemini" = "models/gemini-embedding-exp-03-07",
+      "siliconflow" = "Qwen/Qwen3-Embedding-8B", # 新增: SiliconFlow 的默认模型
+      stop("Invalid API provider. Please choose 'openai', 'gemini', or 'siliconflow'.")
+    )
+  }
+
+  # 根据 API 提供者选择 URL 和构建请求体
+  if (api_provider %in% c("openai", "siliconflow")) { # 修改: 将 openai 和 siliconflow 分组
+    url <- switch(
+      api_provider,
+      "openai" = "https://api.openai.com/v1/embeddings",
+      "siliconflow" = "https://api.siliconflow.cn/v1/embeddings" # 新增: SiliconFlow URL
+    )
+    data <- list(
+      model = model_name,
+      input = chunk
+    )
+  } else if (api_provider == "gemini") {
+    url <- paste0("https://generativelanguage.googleapis.com/v1beta/models/",
+                  gsub("^models/", "", model_name), ":embedContent")
+    data <- list(
+      model = model_name,
+      content = list(
+        parts = list(
+          list(text = chunk)
+        )
+      ),
+      taskType = task_type
+    )
+  } else {
+    stop("Invalid API provider. Please choose 'openai', 'gemini', or 'siliconflow'.")
+  }
+
+  if (api_provider == "siliconflow") {
+    if (!test_siliconflow_url(api_key)) {
+      url <- "https://api.siliconflow.com/v1/embeddings"
+    }
+  }
 
   # 请求嵌入向量
   embedding <- tryCatch(
     expr = {
       # 创建请求对象
-      req <- httr2::request(url)
+      req <- httr2::request(url) %>%
+        httr2::req_method("POST")
 
+      # 根据API提供者设置认证方式
+      if (api_provider %in% c("openai", "siliconflow")) { # 修改: 为 siliconflow 使用 Bearer Token
+        req <- req %>% httr2::req_auth_bearer_token(token = api_key)
+      } else if (api_provider == "gemini") {
+        req <- req %>% httr2::req_headers(`x-goog-api-key` = api_key)
+      }
+
+      # 执行请求
       resp <- req %>%
-        httr2::req_auth_bearer_token(token = api_key) %>%
+        httr2::req_headers(
+          "Content-Type" = "application/json",
+          "Accept" = "application/json"
+        ) %>%
         httr2::req_body_json(data = data) %>%
         httr2::req_retry(
           max_tries = 3,
           max_seconds = 60,
-          after = \(resp) is.null(resp) && resp$status_code != 200  # 重试条件
+          is_transient = \(resp) httr2::resp_status(resp) %in% c(429, 500, 503), # 改进重试条件
+          after = \(resp) httr2::resp_retry_after(resp)
         ) %>%
         httr2::req_perform()
 
-      # 提取嵌入向量
-      embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding   # 解析 JSON 响应
+      # 根据API提供者解析响应
+      if (api_provider %in% c("openai", "siliconflow")) { # 修改: 为 siliconflow 使用相同的解析逻辑
+        embedding <- httr2::resp_body_json(resp)$data[[1]]$embedding
+      } else if (api_provider == "gemini") {
+        embedding <- httr2::resp_body_json(resp)$embedding$values
+      }
+
       unlist(embedding)
     },
     error = function(e) {
-      warning("Failed to get embedding after 3 retries:", e$message)
+      warning("Failed to get embedding after retries for provider '", api_provider, "': ", e$message)
       NULL
     }
   )
@@ -181,6 +287,56 @@ get_embedding <- function(chunk, api_key, model_name = "text-embedding-3-small",
   return(embedding)
 }
 
+#' test_siliconflow_url: Internal function to validate SiliconFlow API endpoint
+#'
+#' This internal function tests whether the default SiliconFlow API endpoint
+#' (`https://api.siliconflow.cn/v1/models`) is reachable and the provided API key
+#' is valid. It performs a simple GET request and returns a logical flag indicating
+#' the accessibility of the API.
+#'
+#' @param api_key A string containing the API key required for authentication with
+#'   the SiliconFlow API.
+#'
+#' @return A logical value:
+#'   - `TRUE` if the API endpoint is reachable and authentication succeeds.
+#'   - `FALSE` otherwise, with error messages printed for debugging.
+#'
+#' @note This function is for internal use only. It is intended to verify the
+#'       connectivity and authentication to the SiliconFlow API before making
+#'       embedding requests.
+#'
+#' @author Feifan Zhang <FEIFAN004@e.ntu.edu.sg>
+#'
+#' @examples
+#' \dontrun{
+#' test_siliconflow_url("<your_api_key>")
+#' }
+#'
+#' @export
+test_siliconflow_url <- function(api_key) {
+  url <- "https://api.siliconflow.cn/v1/models"
+
+  res <- tryCatch({
+    httr::GET(
+      url,
+      httr::add_headers(Authorization = paste("Bearer", api_key))
+    )
+  }, error = function(e) {
+    message("Failed in default siliconflow url: ", e$message)
+    return(NULL)
+  })
+
+  if (is.null(res)) return(FALSE)
+
+  if (httr::status_code(res) == 200) {
+    content <- content(res, "text", encoding = "UTF-8")
+    parsed <- fromJSON(content, flatten = TRUE)
+    return(TRUE)
+  } else {
+    # message("Failed:", httr::status_code(res))
+    return(FALSE)
+  }
+}
 
 
 #' Clear the embedding_output directory

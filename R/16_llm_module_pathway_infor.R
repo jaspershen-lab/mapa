@@ -84,8 +84,11 @@ preprocess_module <- function(df,
     # functional_module_result for metabolites
     query_type <- "metabolite"
     df <- df %>%
-      dplyr::rename(queryid = mapped_id) %>%
-      dplyr::rename(pathway_id = node)
+      dplyr::rename(queryid = mapped_id)
+    if ("node" %in% colnames(df)) {
+      df <- df %>%
+        dplyr::rename(pathway_id = node)
+    }
   }
 
   required_cols <- c("Description", "queryid", "module", "pathway_id")
@@ -127,8 +130,15 @@ preprocess_module <- function(df,
       # GeneSymbols_vec <- gene_conversion$GeneSymbols_vec
       # GeneNames_vec <- gene_conversion$GeneNames_vec
 
-      suppressMessages(GeneSymbols_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first") %>% unname())
-      suppressMessages(GeneNames_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "GENENAME", keytype = "ENSEMBL", multiVals = "first") %>% unname())
+      if (length(GeneIDs_vec) == 1) {
+        if (is.na(GeneIDs_vec) || GeneIDs_vec == "NA") {
+          GeneSymbols_vec <- NA
+          GeneNames_vec <- NA
+        }
+      } else {
+        suppressMessages(GeneSymbols_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first") %>% unname())
+        suppressMessages(GeneNames_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs_vec, column = "GENENAME", keytype = "ENSEMBL", multiVals = "first") %>% unname())
+      }
 
       result_list[[mod_raw]] <- list(
         PathwayNames = pthName_vec,

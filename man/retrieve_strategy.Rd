@@ -13,7 +13,10 @@ retrieve_strategy(
   GPT_filter_num = 5,
   local_corpus = FALSE,
   embedding_output_dir = NULL,
-  save_dir_local_corpus_embed = NULL
+  save_dir_local_corpus_embed = NULL,
+  api_provider = "openai",
+  thinkingBudget = 0,
+  thread = thread
 )
 }
 \arguments{
@@ -39,6 +42,13 @@ in the analysis (default is FALSE).}
 
 \item{save_dir_local_corpus_embed}{A character string specifying the subdirectory for local
 corpus embeddings (required if \code{local_corpus} is TRUE).}
+
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
+
+\item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
+
+\item{thread}{An integer specifying the number of parallel threads to use for processing.
+Default is \code{10} for sequential processing.}
 }
 \value{
 A named list where each element corresponds to a module. Each module contains

@@ -25,15 +25,15 @@ include_if_exists <- function(path, ...) {
 
 <img src="mapa_logo.png" alt="" style="width:200px">
 
-<h1>**Module Annotation for Pathway Enrichment Result Analysis**</h1>
-<h3>[mapa](https://jaspershen.github.io/mapa/) by [The Shen lab](https://www.shen-lab.org/)</h3>
+<h1>**Functional Module Identification and Annotation for Pathway Analysis Results Using Large Language Models**</h1>
+<h3>[MAPA](http://www.shen-lab.org/mapa-tutorial/) by [The Shen lab](https://www.shen-lab.org/)</h3>
 <h3>`r format(Sys.Date())`</h3>
 
 ---
 
 # **<font color = "lightseagreen">Introduction</font>**
 
-<h4> <p style="line-height:1.5em;">**mapa (version 0.1.30)**: Created in 2021 by [The Shen lab](https://www.shen-lab.org/)</p> </h4>
+<h4> <p style="line-height:1.5em;">**MAPA (version 2.1.0)**: Created in 2025 by [The Shen lab](https://www.shen-lab.org/)</p> </h4>
 
 ---
 

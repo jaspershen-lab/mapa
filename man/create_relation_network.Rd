@@ -11,7 +11,8 @@ create_relation_network(
   include_functional_modules = TRUE,
   include_modules = TRUE,
   include_pathways = TRUE,
-  include_molecules = TRUE
+  include_molecules = TRUE,
+  include_variables = TRUE
 )
 }
 \arguments{
@@ -21,28 +22,29 @@ processed by \code{merge_pathways()} and \code{merge_modules()}.}
 \item{llm_text}{Use the \code{llm_module_name} (GPT annotation) column instead of
 \code{module_annotation} for functional-module labels?}
 
-\item{include_functional_modules, include_modules, include_molecules, include_pathways, }{include_molecules Logical; include the corresponding node class (at least
-two must be \code{TRUE}).}
+\item{include_functional_modules, include_modules, include_pathways, include_molecules, include_variables}{Logical; include the corresponding node class (at least two must be \code{TRUE}).}
 }
 \value{
 A \strong{tbl_graph} whose node tibble contains \code{node}, \code{annotation},
 \code{Count}, \code{class}, and whose edge tibble contains \code{from}, \code{to}, \code{class}
-(e.g. \code{"Module-Pathway"}).
+(e.g. \code{"Module-Pathway"}, \code{"Molecule-Variable"}).
 }
 \description{
 \code{create_relation_network()} converts the hierarchical links among functional
-modules, modules, pathways, and molecules in a \strong{functional_module} object
+modules, modules, pathways, molecules, and variables in a \strong{functional_module} object
 into a \emph{tidygraph}.
-\strong{Internal helper} for \code{\link[=plot_relationship_network]{plot_relationship_network()}}; not intended for
-direct use by package users.
 }
 \examples{
 \dontrun{
-g <- create_relation_network(my_fmod, include_modules = FALSE)
+g <- create_relation_network(my_fmod,
+                             include_modules = FALSE,
+                             include_variables = TRUE)
 }
 
 }
 \author{
 Xiaotao Shen \email{shenxt1990@outlook.com}
+
+Yifei Ge \email{yifeii.ge@outlook.com}
 }
 \keyword{internal}

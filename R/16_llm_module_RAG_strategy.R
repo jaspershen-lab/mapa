@@ -118,6 +118,7 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #'   (character vectors defining molecules of interest).
 #' @param embedding_model A string specifying the embedding model to use (default is `"text-embedding-3-small"`).
 #' @param api_key A character string containing the API key for the embedding generation service.
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #'
 #' @return A numeric vector representing the generated embedding for the module.
 #'
@@ -125,7 +126,7 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #'
 #' @keywords internal
 #基于pathway和gene为module生成embedding
-get_module_embedding <- function(module_list, api_key, embedding_model = "text-embedding-3-small"){
+ get_module_embedding <- function(module_list, api_key, embedding_model = "text-embedding-3-small", api_provider = "openai"){
   if ("GeneNames_vec" %in% names(module_list)) {
     module_str <- paste0(
       paste(module_list$PathwayNames, collapse = " "),
@@ -140,7 +141,7 @@ get_module_embedding <- function(module_list, api_key, embedding_model = "text-e
     )
   }
 
-  get_embedding(module_str, api_key, model_name = embedding_model)
+  get_embedding(module_str, api_key, model_name = embedding_model, api_provider)
 }
 
 
@@ -200,7 +201,10 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #'   (character vectors defining molecules of interest).
 #' @param api_key A character string containing the API key for the GPT service.
 #' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
-#'
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
+#' @param thread Integer. Number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #' @return A list of results where each element is a list containing:
 #' \item{relevance_score}{A numeric value between 0 and 1, indicating the relevance of the chunk.}
 #' \item{cleaned_text}{A character string with unrelated information (such as author names,
@@ -248,7 +252,7 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini-2024-07-18") {
+GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini-2024-07-18",  api_provider = "openai",  thinkingBudget = 0, thread = 10) {
   # 初始化结果列表
   reranked_results <- list()
 
@@ -262,28 +266,30 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
 
   # 根据操作系统选择不同的并行处理方式
   if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(min(detectCores()-1, 10))
+    cl <- parallel::makeCluster(thread)
 
     # 导出所有必需的变量到集群
     parallel::clusterExport(cl, c("chunks", "pathways", "molecules", "api_key", "model"),
                            envir = environment())
 
     # 导出工具函数
-    parallel::clusterExport(cl, c("process_chunk", "check_json_format",
-                                 "modify_prompt_for_format", "gpt_api_call"),
+    parallel::clusterExport(cl, c("process_chunk", "gpt_api_call","test_siliconflow_url","extract_and_parse_json"),
                            envir = environment())
 
     # 加载必要的包
     parallel::clusterEvalQ(cl, {
       library(jsonlite)
       library(curl)
+      library(httr)
       source("R/16_llm_module_utils.R")  # 导入包含 gpt_api_call 的文件
     })
 
     # 执行并行处理
     reranked_results <- parallel::parLapply(cl, chunks,
                                           function(chunk) {
-                                            process_chunk(chunk, pathways, molecules, api_key, model = model)
+                                            process_chunk(chunk, pathways, molecules, api_key, model = model,
+                                                          api_provider = api_provider,
+                                                          thinkingBudget = thinkingBudget)
                                           })
     parallel::stopCluster(cl)
   } else {
@@ -292,7 +298,9 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
                                   molecules = molecules,
                                   api_key = api_key,
                                   model = model,
-                                  mc.cores = detectCores()-1
+                                  mc.cores = thread,
+                                  api_provider = api_provider,
+                                  thinkingBudget = thinkingBudget
                                   )
   }
 
@@ -306,15 +314,15 @@ GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini
   return(reranked_results)
 }
 
-# 定义验证 JSON 格式的函数
-check_json_format <- function(response) {
-  tryCatch({
-    result <- jsonlite::fromJSON(response, simplifyVector = FALSE)
-    return(exists("relevance_score", result) && exists("cleaned_text", result))
-  }, error = function(e) {
-    return(FALSE)
-  })
-}
+# # 定义验证 JSON 格式的函数
+# check_json_format <- function(response) {
+#   tryCatch({
+#     result <- jsonlite::fromJSON(response, simplifyVector = FALSE)
+#     return(exists("relevance_score", result) && exists("cleaned_text", result))
+#   }, error = function(e) {
+#     return(FALSE)
+#   })
+# }
 
 extract_and_parse_json <- function(response) {
   tryCatch({
@@ -338,26 +346,26 @@ extract_and_parse_json <- function(response) {
   })
 }
 
-# 定义修改格式的逻辑
-modify_prompt_for_format <- function(original_prompt) {
-  # 将原始 prompt 和附加信息封装为 messages 格式
-  messages <- list(
-    list(role = "system", content = "You are an AI tasked with ensuring responses follow a strict JSON format."),
-    list(role = "user", content = paste0(
-      original_prompt, "\n\n",
-      "If your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
-      "{\n",
-      "  \"relevance_score\": <score>,\n",
-      "  \"cleaned_text\": \"<cleaned text>\"\n",
-      "}"
-    ))
-  )
-
-  return(messages)
-}
+# # 定义修改格式的逻辑
+# modify_prompt_for_format <- function(original_prompt) {
+#   # 将原始 prompt 和附加信息封装为 messages 格式
+#   messages <- list(
+#     list(role = "system", content = "You are an AI tasked with ensuring responses follow a strict JSON format."),
+#     list(role = "user", content = paste0(
+#       original_prompt, "\n\n",
+#       "If your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
+#       "{\n",
+#       "  \"relevance_score\": <score>,\n",
+#       "  \"cleaned_text\": \"<cleaned text>\"\n",
+#       "}"
+#     ))
+#   )
+#
+#   return(messages)
+# }
 
 # 遍历 chunks，调用 GPT API
-process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-mini-2024-07-18") {
+process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-mini-2024-07-18",  api_provider = "openai",  thinkingBudget = 0) {
   # 构建 GPT API 的 prompt
   messages <- list(
     list(role = "system", content = "You are an AI tasked with identifying the most relevant and valuable articles for the given module."),
@@ -388,17 +396,17 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
   }
 
   # 第一次调用 GPT API
-  gpt_response <- gpt_api_call(messages, api_key, model = model)
+  gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
   result <- parse_gpt_response(gpt_response)
 
   # 如果第一次失败，重试
   if (is.null(result)) {
-    gpt_response <- gpt_api_call(messages, api_key, model = model)
+    gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
     result <- parse_gpt_response(gpt_response)
 
     # 如果第二次也失败，再试一次
     if (is.null(result)) {
-      gpt_response <- gpt_api_call(messages, api_key, model = model)
+      gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
       result <- parse_gpt_response(gpt_response)
 
       # 如果三次都失败，返回默认结果
@@ -431,7 +439,10 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
 #' @param embedding_output_dir A character string specifying the directory for embeddings.
 #' @param save_dir_local_corpus_embed A character string specifying the subdirectory for local
 #'   corpus embeddings (required if \code{local_corpus} is TRUE).
-#'
+#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
+#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
+#' @param thread An integer specifying the number of parallel threads to use for processing.
+#'   Default is `10` for sequential processing.
 #' @return A named list where each element corresponds to a module. Each module contains
 #'   a list of results with the following components:
 #' \item{title}{The title of the filtered document.}
@@ -466,6 +477,7 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
 #'
 #' @keywords internal
 #对于每个module进行检索，检索后通过GPT进行rerank然后顺便清洗一下
+
 retrieve_strategy <- function(pubmed_result,
                               model = "gpt-4o-mini-2024-07-18",
                               embedding_model = "text-embedding-3-small",
@@ -474,7 +486,10 @@ retrieve_strategy <- function(pubmed_result,
                               GPT_filter_num = 5,
                               local_corpus = FALSE,
                               embedding_output_dir = NULL,
-                              save_dir_local_corpus_embed = NULL) {
+                              save_dir_local_corpus_embed = NULL,
+                              api_provider = "openai",
+                              thinkingBudget = 0,
+                              thread = thread) {
   result <- list()
 
   cat("Starting to process all modules...\n")
@@ -495,7 +510,7 @@ retrieve_strategy <- function(pubmed_result,
       final_result <- list()
     } else {
       cat("- Generating module embeddings...\n")
-      module_embedding <- get_module_embedding(module_list = module_list, embedding_model = embedding_model, api_key = api_key)
+      module_embedding <- get_module_embedding(module_list = module_list, embedding_model = embedding_model, api_key = api_key, api_provider = api_provider)
 
       cat("- Reading and calculating PubMed similarity...\n")
       pubmed_embeddings <- read_embeddings(save_dir = file.path(embedding_output_dir, module_name))
@@ -572,7 +587,9 @@ retrieve_strategy <- function(pubmed_result,
       }
 
       cat("- Processing document content using GPT...\n")
-      combined_GPT_result <- GPT_process_chunk(combined_chunks, module_list, api_key, model = model)
+      combined_GPT_result <- GPT_process_chunk(combined_chunks, module_list, api_key, model = model,
+                                               api_provider = api_provider,
+                                               thinkingBudget = thinkingBudget, thread = thread)
 
       cat("- Filtering the most relevant results...\n")
       # 筛选 GPT 结果 Top N（由 GPT_filter_num 决定）

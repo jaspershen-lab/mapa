@@ -1,8 +1,8 @@
 Type: Package
 Package: mapa
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 1.6.2
-Date: 2025-06-17
+Version: 2.1.0
+Date: 2025-07-17
 Authors@R: c(
     person("Xiaotao", "Shen", , "shenxt1990@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-9608-9964")),
@@ -23,14 +23,18 @@ Imports:
     cli,
     cluster,
     clusterProfiler,
+    clusterSim,
+    ComplexHeatmap,
     crayon,
     curl,
     data.table,
     digest,
     dplyr,
     extrafont,
+    factoextra,
     ggforce,
     ggplot2,
+    ggplotify,
     ggraph,
     ggwordcloud,
     grid,
@@ -64,6 +68,7 @@ Imports:
     simplifyEnrichment (>= 2.0.0),
     stats,
     stringr,
+    textstem,
     tibble,
     tidygraph,
     tidyr,
@@ -72,7 +77,6 @@ Suggests:
     AnnotationHub,
     BiocGenerics,
     flexclust,
-    ggplotify,
     htmlwidgets,
     htmltools,
     kableExtra,
