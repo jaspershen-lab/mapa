@@ -128,7 +128,7 @@ do_gsea <-
     }
 
     ###change all columns to lower case
-    colnames(variable_info) <- tolower(colnames(variable_info))
+    # colnames(variable_info) <- tolower(colnames(variable_info))
 
     #####check variable_info
     check_variable_info(variable_info = variable_info,
