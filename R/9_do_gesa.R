@@ -135,23 +135,6 @@ do_gsea <-
                        query_type = "gene",
                        order_by = order_by)
 
-    variable_info <-
-      variable_info %>%
-      dplyr::filter(!is.na(entrezid)) %>%
-      dplyr::group_by(entrezid) %>%
-      dplyr::mutate(p_adjust = min(p_value_adjust)) %>%
-      dplyr::ungroup() %>%
-      dplyr::distinct(entrezid, .keep_all = TRUE)
-
-    message("Filter variable_info to unique 'entrezid' entries with minimum adjusted p-values.")
-    message("'ENTREZID' are used for GSEA.")
-
-    gene_list <-
-      log(variable_info[[order_by]], 2)
-
-    names(gene_list) <-
-      variable_info$entrezid
-
     ###GO enrichment
     if ("go" %in% database) {
       message("GO database...")
@@ -159,9 +142,16 @@ do_gsea <-
         stop("go.orgdb is required for GO analysis")
       }
 
+      gene_list <- prepare_genelist(
+        variable_info = variable_info,
+        db = "GO",
+        key_col = tolower(go.keytype),
+        ranking_col = order_by
+      )
+
       gsea_go_result <-
         clusterProfiler::gseGO(
-          geneList = sort(gene_list, decreasing = TRUE),
+          geneList = gene_list,
           ont = go.ont,
           OrgDb = go.orgdb,
           keyType = go.keytype,
@@ -192,9 +182,21 @@ do_gsea <-
     if ("kegg" %in% database) {
       message("KEGG database...")
 
+      key_map <- c("kegg" = "entrezid",
+                   "ncbi-geneid" = "entrezid",
+                   "ncbi-proteinid" = "ncbi-proteinid",
+                   "uniprot" = "uniprot")
+
+      gene_list <- prepare_genelist(
+        variable_info = variable_info,
+        db = "KEGG",
+        key_col = key_map[[kegg.keytype]],
+        ranking_col = order_by
+      )
+
       gsea_kegg_result <-
         clusterProfiler::gseKEGG(
-          geneList = sort(gene_list, decreasing = TRUE),
+          geneList = gene_list,
           organism = kegg.organism,
           keyType = kegg.keytype,
           exponent = exponent,
@@ -225,9 +227,16 @@ do_gsea <-
     if ("reactome" %in% database) {
       message("Reactome database...")
 
+      gene_list <- prepare_genelist(
+        variable_info = variable_info,
+        db = "Reactome",
+        key_col = "entrezid",
+        ranking_col = order_by
+      )
+
       gsea_reactome_result <-
         ReactomePA::gsePathway(
-          geneList = sort(gene_list, decreasing = TRUE),
+          geneList = gene_list,
           organism = reactome.organism,
           exponent = exponent,
           minGSSize = minGSSize,
@@ -320,3 +329,56 @@ do_gsea <-
     message("Done.")
     result
   }
+
+
+prepare_genelist <- function(variable_info, db, key_col, ranking_col) {
+
+  significance_col <- "p_value_adjust"
+
+  if (!key_col %in% names(variable_info)) {
+    stop(paste0("Error: 'key_col' (", key_col, ") not found in dataframe."))
+  }
+  if (!ranking_col %in% names(variable_info)) {
+    stop(paste0("Error: 'ranking_col' (", ranking_col, ") not found in dataframe."))
+  }
+  if (!significance_col %in% names(variable_info)) {
+    stop(paste0("Error: Required column '", significance_col, "' not found in dataframe."))
+  }
+
+  message(paste0("Generating ranked genelist for ", db, " GSEA ..."))
+  message(paste0("Selecting row with minimum '", significance_col, "' for '", key_col, "' duplicates."))
+  message(paste0("Using '", ranking_col, "' as the ranking metric."))
+
+  # --- 2. Process Data ---
+  processed_info <- variable_info |>
+    dplyr::filter(
+      !is.na(.data[[key_col]]) &
+        !is.na(.data[[ranking_col]]) &
+        !is.na(.data[[significance_col]])
+    ) |>
+    dplyr::group_by(.data[[key_col]]) |>
+    dplyr::slice_min(order_by = .data[[significance_col]], n = 1, with_ties = FALSE) |>
+    dplyr::ungroup()
+
+  if (nrow(processed_info) == 0) {
+    warning("No rows remained after filtering. Returning an empty vector.")
+    return(numeric(0))
+  }
+
+  # --- 3. Create Gene List ---
+  # Get the numeric values
+  gene_list_values <- processed_info[[ranking_col]]
+
+  # Get the names
+  gene_list_names <- processed_info[[key_col]]
+
+  # Create the named vector
+  gene_list <- gene_list_values
+  names(gene_list) <- gene_list_names
+
+  # GSEA requires the list to be pre-sorted in decreasing order
+  gene_list_sorted <- sort(gene_list, decreasing = TRUE)
+
+  message(paste("Successfully created gene list with", length(gene_list_sorted), "unique genes."))
+  return(gene_list_sorted)
+}
