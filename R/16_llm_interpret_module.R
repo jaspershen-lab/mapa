@@ -188,6 +188,19 @@ llm_interpret_module <- function(object,
                                  api_provider = "openai",
                                  thinkingBudget = 0,
                                  thread = 10) {
+  # convert character orgdb into orgdb object
+  if (is(orgdb, "character")) {
+
+    # Check if package is installed
+    if (!requireNamespace(orgdb, quietly = TRUE)) {
+      stop("Package '", orgdb, "' is not installed. ",
+           "Please install it using:\n",
+           "  BiocManager::install('", orgdb, "')")
+    }
+
+    # Load the orgdb object from the package
+    orgdb <- utils::getFromNamespace(orgdb, orgdb)
+  }
 
   # 1. Collect functional module result
   if (!is(object, "functional_module")) {

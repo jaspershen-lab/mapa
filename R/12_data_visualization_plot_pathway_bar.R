@@ -710,8 +710,8 @@ plot4pathway_enrichment <-
           temp_data |>
           dplyr::mutate(log.p = -log(p_adjust, 10)) |>
           dplyr::arrange(NES) |>
-          dplyr::mutate(Description = factor(Description, levels = Description)) |>
-          ggplot(aes(NES, Description)) +
+          # dplyr::mutate(Description = factor(Description, levels = unique(Description))) |>
+          ggplot(aes(NES, reorder(Description, NES, decreasing = FALSE))) +
           scale_y_discrete(
             labels = function(x)
               stringr::str_wrap(x, width = y_label_width)
@@ -729,7 +729,6 @@ plot4pathway_enrichment <-
           ) +
           geom_point(aes(size = Count, fill = class),
                      shape = 21) +
-                     #alpha = 1) +
           scale_size_continuous(range = c(3, 7),
                                 breaks = round(seq(min(temp_data$Count), max(temp_data$Count), length.out = 4))) +
           scale_fill_manual(values = database_color) +
@@ -898,8 +897,8 @@ plot4pathway_enrichment <-
           temp_data |>
           dplyr::mutate(log.p = -log(p_adjust, 10)) |>
           dplyr::arrange(NES) |>
-          dplyr::mutate(Description = factor(Description, levels = Description)) |>
-          ggplot(aes(NES, Description)) +
+          # dplyr::mutate(Description = factor(Description, levels = Description)) |>
+          ggplot(aes(NES, reorder(Description, NES, decreasing = FALSE))) +
           scale_y_discrete(
             labels = function(x)
               stringr::str_wrap(x, width = y_label_width)
