@@ -116,10 +116,12 @@ assess_clustering_quality <- function(object,
     dplyr::count(module, name = "size") |>
     dplyr::arrange(dplyr::desc(size))
 
-  if (ignore_singleton) {
-    non_singleton_modules <- module_sizes |>
-      dplyr::filter(size > 1)
-  } else {
+  total_modules <- nrow(module_sizes)
+  non_singleton_modules <- module_sizes |> dplyr::filter(size > 1)
+  non_singleton_count <- nrow(non_singleton_modules)
+  prop_non_singleton <- non_singleton_count / total_modules
+
+  if (!ignore_singleton) {
     non_singleton_modules <- module_sizes |>
       dplyr::filter(size > 0)
   }
@@ -163,19 +165,26 @@ assess_clustering_quality <- function(object,
   db_index <- clusterSim::index.DB(x = filtered_sim_matrix,
                                    cl = numeric_clusters)$DB
 
-  total_modules <- nrow(module_sizes)
-  non_singleton_count <- nrow(non_singleton_modules)
-  prop_non_singleton <- non_singleton_count / total_modules
+  if (is.na(sil_scores)) {
+    new_avg_score <- NA
+    sil_df <- data.frame(
+      node = filtered_node_data$node,
+      cluster = NA,
+      neighbor = NA,
+      sil_width = NA,
+      stringsAsFactors = FALSE
+    )
+  } else {
+    new_avg_score <- mean(sil_scores[, "sil_width"])
 
-  new_avg_score <- mean(sil_scores[, "sil_width"])
-
-  sil_df <- data.frame(
-    node = filtered_node_data$node,
-    cluster = sil_scores[, "cluster"],
-    neighbor = sil_scores[, "neighbor"],
-    sil_width = sil_scores[, "sil_width"],
-    stringsAsFactors = FALSE
-  )
+    sil_df <- data.frame(
+      node = filtered_node_data$node,
+      cluster = sil_scores[, "cluster"],
+      neighbor = sil_scores[, "neighbor"],
+      sil_width = sil_scores[, "sil_width"],
+      stringsAsFactors = FALSE
+    )
+  }
 
   sil_score_df <-
     result_filtered |>
@@ -224,27 +233,41 @@ assess_clustering_quality <- function(object,
   #   .desc = TRUE
   # )
 
-  # Create the evaluation plot
-  evaluation_plot <-
-    factoextra::fviz_silhouette(sil_scores, label = FALSE, print.summary = FALSE) +
-    scale_fill_manual(values = colors) +
-    scale_color_manual(values = colors) +
-    scale_y_continuous(limits = c(-1, 1)) +
-    theme_bw() +
-    labs(
-      title = paste(
-        "Avg Silhouette =", round(new_avg_score, 3),
-        "| Non-singleton Prop =", round(prop_non_singleton, 3),
-        "| CH Index =", round(ch_index, 3),
-        "| DB Index =", round(db_index, 3)
+  if (!is.na(sil_scores)) {
+    # Create the evaluation plot
+    evaluation_plot <-
+      factoextra::fviz_silhouette(sil_scores, label = FALSE, print.summary = FALSE) +
+      scale_fill_manual(values = colors) +
+      scale_color_manual(values = colors) +
+      scale_y_continuous(limits = c(-1, 1)) +
+      theme_bw() +
+      labs(
+        title = paste(
+          "Avg Silhouette =", round(new_avg_score, 3),
+          "| Non-singleton Prop =", round(prop_non_singleton, 3),
+          "| CH Index =", round(ch_index, 3),
+          "| DB Index =", round(db_index, 3)
+        )
+      ) +
+      theme(
+        panel.grid = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        plot.title = element_text(size = 10, hjust = 0.5)
       )
-    ) +
-    theme(
-      panel.grid = element_blank(),
-      axis.ticks.x = element_blank(),
-      axis.text.x = element_blank(),
-      plot.title = element_text(size = 10, hjust = 0.5)
-    )
+  } else {
+    evaluation_plot <- ggplot() +
+      theme_void() +
+      labs(
+        title = paste(
+          "Silhouette plot unavailable |",
+          "Non-singleton Prop =", round(prop_non_singleton, 3),
+          "| CH Index =", round(ch_index, 3),
+          "| DB Index =", round(db_index, 3)
+        )
+      ) +
+      theme(plot.title = element_text(size = 10, hjust = 0.5))
+  }
 
   if (save_plot) {
     ggsave(plot_path, evaluation_plot, width = width, height = height)
