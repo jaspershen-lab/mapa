@@ -19,8 +19,7 @@
 #'
 #' @details
 #' The function operates on a `functional_module` object. It first identifies
-#' and filters out singleton modules (modules with only one node), as silhouette
-#' scores are not meaningful for them.
+#' and filters out singleton modules (modules with only one node).
 #'
 #' Using the `sim` edge attribute from the object's graph data, it calculates a
 #' distance matrix (`distance = 1 - similarity`). This matrix and the cluster
@@ -39,12 +38,15 @@
 #'   Defaults to `12`.
 #' @param height A numeric value for the height of the saved plot in inches.
 #'   Defaults to `8`.
+#' @param ignore_singleton A logical value indicating whether to exclude singleton
+#'   modules (modules with only one node) from the quality assessment. Defaults to
+#'   `FALSE`.
 #'
 #' @return
 #' A list containing three elements:
 #' \item{quality_metrics}{
-#'   A data frame providing detailed metrics for each node within non-singleton
-#'   modules. The columns include:
+#'   A data frame providing detailed metrics for each node.
+#'   The columns include:
 #'   \itemize{
 #'     \item \code{module}: The identifier for the functional module.
 #'     \item \code{size}: The total number of nodes in the module.
@@ -60,7 +62,7 @@
 #' }
 #' \item{evaluation_plot}{
 #'   A `ggplot` object that visualizes the silhouette scores for all nodes in
-#'   non-singleton clusters. The plot title summarizes the overall clustering quality with:
+#'   the clusters. The plot title summarizes the overall clustering quality with:
 #'   \itemize{
 #'     \item Average silhouette score.
 #'     \item The proportion of modules that are non-singletons.
@@ -103,7 +105,9 @@ assess_clustering_quality <- function(object,
                                       save_plot = FALSE,
                                       plot_path = "clustering_quality_plot.png",
                                       width = 12,
-                                      height = 8) {
+                                      height = 8,
+                                      ignore_singleton = FALSE
+                                      ) {
 
   graph_data <- object@merged_module$graph_data
   result_with_module <- object@merged_module$result_with_module
@@ -112,8 +116,13 @@ assess_clustering_quality <- function(object,
     dplyr::count(module, name = "size") |>
     dplyr::arrange(dplyr::desc(size))
 
-  non_singleton_modules <- module_sizes |>
-    dplyr::filter(size > 1)
+  if (ignore_singleton) {
+    non_singleton_modules <- module_sizes |>
+      dplyr::filter(size > 1)
+  } else {
+    non_singleton_modules <- module_sizes |>
+      dplyr::filter(size > 0)
+  }
 
   result_filtered <- result_with_module |>
     dplyr::filter(module %in% non_singleton_modules$module)
