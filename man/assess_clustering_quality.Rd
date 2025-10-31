@@ -9,7 +9,8 @@ assess_clustering_quality(
   save_plot = FALSE,
   plot_path = "clustering_quality_plot.png",
   width = 12,
-  height = 8
+  height = 8,
+  ignore_singleton = FALSE
 )
 }
 \arguments{
@@ -27,12 +28,16 @@ Defaults to \code{12}.}
 
 \item{height}{A numeric value for the height of the saved plot in inches.
 Defaults to \code{8}.}
+
+\item{ignore_singleton}{A logical value indicating whether to exclude singleton
+modules (modules with only one node) from the quality assessment. Defaults to
+\code{FALSE}.}
 }
 \value{
 A list containing three elements:
 \item{quality_metrics}{
-A data frame providing detailed metrics for each node within non-singleton
-modules. The columns include:
+A data frame providing detailed metrics for each node.
+The columns include:
 \itemize{
 \item \code{module}: The identifier for the functional module.
 \item \code{size}: The total number of nodes in the module.
@@ -48,7 +53,7 @@ showing the number of nodes in each functional module.
 }
 \item{evaluation_plot}{
 A \code{ggplot} object that visualizes the silhouette scores for all nodes in
-non-singleton clusters. The plot title summarizes the overall clustering quality with:
+the clusters. The plot title summarizes the overall clustering quality with:
 \itemize{
 \item Average silhouette score.
 \item The proportion of modules that are non-singletons.
@@ -64,8 +69,7 @@ score, Calinski-Harabasz index, and Davies-Bouldin index.
 }
 \details{
 The function operates on a \code{functional_module} object. It first identifies
-and filters out singleton modules (modules with only one node), as silhouette
-scores are not meaningful for them.
+and filters out singleton modules (modules with only one node).
 
 Using the \code{sim} edge attribute from the object's graph data, it calculates a
 distance matrix (\code{distance = 1 - similarity}). This matrix and the cluster
