@@ -233,7 +233,7 @@ assess_clustering_quality <- function(object,
   #   .desc = TRUE
   # )
 
-  if (!is.na(sil_scores)) {
+  if (!any(is.na(sil_scores))) {
     # Create the evaluation plot
     evaluation_plot <-
       factoextra::fviz_silhouette(sil_scores, label = FALSE, print.summary = FALSE) +
