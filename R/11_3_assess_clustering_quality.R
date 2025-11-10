@@ -165,7 +165,7 @@ assess_clustering_quality <- function(object,
   db_index <- clusterSim::index.DB(x = filtered_sim_matrix,
                                    cl = numeric_clusters)$DB
 
-  if (is.na(sil_scores)) {
+  if (any(is.na(sil_scores))) {
     new_avg_score <- NA
     sil_df <- data.frame(
       node = filtered_node_data$node,
