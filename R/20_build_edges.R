@@ -61,7 +61,8 @@ get_ppi_edges <- function(gene_symbols,
     dplyr::select(-STRING_id) |>
     dplyr::rename(STRING_id = to) |>
     dplyr::left_join(mapped |> dplyr::rename(to = symbol), by = "STRING_id") |>
-    dplyr::select(-STRING_id)
+    dplyr::select(-STRING_id) |>
+    dplyr::filter(from %in% unique(gene_symbols) & to %in% unique(gene_symbols))
 }
 
 
@@ -80,17 +81,18 @@ get_ppi_edges <- function(gene_symbols,
 
   biomaRt::getBM(
     attributes = c(sym_attr, "uniprotswissprot", "uniprotsptrembl"),
-    filters    = sym_attr,
-    values     = unique(gene_symbols),
-    mart       = mart
+    filters = sym_attr,
+    values = unique(gene_symbols),
+    mart = mart
   ) |>
     dplyr::mutate(
-      symbol    = .data[[sym_attr]],
+      symbol = .data[[sym_attr]],
       uniprotkb = dplyr::coalesce(uniprotswissprot, uniprotsptrembl)
     ) |>
     dplyr::filter(!is.na(uniprotkb), uniprotkb != "") |>
     dplyr::select(symbol, uniprotkb) |>
-    dplyr::distinct()
+    dplyr::distinct() |>
+    dplyr::filter(symbol %in% gene_symbols)
 }
 
 
@@ -144,7 +146,7 @@ get_reactome_enzyme_metabolite_edges <- function(protein_symbols,
 
   prot_role <- readr::read_delim(
     file.path(reactome_dir, "ProteinRoleReaction.txt"),
-    col_names     = c("protein_id", "role", "reaction_id"),
+    col_names = c("protein_id", "role", "reaction_id"),
     show_col_types = FALSE
   ) |>
     dplyr::filter(stringr::str_detect(reaction_id, rxn_pat))
@@ -458,6 +460,6 @@ get_metabolite_metabolite_edges <- function(
 # Molecule–Pathway edges (from enrichment)
 get_molecule_pathway_edges <- function(pathway_molecule_pairs) {
   pathway_molecule_pairs |>
-    dplyr::select(mapped_id, pathway_id, pathway_name, p_adjust) |>
+    dplyr::select(mapped_id, pathway_id) |>
     dplyr::mutate(edge_type = "molecule_pathway")
 }

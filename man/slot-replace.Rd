@@ -3,46 +3,49 @@
 \name{slot-replace}
 \alias{slot-replace}
 \alias{mol_nodes<-}
-\alias{path_nodes<-}
-\alias{path_to_mol<-}
 \alias{mol_layers<-}
-\alias{path_adj<-}
-\alias{pathway_mol_m<-}
+\alias{mol_layers_edge_weight<-}
+\alias{path_nodes<-}
+\alias{path_layer_edge_weight<-}
+\alias{path_to_mol<-}
+\alias{pathway_mol_edge_weight<-}
 \alias{layer_weights<-}
 \alias{mol_nodes<-,multi_omics_functional_module-method}
-\alias{path_nodes<-,multi_omics_functional_module-method}
-\alias{path_to_mol<-,multi_omics_functional_module-method}
 \alias{mol_layers<-,multi_omics_functional_module-method}
-\alias{path_adj<-,multi_omics_functional_module-method}
-\alias{pathway_mol_m<-,multi_omics_functional_module-method}
+\alias{path_nodes<-,multi_omics_functional_module-method}
+\alias{path_layer_edge_weight<-,multi_omics_functional_module-method}
+\alias{path_to_mol<-,multi_omics_functional_module-method}
+\alias{pathway_mol_edge_weight<-,multi_omics_functional_module-method}
 \alias{layer_weights<-,multi_omics_functional_module-method}
 \title{Replace slots of a multi_omics_functional_module object}
 \usage{
 mol_nodes(x) <- value
 
+mol_layers(x) <- value
+
+mol_layers_edge_weight(x) <- value
+
 path_nodes(x) <- value
+
+path_layer_edge_weight(x) <- value
 
 path_to_mol(x) <- value
 
-mol_layers(x) <- value
-
-path_adj(x) <- value
-
-pathway_mol_m(x) <- value
+pathway_mol_edge_weight(x) <- value
 
 layer_weights(x) <- value
 
 \S4method{mol_nodes}{multi_omics_functional_module}(x) <- value
 
+\S4method{mol_layers}{multi_omics_functional_module}(x) <- value
+
 \S4method{path_nodes}{multi_omics_functional_module}(x) <- value
+
+\S4method{path_layer_edge_weight}{multi_omics_functional_module}(x) <- value
 
 \S4method{path_to_mol}{multi_omics_functional_module}(x) <- value
 
-\S4method{mol_layers}{multi_omics_functional_module}(x) <- value
-
-\S4method{path_adj}{multi_omics_functional_module}(x) <- value
-
-\S4method{pathway_mol_m}{multi_omics_functional_module}(x) <- value
+\S4method{pathway_mol_edge_weight}{multi_omics_functional_module}(x) <- value
 
 \S4method{layer_weights}{multi_omics_functional_module}(x) <- value
 }

@@ -6,29 +6,47 @@
 \usage{
 build_MNetwork(
   network_tables,
-  mol_layers_m = list(),
-  path_adj = NULL,
+  api_provider = c("openai", "gemini", "siliconflow"),
+  text_embedding_model,
+  api_key,
   layer_weights = NULL,
   params = list()
 )
 }
 \arguments{
-\item{network_tables}{\code{list}. Standardised network tables.}
+\item{network_tables}{\code{list}. Output of \code{\link[=build_network_tables]{build_network_tables()}}, containing:
+\describe{
+\item{\code{node_tables}}{A list with elements \code{mol_nodes} and
+\code{pathway_nodes} (each a \code{data.frame} with columns \code{node_id},
+\code{node_type}, \code{node_info}).}
+\item{\code{edge_table}}{A named list of edge \code{data.frame}s:
+\code{tf_target}, \code{ppi}, \code{metabolite_reaction}, \code{enzyme_metabolite},
+\code{pathway_mol}.}
+}}
 
-\item{mol_layers_m}{\code{list}. Edge weight matrix for each molecule layers.}
+\item{api_provider}{\code{character(1)}. Embedding API provider for computing
+pathway–pathway text similarities. One of \code{"c"}, \code{"gemini"}, or
+\code{"siliconflow"}.}
 
-\item{path_adj}{\code{dMatrix} or \code{NULL}. m × m pathway adjacency matrix.
-A zero matrix is used when \code{NULL}.}
+\item{text_embedding_model}{\code{character(1)}. Name of the text embedding model
+to use (e.g. \code{"text-embedding-3-small"} for OpenAI).}
 
-\item{layer_weights}{\code{numeric} or \code{NULL}. Weight vector of length L.
-Equal weights (1/L) are assigned when \code{NULL}.}
+\item{api_key}{\code{character(1)}. API key for the chosen \code{api_provider}.}
 
-\item{params}{\code{list}. Named list overriding default diffusion parameters:
-\code{restart}, \code{interlayer}, \code{gamma}, \code{tol}, \code{max_iter}.}
+\item{layer_weights}{\code{numeric} or \code{NULL}. Named numeric vector of length L
+(one value per molecular layer) supplying custom layer weights. When
+\code{NULL} (default), equal weights (\code{1 / L}) are assigned automatically.}
+
+\item{params}{\code{list}. Named list of diffusion algorithm parameters that
+override the defaults. Recognised keys: \code{restart} (default \code{0.7}),
+\code{interlayer} (default \code{0.5}), \code{gamma} (default \code{1.0}), \code{tol} (default
+\code{1e-6}), \code{max_iter} (default \code{1000}).}
 }
 \value{
-A validated \link{multi_omics_functional_module} object.
+A validated \link{multi_omics_functional_module} S4 object.
 }
 \description{
-Constructs a \link{multi_omics_functional_module} object.
+Constructs a \link{multi_omics_functional_module} S4 object. Molecular-layer edge
+weights, pathway–pathway similarity weights (via biotext embedding), and
+pathway–molecule IDF weights are computed internally.
 }

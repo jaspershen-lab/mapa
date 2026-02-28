@@ -5,47 +5,72 @@
 \alias{multi_omics_functional_module-class}
 \title{S4 Class: multi_omics_functional_module}
 \description{
-Core data structure for a multi-omics functional module network, integrating
-molecular-layer networks, a pathway layer, and their bipartite connections.
+Core data structure for a multi-omics functional module network. It
+integrates four molecular-layer networks (TF–target, PPI,
+metabolite–reaction, enzyme–metabolite), a pathway layer, and their
+bipartite connections.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{mol_nodes}}{\code{data.frame}. Molecule node table; must contain columns
-\code{node_id} and \code{node_type}.}
+\item{\code{mol_nodes}}{\code{data.frame}. Molecule node table with one row per unique
+molecule (gene or metabolite).}
 
-\item{\code{path_nodes}}{\code{data.frame}. Pathway node table; must contain columns
-\code{pathway_id} and \code{pathway_name}.}
-
-\item{\code{path_to_mol}}{\code{data.frame}. Edge table linking pathways to molecules.}
-
-\item{\code{mol_layers}}{\code{list}. Raw edge tables for each molecular layer, one
-data frame per layer.}
-
-\item{\code{mol_layers_m}}{\code{list}. Sparse adjacency matrices (\code{dMatrix}) for each
-molecular layer; each matrix has dimensions n × n.}
-
-\item{\code{path_adj}}{\code{dMatrix}. Pathway-layer similarity matrix; dimensions m × m.}
-
-\item{\code{pathway_mol_m}}{\code{dMatrix}. Bipartite matrix linking pathways to
-molecules; dimensions m × n (rows = pathways, columns = molecules).}
-
-\item{\code{layer_weights}}{\code{numeric}. Normalised weights for each molecular layer;
-length equals the number of layers L.}
-
-\item{\code{params}}{\code{list}. Diffusion algorithm parameters. Defaults:
+\item{\code{mol_layers}}{\code{list}. Edge tables for each molecular layer,
+as returned by \code{\link[=build_network_tables]{build_network_tables()}}. Named elements:
 \describe{
-\item{restart}{Random-walk restart probability (default 0.7).}
-\item{interlayer}{Inter-layer jump probability (default 0.5).}
-\item{gamma}{Pathway-weight scaling factor (default 1.0).}
-\item{tol}{Convergence tolerance (default 1e-6).}
-\item{max_iter}{Maximum number of iterations (default 1000).}
+\item{\code{tf_target}}{TF–target edges (\code{from}, \code{to}, \code{mor},
+\code{confidence}, \code{edge_type}). Gene symbols in both columns.}
+\item{\code{ppi}}{Protein–protein interaction edges (\code{from}, \code{to},
+\code{combined_score}, \code{edge_type}). Gene symbols in both columns.}
+\item{\code{metabolite_reaction}}{Metabolite co-reaction edges (\code{from},
+\code{to}, \code{reaction_id}, \code{reaction_info}, \code{edge_type}, \code{source}).
+KEGG compound IDs in both columns.}
+\item{\code{enzyme_metabolite}}{Enzyme–metabolite edges (\code{from}, \code{to},
+\code{source}, \code{reaction_id}, \code{reaction_info}, \code{ec},
+\code{reactome_entity_id}, \code{edge_type}). Gene symbol in \code{from}; KEGG
+compound ID in \code{to}.}
 }}
 
-\item{\code{index}}{\code{list}. Fast-lookup index vectors: \code{mol_index} (molecule ID →
-row position) and \code{path_index} (pathway ID → row position).}
+\item{\code{mol_layers_edge_weight}}{\code{list}. Processed, undirected edge tables (with
+columns \code{from}, \code{to}, \code{weight}) for each molecular layer, as returned by
+\code{\link[=build_mol_layers_weight]{build_mol_layers_weight()}}. Named elements match those of
+\code{mol_layers}: \code{tf_target}, \code{ppi}, \code{metabolite_reaction},
+\code{enzyme_metabolite}. All weights are binary (\code{1}) except \code{ppi} when
+\code{weight_ppi = TRUE}, in which case \code{combined_score} is used.}
+
+\item{\code{path_nodes}}{\code{data.frame}. Pathway node table with one row per enriched
+pathway.}
+
+\item{\code{path_layer_edge_weight}}{\code{data.frame}. Pathway–pathway similarity edge
+table derived from pairwise cosine similarities
+of biotext embeddings.}
+
+\item{\code{path_to_mol}}{\code{data.frame}. Bipartite edge table linking pathways to
+molecules.}
+
+\item{\code{pathway_mol_edge_weight}}{\code{data.frame}. Full pathway × molecule weight
+table with columns \code{pathway_id}, \code{mol_id}, and \code{weight}. Weight is
+an IDF-like score (\code{log((N_bg + 1) / (df_bg + 1))}) when the
+pathway–molecule edge is observed, and \code{0} otherwise.
+Pathways with fewer than \code{min_bg_genes_per_path} background genes are excluded.}
+
+\item{\code{layer_weights}}{\code{numeric}. Named vector of normalised weights for each
+molecular layer; length equals \code{length(mol_layers)}. Equal weights
+(\code{1 / L}) are assigned when \code{NULL} is passed to \code{\link[=build_MNetwork]{build_MNetwork()}}.}
+
+\item{\code{params}}{\code{list}. Diffusion algorithm parameters:
+\describe{
+\item{\code{restart}}{Random-walk restart probability (default \code{0.7}).}
+\item{\code{interlayer}}{Inter-layer jump probability (default \code{0.5}).}
+\item{\code{gamma}}{Pathway-weight scaling factor (default \code{1.0}).}
+\item{\code{tol}}{Convergence tolerance (default \code{1e-6}).}
+\item{\code{max_iter}}{Maximum number of iterations (default \code{1000}).}
 }}
 
-\seealso{
-\code{\link[=build_MNetwork]{build_MNetwork()}} for constructing objects from standard input tables.
-}
+\item{\code{index}}{\code{list}. Fast-lookup index vectors for O(1) node position
+retrieval: \code{mol_index} (named integer vector mapping molecule \code{node_id} →
+row position in \code{mol_nodes}) and \code{path_index} (named integer vector
+mapping pathway \code{node_id} → row position in \code{path_nodes}).}
+}}
+

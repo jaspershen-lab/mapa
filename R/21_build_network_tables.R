@@ -9,19 +9,19 @@
 # load("demo_data/demo_multi-omics/P_up_enrich_pathway_res.rda")
 # P_input <- enrich_pathway_res
 # network_tables <- build_network_tables(transcriptome_enrich = T_input,
-#                              proteome_enrich = P_input,
-#                              metabolome_enrich = M_input,
-#                              reactome_dir = "demo_data/reactome_db/",
-#                              input_directory = "demo_data/string_db/",
-#                              taxon_id = 9606,
-#                              string_score_cutoff  = 0.9,
-#                              tf_confidence_levels = "A")
-
+#                                        proteome_enrich = P_input,
+#                                        metabolome_enrich = M_input,
+#                                        reactome_dir = "demo_data/reactome_db/",
+#                                        input_directory = "demo_data/string_db/",
+#                                        taxon_id = 9606,
+#                                        string_score_cutoff  = 0.9,
+#                                        tf_confidence_levels = "A")
+# save(network_tables, file = "demo_data/demo_multi-omics/network_tables.rda")
 
 build_node_tables <- function(transcriptome_enrich,
                               proteome_enrich,
                               metabolome_enrich,
-                              all_enrichment) {
+                              enriched_pathway) {
   # --- Gene nodes (union of transcriptome DE genes and proteome DE proteins) ---
   t_genes <- transcriptome_enrich@variable_info |>
     dplyr::select(symbol, ensembl, entrezid, uniprot) |>
@@ -59,17 +59,17 @@ build_node_tables <- function(transcriptome_enrich,
 
 
   # --- Pathway nodes ---
-  pathway_nodes <- all_enrichment |>
-    dplyr::select(pathway_id, pathway_name, p_adjust) |>
+  pathway_nodes <- enriched_pathway |>
     dplyr::distinct(pathway_id, .keep_all = TRUE) |>
+    dplyr::rename(node_id = pathway_id) |>
     dplyr::mutate(node_type = "pathway",
-                  node_id   = pathway_id,
                   node_info = purrr::pmap(
                     list(pathway_name = pathway_name,
-                         p_adjust = p_adjust),
+                         p_adjust = p_adjust,
+                         BgRatio = BgRatio),
                     function(...) list(...)
                   )) |>
-    dplyr::select(-c(pathway_id, pathway_name, p_adjust))
+    dplyr::select(-c(pathway_name, p_adjust, BgRatio))
 
   list(mol_nodes = rbind(gene_nodes, met_nodes) |> dplyr::select(node_id, node_type, node_info),
        pathway_nodes = pathway_nodes |> dplyr::select(node_id, node_type, node_info))
@@ -126,8 +126,8 @@ build_network_tables <- function(transcriptome_enrich,
   message("Step 1: Extracting enrichment results ...")
   enrich_out <- build_enrichment_tables(
     transcriptome_enrich = transcriptome_enrich,
-    proteome_enrich      = proteome_enrich,
-    metabolome_enrich    = metabolome_enrich
+    proteome_enrich      = proteome_enrich
+    # metabolome_enrich    = metabolome_enrich
   )
 
   message("Step 2: Building node table ...")
@@ -135,7 +135,7 @@ build_network_tables <- function(transcriptome_enrich,
     transcriptome_enrich = transcriptome_enrich,
     proteome_enrich = proteome_enrich,
     metabolome_enrich = metabolome_enrich,
-    all_enrichment = enrich_out$all_enrichment
+    enriched_pathway = enrich_out$pathway_nodes
   )
 
   # Collect DE symbols / KEGG IDs for edge construction
