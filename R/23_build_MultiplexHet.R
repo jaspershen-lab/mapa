@@ -174,7 +174,7 @@ build_MultiplexHet <- function(mnet,
   multiplex_het <- create.multiplexHet(
     Multiplex_object_1 = multiplex1,
     Multiplex_object_2 = multiplex2,
-    Nodes_relations    = nodes_relations
+    Nodes_relations = nodes_relations
   )
 
   message("Done. MultiplexHet object created successfully.")
