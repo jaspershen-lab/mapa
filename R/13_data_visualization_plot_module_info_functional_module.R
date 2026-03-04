@@ -135,13 +135,13 @@
 #'
 #' @examples
 #' \dontrun{
-#' result <- plot_module_info(object = myObject,
-#'                           level = "module",
-#'                           database = "go",
-#'                           module_id = "M123")
+#' result <- .plot_module_info_functional_module(object = myObject,
+#'                                               level = "module",
+#'                                               database = "go",
+#'                                               module_id = "M123")
 #' }
 
-plot_module_info <-
+.plot_module_info_functional_module <-
   function(object,
            level = c("module",
                      "functional_module"),

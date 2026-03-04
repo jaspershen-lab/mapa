@@ -497,7 +497,7 @@ determine_optimal_clusters.list <-
   function(object,
            cutoff_range = c(0.2, 0.9),
            cutoff_increment = 0.05,
-           methods = c("h_ward.D", "binary_cut", "louvain"),
+           methods = "louvain",
            ...) {
     # Check if this is a bioembedding similarity object
     if (!all(c("enriched_pathway", "sim_matrix") %in% names(object))) {
@@ -557,6 +557,64 @@ determine_optimal_clusters.list <-
   }
 
 
+# determine_optimal_clusters.dgCMatrix <-
+#   function(object,
+#            cutoff_range = c(0.2, 0.9),
+#            cutoff_increment = 0.05,
+#            methods = "louvain",
+#            ...) {
+#     message("Starting optimal cluster determination for multi-omics integration ...")
+#
+#     # Validate inputs
+#     if (!is.numeric(cutoff_range) ||
+#         length(cutoff_range) != 2 ||
+#         cutoff_range[1] >= cutoff_range[2]) {
+#       stop(
+#         "`cutoff_range` must be a numeric vector of length 2 with the first element smaller than the second."
+#       )
+#     }
+#
+#     available_methods <- c(
+#       "h_ward.D", "h_ward.D2", "h_single", "h_complete",
+#       "h_average", "h_mcquitty", "h_median", "h_centroid",
+#       "binary_cut", "louvain", "walktrap", "infomap",
+#       "edge_betweenness", "fast_greedy", "label_prop", "leading_eigen",
+#       "optimal"
+#     )
+#
+#
+#     if (!all(methods %in% available_methods)) {
+#       invalid_methods <- methods[!methods %in% available_methods]
+#       stop(paste(
+#         "Invalid methods:",
+#         paste(invalid_methods, collapse = ", "),
+#         "\nAvailable methods:",
+#         paste(available_methods, collapse = ", ")
+#       ))
+#     }
+#
+#     ## Data preparation for list object
+#     sim_matrix <- object
+#     edge_data <- as.data.frame(as.table(sim_matrix), responseName = "sim")
+#     colnames(edge_data) <- c("from", "to", "sim")
+#     edge_data$from <- as.character(edge_data$from)
+#     edge_data$to <- as.character(edge_data$to)
+#     edge_data <- edge_data[edge_data$from < edge_data$to, ]
+#
+#     # Call the shared clustering evaluation function
+#     result <- perform_clustering_evaluation(
+#       sim_matrix = sim_matrix,
+#       edge_data = edge_data,
+#       methods = methods,
+#       cutoff_range = cutoff_range,
+#       cutoff_increment = cutoff_increment
+#     )
+#
+#     message("Analysis complete!")
+#     return(result)
+#   }
+
+
 #' Perform Clustering Evaluation (Internal)
 #'
 #' @description
@@ -583,6 +641,8 @@ perform_clustering_evaluation <- function(sim_matrix,
   if (any(grepl("^h_", methods))) {
     hclust_methods <- gsub("^h_", "", methods[grepl("^h_", methods)])
     methods <- c("hierarchical", methods[!grepl("^h_", methods)])
+  } else {
+    hclust_methods <- NULL
   }
 
   # Validate hierarchical clustering methods
@@ -850,65 +910,65 @@ generate_clustering <- function(sim_matrix,
 #' @importFrom tidyr pivot_wider
 #'
 #' @noRd
-create_evaluation_plot <- function(plot_data) {
-  plot_data <- plot_data |>
-    tidyr::pivot_wider(names_from = metric, values_from = value) |>
-    dplyr::arrange(method, cutoff)
-
-  n_methods <- length(unique(plot_data$method))
-  n_cutoffs <- length(unique(plot_data$cutoff))
-  ratio <- n_methods / n_cutoffs
-
-  heatmap_plot <- ggplot2::ggplot(data = plot_data,
-                                  aes(x = cutoff, y = method)) +
-    # Add a tile layer for the background grid
-    ggplot2::geom_tile(color = "black",
-                       fill = "white",
-                       linewidth = 0.2) +
-
-    # Add points (circles) for valid results
-    ggplot2::geom_point(
-      data = . %>% dplyr::filter(!is.na(modularity) & !is.na(silhouette)),
-      aes(fill = modularity, size = silhouette),
-      shape = 21,
-      color = "black"
-    ) +
-
-    # Add "NA" text for cells with missing data
-    ggplot2::geom_text(
-      data = . %>% dplyr::filter(is.na(modularity) | is.na(silhouette)),
-      aes(label = "NA"),
-      size = 3,
-      color = "gray50"
-    ) +
-
-    # --- Customize Scales and Colors ---
-    # Color gradient for fill (modularity)
-    ggplot2::scale_fill_gradient2(
-      low = "#4877b5",
-      mid = "#fbf6bb",
-      high = "#d73226",
-      midpoint = 0.5,
-      name = "Modularity",
-      na.value = "transparent"
-    ) +
-
-    # Scale for circle size (silhouette score)
-    ggplot2::scale_size_continuous(range = c(4, 10),
-                                   name = "Silhouette\nScore") +
-    ggplot2::scale_x_continuous(breaks = unique(plot_data$cutoff)) +
-
-    # --- Theming and Labels ---
-    labs(x = "Cutoff",
-         y = "Clustering Method") +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      legend.position = "right",
-      aspect.ratio = ratio
-    )
-
-  return(heatmap_plot)
-}
+# create_evaluation_plot <- function(plot_data) {
+#   plot_data <- plot_data |>
+#     tidyr::pivot_wider(names_from = metric, values_from = value) |>
+#     dplyr::arrange(method, cutoff)
+#
+#   n_methods <- length(unique(plot_data$method))
+#   n_cutoffs <- length(unique(plot_data$cutoff))
+#   ratio <- n_methods / n_cutoffs
+#
+#   heatmap_plot <- ggplot2::ggplot(data = plot_data,
+#                                   aes(x = cutoff, y = method)) +
+#     # Add a tile layer for the background grid
+#     ggplot2::geom_tile(color = "black",
+#                        fill = "white",
+#                        linewidth = 0.2) +
+#
+#     # Add points (circles) for valid results
+#     ggplot2::geom_point(
+#       data = . %>% dplyr::filter(!is.na(modularity) & !is.na(silhouette)),
+#       aes(fill = modularity, size = silhouette),
+#       shape = 21,
+#       color = "black"
+#     ) +
+#
+#     # Add "NA" text for cells with missing data
+#     ggplot2::geom_text(
+#       data = . %>% dplyr::filter(is.na(modularity) | is.na(silhouette)),
+#       aes(label = "NA"),
+#       size = 3,
+#       color = "gray50"
+#     ) +
+#
+#     # --- Customize Scales and Colors ---
+#     # Color gradient for fill (modularity)
+#     ggplot2::scale_fill_gradient2(
+#       low = "#4877b5",
+#       mid = "#fbf6bb",
+#       high = "#d73226",
+#       midpoint = 0.5,
+#       name = "Modularity",
+#       na.value = "transparent"
+#     ) +
+#
+#     # Scale for circle size (silhouette score)
+#     ggplot2::scale_size_continuous(range = c(4, 10),
+#                                    name = "Silhouette\nScore") +
+#     ggplot2::scale_x_continuous(breaks = unique(plot_data$cutoff)) +
+#
+#     # --- Theming and Labels ---
+#     labs(x = "Cutoff",
+#          y = "Clustering Method") +
+#     theme_minimal() +
+#     theme(
+#       axis.text.x = element_text(angle = 45, hjust = 1),
+#       panel.grid.major = element_blank(),
+#       panel.grid.minor = element_blank(),
+#       legend.position = "right",
+#       aspect.ratio = ratio
+#     )
+#
+#   return(heatmap_plot)
+# }

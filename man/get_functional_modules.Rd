@@ -11,23 +11,21 @@ get_functional_modules(object, ...)
 \itemize{
 \item A \code{functional_module} class object from traditional pathway similarity calculation and pathway enrichment analysis
 \item A \code{list} object with components "enriched_pathway" and "sim_matrix" from biotext embedding pathway similarity calculation and pathway enrichment analysis
+\item A \code{multi_omics_functional_module} class object from multi-omics network construction
 }}
 
 \item{...}{Additional arguments passed to specific methods.}
 }
 \value{
-The updated object with functional modules added to the "merged_module" slot.
-
-The function supports multiple clustering methods including binary cut, Girvan-Newman
-community detection, and hierarchical clustering to group related pathways into
-functional modules.
+The updated object with functional modules.
 }
 \description{
 A generic function to identify functional modules from pathway enrichment results.
-This function supports two types of input objects:
+This function supports three types of input objects:
 \itemize{
 \item Traditional pathway enrichment objects (functional_module class)
 \item Biotext embedding similarity objects (list with enriched_pathway and sim_matrix)
+\item Multi-omics network objects (multi_omics_functional_module class)
 }
 The function clusters related pathways into functional modules using similarity-based
 clustering methods.
@@ -45,6 +43,13 @@ enriched_modules <- get_functional_modules(
 enriched_modules <- get_functional_modules(
   object = biotext_results,
   sim.cutoff = 0.6,
+  cluster_method = "louvain"
+)
+
+# For multi-omics network objects
+graph_data <- get_functional_modules(
+  object = mnet_obj,
+  sim_cutoff = 0.55,
   cluster_method = "louvain"
 )
 }

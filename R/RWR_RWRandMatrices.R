@@ -628,7 +628,8 @@ Random.Walk.Restart.MultiplexHet <- function(...){
 #'@rdname Random.Walk.Restart.MultiplexHet
 #'@noRd
 Random.Walk.Restart.MultiplexHet.default <- function(x, MultiplexHet_Object,
-                                                     Multiplex1_Seeds,Multiplex2_Seeds, r=0.7,tau1,tau2,eta=0.5,
+                                                     Multiplex1_Seeds, Multiplex2_Seeds,
+                                                     r=0.7, tau1, tau2, eta=0.5,
                                                      MeanType="Geometric", DispResults="TopScores",...){
 
   ## We control the different values.
@@ -716,8 +717,8 @@ Random.Walk.Restart.MultiplexHet.default <- function(x, MultiplexHet_Object,
   iter <- 1
 
   ## We compute the scores for the different seeds.
-  Seeds_Score <- get.seed.scores.multHet(Multiplex1_Seeds, Multiplex2_Seeds,eta,
-                                         NumberLayers1,NumberLayers2,tau1,tau2)
+  Seeds_Score <- get.seed.scores.multHet(Multiplex1_Seeds, Multiplex2_Seeds, eta,
+                                         NumberLayers1, NumberLayers2, tau1, tau2)
 
   ## We define the prox_vector(The vector we will move after the first
   ## RWR iteration. We start from The seed. We have to take in account

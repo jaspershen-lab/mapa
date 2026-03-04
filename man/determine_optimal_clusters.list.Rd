@@ -8,7 +8,7 @@
   object,
   cutoff_range = c(0.2, 0.9),
   cutoff_increment = 0.05,
-  methods = c("h_ward.D", "binary_cut", "louvain"),
+  methods = "louvain",
   ...
 )
 }

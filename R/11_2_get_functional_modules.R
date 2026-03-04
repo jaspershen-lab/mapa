@@ -15,15 +15,25 @@
 #                                                      sim.cutoff = 0.5,
 #                                                      cluster_method = "h_ward.D2")
 # save(biotext_functional_modules, file = "biotext_functional_modules.rda")
+###
+# For multi_omics_functional_module
+# load("demo_data/demo_multi-omics/mnet_obj.rda")
+# multi_omics_modules <- get_functional_modules(
+#   mnet_obj = mnet_obj,
+#   sim_cutoff = 0.6,
+#   cluster_method = "louvain"
+# )
+# save(multi_omics_modules, file = "demo_data/demo_multi-omics/multi_omics_modules.rda")
 
 #' Get Functional Modules from Pathway Similarity and Pathway Enrichment Results
 #'
 #' @description
 #' A generic function to identify functional modules from pathway enrichment results.
-#' This function supports two types of input objects:
+#' This function supports three types of input objects:
 #' \itemize{
 #'   \item Traditional pathway enrichment objects (functional_module class)
 #'   \item Biotext embedding similarity objects (list with enriched_pathway and sim_matrix)
+#'   \item Multi-omics network objects (multi_omics_functional_module class)
 #' }
 #' The function clusters related pathways into functional modules using similarity-based
 #' clustering methods.
@@ -32,15 +42,11 @@
 #'   \itemize{
 #'     \item A \code{functional_module} class object from traditional pathway similarity calculation and pathway enrichment analysis
 #'     \item A \code{list} object with components "enriched_pathway" and "sim_matrix" from biotext embedding pathway similarity calculation and pathway enrichment analysis
+#'     \item A \code{multi_omics_functional_module} class object from multi-omics network construction
 #'   }
 #' @param ... Additional arguments passed to specific methods.
 #'
-#' @return The updated object with functional modules added to the "merged_module" slot.
-#'
-#'
-#' The function supports multiple clustering methods including binary cut, Girvan-Newman
-#' community detection, and hierarchical clustering to group related pathways into
-#' functional modules.
+#' @return The updated object with functional modules.
 #'
 #' @examples
 #' \dontrun{
@@ -55,6 +61,13 @@
 #' enriched_modules <- get_functional_modules(
 #'   object = biotext_results,
 #'   sim.cutoff = 0.6,
+#'   cluster_method = "louvain"
+#' )
+#'
+#' # For multi-omics network objects
+#' graph_data <- get_functional_modules(
+#'   object = mnet_obj,
+#'   sim_cutoff = 0.55,
 #'   cluster_method = "louvain"
 #' )
 #' }
@@ -187,5 +200,55 @@ get_functional_modules.list <- function(object,
   } else {
     stop("List object must contain 'enriched_pathway' and 'sim_matrix' components.")
   }
+}
+
+#' Get Functional Modules from Multi-Omics Network Object
+#'
+#' Identifies functional modules by integrating multi-omics data through
+#' Random Walk with Restart on a multiplex-heterogeneous network, followed by
+#' cosine similarity calculation and graph-based clustering.
+#' This method is a user-facing wrapper around \code{\link{merge_multi_omics_nodes}}.
+#'
+#' @param object A \code{multi_omics_functional_module} S4 object, as produced by
+#'   \code{\link{build_MNetwork}}.
+#' @param sim_cutoff Numeric, cosine similarity cutoff for retaining edges between
+#'   nodes (default: 0.55).
+#' @param cluster_method Character, clustering method (default: \code{"louvain"}).
+#' @param verbose Logical, print progress messages (default: \code{TRUE}).
+#'
+#' @return A \code{tidygraph} object with nodes annotated by cluster membership
+#'   (\code{module} column) and module size (\code{module_size} column).
+#'
+#' @examples
+#' \dontrun{
+#' graph_data <- get_functional_modules(
+#'   object     = mnet_obj,
+#'   sim_cutoff = 0.6,
+#'   cluster_method = "louvain"
+#' )
+#' }
+#'
+#' @seealso \code{\link{merge_multi_omics_nodes}}, \code{\link{build_MNetwork}}
+#'
+#' @method get_functional_modules multi_omics_functional_module
+#' @export
+
+get_functional_modules.multi_omics_functional_module <- function(
+    object,
+    sim_matrix,
+    sim_cutoff = 0.55,
+    cluster_method = "louvain",
+    verbose = TRUE,
+    ...
+) {
+  message("Get functional modules from multi-omics network object ...")
+
+  merge_multi_omics_nodes(
+    mnet_obj = object,
+    sim_matrix = sim_matrix,
+    sim_cutoff = sim_cutoff,
+    cluster_method = cluster_method,
+    verbose = verbose
+  )
 }
 
