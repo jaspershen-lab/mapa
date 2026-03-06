@@ -24,7 +24,7 @@
 #'
 #' @return A sparse cosine-similarity matrix (rows and columns = node IDs).
 #'
-#' @noRd
+#' @export
 get_multi_omics_sim <- function(
     mnet_obj,
     # build_MultiplexHet args
