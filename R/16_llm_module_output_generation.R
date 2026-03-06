@@ -27,7 +27,7 @@
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
+#' @noRd
 single_module_generation <- function(module_related_paper,
                                      module_info,
                                      phenotype = NULL,
@@ -271,6 +271,7 @@ modify_prompt_for_format_output_generation <- function(gpt_response) {
 #' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
+#' @param multi_omics Logical. If TRUE, use multi-omics prompt templates. Default is FALSE.
 #' @return A list of results for each module, where each element is a list containing
 #' \code{module_name} and \code{summary}.
 #'
@@ -280,9 +281,7 @@ modify_prompt_for_format_output_generation <- function(gpt_response) {
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-
-# Generate final module names and summaries for all modules
+#' @noRd
 module_name_generation <- function(paper_result,
                                    phenotype = NULL,
                                    model = "gpt-4o-mini-2024-07-18",

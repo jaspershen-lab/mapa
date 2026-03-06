@@ -42,6 +42,47 @@
 #                                                            thread = 10)
 
 
+#' Interpret Multi-Omics Functional Modules using LLM
+#'
+#' Internal implementation for the multi-omics branch of [llm_interpret_module()].
+#' Retrieves relevant literature via a RAG strategy and uses an LLM to generate
+#' biological names and summaries for each functional module.
+#'
+#' @param object A \code{list} produced by [merge_multi_omics_nodes()], containing
+#'   \code{graph_data}, \code{functional_module_result}, and \code{result_with_module}.
+#' @param module_content_number_cutoff Integer. Only modules with content number
+#'   greater than this value are processed. Default \code{1}.
+#' @param llm_model Character. LLM model identifier. Default
+#'   \code{"gpt-4o-mini-2024-07-18"}.
+#' @param embedding_model Character. Embedding model identifier. Default
+#'   \code{"text-embedding-3-small"}.
+#' @param api_key Character. API key for the chosen provider.
+#' @param embedding_output_dir Character. Directory for embedding cache files.
+#' @param local_corpus_dir Character or \code{NULL}. Path to user-supplied local
+#'   documents. Default \code{NULL}.
+#' @param phenotype Character or \code{NULL}. Phenotype/disease to focus on.
+#'   Default \code{NULL}.
+#' @param chunk_size Integer. PubMed query chunk size. Default \code{5}.
+#' @param years Integer. Years to look back in PubMed. Default \code{5}.
+#' @param retmax Integer. Max PubMed records per query. Default \code{10}.
+#' @param similarity_filter_num Integer. Top-N documents after embedding
+#'   similarity filtering. Default \code{20}.
+#' @param GPT_filter_num Integer. Top-N documents after LLM re-ranking.
+#'   Default \code{5}.
+#' @param orgdb Organism database object for gene annotation. Default
+#'   \code{org.Hs.eg.db}.
+#' @param output_prompt Logical. Include the LLM prompt in results. Default
+#'   \code{TRUE}.
+#' @param api_provider Character. API provider: \code{"openai"},
+#'   \code{"gemini"}, or \code{"siliconflow"}. Default \code{"openai"}.
+#' @param thinkingBudget Integer. Gemini thinking budget. Default \code{0}.
+#' @param thread Integer. Number of parallel threads. Default \code{10}.
+#'
+#' @return The updated \code{object} list with an added \code{llm_module_interpretation}
+#'   element and an updated \code{functional_module_result} table containing a
+#'   \code{llm_module_name} column.
+#'
+#' @noRd
 llm_interpret_multi_omics_module <- function(object,
                                              module_content_number_cutoff = 1,
                                              llm_model = "gpt-4o-mini-2024-07-18",

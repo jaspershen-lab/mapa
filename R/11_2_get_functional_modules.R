@@ -211,6 +211,8 @@ get_functional_modules.list <- function(object,
 #'
 #' @param object A \code{multi_omics_functional_module} S4 object, as produced by
 #'   \code{\link{build_MNetwork}}.
+#' @param sim_matrix A square cosine-similarity matrix (rows/columns = node IDs),
+#'   as returned by [get_multi_omics_sim()].
 #' @param sim_cutoff Numeric, cosine similarity cutoff for retaining edges between
 #'   nodes (default: 0.55).
 #' @param cluster_method Character, clustering method (default: \code{"louvain"}).

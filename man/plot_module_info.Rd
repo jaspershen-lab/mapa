@@ -5,6 +5,7 @@
 \alias{plot_module_info}
 \alias{plot_module_info.functional_module}
 \alias{plot_module_info.list}
+\alias{plot_module_info.default}
 \title{Plot Module Information}
 \usage{
 plot_module_info(object, ...)
@@ -34,6 +35,8 @@ plot_module_info(object, ...)
   title = NULL,
   ...
 )
+
+\method{plot_module_info}{default}(object, ...)
 }
 \arguments{
 \item{object}{The primary object. Either a \code{functional_module} S4 object
@@ -108,5 +111,8 @@ containing elements \code{graph_data}, \code{functional_module_result},
 and \code{result_with_module}.
 All other parameters are identical to \code{plot_multi_omics_module_info()}
 defined in \file{13_data_visualization_plot_multi_omics_module_info.R}.
+
+\item \code{plot_module_info(default)}: Default method — raises an informative error for
+unsupported object types.
 
 }}

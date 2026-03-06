@@ -24,6 +24,30 @@
 # )
 # save(multi_omics_modules, file = "demo_data/demo_multi-omics/multi_omics_modules.rda")
 
+#' Merge Multi-Omics Nodes into Functional Modules
+#'
+#' Clusters molecules (genes, metabolites) and enriched pathways from a
+#' \code{multi_omics_functional_module} object into functional modules using a
+#' pre-computed cosine-similarity matrix.
+#'
+#' @param object A \code{multi_omics_functional_module} S4 object produced by
+#'   [build_MNetwork()].
+#' @param sim_matrix A square cosine-similarity matrix (rows/columns = node IDs),
+#'   as returned by [get_multi_omics_sim()].
+#' @param sim_cutoff Numeric. Minimum similarity to retain an edge. Default \code{0.55}.
+#' @param cluster_method Character. Clustering algorithm. One of \code{"louvain"},
+#'   \code{"walktrap"}, \code{"h_ward.D"}, \code{"binary_cut"}, etc.
+#'   Default \code{"louvain"}.
+#' @param verbose Logical. Print progress messages. Default \code{TRUE}.
+#'
+#' @return A named list with elements:
+#' \describe{
+#'   \item{\code{graph_data}}{A \code{tbl_graph} with node and edge annotations.}
+#'   \item{\code{functional_module_result}}{A data frame summarising each module.}
+#'   \item{\code{result_with_module}}{A data frame of all nodes with module assignments.}
+#' }
+#'
+#' @export
 merge_multi_omics_nodes <- function(
     object,
     sim_matrix,
@@ -95,6 +119,17 @@ merge_multi_omics_nodes <- function(
   )
 }
 
+#' Cluster Nodes by Similarity
+#'
+#' @param object A \code{multi_omics_functional_module} S4 object.
+#' @param sim_matrix Square similarity matrix with node IDs as row/column names.
+#' @param sim_cutoff Numeric. Minimum similarity to retain an edge. Default \code{0.55}.
+#' @param node_meta Data frame of node metadata (must contain \code{node_id} and \code{node_type}).
+#' @param cluster_method Character. Clustering algorithm. Default \code{"louvain"}.
+#'
+#' @return A \code{tbl_graph} with nodes annotated by module membership.
+#'
+#' @noRd
 cluster_nodes <- function(
     object,
     sim_matrix,

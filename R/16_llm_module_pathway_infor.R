@@ -67,7 +67,7 @@
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @keywords internal
+#' @noRd
 preprocess_module <- function(df,
                               orgdb = org.Hs.eg.db  # Annotation database, can be replaced based on species
                               ) {
@@ -180,6 +180,16 @@ preprocess_module <- function(df,
 }
 
 
+#' Preprocess Multi-Omics Module Data
+#'
+#' @param df A data frame from \code{functional_module_result} with columns \code{module},
+#'   \code{include_genes}, \code{include_metabolites}, \code{include_pathways},
+#'   \code{genes}, \code{metabolites}, and \code{pathways}.
+#' @param orgdb Organism annotation database object. Default \code{org.Hs.eg.db}.
+#' @return A named list where each element corresponds to a module with fields:
+#'   \code{GeneIDs}, \code{GeneNames_vec}, \code{MetIDs}, \code{MetNames_vec},
+#'   \code{PathwayNames}, \code{PathwayDescription}, \code{PathwayReferencePMID}.
+#' @noRd
 preprocess_multi_omics_module <- function(df, orgdb = org.Hs.eg.db) {
 
   result_list <- list()
@@ -280,7 +290,7 @@ preprocess_multi_omics_module <- function(df, orgdb = org.Hs.eg.db) {
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @keywords internal
+#' @noRd
 get_pathway_and_gene_info <- function(pathwayID_vec) {
   # Identify different types of pathway ID
   go_ids <- pathwayID_vec[grepl("^GO:", pathwayID_vec)]
@@ -369,8 +379,7 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @keywords internal
-
+#' @noRd
 get_pathway_and_metabolite_info <- function(pathwayID_vec) {
   # Identify different types of pathway ID
   # kegg_ids <- pathwayID_vec[grepl("^[a-zA-Z]+\\d+$", pathwayID_vec)]
@@ -406,6 +415,11 @@ get_pathway_and_metabolite_info <- function(pathwayID_vec) {
   ))
 }
 
+#' Get Metabolite Names from HMDB and KEGG IDs
+#'
+#' @param MetIDs_vec Character vector of metabolite IDs (HMDB or KEGG format).
+#' @return Character vector of metabolite names.
+#' @noRd
 get_metabolite_name <- function(MetIDs_vec) {
   hmdb_MetNames_vec <-
     metpath::hmdb_compound_database@spectra.info %>%

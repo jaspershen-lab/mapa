@@ -18,6 +18,18 @@
 #                                        tf_confidence_levels = "A")
 # save(network_tables, file = "demo_data/demo_multi-omics/network_tables.rda")
 
+#' Build Network Node and Edge Tables from Multi-Omics Enrichment Results
+#'
+#' @param transcriptome_enrich A \code{functional_module} object from transcriptome analysis.
+#' @param proteome_enrich A \code{functional_module} object from proteome analysis.
+#' @param metabolome_enrich A \code{functional_module} object from metabolome analysis.
+#' @param taxon_id Integer. NCBI taxonomy ID for STRING. Default \code{9606}.
+#' @param reactome_dir Character or NA. Path to local Reactome database files.
+#' @param input_directory Character or NA. Path to local STRING database directory.
+#' @param string_score_cutoff Numeric. Minimum STRING combined score. Default \code{0.9}.
+#' @param tf_confidence_levels Character. DoRothEA confidence levels. Default \code{"A"}.
+#' @return A list with \code{node_tables} and \code{edge_table}.
+#' @export
 build_network_tables <- function(transcriptome_enrich,
                                  proteome_enrich,
                                  metabolome_enrich,
@@ -112,7 +124,12 @@ build_network_tables <- function(transcriptome_enrich,
   )
 }
 
-# Helper: extract GO / KEGG / Reactome enrichment from a mapa object for transcriptome and proteome
+#' Extract Enrichment Results from a Transcriptome/Proteome Object
+#'
+#' @param enrich_obj A \code{functional_module} object with enrichment result slots.
+#' @return A tibble with columns \code{pathway_id}, \code{pathway_name}, \code{BgRatio},
+#'   \code{p_adjust}, \code{mapped_id}.
+#' @noRd
 .extract_tp_enrichment <- function(enrich_obj) {
   extract_slot <- function(slot_result) {
     if (is.null(slot_result)) {
@@ -157,7 +174,13 @@ build_network_tables <- function(transcriptome_enrich,
     dplyr::filter(!is.na(pathway_id))
 }
 
-# Build combined pathway enrichment table from T / P / M objects
+#' Extract and Combine Enrichment Results from Transcriptome and Proteome
+#'
+#' @param transcriptome_enrich A \code{functional_module} object from transcriptome analysis.
+#' @param proteome_enrich A \code{functional_module} object from proteome analysis.
+#' @return A list with \code{pathway_nodes} (unique pathways) and \code{pathway_molecule_pairs}
+#'   (long-format pathway–molecule mapping).
+#' @noRd
 extract_enrichment_result <- function(transcriptome_enrich,
                                       proteome_enrich) {
   t_enrich <- .extract_tp_enrichment(transcriptome_enrich)
@@ -182,6 +205,14 @@ extract_enrichment_result <- function(transcriptome_enrich,
   )
 }
 
+#' Build Gene, Metabolite, and Pathway Node Tables
+#'
+#' @param transcriptome_enrich A \code{functional_module} object from transcriptome analysis.
+#' @param proteome_enrich A \code{functional_module} object from proteome analysis.
+#' @param metabolome_enrich A \code{functional_module} object from metabolome analysis.
+#' @param enriched_pathway A data frame of enriched pathways with \code{pathway_id} and metadata.
+#' @return A list with \code{mol_nodes} and \code{pathway_nodes} tibbles.
+#' @noRd
 build_node_tables <- function(transcriptome_enrich,
                               proteome_enrich,
                               metabolome_enrich,
@@ -239,6 +270,16 @@ build_node_tables <- function(transcriptome_enrich,
        pathway_nodes = pathway_nodes |> dplyr::select(node_id, node_type, node_info))
 }
 
+#' Assemble Normalized Edge Tables
+#'
+#' @param tf_target_edges Data frame from \code{get_tf_target_edges()}.
+#' @param ppi_edges Data frame from \code{get_ppi_edges()}.
+#' @param enzyme_metabolite_edges Data frame from \code{combine_enzyme_metabolite_edges()}.
+#' @param metabolite_metabolite_edges Data frame from \code{get_metabolite_metabolite_edges()}.
+#' @param molecule_pathway_edges Data frame from \code{get_molecule_pathway_edges()}.
+#' @return A named list with normalized edge tibbles: \code{tf_target}, \code{ppi},
+#'   \code{metabolite_reaction}, \code{enzyme_metabolite}, \code{pathway_mol}.
+#' @noRd
 build_edge_tables <- function(tf_target_edges,
                               ppi_edges,
                               enzyme_metabolite_edges,

@@ -18,6 +18,13 @@
 # test_combo_res <- combine_enzyme_metabolite_edges(kegg_edges = test_PM_kegg, reactome_edges = test_PM_reactome)
 # test <- get_molecule_pathway_edges(test$pathway_molecule_pairs)
 
+#' Get Transcription Factor–Target Edges
+#'
+#' @param gene_symbols Character vector of gene symbols to filter from DoRothEA.
+#' @param confidence_levels Character vector. Confidence levels to retain. Default \code{"A"}.
+#' @return A data frame with columns \code{tf}, \code{target}, \code{mor}, \code{confidence},
+#'   and \code{edge_type}.
+#' @noRd
 get_tf_target_edges <- function(gene_symbols,
                                 confidence_levels = "A") {
   data("dorothea_hs", package = "dorothea", envir = environment())
@@ -33,6 +40,14 @@ get_tf_target_edges <- function(gene_symbols,
     dplyr::mutate(edge_type = "TF_target")
 }
 
+#' Get Protein–Protein Interaction Edges via STRING
+#'
+#' @param gene_symbols Character vector of gene symbols.
+#' @param taxon_id Integer. NCBI taxonomy ID. Default \code{9606} (human).
+#' @param score_cutoff Numeric. Minimum combined score (0–1). Default \code{0.9}.
+#' @param input_directory Character or NA. Local STRING database directory. Default \code{NA}.
+#' @return A tibble with columns \code{from}, \code{to}, \code{combined_score}, \code{edge_type}.
+#' @noRd
 get_ppi_edges <- function(gene_symbols,
                           taxon_id = 9606,
                           score_cutoff = 0.9,
@@ -66,7 +81,11 @@ get_ppi_edges <- function(gene_symbols,
 }
 
 
-# Protein–Metabolite edges via Reactome
+#' Map Gene Symbols to UniProt IDs via BioMart
+#'
+#' @param gene_symbols Character vector of HGNC gene symbols.
+#' @return A data frame with columns \code{symbol} and \code{uniprotkb}.
+#' @noRd
 .map_symbol_to_uniprot <- function(gene_symbols) {
   ensembl  <- biomaRt::useMart("ensembl")
   datasets <- biomaRt::listDatasets(ensembl)
@@ -96,7 +115,13 @@ get_ppi_edges <- function(gene_symbols,
 }
 
 
-# Map KEGG compound IDs to ChEBI IDs
+#' Map KEGG Compound IDs to ChEBI IDs
+#'
+#' @param kegg_ids Character vector of KEGG compound IDs.
+#' @param chunk_size Integer. Query chunk size. Default \code{100}.
+#' @param sleep_sec Numeric. Pause between chunks (seconds). Default \code{0.1}.
+#' @return A data frame with columns \code{keggid} and \code{chebi_id}.
+#' @noRd
 .map_kegg_to_chebi <- function(kegg_ids,
                                chunk_size = 100,
                                sleep_sec  = 0.1) {
@@ -135,6 +160,14 @@ get_ppi_edges <- function(gene_symbols,
 }
 
 
+#' Get Enzyme–Metabolite Edges via Reactome
+#'
+#' @param protein_symbols Character vector of gene/protein symbols.
+#' @param metabolite_kegg Character vector of KEGG compound IDs.
+#' @param reactome_dir Character. Path to local Reactome database files.
+#' @param species_prefix Character. Reactome species prefix. Default \code{"HSA"}.
+#' @return A data frame with enzyme–metabolite edges and \code{edge_type = "enzyme_metabolite"}.
+#' @noRd
 get_reactome_enzyme_metabolite_edges <- function(protein_symbols,
                                                  metabolite_kegg,
                                                  reactome_dir,
@@ -188,7 +221,14 @@ get_reactome_enzyme_metabolite_edges <- function(protein_symbols,
                   source = "Reactome")
 }
 
-# Helper: split vector into chunks and apply keggLink, return named character vector
+#' Chunked keggLink Wrapper
+#'
+#' @param target Character. KEGG target database (e.g., \code{"reaction"}).
+#' @param keys Character vector. Query keys.
+#' @param chunk_size Integer. Number of keys per request.
+#' @param sleep_sec Numeric. Pause between requests (seconds).
+#' @return Named character vector of KEGG links.
+#' @noRd
 .kegg_link_chunked <- function(target, keys, chunk_size, sleep_sec) {
   chunks <- split(keys, ceiling(seq_along(keys) / chunk_size))
   results <- purrr::map(chunks, function(chunk) {
@@ -206,6 +246,15 @@ get_reactome_enzyme_metabolite_edges <- function(protein_symbols,
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
 
+#' Get Enzyme–Metabolite Edges via KEGG
+#'
+#' @param protein_symbols Character vector of gene/protein symbols.
+#' @param metabolite_kegg Character vector of KEGG compound IDs.
+#' @param organism Character. KEGG organism code. Default \code{"hsa"}.
+#' @param sleep_sec Numeric. Pause between KEGG API requests. Default \code{0.2}.
+#' @param chunk_size Integer. Query chunk size. Default \code{50}.
+#' @return A tibble with enzyme–metabolite edges and \code{edge_type = "enzyme_metabolite"}.
+#' @noRd
 get_kegg_enzyme_metabolite_edges <- function(protein_symbols,
                                              metabolite_kegg,
                                              organism = "hsa",
@@ -299,6 +348,12 @@ get_kegg_enzyme_metabolite_edges <- function(protein_symbols,
                   source = "KEGG")
 }
 
+#' Combine KEGG and Reactome Enzyme–Metabolite Edges
+#'
+#' @param kegg_edges Data frame from \code{get_kegg_enzyme_metabolite_edges()}.
+#' @param reactome_edges Data frame from \code{get_reactome_enzyme_metabolite_edges()}.
+#' @return A combined data frame with shared columns.
+#' @noRd
 combine_enzyme_metabolite_edges <- function(kegg_edges, reactome_edges) {
   shared_cols <- c(
     "edge_type", "source", "reaction_id", "reaction_info",
@@ -323,7 +378,16 @@ combine_enzyme_metabolite_edges <- function(kegg_edges, reactome_edges) {
   dplyr::bind_rows(kegg_norm, reactome_norm)
 }
 
-# Metabolite–Metabolite edges
+#' Get Metabolite–Metabolite Edges from KEGG and Reactome
+#'
+#' @param metabolite_kegg Character vector of KEGG compound IDs.
+#' @param reactome_dir Character. Path to local Reactome database files.
+#' @param organism Character. KEGG organism code. Default \code{"hsa"}.
+#' @param species_prefix Character. Reactome species prefix. Default \code{"HSA"}.
+#' @param sleep_sec Numeric. Pause between API requests. Default \code{0.2}.
+#' @param chunk_size Integer. Query chunk size. Default \code{50}.
+#' @return A data frame with metabolite–metabolite edges and \code{edge_type = "metabolite_metabolite"}.
+#' @noRd
 get_metabolite_metabolite_edges <- function(
     metabolite_kegg,
     reactome_dir,
@@ -457,7 +521,12 @@ get_metabolite_metabolite_edges <- function(
     dplyr::distinct(from, to, reaction_id, source, .keep_all = TRUE)
 }
 
-# Molecule–Pathway edges (from enrichment)
+#' Get Molecule–Pathway Edges from Enrichment Results
+#'
+#' @param pathway_molecule_pairs A data frame with columns \code{mapped_id} and \code{pathway_id}.
+#' @return A data frame with columns \code{mapped_id}, \code{pathway_id}, and
+#'   \code{edge_type = "molecule_pathway"}.
+#' @noRd
 get_molecule_pathway_edges <- function(pathway_molecule_pairs) {
   pathway_molecule_pairs |>
     dplyr::select(mapped_id, pathway_id) |>

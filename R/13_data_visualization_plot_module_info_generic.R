@@ -138,6 +138,8 @@ plot_module_info.list <- function(
 # Default method: unsupported object classes
 # -----------------------------------------------------------------------------
 
+#' @describeIn plot_module_info Default method — raises an informative error for
+#'   unsupported object types.
 #' @export
 plot_module_info.default <- function(object, ...) {
   stop(

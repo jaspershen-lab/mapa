@@ -17,6 +17,9 @@
 \item{object}{A \code{multi_omics_functional_module} S4 object, as produced by
 \code{\link{build_MNetwork}}.}
 
+\item{sim_matrix}{A square cosine-similarity matrix (rows/columns = node IDs),
+as returned by \code{\link[=get_multi_omics_sim]{get_multi_omics_sim()}}.}
+
 \item{sim_cutoff}{Numeric, cosine similarity cutoff for retaining edges between
 nodes (default: 0.55).}
 

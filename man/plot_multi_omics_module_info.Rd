@@ -20,13 +20,21 @@ plot_multi_omics_module_info(
 )
 }
 \arguments{
-\item{merge_result}{\code{list}. Direct output of \code{\link[=merge_multi_omics_nodes]{merge_multi_omics_nodes()}},
+\item{merge_result}{A \code{list}. Direct output of \code{\link[=merge_multi_omics_nodes]{merge_multi_omics_nodes()}},
 containing elements \code{graph_data}, \code{functional_module_result}, and
 \code{result_with_module}. The \code{graph_data} edge table must include \code{edge_type},
 \code{weight}, and \code{diff_weight} columns (produced by the current version of
 \code{\link[=merge_multi_omics_nodes]{merge_multi_omics_nodes()}}).}
 
-\item{module_id}{\code{character(1)}. Module name to plot, e.g.\code{"Functional_module_1"}.}
+\item{module_id}{\code{character(1)}. Module name to plot, e.g. \code{"Functional_module_1"}.}
+
+\item{node_colors}{Named character vector of fill colours for each node type
+(\code{"gene"}, \code{"metabolite"}, \code{"pathway"}).}
+
+\item{node_shapes}{Named integer vector of point shapes for each node type.
+Use fill-able shapes (21 = circle, 22 = square, 24 = triangle up).}
+
+\item{edge_colors}{Named character vector of colours for each edge type.}
 
 \item{node_size}{\code{numeric(1)}. Base node size. Default \code{5}.}
 

@@ -1,6 +1,30 @@
 # setwd(r4projects::get_project_wd())
 # load("demo_data/demo_multi-omics/mnet_obj.rda")
 
+#' Compute Multi-Omics Similarity Matrix
+#'
+#' Runs the full pipeline from a \code{multi_omics_functional_module} object to a
+#' cosine-similarity matrix: builds a MultiplexHet object, computes RWR
+#' diffusion profiles, and calculates pairwise cosine similarities.
+#'
+#' @param mnet_obj A \code{multi_omics_functional_module} S4 object produced by
+#'   [build_MNetwork()].
+#' @param min_path_sim Numeric. Minimum cosine similarity for pathway-pathway
+#'   edges. Default \code{0.55}.
+#' @param min_bipartite_weight Numeric. Minimum IDF weight for pathway-molecule
+#'   edges. Default \code{0}.
+#' @param TransitionMatrix Optional pre-computed transition matrix. Default
+#'   \code{NULL}.
+#' @param r Numeric. Restart probability for RWR. Default \code{0.5}.
+#' @param eta Numeric. Inter-layer jumping probability. Default \code{0.5}.
+#' @param lambda Numeric. Multiplex-to-bipartite weight. Default \code{0.2}.
+#' @param delta1 Numeric. Layer weight in multiplex 1. Default \code{0.5}.
+#' @param delta2 Numeric. Layer weight in multiplex 2. Default \code{0.5}.
+#' @param verbose Logical. Print progress messages. Default \code{TRUE}.
+#'
+#' @return A sparse cosine-similarity matrix (rows and columns = node IDs).
+#'
+#' @noRd
 get_multi_omics_sim <- function(
     mnet_obj,
     # build_MultiplexHet args
@@ -171,6 +195,24 @@ build_MultiplexHet <- function(mnet,
   return(multiplex_het)
 }
 
+#' Compute Diffusion Profiles via Random Walk with Restart
+#'
+#' For each seed node in the MultiplexHet network, runs RWR and collects the
+#' global score vector, assembling all results into a profile matrix.
+#'
+#' @param MultiplexHet_Object A \code{MultiplexHet} object.
+#' @param TransitionMatrix Optional pre-computed transition matrix. Default
+#'   \code{NULL} (computed internally).
+#' @param r Numeric. Restart probability. Default \code{0.5}.
+#' @param eta Numeric. Inter-layer jumping probability. Default \code{0.5}.
+#' @param lambda Numeric. Multiplex-to-bipartite weight. Default \code{0.2}.
+#' @param delta1 Numeric. Layer weight in multiplex 1. Default \code{0.5}.
+#' @param delta2 Numeric. Layer weight in multiplex 2. Default \code{0.5}.
+#' @param verbose Logical. Print progress messages. Default \code{TRUE}.
+#'
+#' @return A numeric matrix (seeds x nodes) of RWR scores.
+#'
+#' @noRd
 compute_diffusion_profiles <- function(
     MultiplexHet_Object,
     TransitionMatrix = NULL,
@@ -290,6 +332,15 @@ compute_diffusion_profiles <- function(
 }
 
 
+#' Calculate Cosine Similarity Matrix
+#'
+#' @param m Numeric matrix of diffusion profiles (rows = seeds).
+#' @param zero_diag Logical. Set diagonal to zero before normalisation. Default \code{TRUE}.
+#' @param renorm_rows Logical. Row-normalise before computing cosine. Default \code{TRUE}.
+#'
+#' @return A sparse cosine-similarity matrix.
+#'
+#' @noRd
 .calculate_sim <- function(m, zero_diag = TRUE, renorm_rows = TRUE) {
 
   node_ids <- rownames(m)

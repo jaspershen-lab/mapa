@@ -5,6 +5,7 @@
 #' the IDs to the processed data.
 #'
 #' @param processed_data A named list where each element corresponds to a module.
+#' @param phenotype Character or NULL. Phenotype/disease to focus the search on.
 #' @param chunk_size An integer specifying the size of query chunks (default is 5).
 #' @param years An integer specifying how many years to look back in the search (default is 5).
 #' @param retmax An integer specifying the maximum number of results to retrieve (default is 10).
@@ -20,7 +21,7 @@
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @keywords internal
+#' @noRd
 pubmed_search <- function(processed_data, phenotype, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread)  # Creates clusters based on available cores
@@ -66,6 +67,7 @@ pubmed_search <- function(processed_data, phenotype, chunk_size = 5, years = 5, 
 #'     \item For gene modules (length 6): Contains PathwayNames, GeneSymbols, and GeneNames_vec
 #'     \item For metabolite modules (length 5): Contains PathwayNames and MetNames_vec
 #'   }
+#' @param phenotype Character or NULL. Phenotype/disease to focus the search on.
 #' @param chunk_size An integer specifying the size of query chunks (default is 5).
 #' @param years An integer specifying how many years to look back in the search (default is 5).
 #' @param retmax An integer specifying the maximum number of results to retrieve (default is 10).
@@ -77,7 +79,7 @@ pubmed_search <- function(processed_data, phenotype, chunk_size = 5, years = 5, 
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @keywords internal
+#' @noRd
 process_module <- function(module_name, module, phenotype = NULL, chunk_size = 5, years = 5, retmax = 10) {
 
   if (length(module) == 7) { # for multi_omics module
@@ -128,8 +130,7 @@ process_module <- function(module_name, module, phenotype = NULL, chunk_size = 5
 #' strategy: first attempting a full query with all terms, then breaking into chunks if that
 #' fails, and finally trying individual terms if chunk queries also fail.
 #'
-#' @param query_terms A character vector of query terms (e.g., gene symbols, gene names, metabolite names).
-#' @param pathway_query A character string representing the pathway part of the query.
+#' @param query A character string containing the full PubMed query.
 #' @param years An integer specifying how many years to look back in the search.
 #' @param retmax An integer specifying the maximum number of results to retrieve.
 #' @param chunk_size An integer specifying the size of query chunks.
@@ -141,7 +142,7 @@ process_module <- function(module_name, module, phenotype = NULL, chunk_size = 5
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
-#' @keywords internal
+#' @noRd
 perform_query <- function(query,
                           years,
                           retmax,
@@ -197,8 +198,7 @@ perform_query <- function(query,
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-
+#' @noRd
 safe_entrez_search <- function(db, term, retmax = 10, retries = 3, pause = 5, years = 5) {
   # Validate years if provided
   if (!is.null(years)) {
@@ -227,8 +227,17 @@ safe_entrez_search <- function(db, term, retmax = 10, retries = 3, pause = 5, ye
   return(NULL)
 }
 
-# Desired structure:
-# ( <ANCHOR> ) AND ( (<GENE_OR_LIST>) OR (<METABOLITE_OR_LIST>) OR (<PATHWAY_OR_LIST>) )
+#' Build a PubMed Query String
+#'
+#' @param pathway_names Character vector of pathway names.
+#' @param gene_symbols Character vector of gene symbols, or \code{NA}.
+#' @param gene_names Character vector of gene full names, or \code{NA}.
+#' @param met_names Character vector of metabolite names, or \code{NA}.
+#' @param phenotype Character or NULL. Phenotype/disease anchor term.
+#' @param field Character. PubMed field tag. Default \code{"tiab"}.
+#' @param add_mesh_for_anchor Logical. Add MeSH term for phenotype anchor. Default \code{TRUE}.
+#' @return A character string containing the assembled PubMed query.
+#' @noRd
 build_pubmed_query <- function(
     pathway_names,
     gene_symbols,

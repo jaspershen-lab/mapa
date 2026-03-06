@@ -29,8 +29,6 @@
 #'       in the code if necessary.
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
-#'
-
 #' @export
 gpt_api_call <- function(
     messages,
@@ -356,7 +354,7 @@ test_siliconflow_url <- function(api_key) {
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
+#' @noRd
 clear_output_dir <- function(output_dir = NULL) {
   # Check if directory exists
   if (file.exists(output_dir)) {

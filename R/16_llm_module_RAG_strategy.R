@@ -33,8 +33,7 @@
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-#从embedding储存文件中读取数据，到时候分批读取并计算similarity。
+#' @noRd
 read_embeddings <- function(save_dir, start_row = 1, n_rows = -1) {
   # 拼接路径，确保路径前缀是 "embedding_output/"
   file_path <- paste0(save_dir, "/embedding_vector.csv.gz")
@@ -66,8 +65,7 @@ read_embeddings <- function(save_dir, start_row = 1, n_rows = -1) {
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-# 读取title
+#' @noRd
 read_titles <- function(save_dir, start_row = 1, n_rows = -1) {
   # 拼接路径，确保路径前缀是 "embedding_output/"
   file_path <- paste0(save_dir, "/paper_title.txt")
@@ -96,8 +94,7 @@ read_titles <- function(save_dir, start_row = 1, n_rows = -1) {
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-
+#' @noRd
 read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
   # 拼接路径，确保路径前缀是 "embedding_output/"
   file_path <- paste0(save_dir, "/chunk.txt")
@@ -124,8 +121,7 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-#基于pathway和gene为module生成embedding
+#' @noRd
 get_module_embedding <- function(module_list, api_key,
                                  embedding_model = "text-embedding-3-small",
                                  api_provider = "openai"){
@@ -184,8 +180,7 @@ get_module_embedding <- function(module_list, api_key,
 #'
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-#计算embedding间的相似性
+#' @noRd
 calculate_similarity <- function(target_embeddings_list, module_embedding) {
   # 检查输入的维度是否匹配
   if (ncol(target_embeddings_list) != length(module_embedding)) {
@@ -254,7 +249,7 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
+#' @noRd
 GPT_process_chunk <- function(chunks, module_list = NULL,
                               multi_omics_module = NULL,
                               api_key,
@@ -335,6 +330,12 @@ GPT_process_chunk <- function(chunks, module_list = NULL,
   )]
 }
 
+#' Extract and Parse JSON from LLM Response
+#'
+#' @param response Character string. Raw text response from the LLM.
+#' @return A list with \code{success} (logical), and either \code{relevance_score} +
+#'   \code{cleaned_text} on success, or \code{error} (character) on failure.
+#' @noRd
 extract_and_parse_json <- function(response) {
   tryCatch({
     # 使用正则表达式提取JSON部分
@@ -358,7 +359,18 @@ extract_and_parse_json <- function(response) {
 }
 
 
-# 遍历 chunks，调用 GPT API
+#' Process a Single Text Chunk with LLM for Relevance Scoring
+#'
+#' @param chunk Character string. A single text chunk (e.g., abstract) to evaluate.
+#' @param pathways Character string. Comma-separated pathway names (single-omics mode).
+#' @param molecules Character string. Comma-separated molecule names (single-omics mode).
+#' @param api_key Character string. API key.
+#' @param model Character string. LLM model identifier. Default \code{"gpt-4o-mini-2024-07-18"}.
+#' @param api_provider Character string. API provider. Default \code{"openai"}.
+#' @param thinkingBudget Integer. Gemini thinking budget. Default \code{0}.
+#' @param multi_omics_module Named list. Multi-omics module descriptor (multi-omics mode).
+#' @return A list with \code{relevance_score} (numeric 0–1) and \code{cleaned_text} (character).
+#' @noRd
 process_chunk <- function(chunk, pathways = NULL, molecules = NULL, api_key,
                           model = "gpt-4o-mini-2024-07-18",
                           api_provider = "openai",
@@ -492,6 +504,7 @@ process_chunk <- function(chunk, pathways = NULL, molecules = NULL, api_key,
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
 #' @param thread An integer specifying the number of parallel threads to use for processing.
 #'   Default is `10` for sequential processing.
+#' @param multi_omics Logical. If TRUE, enables multi-omics processing mode. Default \code{FALSE}.
 #' @return A named list where each element corresponds to a module. Each module contains
 #'   a list of results with the following components:
 #' \item{title}{The title of the filtered document.}
@@ -525,9 +538,7 @@ process_chunk <- function(chunk, pathways = NULL, molecules = NULL, api_key,
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
-#' @keywords internal
-#对于每个module进行检索，检索后通过GPT进行rerank然后顺便清洗一下
-
+#' @noRd
 retrieve_strategy <- function(pubmed_result,
                               model = "gpt-4o-mini-2024-07-18",
                               embedding_model = "text-embedding-3-small",

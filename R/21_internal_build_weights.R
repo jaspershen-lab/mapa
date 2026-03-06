@@ -11,6 +11,14 @@
 #                                 api_key = api_key)
 
 
+#' Build Molecule-Layer Edge Weight Tables
+#'
+#' @param mol_layers A named list with edge tables: \code{tf_target}, \code{ppi},
+#'   \code{metabolite_reaction}, \code{enzyme_metabolite}.
+#' @param weight_ppi Logical. Use STRING combined score as PPI weight. Default \code{FALSE}.
+#' @return A named list of normalized edge data frames each with columns \code{from},
+#'   \code{to}, \code{weight}.
+#' @noRd
 build_mol_layers_weight <- function(mol_layers,
                                     weight_ppi = FALSE) {
   # Standardise any edge table to (from, to, weight = 1)
@@ -83,6 +91,15 @@ build_mol_layers_weight <- function(mol_layers,
   )
 }
 
+#' Build Pathway-Layer Edge Weights via Text Embedding Similarity
+#'
+#' @param path_nodes A tibble of pathway nodes with column \code{node_id}.
+#' @param api_provider Character. API provider: \code{"openai"}, \code{"gemini"}, or
+#'   \code{"siliconflow"}.
+#' @param text_embedding_model Character. Embedding model identifier.
+#' @param api_key Character. API key.
+#' @return A data frame with columns \code{from}, \code{to}, \code{weight} (cosine similarity).
+#' @noRd
 build_path_layer_weight <- function(path_nodes,
                                     api_provider = c("openai", "gemini", "siliconflow"),
                                     text_embedding_model = NULL,
@@ -170,6 +187,13 @@ build_path_layer_weight <- function(path_nodes,
     edge_df
 }
 
+#' Build Pathway–Molecule Bipartite Edge Weights using IDF Scoring
+#'
+#' @param network_tables A list as returned by \code{build_network_tables()}, containing
+#'   \code{node_tables} and \code{edge_table}.
+#' @param min_bg_genes_per_path Integer. Minimum background gene count per pathway. Default \code{5}.
+#' @return A tibble with columns \code{pathway_id}, \code{mol_id}, \code{weight}.
+#' @noRd
 build_pathway_mol_weight <- function(network_tables,
                                      min_bg_genes_per_path = 5) {
   path_node_pair <- network_tables$edge_table$pathway_mol |> tibble::tibble()

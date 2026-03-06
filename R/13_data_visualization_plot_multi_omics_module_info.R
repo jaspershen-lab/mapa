@@ -60,12 +60,17 @@
 #' is read directly from the `graph_data` tidygraph object produced by
 #' [merge_multi_omics_nodes()]. No `mnet_obj` is required.
 #'
-#' @param merge_result `list`. Direct output of [merge_multi_omics_nodes()],
+#' @param merge_result A `list`. Direct output of [merge_multi_omics_nodes()],
 #'   containing elements `graph_data`, `functional_module_result`, and
 #'   `result_with_module`. The `graph_data` edge table must include `edge_type`,
 #'   `weight`, and `diff_weight` columns (produced by the current version of
 #'   [merge_multi_omics_nodes()]).
-#' @param module_id `character(1)`. Module name to plot, e.g.`"Functional_module_1"`.
+#' @param module_id `character(1)`. Module name to plot, e.g. `"Functional_module_1"`.
+#' @param node_colors Named character vector of fill colours for each node type
+#'   (`"gene"`, `"metabolite"`, `"pathway"`).
+#' @param node_shapes Named integer vector of point shapes for each node type.
+#'   Use fill-able shapes (21 = circle, 22 = square, 24 = triangle up).
+#' @param edge_colors Named character vector of colours for each edge type.
 #' @param node_size `numeric(1)`. Base node size. Default `5`.
 #' @param label_size `numeric(1)`. Text label size (pt). Default `3`.
 #' @param show_rwr_edge `logical(1)`. Whether to display diffusion-similarity
