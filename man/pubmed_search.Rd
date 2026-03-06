@@ -6,6 +6,7 @@
 \usage{
 pubmed_search(
   processed_data,
+  phenotype,
   chunk_size = 5,
   years = 5,
   retmax = 10,

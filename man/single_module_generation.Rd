@@ -12,13 +12,17 @@ single_module_generation(
   api_key,
   output_prompt = TRUE,
   api_provider = "openai",
-  thinkingBudget = 0
+  thinkingBudget = 0,
+  multi_omics = FALSE
 )
 }
 \arguments{
 \item{module_related_paper}{A list of related papers with titles and cleaned texts for the module.}
 
-\item{module_info}{A list containing pathway names and gene symbols relevant to the module.}
+\item{module_info}{A list containing pathway names and gene symbols relevant to the module.
+When \code{multi_omics = TRUE}, \code{module_info} must contain the fields:
+\code{GeneIDs}, \code{GeneNames_vec}, \code{MetIDs}, \code{MetNames_vec},
+\code{PathwayNames}, \code{PathwayDescription}, and \code{PathwayReferencePMID}.}
 
 \item{phenotype}{Character string. Phenotype or disease to focus on. Default is NULL.}
 
@@ -31,10 +35,14 @@ single_module_generation(
 \item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
 
 \item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
+
+\item{multi_omics}{Logical. If TRUE, use multi-omics prompt templates that integrate genes,
+metabolites, and pathways together. Default is FALSE.}
 }
 \value{
-A list containing two elements: \code{module_name} (the generated biological module name)
-and \code{summary} (the research summary).
+A list containing: \code{module_name}, \code{summary}, \code{confidence_score},
+optionally \code{phenotype_analysis} (when \code{phenotype} is provided),
+and optionally \code{prompt} (when \code{output_prompt} is TRUE).
 }
 \description{
 This internal function generates a biological module name and a research summary
@@ -42,6 +50,8 @@ for a specific module based on provided pathway, gene, and related article infor
 It interacts with an AI API to perform text analysis and ensure the response is in JSON format.
 }
 \author{
+Yifei Ge \email{yifeii.ge@outlook.com}
+
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }
 \keyword{internal}

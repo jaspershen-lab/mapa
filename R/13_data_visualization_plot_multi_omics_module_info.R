@@ -1,12 +1,45 @@
 # setwd(r4projects::get_project_wd())
 # load("demo_data/demo_multi-omics/multi_omics_modules.rda")
-# load("demo_data/demo_multi-omics/mnet_obj.rda")
 # merge_result <- multi_omics_modules
-# mnet_obj <- mnet_obj
 # module_id <- "Functional_module_92"
-# p1 <- plot_module_info(mnet_obj = mnet_obj,
-#                        merge_result = multi_omics_modules,
-#                        module_id = c("Functional_module_89"))
+# {
+#   merge_result = multi_omics_modules
+#   module_id = "Functional_module_92"
+#   node_colors = c(
+#     "gene" = "#4E79A7",
+#     "metabolite" = "#F28E2B",
+#     "pathway" = "#59A14F"
+#   )
+#   node_shapes = c(
+#     "gene" = 21, # circle (fill-able)
+#     "metabolite" = 24, # triangle up
+#     "pathway" = 22 # square
+#   )
+#   edge_colors = c(
+#     "TF-target" = "#E15759",
+#     "PPI" = "#76B7B2",
+#     "Reaction" = "#B07AA1",
+#     "molecule_pathway" = "#F1CE63",
+#     "diffusion_similarity" = "grey"
+#   )
+#   node_size = 5
+#   label_size = 3
+#   show_rwr_edge = FALSE
+#   show_labels = TRUE
+#   title = NULL
+# }
+#
+# p1 <- plot_multi_omics_module_info(merge_result = multi_omics_modules,
+#                                    module_id = c("Functional_module_89"),
+#                                    node_colors = node_colors,
+#                                    node_shapes = node_shapes,
+#                                    edge_colors = edge_colors,
+#                                    node_size = node_size,
+#                                    label_size = label_size,
+#                                    show_rwr_edge = show_rwr_edge,
+#                                    show_labels = show_labels,
+#                                    title = title
+#                                    )
 # p1
 
 #' Plot Multi-Omics Functional Module Information
@@ -16,20 +49,27 @@
 #'
 #' * **Knowledge edges** (solid lines, coloured by type):
 #'   TF-target, PPI, Reaction (metabolite_reaction + enzyme_metabolite),
-#'   pathway_annotation (pathway–molecule links).
+#'   molecule_pathway (pathway–molecule links).
 #'
 #' * **Computational edges** (dashed grey lines):
-#'   Diffusion-based similarity edges from the `graph_data` tidygraph object
-#'   (i.e., the cosine-similarity edges produced by `merge_multi_omics_nodes()`).
+#'   Diffusion-based similarity edges with no matching knowledge-layer
+#'   connection (edge_type == "diffusion_similarity").
 #'
-#' @param mnet_obj `multi_omics_functional_module`. The S4 object holding
-#'   all knowledge-layer edge tables (`mol_layers`, `path_to_mol`).
+#' All edge information — including `edge_type`, `weight` (knowledge layer
+#' weight), and `diff_weight` (cosine similarity from the diffusion matrix) —
+#' is read directly from the `graph_data` tidygraph object produced by
+#' [merge_multi_omics_nodes()]. No `mnet_obj` is required.
+#'
 #' @param merge_result `list`. Direct output of [merge_multi_omics_nodes()],
 #'   containing elements `graph_data`, `functional_module_result`, and
-#'   `result_with_module`.
+#'   `result_with_module`. The `graph_data` edge table must include `edge_type`,
+#'   `weight`, and `diff_weight` columns (produced by the current version of
+#'   [merge_multi_omics_nodes()]).
 #' @param module_id `character(1)`. Module name to plot, e.g.`"Functional_module_1"`.
 #' @param node_size `numeric(1)`. Base node size. Default `5`.
 #' @param label_size `numeric(1)`. Text label size (pt). Default `3`.
+#' @param show_rwr_edge `logical(1)`. Whether to display diffusion-similarity
+#'   edges in addition to knowledge edges. Default `FALSE`.
 #' @param show_labels `logical(1)`. Whether to display node labels. Default `TRUE`.
 #' @param title `character(1)` or `NULL`. Plot title. When `NULL`
 #'   (default) the module name is used.
@@ -45,7 +85,6 @@
 #'
 #' @export
 plot_multi_omics_module_info <- function(
-    mnet_obj,
     merge_result,
     module_id,
     node_colors = c(
@@ -84,47 +123,6 @@ plot_multi_omics_module_info <- function(
 
   node_ids <- unique(plot_nodes$node_id)
 
-  # Knowledge edges
-  # Keep only edges where both endpoints fall within the module
-  .ke <- function(df, edge_type) {
-    if (is.null(df) || nrow(df) == 0) return(NULL)
-
-    result <- df |>
-      dplyr::filter(from %in% node_ids & to %in% node_ids)
-
-    if (nrow(result) == 0) {
-      return(tibble::tibble(
-        from = character(0),
-        to = character(0),
-        weight = numeric(0),
-        edge_type = character(0),
-        edge_category = character(0)
-      ))
-    }
-
-    result |>
-      dplyr::mutate(
-        edge_category = "knowledge",
-        edge_type = edge_type
-      ) |>
-      dplyr::select(from, to, weight, edge_type, edge_category)
-  }
-
-  tf_edges <- .ke(mnet_obj@mol_layers_edge_weight$tf_target, edge_type = "TF-target")
-  ppi_edges <- .ke(mnet_obj@mol_layers_edge_weight$ppi, edge_type = "PPI")
-  rxn_edges <- .ke(mnet_obj@mol_layers_edge_weight$metabolite_reaction, edge_type = "Reaction")
-  enz_edges <- .ke(mnet_obj@mol_layers_edge_weight$enzyme_metabolite, edge_type = "Reaction")
-
-  # path_to_mol: from = pathway_id, to = mol_id
-  path_edges  <- .ke(mnet_obj@pathway_mol_edge_weight |>
-                       dplyr::rename(from = pathway_id, to = mol_id),
-                     edge_type = "molecule_pathway") |>
-    dplyr::mutate(weight = 1)
-
-  knowledge_edges <- dplyr::bind_rows(tf_edges, ppi_edges, rxn_edges, enz_edges, path_edges) |>
-    dplyr::distinct(from, to, edge_type, .keep_all = TRUE)
-
-  # Computational (diffusion similarity) edges
   gd_nodes <- merge_result$graph_data |>
     tidygraph::activate("nodes") |>
     tibble::as_tibble()
@@ -133,7 +131,6 @@ plot_multi_omics_module_info <- function(
     tidygraph::activate("edges") |>
     tibble::as_tibble()
 
-  # Resolve tidygraph integer indices to node_id strings
   if (nrow(gd_edges_raw) > 0 && is.numeric(gd_edges_raw$from)) {
     gd_edges_raw <- gd_edges_raw |>
       dplyr::mutate(
@@ -142,18 +139,23 @@ plot_multi_omics_module_info <- function(
       )
   }
 
-  diffusion_edges <- gd_edges_raw |>
+  all_edges <- gd_edges_raw |>
     dplyr::filter(from %in% node_ids, to %in% node_ids) |>
-    dplyr::rename(weight = sim) |>
     dplyr::mutate(
-      edge_type = "diffusion_similarity",
-      edge_category = "computational"
+      edge_category = dplyr::if_else(
+        edge_type == "diffusion_similarity", "computational", "knowledge"
+      ),
+      # Use knowledge weight when available, fall back to diffusion similarity
+      display_weight = dplyr::if_else(!is.na(weight), weight, diff_weight)
     ) |>
-    dplyr::distinct(from, to, .keep_all = TRUE)
-
-  # Combine edges
-  all_edges <- dplyr::bind_rows(knowledge_edges, diffusion_edges) |>
+    dplyr::select(from, to, diff_weight, edge_type, weight, display_weight, edge_category) |>
     dplyr::distinct(from, to, edge_type, .keep_all = TRUE)
+
+  # Optionally drop diffusion-only edges
+  if (!show_rwr_edge) {
+    all_edges <- all_edges |>
+      dplyr::filter(edge_category == "knowledge")
+  }
 
   # Build tidygraph object
   if (nrow(all_edges) == 0) {
@@ -161,14 +163,12 @@ plot_multi_omics_module_info <- function(
     all_edges <- tibble::tibble(
       from = character(0),
       to = character(0),
+      diff_weight = numeric(0),
       edge_type = character(0),
+      weight = numeric(0),
+      display_weight = numeric(0),
       edge_category = character(0)
     )
-  }
-
-  if (!show_rwr_edge) {
-    all_edges <- all_edges |>
-      dplyr::filter(edge_category == "knowledge")
   }
 
   g <- tidygraph::tbl_graph(
@@ -188,7 +188,7 @@ plot_multi_omics_module_info <- function(
 
   # Count stats for subtitle
   n_genes <- sum(plot_nodes$node_type == "gene", na.rm = TRUE)
-  n_mets <- sum(plot_nodes$node_type == "metabolite", na.rm = TRUE)
+  n_mets  <- sum(plot_nodes$node_type == "metabolite", na.rm = TRUE)
   n_paths <- sum(plot_nodes$node_type == "pathway", na.rm = TRUE)
   n_ke <- all_edges |> dplyr::filter(edge_category == "knowledge") |> nrow()
   n_de <- all_edges |> dplyr::filter(edge_category == "computational") |> nrow()
@@ -208,13 +208,13 @@ plot_multi_omics_module_info <- function(
       ggplot2::aes(
         colour = edge_type,
         linetype = edge_type,
-        edge_width = weight
+        edge_width = display_weight
       ),
       alpha = 0.6
     ) +
     ggraph::scale_edge_width(range = c(0.2, 1)) +
     ggraph::scale_edge_colour_manual(
-      name   = "Edge type",
+      name = "Edge type",
       values = edge_colors
     ) +
     ggraph::scale_edge_linetype_manual(
@@ -223,37 +223,37 @@ plot_multi_omics_module_info <- function(
     ) +
 
     # Nodes
-  ggraph::geom_node_point(
-    ggplot2::aes(fill = node_type, shape = node_type),
-    size = node_size,
-    colour = "black",
-    stroke = 0.5
-  ) +
+    ggraph::geom_node_point(
+      ggplot2::aes(fill = node_type, shape = node_type),
+      size = node_size,
+      colour = "black",
+      stroke = 0.5
+    ) +
     ggplot2::scale_fill_manual(
       name = "Node type",
       values = node_colors,
     ) +
     ggplot2::scale_shape_manual(
-      name   = "Node type",
+      name  = "Node type",
       values = node_shapes
     ) +
 
     # Labels
-  {
-    if (show_labels)
-      ggraph::geom_node_text(
-        ggplot2::aes(label = node_id),
-        size = label_size,
-        repel = TRUE,
-        colour = "grey15",
-        bg.colour = "white",
-        bg.r = 0.12,
-        max.overlaps = 20
-      )
-  } +
+    {
+      if (show_labels)
+        ggraph::geom_node_text(
+          ggplot2::aes(label = node_id),
+          size = label_size,
+          repel = TRUE,
+          colour = "grey15",
+          bg.colour = "white",
+          bg.r = 0.12,
+          max.overlaps = 20
+        )
+    } +
 
-  # Theme
-  ggraph::theme_graph() +
+    # Theme
+    ggraph::theme_graph() +
     ggplot2::labs(
       title = plot_title,
       subtitle = plot_sub

@@ -16,7 +16,8 @@ retrieve_strategy(
   save_dir_local_corpus_embed = NULL,
   api_provider = "openai",
   thinkingBudget = 0,
-  thread = thread
+  thread = thread,
+  multi_omics = FALSE
 )
 }
 \arguments{
@@ -85,6 +86,8 @@ Progress updates are printed to the console throughout the processing of each mo
 \code{\link{GPT_process_chunk}}
 }
 \author{
+Yifei Ge \email{yifeii.ge@outlook.com}
+
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }
 \keyword{internal}

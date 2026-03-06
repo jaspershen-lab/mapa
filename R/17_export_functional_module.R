@@ -14,6 +14,7 @@
 #
 # export_functional_module(object = object)
 
+
 #' Export functional-module results to CSV
 #'
 #' Writes every enrichment/table contained in a

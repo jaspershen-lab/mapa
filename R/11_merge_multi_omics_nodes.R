@@ -10,12 +10,13 @@
 # range(diffusion_profile)
 # cosine_sim <- .calculate_sim(diffusion_profile)
 # hist(cosine_sim@x[cosine_sim@x > 0.6 & cosine_sim@x < 0.9])
-# node_meta <- rbind(mnet_obj@mol_nodes, mnet_obj@path_nodes)
+# node_meta <- rbind(object@mol_nodes, object@path_nodes)
 # save(graph_data, file = "demo_data/demo_multi-omics/graph_data.rda")
 #
 # load("demo_data/demo_multi-omics/mnet_obj.rda")
 # load("demo_data/demo_multi-omics/sim_matrix_multi_omics.rda")
-# multi_omics_modules <- get_functional_modules(
+# set.seed(123)
+# multi_omics_modules <- merge_multi_omics_nodes(
 #   object = mnet_obj,
 #   sim_matrix = sim_matrix,
 #   sim_cutoff = 0.45,
@@ -24,7 +25,7 @@
 # save(multi_omics_modules, file = "demo_data/demo_multi-omics/multi_omics_modules.rda")
 
 merge_multi_omics_nodes <- function(
-    mnet_obj,
+    object,
     sim_matrix,
     sim_cutoff = 0.55,
     cluster_method = "louvain",
@@ -32,9 +33,10 @@ merge_multi_omics_nodes <- function(
 ) {
   # similarity matrix → clustered tidygraph
   if (verbose) message("\n Clustering multi-omics molecules and enriched pathways ...")
-  node_meta <- rbind(mnet_obj@mol_nodes, mnet_obj@path_nodes)
+  node_meta <- rbind(object@mol_nodes, object@path_nodes)
 
   graph_data <- cluster_nodes(
+    object = object,
     sim_matrix = sim_matrix,
     sim_cutoff = sim_cutoff,
     node_meta = node_meta,
@@ -47,9 +49,7 @@ merge_multi_omics_nodes <- function(
   result_with_module <- graph_data |>
     tidygraph::activate(what = "nodes") |>
     tibble::as_tibble() |>
-    dplyr::mutate(
-      module = stringr::str_replace(module, "^Module_", "Functional_module_")
-    )
+    dplyr::mutate(module = stringr::str_replace(module, "^Module_", "Functional_module_"))
 
   # functional_module_result
   x <- result_with_module |> dplyr::mutate(node_type = tolower(node_type))
@@ -79,11 +79,11 @@ merge_multi_omics_nodes <- function(
       module,
       module_content_number,
       include_genes = !is.na(gene) & gene != "",
-      genes = if_else(include_genes, gene, NA_character_),
+      genes = ifelse(include_genes, gene, NA_character_),
       include_metabolites = !is.na(metabolite) & metabolite != "",
-      metabolites = if_else(include_metabolites, metabolite, NA_character_),
+      metabolites = ifelse(include_metabolites, metabolite, NA_character_),
       include_pathways = !is.na(pathway) & pathway != "",
-      pathways = if_else(include_pathways, pathway, NA_character_)
+      pathways = ifelse(include_pathways, pathway, NA_character_)
     ) |>
     dplyr::mutate(multi_omics_num = include_genes + include_metabolites + include_pathways) |>
     dplyr::select(module, module_content_number, multi_omics_num, everything())
@@ -96,6 +96,7 @@ merge_multi_omics_nodes <- function(
 }
 
 cluster_nodes <- function(
+    object,
     sim_matrix,
     sim_cutoff = 0.55,
     node_meta,
@@ -123,13 +124,12 @@ cluster_nodes <- function(
   all_nodes <- rownames(sim_matrix)
   if (is.null(all_nodes)) stop("sim_matrix must have row/col names = node IDs.")
 
-  # Build edge table (upper triangle only, no self-loops)
   message("Building edge table...")
   edge_data <- as.data.frame(as.table(sim_matrix), responseName = "sim")
   colnames(edge_data) <- c("from", "to", "sim")
   edge_data$from <- as.character(edge_data$from)
   edge_data$to <- as.character(edge_data$to)
-  edge_data <- edge_data[edge_data$from < edge_data$to, ]   # upper triangle
+  edge_data <- edge_data[edge_data$from < edge_data$to, ]
 
   if (nrow(edge_data) == 0) stop("Edge table empty – need >= 2 nodes.")
 
@@ -139,16 +139,13 @@ cluster_nodes <- function(
     node_meta, by = "node_id", all.x = TRUE
   )
   node_data <- node_data[match(all_nodes, node_data$node_id), ]
-  node_data$node <- node_data$node_id   # alias used by tidygraph key
+  node_data$node <- node_data$node_id
   rownames(node_data) <- NULL
-
-  message(sprintf("Nodes: %d  |  Edges before filter: %d",
-                  nrow(node_data), nrow(edge_data)))
 
   # Handle hierarchical prefix
   hclust_method <- NULL
   if (grepl("^h_", cluster_method)) {
-    hclust_method  <- sub("^h_", "", cluster_method)
+    hclust_method <- sub("^h_", "", cluster_method)
     cluster_method <- "hierarchical"
   }
 
@@ -166,7 +163,7 @@ cluster_nodes <- function(
   }
 
   .membership_df <- function(comm) {
-    data.frame(node   = node_data$node,
+    data.frame(node = node_data$node,
                module = paste0("Module_", as.character(igraph::membership(comm))),
                stringsAsFactors = FALSE)
   }
@@ -220,13 +217,56 @@ cluster_nodes <- function(
     }
   )
 
+  message("Annotating edges with knowledge layer information...")
+
+  .ke <- function(df, etype) {
+    if (is.null(df) || nrow(df) == 0) return(NULL)
+    df |>
+      dplyr::select(from, to, weight) |>
+      dplyr::mutate(
+        edge_type = etype,
+        from_c = pmin(from, to),
+        to_c = pmax(from, to)
+      ) |>
+      dplyr::select(from = from_c, to = to_c, weight, edge_type)
+  }
+
+  knowledge_edges <- dplyr::bind_rows(
+    .ke(object@mol_layers_edge_weight$tf_target, "TF-target"),
+    .ke(object@mol_layers_edge_weight$ppi, "PPI"),
+    .ke(object@mol_layers_edge_weight$metabolite_reaction, "Reaction"),
+    .ke(object@mol_layers_edge_weight$enzyme_metabolite, "Reaction"),
+    .ke(object@pathway_mol_edge_weight |>
+          dplyr::rename(from = pathway_id, to = mol_id) |>
+          dplyr::mutate(weight = 1), "molecule_pathway")
+  ) |>
+    dplyr::distinct(from, to, edge_type, .keep_all = TRUE)
+
+  # Annotate diffusion edges
+  # Filtered diffusion edges (sim > sim_cutoff) are the backbone of the graph.
+  # Each diffusion edge is left-joined to knowledge_edges on (from, to):
+  #   - Matching edges expand into one row per knowledge edge_type, carrying
+  #     both the knowledge `weight` and the diffusion similarity as `diff_weight`.
+  #   - Non-matching edges receive edge_type = "diffusion_similarity" and
+  #     weight = NA_real_, retaining only the `diff_weight`.
+  filtered_edges <- edge_data[edge_data$sim > sim_cutoff, ] |>
+    dplyr::rename(diff_weight = sim)
+
+  annotated_edges <- filtered_edges |>
+    dplyr::left_join(knowledge_edges, by = c("from", "to")) |>
+    dplyr::mutate(
+      edge_type = dplyr::if_else(is.na(edge_type), "diffusion_similarity", edge_type),
+      weight = dplyr::if_else(edge_type == "diffusion_similarity", NA_real_, weight)
+    ) |>
+    dplyr::select(from, to, diff_weight, edge_type, weight)
+
   # Build tidygraph
   message("Building tidygraph object...")
 
   graph_data <-
     tidygraph::tbl_graph(
-      nodes    = node_data,
-      edges    = edge_data[edge_data$sim > sim_cutoff, ],
+      nodes = node_data,
+      edges = annotated_edges,
       directed = FALSE,
       node_key = "node"
     ) |>
@@ -253,4 +293,3 @@ cluster_nodes <- function(
 
   graph_data
 }
-

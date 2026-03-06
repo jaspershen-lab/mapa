@@ -126,8 +126,28 @@ read_chunks <- function(save_dir, start_row = 1, n_rows = -1) {
 #'
 #' @keywords internal
 #基于pathway和gene为module生成embedding
- get_module_embedding <- function(module_list, api_key, embedding_model = "text-embedding-3-small", api_provider = "openai"){
-  if ("GeneNames_vec" %in% names(module_list)) {
+get_module_embedding <- function(module_list, api_key,
+                                 embedding_model = "text-embedding-3-small",
+                                 api_provider = "openai"){
+   if ("GeneNames_vec" %in% names(module_list) & "MetNames_vec" %in% names(module_list)) {
+     clean <- function(x) {
+       if (is.null(x)) return(character(0))
+       x <- x[!is.na(x)]
+       x <- trimws(x)
+       x <- x[nzchar(x)]
+       unique(x)
+     }
+
+     genes <- module_list$GeneNames_vec
+     mets <- module_list$MetNames_vec
+     paths <- module_list$PathwayNames
+
+     module_str <- paste(
+       if (length(paths)) paste0("Pathways: ", paste(paths, collapse = ", "), ".") else NULL,
+       if (length(genes)) paste0("Genes: ", paste(genes, collapse = ", "), ".") else NULL,
+       if (length(mets))  paste0("Metabolites: ", paste(mets, collapse = ", "), ".") else NULL
+     )
+   } else if ("GeneNames_vec" %in% names(module_list)) {
     module_str <- paste0(
       paste(module_list$PathwayNames, collapse = " "),
       " ",
@@ -187,142 +207,133 @@ calculate_similarity <- function(target_embeddings_list, module_embedding) {
 }
 
 
-
 #' Process Chunks with GPT for Relevance Scoring and Text Cleaning
 #'
 #' @description
 #' Processes a list of text chunks using GPT to evaluate their relevance to a specified module
 #' and cleans the text by removing unrelated information. The function assigns relevance scores
 #' to each chunk based on how well it aligns with the pathways and molecules defined in the module.
+#' Supports both single-omics mode (via \code{module_list}) and multi-omics mode
+#' (via \code{multi_omics_module}).
 #'
 #' @param chunks A character vector where each element is a text chunk (e.g., abstracts or articles) to process.
-#' @param module_list A list or data frame containing module information with at least:
-#'   \code{PathwayNames} (character vector) and one of \code{GeneNames_vec} or \code{MetNames_vec}
-#'   (character vectors defining molecules of interest).
+#' @param module_list A list or data frame containing single-omics module information with at least:
+#'   \code{PathwayNames} (character vector) and one of \code{GeneNames_vec} or \code{MetNames_vec}.
+#'   Set to \code{NULL} when using \code{multi_omics_module}.
+#' @param multi_omics_module A named list describing a multi-omics module. Expected fields (all optional
+#'   except at least one must be non-NA): \code{GeneIDs}, \code{GeneNames_vec}, \code{MetIDs},
+#'   \code{MetNames_vec}, \code{PathwayNames}, \code{PathwayDescription}.
+#'   Set to \code{NULL} (default) when using single-omics \code{module_list}.
 #' @param api_key A character string containing the API key for the GPT service.
-#' @param model A string specifying the GPT model to use (default is `"gpt-4o-mini-2024-07-18"`).
-#' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
-#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
-#' @param thread Integer. Number of parallel threads to use for processing.
-#'   Default is `10` for sequential processing.
-#' @return A list of results where each element is a list containing:
-#' \item{relevance_score}{A numeric value between 0 and 1, indicating the relevance of the chunk.}
-#' \item{cleaned_text}{A character string with unrelated information (such as author names,
-#'   affiliations, and non-relevant metadata) removed.}
-#' The list is sorted in descending order of \code{relevance_score}.
+#' @param model A string specifying the GPT model to use (default is \code{"gpt-4o-mini-2024-07-18"}).
+#' @param api_provider A string indicating the API provider, either \code{"openai"}, \code{"gemini"},
+#'   or \code{"siliconflow"} (default is \code{"openai"}).
+#' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API
+#'   (default is \code{0}).
+#' @param thread Integer. Number of parallel threads to use for processing (default is \code{10}).
 #'
-#' @details
-#' The function performs the following steps:
-#' \enumerate{
-#'   \item Extracts pathway and molecule information from the module_list
-#'   \item Processes each chunk in parallel using either \code{parallel::parLapply} (Windows)
-#'     or \code{pbmclapply} (other platforms)
-#'   \item For each chunk, calls the GPT API with a carefully constructed prompt
-#'   \item Validates and potentially retries the API call if the response format is incorrect
-#'   \item Parses the JSON response to extract relevance scores and cleaned text
-#'   \item Returns the results sorted by relevance score
-#' }
+#' @return A list of results sorted in descending order of \code{relevance_score}, where each element contains:
+#' \item{relevance_score}{A numeric value between 0 and 1.}
+#' \item{cleaned_text}{A character string with unrelated metadata removed.}
 #'
 #' @examples
 #' \dontrun{
-#' # Example: Process a set of scientific abstracts
-#' abstracts <- c(
-#'   "Abstract 1: This study investigates Pathway1 and its relationship with Gene1...",
-#'   "Abstract 2: Recent findings on Pathway2 suggest that Gene2 plays a crucial role..."
-#' )
-#' module_info <- list(
-#'   PathwayNames = c("Pathway1", "Pathway2"),
-#'   GeneNames_vec = c("Gene1", "Gene2", "Gene3")
-#' )
-#' api_key <- "your_openai_api_key"
-#' results <- GPT_process_chunk(abstracts, module_info, api_key, model)
+#' # Single-omics mode (original usage, unchanged)
+#' results <- GPT_process_chunk(abstracts, module_info, api_key)
 #'
-#' # Access the most relevant result
-#' top_result <- results[[1]]
-#' print(paste("Top score:", top_result$relevance_score))
-#' print(paste("Cleaned text:", top_result$cleaned_text))
+#' # Multi-omics mode
+#' results <- GPT_process_chunk(abstracts, module_list = NULL, api_key,
+#'                              multi_omics_module = my_module_list)
 #' }
 #'
 #' @importFrom parallel makeCluster clusterExport clusterEvalQ parLapply stopCluster
 #' @importFrom jsonlite fromJSON
 #'
-#' @seealso
-#' \code{\link{gpt_api_call}} used internally for API communication
+#' @seealso \code{\link{process_chunk}}, \code{\link{gpt_api_call}}
 #'
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-GPT_process_chunk <- function(chunks, module_list, api_key, model = "gpt-4o-mini-2024-07-18",  api_provider = "openai",  thinkingBudget = 0, thread = 10) {
-  # 初始化结果列表
-  reranked_results <- list()
+GPT_process_chunk <- function(chunks, module_list = NULL,
+                              multi_omics_module = NULL,
+                              api_key,
+                              model = "gpt-4o-mini-2024-07-18",
+                              api_provider = "openai",
+                              thinkingBudget = 0,
+                              thread = 10) {
 
-  # 提取模块相关信息
-  pathways <- paste(module_list[["PathwayNames"]], collapse = ", ")
-  if ("GeneNames_vec" %in% names(module_list)) {
-    molecules <- paste(module_list[["GeneNames_vec"]], collapse = ", ")
-  } else if ("MetNames_vec" %in% names(module_list)) {
-    molecules <- paste(module_list[["MetNames_vec"]], collapse = ", ")
+  has_single_omics <- !is.null(module_list)
+  has_multi_omics  <- !is.null(multi_omics_module)
+
+  if (!has_single_omics && !has_multi_omics) {
+    stop("Must provide either module_list (single-omics) or multi_omics_module (multi-omics).")
+  }
+  if (has_single_omics && has_multi_omics) {
+    stop("Please provide either module_list OR multi_omics_module, not both.")
   }
 
-  # 根据操作系统选择不同的并行处理方式
+  if (has_single_omics) {
+    pathways  <- paste(module_list[["PathwayNames"]], collapse = ", ")
+    molecules <- if ("GeneNames_vec" %in% names(module_list)) {
+      paste(module_list[["GeneNames_vec"]], collapse = ", ")
+    } else {
+      paste(module_list[["MetNames_vec"]], collapse = ", ")
+    }
+    mo_module <- NULL
+  } else {
+    pathways  <- NULL
+    molecules <- NULL
+    mo_module <- multi_omics_module
+  }
+
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread)
-
-    # 导出所有必需的变量到集群
-    parallel::clusterExport(cl, c("chunks", "pathways", "molecules", "api_key", "model"),
-                           envir = environment())
-
-    # 导出工具函数
-    parallel::clusterExport(cl, c("process_chunk", "gpt_api_call","test_siliconflow_url","extract_and_parse_json"),
-                           envir = environment())
-
-    # 加载必要的包
+    parallel::clusterExport(
+      cl,
+      c("chunks", "pathways", "molecules", "api_key", "model",
+        "api_provider", "thinkingBudget", "mo_module",
+        "process_chunk", "gpt_api_call", "test_siliconflow_url",
+        "extract_and_parse_json"),
+      envir = environment()
+    )
     parallel::clusterEvalQ(cl, {
       library(jsonlite)
       library(curl)
       library(httr)
-      source("R/16_llm_module_utils.R")  # 导入包含 gpt_api_call 的文件
+      source("R/16_llm_module_utils.R")
     })
-
-    # 执行并行处理
-    reranked_results <- parallel::parLapply(cl, chunks,
-                                          function(chunk) {
-                                            process_chunk(chunk, pathways, molecules, api_key, model = model,
-                                                          api_provider = api_provider,
-                                                          thinkingBudget = thinkingBudget)
-                                          })
+    reranked_results <- parallel::parLapply(cl, chunks, function(chunk) {
+      process_chunk(chunk,
+                    pathways = pathways,
+                    molecules = molecules,
+                    api_key = api_key,
+                    model = model,
+                    api_provider = api_provider,
+                    thinkingBudget = thinkingBudget,
+                    multi_omics_module = mo_module)
+    })
     parallel::stopCluster(cl)
   } else {
-    reranked_results <- pbmclapply(chunks, process_chunk,
-                                  pathways = pathways,
-                                  molecules = molecules,
-                                  api_key = api_key,
-                                  model = model,
-                                  mc.cores = thread,
-                                  api_provider = api_provider,
-                                  thinkingBudget = thinkingBudget
-                                  )
+    reranked_results <- pbmclapply(
+      chunks, process_chunk,
+      pathways = pathways,
+      molecules = molecules,
+      api_key = api_key,
+      model = model,
+      api_provider = api_provider,
+      thinkingBudget = thinkingBudget,
+      multi_omics_module = mo_module,
+      mc.cores = thread
+    )
   }
 
-  # for (chunk in chunks) {
-  #   res <- process_chunk(chunk, pathways, molecules, api_key, model = model)
-  #   reranked_results <- c(reranked_results, res)
-  # }
-  # 对结果按 relevance_score 进行降序排序
-  reranked_results <- reranked_results[order(sapply(reranked_results, function(x) x$relevance_score), decreasing = TRUE)]
-
-  return(reranked_results)
+  # 按 relevance_score 降序排列
+  reranked_results[order(
+    sapply(reranked_results, function(x) x$relevance_score),
+    decreasing = TRUE
+  )]
 }
-
-# # 定义验证 JSON 格式的函数
-# check_json_format <- function(response) {
-#   tryCatch({
-#     result <- jsonlite::fromJSON(response, simplifyVector = FALSE)
-#     return(exists("relevance_score", result) && exists("cleaned_text", result))
-#   }, error = function(e) {
-#     return(FALSE)
-#   })
-# }
 
 extract_and_parse_json <- function(response) {
   tryCatch({
@@ -346,32 +357,80 @@ extract_and_parse_json <- function(response) {
   })
 }
 
-# # 定义修改格式的逻辑
-# modify_prompt_for_format <- function(original_prompt) {
-#   # 将原始 prompt 和附加信息封装为 messages 格式
-#   messages <- list(
-#     list(role = "system", content = "You are an AI tasked with ensuring responses follow a strict JSON format."),
-#     list(role = "user", content = paste0(
-#       original_prompt, "\n\n",
-#       "If your response does not strictly follow the JSON format, please fix the format and make sure to return a valid JSON structure like this:\n",
-#       "{\n",
-#       "  \"relevance_score\": <score>,\n",
-#       "  \"cleaned_text\": \"<cleaned text>\"\n",
-#       "}"
-#     ))
-#   )
-#
-#   return(messages)
-# }
 
 # 遍历 chunks，调用 GPT API
-process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-mini-2024-07-18",  api_provider = "openai",  thinkingBudget = 0) {
-  # 构建 GPT API 的 prompt
+process_chunk <- function(chunk, pathways = NULL, molecules = NULL, api_key,
+                          model = "gpt-4o-mini-2024-07-18",
+                          api_provider = "openai",
+                          thinkingBudget = 0,
+                          multi_omics_module = NULL) {
+
+  has_single_omics <- !is.null(pathways) && !is.null(molecules)
+  has_multi_omics  <- !is.null(multi_omics_module)
+
+  if (!has_single_omics && !has_multi_omics) {
+    stop("Must provide either (pathways + molecules) for single-omics mode, ",
+         "or multi_omics_module for multi-omics mode.")
+  }
+  if (has_single_omics && has_multi_omics) {
+    stop("Please provide either (pathways + molecules) OR multi_omics_module, not both.")
+  }
+
+  #构建 prompt
+  if (has_single_omics) {
+    module_description <- paste0(
+      "The module is defined by the following pathways: ", pathways, ". ",
+      "The module also focuses on the following molecules: ", molecules, ". "
+    )
+  } else {
+    # Multi-omics prompt
+    mo <- multi_omics_module
+    parts <- character(0)
+
+    gene_ids   <- mo$GeneIDs
+    gene_names <- mo$GeneNames_vec
+    if (!is.null(gene_ids) && length(gene_ids) > 0 && !all(is.na(gene_ids))) {
+      gene_str <- if (!is.null(gene_names) && length(gene_names) > 0 && !all(is.na(gene_names))) {
+        paste(paste0(gene_ids, " (", gene_names, ")"), collapse = ", ")
+      } else {
+        paste(gene_ids, collapse = ", ")
+      }
+      parts <- c(parts, paste0("Genes: ", gene_str))
+    }
+
+    met_ids   <- mo$MetIDs
+    met_names <- mo$MetNames_vec
+    if (!is.null(met_ids) && length(met_ids) > 0 && !all(is.na(met_ids))) {
+      met_str <- if (!is.null(met_names) && length(met_names) > 0 && !all(is.na(met_names))) {
+        paste(paste0(met_ids, " (", met_names, ")"), collapse = ", ")
+      } else {
+        paste(met_ids, collapse = ", ")
+      }
+      parts <- c(parts, paste0("Metabolites: ", met_str))
+    }
+
+    path_names <- mo$PathwayNames
+    path_desc  <- mo$PathwayDescription
+    if (!is.null(path_names) && length(path_names) > 0 && !all(is.na(path_names))) {
+      path_str <- if (!is.null(path_desc) && length(path_desc) > 0 && !all(is.na(path_desc))) {
+        paste(paste0(path_names, " (", path_desc, ")"), collapse = ", ")
+      } else {
+        paste(path_names, collapse = ", ")
+      }
+      parts <- c(parts, paste0("Pathways: ", path_str))
+    }
+
+    module_description <- paste0(
+      "The module is derived from a multi-omics analysis and contains the following molecular components:\n",
+      paste(parts, collapse = "\n"), "\n"
+    )
+  }
+
+  # 组装完整 messages（任务指令部分两种模式共用）
   messages <- list(
     list(role = "system", content = "You are an AI tasked with identifying the most relevant and valuable articles for the given module."),
     list(role = "user", content = paste0(
-      "The module is defined by the following pathways: ", pathways, ". ",
-      "The module also focuses on the following molecules: ", molecules, ". ",
+      module_description,
       "Below is an abstract or chunk of text. Please:\n",
       "1. Rank its relevance to the module in terms of how well it aligns with the pathways and molecules.\n",
       "2. Remove unrelated information such as author names, affiliations, and non-relevant metadata.\n",
@@ -385,38 +444,28 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
     ))
   )
 
-  # 尝试解析GPT响应的函数
+  # 解析响应
   parse_gpt_response <- function(response) {
     parsed <- extract_and_parse_json(response)
     if (parsed$success) {
-      return(list(relevance_score = parsed$relevance_score, cleaned_text = parsed$cleaned_text))
-    } else {
-      return(NULL)
+      return(list(relevance_score = parsed$relevance_score,
+                  cleaned_text   = parsed$cleaned_text))
     }
+    return(NULL)
   }
 
-  # 第一次调用 GPT API
-  gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
-  result <- parse_gpt_response(gpt_response)
-
-  # 如果第一次失败，重试
-  if (is.null(result)) {
-    gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
+  # 最多重试3次
+  for (attempt in 1:3) {
+    gpt_response <- gpt_api_call(messages, api_key,
+                                 model = model,
+                                 api_provider = api_provider,
+                                 thinkingBudget = thinkingBudget)
     result <- parse_gpt_response(gpt_response)
-
-    # 如果第二次也失败，再试一次
-    if (is.null(result)) {
-      gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
-      result <- parse_gpt_response(gpt_response)
-
-      # 如果三次都失败，返回默认结果
-      if (is.null(result)) {
-        return(list(relevance_score = 0, cleaned_text = "Unable to process the request after 3 attempts."))
-      }
-    }
+    if (!is.null(result)) return(result)
   }
 
-  return(result)
+  return(list(relevance_score = 0,
+              cleaned_text = "Unable to process the request after 3 attempts."))
 }
 
 #' Retrieve and Rerank Strategy for Modules
@@ -473,6 +522,7 @@ process_chunk <- function(chunk, pathways, molecules, api_key, model = "gpt-4o-m
 #' \code{\link{read_chunks}},
 #' \code{\link{GPT_process_chunk}}
 #'
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
@@ -489,7 +539,8 @@ retrieve_strategy <- function(pubmed_result,
                               save_dir_local_corpus_embed = NULL,
                               api_provider = "openai",
                               thinkingBudget = 0,
-                              thread = thread) {
+                              thread = thread,
+                              multi_omics = FALSE) {
   result <- list()
 
   cat("Starting to process all modules...\n")
@@ -542,6 +593,7 @@ retrieve_strategy <- function(pubmed_result,
       # 获取相似性 Top N 的索引（由 similarity_filter_num 决定）
       if (!is.null(all_similarities)) {
         top_indices <- order(all_similarities, decreasing = TRUE)[1:similarity_filter_num]
+        top_indices <- top_indices[!is.na(top_indices)]
       } else {
         top_indices <- NULL
       }
@@ -556,12 +608,15 @@ retrieve_strategy <- function(pubmed_result,
       # 读取 PubMed 和 Local 的标题
       pubmed_selected_titles <- read_titles(save_dir = file.path(embedding_output_dir, module_name))
       pubmed_filtered_titles <- pubmed_selected_titles[pubmed_top_indices]
+      pubmed_filtered_titles <- pubmed_filtered_titles[!stringr::str_detect(pubmed_filtered_titles, "Skipped")]
       local_selected_titles <- NULL
       local_filtered_titles <- NULL
 
       cat("- Reading document content...\n")
       pubmed_selected_chunks <- read_chunks(save_dir = file.path(embedding_output_dir, module_name))
       pubmed_filtered_chunks <- pubmed_selected_chunks[pubmed_top_indices]
+      pubmed_filtered_chunks <- pubmed_filtered_chunks[!stringr::str_detect(pubmed_filtered_chunks, "Skipped")]
+
       rm(pubmed_selected_chunks)
       gc()
 
@@ -587,8 +642,17 @@ retrieve_strategy <- function(pubmed_result,
       }
 
       cat("- Processing document content using GPT...\n")
-      combined_GPT_result <- GPT_process_chunk(combined_chunks, module_list, api_key, model = model,
-                                               api_provider = api_provider,
+      if (multi_omics) {
+        multi_omics_module <- module_list
+        module_list <- NULL
+      } else {
+        multi_omics_module <- NULL
+      }
+
+      combined_GPT_result <- GPT_process_chunk(chunks = combined_chunks,
+                                               module_list = module_list,
+                                               multi_omics_module = multi_omics_module,
+                                               api_key = api_key, model = model, api_provider = api_provider,
                                                thinkingBudget = thinkingBudget, thread = thread)
 
       cat("- Filtering the most relevant results...\n")

@@ -6,7 +6,6 @@
 \title{Plot Multi-Omics Functional Module Information}
 \usage{
 plot_multi_omics_module_info(
-  mnet_obj,
   merge_result,
   module_id,
   node_colors = c(gene = "#4E79A7", metabolite = "#F28E2B", pathway = "#59A14F"),
@@ -21,18 +20,20 @@ plot_multi_omics_module_info(
 )
 }
 \arguments{
-\item{mnet_obj}{\code{multi_omics_functional_module}. The S4 object holding
-all knowledge-layer edge tables (\code{mol_layers}, \code{path_to_mol}).}
-
 \item{merge_result}{\code{list}. Direct output of \code{\link[=merge_multi_omics_nodes]{merge_multi_omics_nodes()}},
 containing elements \code{graph_data}, \code{functional_module_result}, and
-\code{result_with_module}.}
+\code{result_with_module}. The \code{graph_data} edge table must include \code{edge_type},
+\code{weight}, and \code{diff_weight} columns (produced by the current version of
+\code{\link[=merge_multi_omics_nodes]{merge_multi_omics_nodes()}}).}
 
 \item{module_id}{\code{character(1)}. Module name to plot, e.g.\code{"Functional_module_1"}.}
 
 \item{node_size}{\code{numeric(1)}. Base node size. Default \code{5}.}
 
 \item{label_size}{\code{numeric(1)}. Text label size (pt). Default \code{3}.}
+
+\item{show_rwr_edge}{\code{logical(1)}. Whether to display diffusion-similarity
+edges in addition to knowledge edges. Default \code{FALSE}.}
 
 \item{show_labels}{\code{logical(1)}. Whether to display node labels. Default \code{TRUE}.}
 
@@ -50,9 +51,14 @@ genes, metabolites, or enriched pathways. Edges are drawn in two categories:
 \itemize{
 \item \strong{Knowledge edges} (solid lines, coloured by type):
 TF-target, PPI, Reaction (metabolite_reaction + enzyme_metabolite),
-pathway_annotation (pathway–molecule links).
+molecule_pathway (pathway–molecule links).
 \item \strong{Computational edges} (dashed grey lines):
-Diffusion-based similarity edges from the \code{graph_data} tidygraph object
-(i.e., the cosine-similarity edges produced by \code{merge_multi_omics_nodes()}).
+Diffusion-based similarity edges with no matching knowledge-layer
+connection (edge_type == "diffusion_similarity").
 }
+
+All edge information — including \code{edge_type}, \code{weight} (knowledge layer
+weight), and \code{diff_weight} (cosine similarity from the diffusion matrix) —
+is read directly from the \code{graph_data} tidygraph object produced by
+\code{\link[=merge_multi_omics_nodes]{merge_multi_omics_nodes()}}. No \code{mnet_obj} is required.
 }

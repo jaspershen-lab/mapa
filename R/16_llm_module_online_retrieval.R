@@ -21,11 +21,11 @@
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
+pubmed_search <- function(processed_data, phenotype, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread)  # Creates clusters based on available cores
     parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search", "perform_query","test_siliconflow_url"))
-    parallel::clusterExport(cl, varlist = c("chunk_size", "years", "retmax"), envir = environment())
+    parallel::clusterExport(cl, varlist = c("phenotype", "chunk_size", "years", "retmax", "thread"), envir = environment())
     parallel::clusterEvalQ(cl, {
       library(rentrez)
       library(curl)
@@ -33,7 +33,7 @@ pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10
 
     results <- parallel::parLapply(cl, names(processed_data), function(module_name) {
       module <- processed_data[[module_name]]
-      result <- process_module(module_name, module, chunk_size, years, retmax)
+      result <- process_module(module_name, module, phenotype, chunk_size, years, retmax)
       return(result)
     })
 
@@ -41,7 +41,7 @@ pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10
   } else {
     results <- pbmcapply::pbmclapply(names(processed_data), function(module_name) {
       module <- processed_data[[module_name]]
-      result <- process_module(module_name, module, chunk_size, years, retmax)
+      result <- process_module(module_name, module, phenotype, chunk_size, years, retmax)
       return(result)
     }, mc.cores = thread)
   }
@@ -78,57 +78,44 @@ pubmed_search <- function(processed_data, chunk_size = 5, years = 5, retmax = 10
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-process_module <- function(module_name, module, chunk_size = 5, years = 5, retmax = 10) {
+process_module <- function(module_name, module, phenotype = NULL, chunk_size = 5, years = 5, retmax = 10) {
 
-  if (length(module) == 6) { # For gene
+  if (length(module) == 7) { # for multi_omics module
+    query <- build_pubmed_query(pathway_names = module$PathwayNames,
+                                gene_symbols = module$GeneIDs,
+                                gene_names = module$GeneNames_vec,
+                                met_names = module$MetNames_vec,
+                                phenotype = phenotype)
+
+    pmids <- perform_query(query = query, years = years, retmax = retmax, chunk_size = chunk_size)
+  } else if (length(module) == 6) { # For gene
     pathway_names <- module$PathwayNames
     gene_symbols <- module$GeneSymbols
     gene_names <- module$GeneNames_vec
-    ## Generate query
-    pathway_query <- paste(paste0("\"", pathway_names, "\""), collapse = " OR ")
 
-    ## Perform PubMed search with query (gene_symbol AND pathway_names)
-    if (length(gene_symbols) == 1) {
-      if (is.na(gene_symbols)) {
-        gene_symbol_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-      } else {
-        gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-      }
-    } else {
-      gene_symbol_ids <- perform_query(gene_symbols, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-    }
+    gene_symbol_query <- build_pubmed_query(pathway_names = module$PathwayNames,
+                                            gene_symbols = module$GeneSymbols,
+                                            gene_names = NA,
+                                            met_names = NA,
+                                            phenotype = phenotype)
+    gene_symbol_ids <- perform_query(query = query, years = years, retmax = retmax, chunk_size = chunk_size)
 
-    ## Perform PubMed search with query (gene_name AND pathway_names)
-    if (length(gene_names) == 1) {
-      if (is.na(gene_names)) {
-        gene_name_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-      } else {
-        gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-      }
-    } else {
-      gene_name_ids <- perform_query(paste0("\"", gene_names, "\""), pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-    }
-
+    gene_name_query <- build_pubmed_query(pathway_names = module$PathwayNames,
+                                          gene_symbols = NA,
+                                          gene_names = module$GeneNames_vec,
+                                          met_names = NA,
+                                          phenotype = phenotype)
+    gene_name_ids <- perform_query(query = query, years = years, retmax = retmax, chunk_size = chunk_size)
     pmids <- unique(c(gene_symbol_ids, gene_name_ids))
 
   } else if (length(module) == 5) { # For metabolites
-    pathway_names <- paste0("\"", module$PathwayNames, "\"")
-    met_names <- paste0("\"", module$MetNames_vec, "\"")
-    ## Generate query
-    pathway_query <- paste(pathway_names, collapse = " OR ")
+    query <- build_pubmed_query(pathway_names = module$PathwayNames,
+                                gene_symbols = NA,
+                                gene_names = NA,
+                                met_names = module$MetNames_vec,
+                                phenotype = phenotype)
 
-    ## Perform PubMed search with query (met_name AND pathway_names)
-    if (length(met_names) == 1) {
-      if (is.na(met_names)) {
-        met_name_ids <- perform_query(query_terms = NA, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-      } else {
-        met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-      }
-    } else {
-      met_name_ids <- perform_query(met_names, pathway_query, years = years, retmax = retmax, chunk_size = chunk_size)
-    }
-
-    pmids <- met_name_ids
+    pmids <- perform_query(query = query, years = years, retmax = retmax, chunk_size = chunk_size)
   }
 
   return(list(module_name = module_name, PubmedIDs = pmids))
@@ -155,24 +142,13 @@ process_module <- function(module_name, module, chunk_size = 5, years = 5, retma
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @keywords internal
-perform_query <- function(query_terms,
-                          pathway_query,
+perform_query <- function(query,
                           years,
                           retmax,
                           chunk_size) {
   search_ids <- c()
 
-  if (length(query_terms) == 1) {
-    if (is.na(query_terms)) {
-      full_query <- paste("(", pathway_query, ")", sep = " ")
-    } else {
-      full_query <- paste("(", paste(query_terms, collapse = " OR "), ")", "AND", "(", pathway_query, ")", sep = " ")
-    }
-  } else {
-    full_query <- paste("(", paste(query_terms, collapse = " OR "), ")", "AND", "(", pathway_query, ")", sep = " ")
-  }
-
-  result <- safe_entrez_search(db = "pubmed", term = full_query, retmax = retmax, years = years)
+  result <- safe_entrez_search(db = "pubmed", term = query, retmax = retmax, years = years)
 
   if (!is.null(result)) {
     search_ids <- c(search_ids, result$ids)
@@ -251,3 +227,75 @@ safe_entrez_search <- function(db, term, retmax = 10, retries = 3, pause = 5, ye
   return(NULL)
 }
 
+# Desired structure:
+# ( <ANCHOR> ) AND ( (<GENE_OR_LIST>) OR (<METABOLITE_OR_LIST>) OR (<PATHWAY_OR_LIST>) )
+build_pubmed_query <- function(
+    pathway_names,
+    gene_symbols,
+    gene_names,
+    met_names,
+    phenotype = NULL,
+    field = "tiab",
+    add_mesh_for_anchor = TRUE
+) {
+  clean_terms <- function(x) {
+    if (is.null(x)) return(character(0))
+    x <- as.character(x)
+    x <- x[!is.na(x)]
+    x <- trimws(x)
+    x <- x[nzchar(x)]
+    x <- gsub('"', "", x, fixed = TRUE)   # avoid breaking quotes in query
+    unique(x)
+  }
+
+  fmt_term <- function(term, field) {
+    # Quote phrases with spaces; keep simple.
+    if (grepl("\\s", term)) sprintf('"%s"[%s]', term, field) else sprintf('%s[%s]', term, field)
+  }
+
+  fmt_or_block <- function(terms, field) {
+    terms <- clean_terms(terms)
+    if (length(terms) == 0) return(NULL)
+    paste0("(", paste(vapply(terms, fmt_term, character(1), field = field), collapse = " OR "), ")")
+  }
+
+  # Anchor (phenotype)
+  anchor_block <- NULL
+  if (!is.null(phenotype)) {
+    phenotype <- clean_terms(phenotype)
+    if (length(phenotype) > 0) {
+      # phenotype is a single string; if user passes vector, we OR them
+      anchor_tiab <- paste(vapply(phenotype, fmt_term, character(1), field = field), collapse = " OR ")
+
+      if (add_mesh_for_anchor) {
+        # Mesh term is typically quoted
+        phen_mesh <- paste(sprintf('"%s"[Mesh]', phenotype), collapse = " OR ")
+        anchor_block <- paste0("(", phen_mesh, " OR ", anchor_tiab, ")")
+      } else {
+        anchor_block <- paste0("(", anchor_tiab, ")")
+      }
+    }
+  }
+
+  # Entity blocks
+  gene_terms <- c(clean_terms(gene_symbols), clean_terms(gene_names))
+  gene_block <- fmt_or_block(gene_terms, field = field)
+
+  met_block  <- fmt_or_block(met_names, field = field)
+  path_block <- fmt_or_block(pathway_names, field = field)
+
+  # Combine entity blocks with OR (skip NULLs)
+  entity_blocks <- Filter(Negate(is.null), list(gene_block, met_block, path_block))
+  entity_part <- if (length(entity_blocks) == 0) NULL else paste0("(", paste(entity_blocks, collapse = " OR "), ")")
+
+  # Final assembly
+  if (is.null(anchor_block) && is.null(entity_part)) {
+    stop("No valid terms to build query: phenotype is NULL/empty AND all entity lists are empty/NA.")
+  } else if (is.null(anchor_block)) {
+    return(entity_part)
+  } else if (is.null(entity_part)) {
+    return(anchor_block)
+  } else {
+    return(paste(anchor_block, "AND", entity_part))
+  }
+}

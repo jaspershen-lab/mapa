@@ -11,7 +11,8 @@ module_name_generation(
   api_key,
   output_prompt = TRUE,
   api_provider = "openai",
-  thinkingBudget = 0
+  thinkingBudget = 0,
+  multi_omics = FALSE
 )
 }
 \arguments{

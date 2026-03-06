@@ -36,6 +36,7 @@ Imports:
     ggplot2,
     ggplotify,
     ggraph,
+    ggrepel,
     ggwordcloud,
     grid,
     httr,

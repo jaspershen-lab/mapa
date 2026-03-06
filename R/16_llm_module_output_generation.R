@@ -1,7 +1,3 @@
-# This file is for final name and current study summary
-# library(roxygen2)
-
-
 #' Single Module Generation
 #'
 #' This internal function generates a biological module name and a research summary
@@ -10,22 +6,28 @@
 #'
 #' @param module_related_paper A list of related papers with titles and cleaned texts for the module.
 #' @param module_info A list containing pathway names and gene symbols relevant to the module.
+#'   When \code{multi_omics = TRUE}, \code{module_info} must contain the fields:
+#'   \code{GeneIDs}, \code{GeneNames_vec}, \code{MetIDs}, \code{MetNames_vec},
+#'   \code{PathwayNames}, \code{PathwayDescription}, and \code{PathwayReferencePMID}.
 #' @param phenotype Character string. Phenotype or disease to focus on. Default is NULL.
 #' @param model A string specifying the GPT model to use. Default is `"gpt-4o-mini-2024-07-18"`.
 #' @param api_key A string containing the API key required to access the AI API.
 #' @param output_prompt Logical. Whether to output prompt in final annotation result. Default is TRUE.
 #' @param api_provider A string indicating the API provider, either `"openai"`, `"gemini"`, or `"siliconflow"` (default is `"openai"`).
 #' @param thinkingBudget An integer for the "thinking budget" parameter specific to the Gemini API (default is `0`).
+#' @param multi_omics Logical. If TRUE, use multi-omics prompt templates that integrate genes,
+#'   metabolites, and pathways together. Default is FALSE.
 #'
-#' @return A list containing two elements: \code{module_name} (the generated biological module name)
-#' and \code{summary} (the research summary).
+#' @return A list containing: \code{module_name}, \code{summary}, \code{confidence_score},
+#'   optionally \code{phenotype_analysis} (when \code{phenotype} is provided),
+#'   and optionally \code{prompt} (when \code{output_prompt} is TRUE).
 #'
 #' @importFrom jsonlite fromJSON
 #'
+#' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #' @author Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 #'
 #' @keywords internal
-# Generate a biological module name and research summary using GPT
 single_module_generation <- function(module_related_paper,
                                      module_info,
                                      phenotype = NULL,
@@ -33,14 +35,10 @@ single_module_generation <- function(module_related_paper,
                                      api_key,
                                      output_prompt = TRUE,
                                      api_provider = "openai",
-                                     thinkingBudget = 0) {
-  pathway_info <- paste(module_info[["PathwayNames"]], "(", module_info[["PathwayDescription"]], ")", collapse = "; ")
-  if ("GeneNames_vec" %in% names(module_info)) {
-    gene_names <- paste(module_info[["GeneNames_vec"]], collapse = ", ")
-  } else if ("MetNames_vec" %in% names(module_info)) {
-    met_names <- paste(module_info[["MetNames_vec"]], collapse = ", ")
-  }
+                                     thinkingBudget = 0,
+                                     multi_omics = FALSE) {
 
+  # Build combined literature text
   titles <- sapply(module_related_paper, function(x) x[["title"]])
   cleaned_texts <- sapply(module_related_paper, function(x) x[["cleaned_text"]])
 
@@ -49,50 +47,129 @@ single_module_generation <- function(module_related_paper,
   }, titles, cleaned_texts)
   combined_texts <- paste(title_text_pairs, collapse = "\n\n")
 
-  if (is.null(phenotype)) {
-    prompt_path <- system.file("prompts_template","16_llm_prompt.md", package = "mapa")
+  # multi-omics mode
+  if (multi_omics) {
+
+    # Helper: collapse a field to "NULL" if missing/empty/NA
+    is_empty_field <- function(x) {
+      is.null(x) || length(x) == 0 || all(is.na(x)) ||
+        all(nchar(trimws(as.character(x))) == 0)
+    }
+
+    # Gene names: comma-separated, or "NULL" if missing
+    gene_names_str <- if (is_empty_field(module_info[["GeneNames_vec"]])) {
+      "NULL"
+    } else {
+      paste(module_info[["GeneNames_vec"]], collapse = ", ")
+    }
+
+    # Metabolite names: comma-separated, or "NULL" if missing
+    met_names_str <- if (is_empty_field(module_info[["MetNames_vec"]])) {
+      "NULL"
+    } else {
+      paste(module_info[["MetNames_vec"]], collapse = ", ")
+    }
+
+    # Pathway text: one entry per line pair, or a "not provided" note
+    pathway_names <- module_info[["PathwayNames"]]
+    pathway_desc  <- module_info[["PathwayDescription"]]
+
+    combined_pathway_text <- if (is_empty_field(pathway_names) || is_empty_field(pathway_desc)) {
+      "No pathway enrichment terms were provided for this module."
+    } else {
+      paste(
+        mapply(function(nm, desc) paste0(nm, " (", desc, ")"),
+               pathway_names, pathway_desc),
+        collapse = "\n\n"
+      )
+    }
+
+    # Select prompt template
+    if (is.null(phenotype)) {
+      prompt_path <- system.file("prompts_template", "17_llm_prompt_multiomics_module.md",
+                                 package = "mapa")
+    } else {
+      prompt_path <- system.file("prompts_template",
+                                 "17_llm_prompt_multiomics_module_with_phenotype.md",
+                                 package = "mapa")
+    }
+
     prompt_text <- readLines(prompt_path, warn = FALSE)
+    prompt_text <- paste(prompt_text, collapse = "\n")
+
+    # Fill in placeholders
+    prompt_text <- gsub("\\{GeneNames_vec\\}", gene_names_str, prompt_text)
+    prompt_text <- gsub("\\{MetNames_vec\\}", met_names_str, prompt_text)
+    prompt_text <- gsub("\\{combined_pathway_text\\}", combined_pathway_text, prompt_text)
+
+    if (!is.null(phenotype)) {
+      prompt_text <- gsub("\\{phenotype\\}", phenotype, prompt_text)
+    }
+
+    if (nchar(combined_texts) == 0) {
+      prompt_text <- gsub("\\{combined_texts\\}", "No related articles provided.", prompt_text)
+    } else {
+      prompt_text <- gsub("\\{combined_texts\\}", combined_texts, prompt_text)
+    }
+
+    # original single-omics mode (unchanged)
   } else {
-    prompt_path <- system.file("prompts_template","16_llm_prompt_with_phenotype.md", package = "mapa")
-    prompt_text <- readLines(prompt_path, warn = FALSE)
-    prompt_text <- gsub("\\{phenotype\\}", phenotype, prompt_text)
+
+    pathway_info <- paste(module_info[["PathwayNames"]], "(", module_info[["PathwayDescription"]], ")", collapse = "; ")
+    if ("GeneNames_vec" %in% names(module_info)) {
+      gene_names <- paste(module_info[["GeneNames_vec"]], collapse = ", ")
+    } else if ("MetNames_vec" %in% names(module_info)) {
+      met_names <- paste(module_info[["MetNames_vec"]], collapse = ", ")
+    }
+
+    if (is.null(phenotype)) {
+      prompt_path <- system.file("prompts_template", "16_llm_prompt.md", package = "mapa")
+      prompt_text <- readLines(prompt_path, warn = FALSE)
+    } else {
+      prompt_path <- system.file("prompts_template", "16_llm_prompt_with_phenotype.md", package = "mapa")
+      prompt_text <- readLines(prompt_path, warn = FALSE)
+      prompt_text <- gsub("\\{phenotype\\}", phenotype, prompt_text)
+    }
+
+    prompt_text <- paste(prompt_text, collapse = "\n")
+    prompt_text <- gsub("\\{pathway_info\\}", pathway_info, prompt_text)
+
+    if ("GeneNames_vec" %in% names(module_info)) {
+      prompt_text <- gsub("\\{query_molecule_names\\}", gene_names, prompt_text)
+      prompt_text <- gsub("\\{query_molecules\\}", "genes", prompt_text)
+      prompt_text <- gsub("\\{query_product\\}", "protein", prompt_text)
+    } else if ("MetNames_vec" %in% names(module_info)) {
+      prompt_text <- gsub("\\{query_molecule_names\\}", met_names, prompt_text)
+      prompt_text <- gsub("\\{query_molecules\\}", "compounds", prompt_text)
+      prompt_text <- gsub("\\{query_product\\}", "compound", prompt_text)
+    }
+
+    if (nchar(combined_texts) == 0) {
+      prompt_text <- gsub("Below are related articles: \\{combined_texts\\}", combined_texts, prompt_text)
+    } else {
+      prompt_text <- gsub("\\{combined_texts\\}", combined_texts, prompt_text)
+    }
   }
 
-  prompt_text <- paste(prompt_text, collapse = "\n")
-  prompt_text <- gsub("\\{pathway_info\\}", pathway_info, prompt_text)
-
-  if ("GeneNames_vec" %in% names(module_info)) {
-    prompt_text <- gsub("\\{query_molecule_names\\}", gene_names, prompt_text)
-    prompt_text <- gsub("\\{query_molecules\\}", "genes", prompt_text)
-    prompt_text <- gsub("\\{query_product\\}", "protein", prompt_text)
-  } else if ("MetNames_vec" %in% names(module_info)) {
-    prompt_text <- gsub("\\{query_molecule_names\\}", met_names, prompt_text)
-    prompt_text <- gsub("\\{query_molecules\\}", "compounds", prompt_text)
-    prompt_text <- gsub("\\{query_product\\}", "compound", prompt_text)
-  }
-
-  if (nchar(combined_texts) == 0) {
-    prompt_text <- gsub("Below are related articles: \\{combined_texts\\}", combined_texts, prompt_text)
-  } else {
-    prompt_text <- gsub("\\{combined_texts\\}", combined_texts, prompt_text)
-  }
-
+  # Build messages and call API
   messages <- list(
     list(role = "system", content = "You are an efficient and insightful assistant to a molecular biologist."),
-    list(
-      role = "user",
-      content = prompt_text
-    )
+    list(role = "user",   content = prompt_text)
   )
 
-
-  gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
+  gpt_response <- gpt_api_call(messages, api_key, model = model,
+                               api_provider = api_provider,
+                               thinkingBudget = thinkingBudget)
 
   if (!check_json_format_output_generation(gpt_response)) {
-    gpt_response <- gpt_api_call(messages, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
+    gpt_response <- gpt_api_call(messages, api_key, model = model,
+                                 api_provider = api_provider,
+                                 thinkingBudget = thinkingBudget)
     if (!check_json_format_output_generation(gpt_response)) {
       prompt <- modify_prompt_for_format_output_generation(gpt_response)
-      gpt_response <- gpt_api_call(prompt, api_key, model = model, api_provider = api_provider, thinkingBudget = thinkingBudget)
+      gpt_response <- gpt_api_call(prompt, api_key, model = model,
+                                   api_provider = api_provider,
+                                   thinkingBudget = thinkingBudget)
       if (!check_json_format_output_generation(gpt_response)) {
         print(gpt_response)
         gpt_response <- '{"module_name": "Default Module Name", "summary": "Unable to process the request."}'
@@ -102,6 +179,7 @@ single_module_generation <- function(module_related_paper,
 
   result <- jsonlite::fromJSON(gpt_response)
 
+  # Assemble return value
   if (is.null(phenotype)) {
     if (output_prompt) {
       return(list(
@@ -211,7 +289,8 @@ module_name_generation <- function(paper_result,
                                    api_key,
                                    output_prompt = TRUE,
                                    api_provider = "openai",
-                                   thinkingBudget = 0) {
+                                   thinkingBudget = 0,
+                                   multi_omics = FALSE) {
   for (module_index in seq_along(paper_result)) {
     module_list <- paper_result[[module_index]]
 
@@ -223,7 +302,10 @@ module_name_generation <- function(paper_result,
                                              phenotype = phenotype,
                                              model = model,
                                              api_key = api_key,
-                                             output_prompt = output_prompt, api_provider = api_provider, thinkingBudget = thinkingBudget)
+                                             output_prompt = output_prompt,
+                                             api_provider = api_provider,
+                                             thinkingBudget = thinkingBudget,
+                                             multi_omics = multi_omics)
 
     # 将结果直接存入 paper_result
     paper_result[[module_index]][["generated_name"]] <- final_result

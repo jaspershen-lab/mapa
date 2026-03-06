@@ -46,8 +46,8 @@ gpt_api_call <- function(
   if (is.null(model)) {
     model <- switch(
       api_provider,
-      "openai"      = "gpt-4o-mini-2024-07-18",
-      "gemini"      = "models/gemini-2.5-flash",
+      "openai" = "gpt-4o-mini-2024-07-18",
+      "gemini" = "models/gemini-2.5-flash",
       "siliconflow" = "Qwen/Qwen3-32B",
       stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
     )
@@ -57,9 +57,9 @@ gpt_api_call <- function(
 
   api_url <- switch(
     api_provider,
-    "openai"      = "https://api.openai.com/v1/chat/completions",
-    "gemini"      = paste0("https://generativelanguage.googleapis.com/v1beta/models/",
-                           gsub("^models/", "", model), ":generateContent?key=", api_key),
+    "openai" = "https://api.openai.com/v1/chat/completions",
+    "gemini" = paste0("https://generativelanguage.googleapis.com/v1beta/models/",
+                      gsub("^models/", "", model), ":generateContent?key=", api_key),
     "siliconflow" = "https://api.siliconflow.cn/v1/chat/completions",
     stop("Invalid api_provider. Choose 'openai', 'gemini', or 'siliconflow'.")
   )

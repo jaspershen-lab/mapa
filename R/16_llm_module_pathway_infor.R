@@ -179,6 +179,66 @@ preprocess_module <- function(df,
   return(result_list)
 }
 
+
+preprocess_multi_omics_module <- function(df, orgdb = org.Hs.eg.db) {
+
+  result_list <- list()
+
+  for (i in seq_len(nrow(df))) {
+    # Collect module information
+    module_i_info <- df[i, , drop = FALSE]
+    module_id  <- module_i_info$module
+    include_genes <- module_i_info$include_genes
+    include_metabolites <- module_i_info$include_metabolites
+    include_pathways <- module_i_info$include_pathways
+
+    if (include_genes) {
+      GeneIDs <- unlist(strsplit(module_i_info$genes, "/"))
+
+      suppressMessages(GeneNames_vec <- AnnotationDbi::mapIds(orgdb, keys = GeneIDs,
+                                                              column = "GENENAME", keytype = "SYMBOL",
+                                                              multiVals = "first") |> unname())
+      GeneNames_vec <- GeneNames_vec[!is.na(GeneNames_vec)] |> unique()
+    } else {
+      GeneIDs <- NA
+      GeneNames_vec <- NA
+    }
+
+    if (include_metabolites) {
+      MetIDs <- unlist(strsplit(module_i_info$metabolites, "/"))
+      MetNames_vec <- get_metabolite_name(MetIDs)
+    } else {
+      MetIDs <- NA
+      MetNames_vec <- NA
+    }
+
+    if (include_pathways) {
+      pthID_vec <- unlist(strsplit(module_i_info$pathways, "/"))
+      pathway_info <- get_pathway_and_gene_info(pthID_vec)
+      pthName_vec <- pathway_info$pthName_vec
+      pathwayDescription_vec <- pathway_info$pathwayDescription_vec
+      pathwayReferencePMID_vec <- unique(pathway_info$PMID_vec)
+    } else {
+      pthID_vec <- NA
+      pthName_vec <- NA
+      pathwayDescription_vec <- NA
+      pathwayReferencePMID_vec <- NA
+    }
+
+    result_list[[module_id]] <- list(
+      GeneIDs = GeneIDs,
+      GeneNames_vec = GeneNames_vec,
+      MetIDs = MetIDs,
+      MetNames_vec = MetNames_vec,
+      PathwayNames = pthName_vec,
+      PathwayDescription = pathwayDescription_vec,
+      PathwayReferencePMID = pathwayReferencePMID_vec
+    )
+  }
+
+  return(result_list)
+}
+
 #' Get Pathway and Gene Information
 #'
 #' Retrieves detailed information about pathways and their associated genes from different databases
@@ -228,21 +288,17 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
   reactome_ids <- pathwayID_vec[grepl("^R-[A-Z]{3,4}-\\d+$", pathwayID_vec)]
 
   # Initialize the structure of retrieved data
+  pthName_vec <- c()
   pathwayDescription_vec <- c()
   PMID_vec <- c()
-  # annotated_entrez_vec <- c()
-  # annotated_symbol_vec <- c()
-  # annotated_queryname_vec <- c()
 
   # Retrieve GO info
   if (length(go_ids) > 0) {
     go_info <- get_go_term_info(go_ids)
     for (x in go_info) {
+      pthName_vec <- c(pthName_vec, x$term_name)
       pathwayDescription_vec <- c(pathwayDescription_vec, x$term_definition)
       PMID_vec <- c(PMID_vec, x$PMID)
-      # annotated_entrez_vec <- c(annotated_entrez_vec, x$annotated_entrez)
-      # annotated_symbol_vec <- c(annotated_symbol_vec, x$annotated_symbol)
-      # annotated_queryname_vec <- c(annotated_queryname_vec, x$annotated_genename)
     }
   }
 
@@ -250,11 +306,9 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
   if (length(kegg_ids) > 0) {
     kegg_info <- get_kegg_info(kegg_ids)
     for (x in kegg_info) {
+      pthName_vec <- c(pthName_vec, x$term_name)
       pathwayDescription_vec <- c(pathwayDescription_vec, x$term_definition)
       PMID_vec <- c(PMID_vec, x$PMID)
-      # annotated_entrez_vec <- c(annotated_entrez_vec, x$annotated_entrez)
-      # annotated_symbol_vec <- c(annotated_symbol_vec, x$annotated_symbol)
-      # annotated_queryname_vec <- c(annotated_queryname_vec, x$annotated_genename)
     }
   }
 
@@ -262,21 +316,17 @@ get_pathway_and_gene_info <- function(pathwayID_vec) {
   if (length(reactome_ids) > 0) {
     reactome_info <- get_reactome_info(reactome_ids)
     for (x in reactome_info) {
+      pthName_vec <- c(pthName_vec, x$term_name)
       pathwayDescription_vec <- c(pathwayDescription_vec, x$term_definition)
       PMID_vec <- c(PMID_vec, x$PMID)
-      # annotated_entrez_vec <- c(annotated_entrez_vec, x$annotated_entrez)
-      # annotated_symbol_vec <- c(annotated_symbol_vec, x$annotated_symbol)
-      # annotated_queryname_vec <- c(annotated_queryname_vec, x$annotated_genename)
     }
   }
 
-  # **返回所有合并后的向量**
+
   return(list(
+    pthName_vec = pthName_vec,
     pathwayDescription_vec = pathwayDescription_vec,
     PMID_vec = PMID_vec
-    # annotated_entrez_vec = annotated_entrez_vec,
-    # annotated_symbol_vec = annotated_symbol_vec,
-    # annotated_queryname_vec = annotated_queryname_vec
   ))
 }
 

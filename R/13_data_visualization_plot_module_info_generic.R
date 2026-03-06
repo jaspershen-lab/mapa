@@ -4,13 +4,14 @@
 #' \describe{
 #'   \item{\code{functional_module}}{Single-omics enrichment results.
 #'     Dispatches to \code{\link{plot_module_info.functional_module}}.}
-#'   \item{\code{multi_omics_functional_module}}{Multi-omics integration results.
-#'     Dispatches to \code{\link{plot_module_info.multi_omics_functional_module}}.
-#'     Requires the additional \code{merge_result} argument.}
+#'   \item{\code{list}}{Multi-omics integration results (output of
+#'     \code{merge_multi_omics_nodes()}).
+#'     Dispatches to \code{\link{plot_module_info.list}}.}
 #' }
 #'
-#' @param object The primary object. Must be of class \code{functional_module}
-#'   or \code{multi_omics_functional_module}.
+#' @param object The primary object. Either a \code{functional_module} S4 object
+#'   (single-omics) or a \code{list} object (multi-omics, produced by
+#'   \code{merge_multi_omics_nodes()}).
 #' @param ... Additional arguments passed to the corresponding method.
 #'   See the method documentation for details.
 #'
@@ -68,13 +69,13 @@ plot_module_info.functional_module <- function(
 
 
 #' @describeIn plot_module_info
-#' Method for \code{multi_omics_functional_module} objects.
-#' All parameters are identical to the original \code{plot_multi_omics_module_info()}
-#' function defined in \file{13_data_visualization_plot_multi_omics_module_info.R}.
+#' Method for \code{list} objects (multi-omics).
+#' \code{object} must be the direct output of \code{merge_multi_omics_nodes()},
+#' containing elements \code{graph_data}, \code{functional_module_result},
+#' and \code{result_with_module}.
+#' All other parameters are identical to \code{plot_multi_omics_module_info()}
+#' defined in \file{13_data_visualization_plot_multi_omics_module_info.R}.
 #'
-#' @param merge_result List. Direct output of \code{merge_multi_omics_nodes()},
-#'   containing elements \code{graph_data}, \code{functional_module_result},
-#'   and \code{result_with_module}.
 #' @param node_colors Named character vector of fill colours for each node type
 #'   (\code{"gene"}, \code{"metabolite"}, \code{"pathway"}).
 #' @param node_shapes Named integer vector of point shapes for each node type.
@@ -89,9 +90,8 @@ plot_module_info.functional_module <- function(
 #'
 #' @return A \code{ggplot} / \code{ggraph} object.
 #' @export
-plot_module_info.multi_omics_functional_module <- function(
+plot_module_info.list <- function(
     object,
-    merge_result,
     module_id,
     node_colors = c(
       "gene"       = "#4E79A7",
@@ -119,8 +119,7 @@ plot_module_info.multi_omics_functional_module <- function(
 ) {
   # Forward directly to the original implementation function.
   plot_multi_omics_module_info(
-    mnet_obj      = object,
-    merge_result  = merge_result,
+    merge_result  = object,
     module_id     = module_id,
     node_colors   = node_colors,
     node_shapes   = node_shapes,
@@ -144,6 +143,6 @@ plot_module_info.default <- function(object, ...) {
   stop(
     "No 'plot_module_info' method for object of class: ",
     paste(class(object), collapse = ", "), ".\n",
-    "Supported classes: 'functional_module', 'multi_omics_functional_module'."
+    "Supported classes: 'functional_module', 'list' (multi-omics)."
   )
 }

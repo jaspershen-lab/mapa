@@ -4,7 +4,14 @@
 \alias{process_module}
 \title{Process a Single Module to Retrieve PubMed IDs}
 \usage{
-process_module(module_name, module, chunk_size = 5, years = 5, retmax = 10)
+process_module(
+  module_name,
+  module,
+  phenotype = NULL,
+  chunk_size = 5,
+  years = 5,
+  retmax = 10
+)
 }
 \arguments{
 \item{module_name}{A character string specifying the name of the module.}

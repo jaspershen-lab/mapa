@@ -6,7 +6,8 @@
 \usage{
 GPT_process_chunk(
   chunks,
-  module_list,
+  module_list = NULL,
+  multi_omics_module = NULL,
   api_key,
   model = "gpt-4o-mini-2024-07-18",
   api_provider = "openai",
@@ -17,70 +18,56 @@ GPT_process_chunk(
 \arguments{
 \item{chunks}{A character vector where each element is a text chunk (e.g., abstracts or articles) to process.}
 
-\item{module_list}{A list or data frame containing module information with at least:
-\code{PathwayNames} (character vector) and one of \code{GeneNames_vec} or \code{MetNames_vec}
-(character vectors defining molecules of interest).}
+\item{module_list}{A list or data frame containing single-omics module information with at least:
+\code{PathwayNames} (character vector) and one of \code{GeneNames_vec} or \code{MetNames_vec}.
+Set to \code{NULL} when using \code{multi_omics_module}.}
+
+\item{multi_omics_module}{A named list describing a multi-omics module. Expected fields (all optional
+except at least one must be non-NA): \code{GeneIDs}, \code{GeneNames_vec}, \code{MetIDs},
+\code{MetNames_vec}, \code{PathwayNames}, \code{PathwayDescription}.
+Set to \code{NULL} (default) when using single-omics \code{module_list}.}
 
 \item{api_key}{A character string containing the API key for the GPT service.}
 
 \item{model}{A string specifying the GPT model to use (default is \code{"gpt-4o-mini-2024-07-18"}).}
 
-\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"}, or \code{"siliconflow"} (default is \code{"openai"}).}
+\item{api_provider}{A string indicating the API provider, either \code{"openai"}, \code{"gemini"},
+or \code{"siliconflow"} (default is \code{"openai"}).}
 
-\item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API (default is \code{0}).}
+\item{thinkingBudget}{An integer for the "thinking budget" parameter specific to the Gemini API
+(default is \code{0}).}
 
-\item{thread}{Integer. Number of parallel threads to use for processing.
-Default is \code{10} for sequential processing.}
+\item{thread}{Integer. Number of parallel threads to use for processing (default is \code{10}).}
 }
 \value{
-A list of results where each element is a list containing:
-\item{relevance_score}{A numeric value between 0 and 1, indicating the relevance of the chunk.}
-\item{cleaned_text}{A character string with unrelated information (such as author names,
-affiliations, and non-relevant metadata) removed.}
-The list is sorted in descending order of \code{relevance_score}.
+A list of results sorted in descending order of \code{relevance_score}, where each element contains:
+\item{relevance_score}{A numeric value between 0 and 1.}
+\item{cleaned_text}{A character string with unrelated metadata removed.}
 }
 \description{
 Processes a list of text chunks using GPT to evaluate their relevance to a specified module
 and cleans the text by removing unrelated information. The function assigns relevance scores
 to each chunk based on how well it aligns with the pathways and molecules defined in the module.
-}
-\details{
-The function performs the following steps:
-\enumerate{
-\item Extracts pathway and molecule information from the module_list
-\item Processes each chunk in parallel using either \code{parallel::parLapply} (Windows)
-or \code{pbmclapply} (other platforms)
-\item For each chunk, calls the GPT API with a carefully constructed prompt
-\item Validates and potentially retries the API call if the response format is incorrect
-\item Parses the JSON response to extract relevance scores and cleaned text
-\item Returns the results sorted by relevance score
-}
+Supports both single-omics mode (via \code{module_list}) and multi-omics mode
+(via \code{multi_omics_module}).
 }
 \examples{
 \dontrun{
-# Example: Process a set of scientific abstracts
-abstracts <- c(
-  "Abstract 1: This study investigates Pathway1 and its relationship with Gene1...",
-  "Abstract 2: Recent findings on Pathway2 suggest that Gene2 plays a crucial role..."
-)
-module_info <- list(
-  PathwayNames = c("Pathway1", "Pathway2"),
-  GeneNames_vec = c("Gene1", "Gene2", "Gene3")
-)
-api_key <- "your_openai_api_key"
-results <- GPT_process_chunk(abstracts, module_info, api_key, model)
+# Single-omics mode (original usage, unchanged)
+results <- GPT_process_chunk(abstracts, module_info, api_key)
 
-# Access the most relevant result
-top_result <- results[[1]]
-print(paste("Top score:", top_result$relevance_score))
-print(paste("Cleaned text:", top_result$cleaned_text))
+# Multi-omics mode
+results <- GPT_process_chunk(abstracts, module_list = NULL, api_key,
+                             multi_omics_module = my_module_list)
 }
 
 }
 \seealso{
-\code{\link{gpt_api_call}} used internally for API communication
+\code{\link{process_chunk}}, \code{\link{gpt_api_call}}
 }
 \author{
+Yifei Ge \email{yifeii.ge@outlook.com}
+
 Feifan Zhang \email{FEIFAN004@e.ntu.edu.sg}
 }
 \keyword{internal}
