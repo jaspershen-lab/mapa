@@ -1,3 +1,5 @@
+# mapa 3.0.0
+
 # mapa 2.1.0
 
 * 1. Allow data visualization for expression data and functional module bipartite graph.

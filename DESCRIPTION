@@ -1,7 +1,7 @@
 Type: Package
 Package: mapa
 Title: Moudule Annotation for Pathway Enrichment Analysis Result
-Version: 2.1.0
+Version: 3.0.0
 Date: 2026-03-06
 Authors@R: c(
     person("Xiaotao", "Shen", , "shenxt1990@outlook.com", role = c("aut", "cre"),
