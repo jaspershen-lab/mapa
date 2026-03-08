@@ -320,9 +320,14 @@ build_MNetwork <- function(network_tables,
                            layer_weights = NULL,
                            params = list()) {
   mol_nodes <- network_tables$node_tables$mol_nodes |> tibble::tibble()
-  mol_layers <- network_tables$edge_table[names(network_tables$edge_table) != "pathway_mol"]
-  mol_layers_edge_weight <- build_mol_layers_weight(mol_layers = mol_layers,
-                                                    weight_ppi = FALSE)
+  mol_layers_raw <- network_tables$edge_table[names(network_tables$edge_table) != "pathway_mol"]
+  mol_layers_edge_weight_raw <- build_mol_layers_weight(mol_layers = mol_layers_raw,
+                                                        weight_ppi = FALSE)
+
+  # Drop empty layers from both lists
+  nonempty_mask <- vapply(mol_layers_raw, function(x) !is.null(x) && nrow(x) > 0, logical(1))
+  mol_layers <- mol_layers_raw[nonempty_mask]
+  mol_layers_edge_weight <- mol_layers_edge_weight_raw[nonempty_mask]
 
   path_nodes <- network_tables$node_tables$pathway_nodes |> tibble::tibble()
   path_layer_edge_weight <- build_path_layer_weight(path_nodes = path_nodes,
@@ -343,13 +348,8 @@ build_MNetwork <- function(network_tables,
 
   # molecule layers edge weight
   L <- length(mol_layers)
-  nonempty <- vapply(mol_layers_edge_weight, function(x) nrow(x) > 0, logical(1))
-  L_active <- sum(nonempty)
   if (is.null(layer_weights)) {
-    lw <- stats::setNames(
-      ifelse(nonempty, if (L_active > 0) 1 / L_active else 0, 0),
-      names(mol_layers)
-    )
+    lw <- stats::setNames(rep(1 / L, L), names(mol_layers))
   } else {
     stopifnot(length(layer_weights) == L)
     lw <- stats::setNames(as.numeric(layer_weights), names(mol_layers))
