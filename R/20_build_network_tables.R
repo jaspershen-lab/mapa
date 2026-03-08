@@ -153,16 +153,26 @@ build_network_tables <- function(transcriptome_enrich,
       ) |>
       dplyr::filter(p_adjust < 0.05)
 
-    if (slot_result@keytype != "SYMBOL") {
-      enrich_res |>
-        dplyr::mutate(mapped_id = list(data.frame(entrezid = strsplit(mapped_id, split = "/")[[1]]) |>
-                                         dplyr::left_join(enrich_obj@variable_info |>
-                                                            dplyr::select(symbol, entrezid) |>
-                                                            dplyr::filter(!is.na(symbol)),
-                                                          by = "entrezid"))) |>
-        dplyr::mutate(mapped_id = paste(mapped_id[[1]]$symbol, collapse = "/"))
+    if (nrow(enrich_res) == 0) {
+      return(tibble::tibble(
+        pathway_id = NA_character_,
+        pathway_name = NA_character_,
+        BgRatio = NA_character_,
+        p_adjust = NA_real_,
+        mapped_id = NA_character_
+      ))
     } else {
-      enrich_res
+      if (slot_result@keytype != "SYMBOL") {
+        enrich_res |>
+          dplyr::mutate(mapped_id = list(data.frame(entrezid = strsplit(mapped_id, split = "/")[[1]]) |>
+                                           dplyr::left_join(enrich_obj@variable_info |>
+                                                              dplyr::select(symbol, entrezid) |>
+                                                              dplyr::filter(!is.na(symbol)),
+                                                            by = "entrezid"))) |>
+          dplyr::mutate(mapped_id = paste(mapped_id[[1]]$symbol, collapse = "/"))
+      } else {
+        enrich_res
+      }
     }
   }
 

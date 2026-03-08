@@ -246,7 +246,7 @@ get_functional_modules.multi_omics_functional_module <- function(
   message("Get functional modules from multi-omics network object ...")
 
   merge_multi_omics_nodes(
-    mnet_obj = object,
+    object = object,
     sim_matrix = sim_matrix,
     sim_cutoff = sim_cutoff,
     cluster_method = cluster_method,
