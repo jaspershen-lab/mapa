@@ -343,8 +343,13 @@ build_MNetwork <- function(network_tables,
 
   # molecule layers edge weight
   L <- length(mol_layers)
+  nonempty <- vapply(mol_layers_edge_weight, function(x) nrow(x) > 0, logical(1))
+  L_active <- sum(nonempty)
   if (is.null(layer_weights)) {
-    lw <- stats::setNames(rep(1 / L, L), names(mol_layers))
+    lw <- stats::setNames(
+      ifelse(nonempty, if (L_active > 0) 1 / L_active else 0, 0),
+      names(mol_layers)
+    )
   } else {
     stopifnot(length(layer_weights) == L)
     lw <- stats::setNames(as.numeric(layer_weights), names(mol_layers))

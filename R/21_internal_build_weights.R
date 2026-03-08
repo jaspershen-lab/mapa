@@ -21,13 +21,20 @@
 #' @noRd
 build_mol_layers_weight <- function(mol_layers,
                                     weight_ppi = FALSE) {
+  .empty_edges <- function() {
+    data.frame(from = NA_character_, to = NA_character_, weight = NA_real_,
+               stringsAsFactors = FALSE)[0, ]
+  }
+
   # Standardise any edge table to (from, to, weight = 1)
   .binary_edges <- function(df) {
+    if (is.null(df) || nrow(df) == 0) return(.empty_edges())
     df <- df[, c("from", "to"), drop = FALSE]
     df$from <- as.character(df$from)
     df$to   <- as.character(df$to)
     # remove self-loops
     df <- df[df$from != df$to, ]
+    if (nrow(df) == 0) return(.empty_edges())
     # deduplicate (treat as undirected: sort each pair)
     df <- unique(
       data.frame(
@@ -42,12 +49,14 @@ build_mol_layers_weight <- function(mol_layers,
 
   # Same but keep a numeric weight column from an existing column
   .weighted_edges <- function(df, weight_col) {
+    if (is.null(df) || nrow(df) == 0) return(.empty_edges())
     df <- df[, c("from", "to", weight_col), drop = FALSE]
     colnames(df) <- c("from", "to", "weight")
     df$from <- as.character(df$from)
     df$to <- as.character(df$to)
     df$weight <- as.numeric(df$weight)
     df <- df[df$from != df$to, ]
+    if (nrow(df) == 0) return(.empty_edges())
     # for undirected symmetrisation: average weight of A->B and B->A if both exist
     key <- paste(pmin(df$from, df$to), pmax(df$from, df$to), sep = "__")
     agg <- tapply(df$weight, key, mean)
