@@ -251,16 +251,17 @@ build_node_tables <- function(transcriptome_enrich,
 
   # --- Metabolite nodes ---
   met_nodes <- metabolome_enrich@variable_info |>
-    dplyr::select(keggid) |>
+    dplyr::select(keggid, cpd_name) |>
     dplyr::filter(!is.na(keggid), keggid != "") |>
     dplyr::distinct() |>
     dplyr::mutate(node_type = "metabolite",
                   node_id   = keggid,
                   node_info = purrr::pmap(
-                    list(keggid = keggid),
+                    list(keggid = keggid,
+                         cpd_name = cpd_name),
                     function(...) list(...)
                   )) |>
-    dplyr::select(-keggid)
+    dplyr::select(-c(keggid, cpd_name))
 
 
   # --- Pathway nodes ---

@@ -324,7 +324,12 @@ cluster_nodes <- function(
     tidygraph::activate("nodes") |>
     dplyr::left_join(mod_count, by = "module")
 
-  message("Done. Modules found: ", length(unique(cluster_result$module)))
+  n_modules <- result_with_module |>
+    dplyr::filter(module_size > 3) |>
+    dplyr::pull(module) |>
+    unique() |>
+    length()
+  message("Done. Multi-omics modules with size > 3: ", n_modules)
 
   graph_data
 }

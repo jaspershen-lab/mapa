@@ -85,8 +85,9 @@
 #'   scale_edge_colour_manual theme_graph
 #' @importFrom ggplot2 aes scale_colour_manual labs theme element_text
 #'   guides guide_legend
-#' @importFrom dplyr filter select mutate left_join bind_rows distinct
+#' @importFrom dplyr filter select mutate left_join bind_rows distinct case_when
 #' @importFrom tidygraph tbl_graph activate as_tibble
+#' @importFrom purrr map_chr
 #'
 #' @export
 plot_multi_omics_module_info <- function(
@@ -120,7 +121,14 @@ plot_multi_omics_module_info <- function(
   result_with_module <- merge_result$result_with_module
 
   plot_nodes <- result_with_module |>
-    dplyr::filter(module %in% module_id)
+    dplyr::filter(module %in% module_id) |>
+    dplyr::mutate(
+      label = dplyr::if_else(
+        node_type == "metabolite",
+        purrr::map_chr(node_info, ~ .x[["cpd_name"]] %||% NA_character_),
+        node_id
+      )
+    )
 
   if (nrow(plot_nodes) == 0) {
     stop(sprintf("Module '%s' not found.", module_id))
@@ -247,7 +255,7 @@ plot_multi_omics_module_info <- function(
     {
       if (show_labels)
         ggraph::geom_node_text(
-          ggplot2::aes(label = node_id),
+          ggplot2::aes(label = label),
           size = label_size,
           repel = TRUE,
           colour = "grey15",
