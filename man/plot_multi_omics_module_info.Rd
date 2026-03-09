@@ -16,7 +16,8 @@ plot_multi_omics_module_info(
   label_size = 3,
   show_rwr_edge = FALSE,
   show_labels = TRUE,
-  title = NULL
+  title = NULL,
+  llm_text = FALSE
 )
 }
 \arguments{
@@ -47,6 +48,11 @@ edges in addition to knowledge edges. Default \code{FALSE}.}
 
 \item{title}{\code{character(1)} or \code{NULL}. Plot title. When \code{NULL}
 (default) the module name is used.}
+
+\item{llm_text}{\code{logical(1)}. When \code{TRUE} and a \code{llm_module_name} column is
+present in \code{merge_result$functional_module_result}, the plot title is
+formatted as \code{"<module_id>: <llm_module_name>"}. Ignored when \code{title} is
+supplied. Default \code{FALSE}.}
 }
 \value{
 A \code{ggplot} / \code{ggraph} object.
