@@ -25,7 +25,7 @@
 pubmed_search <- function(processed_data, phenotype, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread)  # Creates clusters based on available cores
-    parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search", "perform_query","test_siliconflow_url"))
+    parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search", "perform_query", "build_anchor_block", "test_siliconflow_url"))
     parallel::clusterExport(cl, varlist = c("phenotype", "chunk_size", "years", "retmax", "thread"), envir = environment())
     parallel::clusterEvalQ(cl, {
       library(rentrez)
@@ -82,58 +82,85 @@ pubmed_search <- function(processed_data, phenotype, chunk_size = 5, years = 5, 
 #' @noRd
 process_module <- function(module_name, module, phenotype = NULL, chunk_size = 5, years = 5, retmax = 10) {
 
-  if (length(module) == 7) { # for multi_omics module
-    query <- build_pubmed_query(pathway_names = module$PathwayNames,
-                                gene_symbols = module$GeneIDs,
-                                gene_names = module$GeneNames_vec,
-                                met_names = module$MetNames_vec,
-                                phenotype = phenotype)
+  anchor_block <- build_anchor_block(phenotype)
 
-    pmids <- perform_query(query = query, years = years, retmax = retmax, chunk_size = chunk_size)
-  } else if (length(module) == 6) { # For gene
-    pathway_names <- module$PathwayNames
-    gene_symbols <- module$GeneSymbols
-    gene_names <- module$GeneNames_vec
-
-    gene_symbol_query <- build_pubmed_query(pathway_names = module$PathwayNames,
-                                            gene_symbols = module$GeneSymbols,
-                                            gene_names = NA,
-                                            met_names = NA,
-                                            phenotype = phenotype)
-    gene_symbol_ids <- perform_query(query = query, years = years, retmax = retmax, chunk_size = chunk_size)
-
-    gene_name_query <- build_pubmed_query(pathway_names = module$PathwayNames,
-                                          gene_symbols = NA,
-                                          gene_names = module$GeneNames_vec,
-                                          met_names = NA,
-                                          phenotype = phenotype)
-    gene_name_ids <- perform_query(query = query, years = years, retmax = retmax, chunk_size = chunk_size)
-    pmids <- unique(c(gene_symbol_ids, gene_name_ids))
-
-  } else if (length(module) == 5) { # For metabolites
-    query <- build_pubmed_query(pathway_names = module$PathwayNames,
-                                gene_symbols = NA,
-                                gene_names = NA,
-                                met_names = module$MetNames_vec,
-                                phenotype = phenotype)
-
-    pmids <- perform_query(query = query, years = years, retmax = retmax, chunk_size = chunk_size)
+  clean_vec <- function(x) {
+    if (length(x) == 0 || all(is.na(x))) return(character(0))
+    x <- as.character(x)
+    x <- x[!is.na(x)]
+    x <- trimws(x)
+    unique(x[nzchar(x)])
   }
+
+  if (length(module) == 7) { # for multi_omics module
+    entity_terms <- unique(c(
+      clean_vec(module$GeneIDs),
+      clean_vec(module$GeneNames_vec),
+      clean_vec(module$MetNames_vec),
+      clean_vec(module$PathwayNames)
+    ))
+  } else if (length(module) == 6) { # For gene
+    entity_terms <- unique(c(
+      clean_vec(module$GeneSymbols),
+      clean_vec(module$GeneNames_vec),
+      clean_vec(module$PathwayNames)
+    ))
+  } else if (length(module) == 5) { # For metabolites
+    entity_terms <- unique(c(
+      clean_vec(module$MetNames_vec),
+      clean_vec(module$PathwayNames)
+    ))
+  }
+
+  pmids <- perform_query(entity_terms = entity_terms, anchor_block = anchor_block,
+                         years = years, retmax = retmax, chunk_size = chunk_size)
 
   return(list(module_name = module_name, PubmedIDs = pmids))
 }
 
-#' Perform PubMed Query with Terms and Pathway Information
+
+#' Build Phenotype Anchor Block for PubMed Query
 #'
-#' This internal function executes a PubMed search using query terms and pathway information,
-#' with fallback strategies for handling failed queries. It implements a three-level search
-#' strategy: first attempting a full query with all terms, then breaking into chunks if that
-#' fails, and finally trying individual terms if chunk queries also fail.
+#' @param phenotype Character or NULL. Phenotype/disease anchor term(s).
+#' @param field Character. PubMed field tag. Default \code{"tiab"}.
+#' @param add_mesh Logical. Add MeSH term for phenotype. Default \code{TRUE}.
+#' @return A character string for the anchor block, or \code{NULL}.
+#' @noRd
+build_anchor_block <- function(phenotype, field = "tiab", add_mesh = TRUE) {
+  if (is.null(phenotype)) return(NULL)
+  phenotype <- as.character(phenotype)
+  phenotype <- phenotype[!is.na(phenotype)]
+  phenotype <- trimws(phenotype)
+  phenotype <- gsub('"', "", phenotype, fixed = TRUE)
+  phenotype <- unique(phenotype[nzchar(phenotype)])
+  if (length(phenotype) == 0) return(NULL)
+
+  fmt_term <- function(term) {
+    if (grepl("\\s", term)) sprintf('"%s"[%s]', term, field) else sprintf('%s[%s]', term, field)
+  }
+
+  anchor_tiab <- paste(vapply(phenotype, fmt_term, character(1)), collapse = " OR ")
+
+  if (add_mesh) {
+    phen_mesh <- paste(sprintf('"%s"[Mesh]', phenotype), collapse = " OR ")
+    paste0("(", phen_mesh, " OR ", anchor_tiab, ")")
+  } else {
+    paste0("(", anchor_tiab, ")")
+  }
+}
+
+#' Perform PubMed Query with Automatic Chunking on Failure
 #'
-#' @param query A character string containing the full PubMed query.
+#' This internal function executes a PubMed search. If the full query fails (e.g. HTTP 414),
+#' it falls back to chunking the entity terms and retrying each chunk against the fixed anchor
+#' block. A third level retries individual terms if a chunk also fails.
+#'
+#' @param entity_terms Character vector of entity terms (genes, metabolites, pathways) to OR together.
+#' @param anchor_block Character string for the pre-built phenotype anchor block, or \code{NULL}.
 #' @param years An integer specifying how many years to look back in the search.
 #' @param retmax An integer specifying the maximum number of results to retrieve.
-#' @param chunk_size An integer specifying the size of query chunks.
+#' @param chunk_size An integer specifying the size of entity term chunks.
+#' @param field Character. PubMed field tag used when formatting terms. Default \code{"tiab"}.
 #'
 #' @return A character vector of unique PubMed IDs retrieved from the search.
 #'
@@ -143,34 +170,66 @@ process_module <- function(module_name, module, phenotype = NULL, chunk_size = 5
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @noRd
-perform_query <- function(query,
+perform_query <- function(entity_terms,
+                          anchor_block = NULL,
                           years,
                           retmax,
-                          chunk_size) {
-  search_ids <- c()
+                          chunk_size,
+                          field = "tiab") {
 
-  result <- safe_entrez_search(db = "pubmed", term = query, retmax = retmax, years = years)
+  fmt_term <- function(term) {
+    term <- gsub('"', "", term, fixed = TRUE)
+    if (grepl("\\s", term)) sprintf('"%s"[%s]', term, field) else sprintf('%s[%s]', term, field)
+  }
 
-  if (!is.null(result)) {
-    search_ids <- c(search_ids, result$ids)
-  } else {
-    message(sprintf("Full query failed. Attempting to split into chunks."))
-    for (i in seq(1, length(query_terms), by = chunk_size)) {
-      term_chunk <- query_terms[i:min(i + chunk_size - 1, length(query_terms))]
-      term_query <- paste(term_chunk, collapse = " OR ")
-      chunk_query <- paste("(", term_query, ")", "AND", "(", pathway_query, ")", sep = " ")
+  build_entity_block <- function(terms) {
+    terms <- trimws(terms)
+    terms <- terms[!is.na(terms) & nzchar(terms)]
+    if (length(terms) == 0) return(NULL)
+    paste0("(", paste(vapply(terms, fmt_term, character(1)), collapse = " OR "), ")")
+  }
 
-      chunk_result <- safe_entrez_search(db = "pubmed", term = chunk_query, retmax = retmax, years = years)
-      if (!is.null(chunk_result)) {
-        search_ids <- c(search_ids, chunk_result$ids)
-      } else {
-        message(sprintf("Chunk query failed. Attempting to split into individual terms."))
-        for (sub_term in term_chunk) {
-          sub_query <- paste("(", sub_term, ")", "AND", "(", pathway_query, ")", sep = " ")
-          sub_result <- safe_entrez_search(db = "pubmed", term = sub_query, retmax = retmax, years = years)
-          if (!is.null(sub_result)) {
-            search_ids <- c(search_ids, sub_result$ids)
-          }
+  assemble_query <- function(terms) {
+    eb <- build_entity_block(terms)
+    if (is.null(eb) && is.null(anchor_block)) return(NULL)
+    if (is.null(eb)) return(anchor_block)
+    if (is.null(anchor_block)) return(eb)
+    paste(anchor_block, "AND", eb)
+  }
+
+  entity_terms <- entity_terms[!is.na(entity_terms) & nzchar(trimws(entity_terms))]
+  search_ids <- character(0)
+
+  # Level 1: try full query with all entity terms
+  full_query <- assemble_query(entity_terms)
+  if (!is.null(full_query)) {
+    result <- safe_entrez_search(db = "pubmed", term = full_query, retmax = retmax, years = years)
+    if (!is.null(result)) {
+      return(unique(result$ids))
+    }
+  }
+
+  # Level 2: chunk entity_terms and retry each chunk against the fixed anchor_block
+  if (length(entity_terms) == 0) return(unique(search_ids))
+  message("Full query failed (possibly HTTP 414). Splitting entity terms into chunks of ", chunk_size, ".")
+
+  for (i in seq(1, length(entity_terms), by = chunk_size)) {
+    chunk <- entity_terms[i:min(i + chunk_size - 1, length(entity_terms))]
+    chunk_query <- assemble_query(chunk)
+    if (is.null(chunk_query)) next
+
+    chunk_result <- safe_entrez_search(db = "pubmed", term = chunk_query, retmax = retmax, years = years)
+    if (!is.null(chunk_result)) {
+      search_ids <- c(search_ids, chunk_result$ids)
+    } else {
+      # Level 3: individual terms within this chunk
+      message("Chunk query failed. Attempting individual terms.")
+      for (term in chunk) {
+        term_query <- assemble_query(term)
+        if (is.null(term_query)) next
+        term_result <- safe_entrez_search(db = "pubmed", term = term_query, retmax = retmax, years = years)
+        if (!is.null(term_result)) {
+          search_ids <- c(search_ids, term_result$ids)
         }
       }
     }
