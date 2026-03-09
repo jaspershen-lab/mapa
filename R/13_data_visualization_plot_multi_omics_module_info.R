@@ -78,6 +78,10 @@
 #' @param show_labels `logical(1)`. Whether to display node labels. Default `TRUE`.
 #' @param title `character(1)` or `NULL`. Plot title. When `NULL`
 #'   (default) the module name is used.
+#' @param llm_text `logical(1)`. When `TRUE` and a `llm_module_name` column is
+#'   present in `merge_result$functional_module_result`, the plot title is
+#'   formatted as `"<module_id>: <llm_module_name>"`. Ignored when `title` is
+#'   supplied. Default `FALSE`.
 #'
 #' @return A `ggplot` / `ggraph` object.
 #'
@@ -114,7 +118,8 @@ plot_multi_omics_module_info <- function(
     label_size = 3,
     show_rwr_edge = FALSE,
     show_labels = TRUE,
-    title = NULL
+    title = NULL,
+    llm_text = FALSE
 ) {
 
   # Resolve module ID and extract nodes
@@ -206,7 +211,23 @@ plot_multi_omics_module_info <- function(
   n_ke <- all_edges |> dplyr::filter(edge_category == "knowledge") |> nrow()
   n_de <- all_edges |> dplyr::filter(edge_category == "computational") |> nrow()
 
-  plot_title <- if (!is.null(title)) title else module_id
+  if (!is.null(title)) {
+    plot_title <- title
+  } else if (llm_text) {
+    fmr <- merge_result$functional_module_result
+    llm_name <- if (!is.null(fmr) && "llm_module_name" %in% colnames(fmr)) {
+      fmr$llm_module_name[fmr$module == module_id][1]
+    } else {
+      NA_character_
+    }
+    plot_title <- if (!is.na(llm_name) && nzchar(llm_name)) {
+      paste0(module_id, ": ", llm_name)
+    } else {
+      module_id
+    }
+  } else {
+    plot_title <- module_id
+  }
   plot_sub <- sprintf(
     "%d nodes  (%d genes  \u00b7  %d metabolites  \u00b7  %d pathways)   |   %d knowledge  \u00b7  %d diffusion edges",
     nrow(plot_nodes), n_genes, n_mets, n_paths, n_ke, n_de
@@ -272,11 +293,11 @@ plot_multi_omics_module_info <- function(
       subtitle = plot_sub
     ) +
     ggplot2::theme(
-      # plot.title    = ggplot2::element_text(face = "bold", size = 14),
-      # plot.subtitle = ggplot2::element_text(size = 9, colour = "grey35"),
+      plot.title = ggplot2::element_text(face = "bold", size = 12),
+      plot.subtitle = ggplot2::element_text(size = 9, colour = "grey35"),
       # plot.caption  = ggplot2::element_text(size = 8, colour = "grey55",
       #                                       face = "italic"),
-      # legend.title  = ggplot2::element_text(size = 9, face = "bold"),
+      legend.title  = ggplot2::element_text(size = 9, face = "bold"),
       # legend.text   = ggplot2::element_text(size = 8),
       legend.position = "right"
     )
