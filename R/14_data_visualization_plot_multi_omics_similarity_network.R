@@ -163,6 +163,7 @@ plot_multi_omics_similarity_network <- function(
       "PPI" = "#76B7B2",
       "Reaction" = "#B07AA1",
       "molecule_pathway" = "#F1CE63",
+      "pathway_similarity" = "#439222",
       "diffusion_similarity" = "grey80"
     ),
     node_size = 4,
@@ -316,6 +317,7 @@ plot_multi_omics_similarity_network <- function(
     "PPI" = "solid",
     "Reaction" = "solid",
     "molecule_pathway" = "solid",
+    "pathway_similarity" = "solid",
     "diffusion_similarity" = "dashed"
   )
 

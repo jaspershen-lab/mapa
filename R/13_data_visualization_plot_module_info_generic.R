@@ -108,6 +108,7 @@ plot_module_info.list <- function(
       "PPI"                  = "#76B7B2",
       "Reaction"             = "#B07AA1",
       "molecule_pathway"     = "#F1CE63",
+      "pathway_similarity" = "#439222",
       "diffusion_similarity" = "grey"
     ),
     node_size     = 5,

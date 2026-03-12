@@ -259,6 +259,10 @@ cluster_nodes <- function(
     df |>
       dplyr::select(from, to, weight) |>
       dplyr::mutate(
+        from = as.character(from),
+        to = as.character(to)
+      ) |>
+      dplyr::mutate(
         edge_type = etype,
         from_c = pmin(from, to),
         to_c = pmax(from, to)
@@ -273,7 +277,9 @@ cluster_nodes <- function(
     .ke(object@mol_layers_edge_weight$enzyme_metabolite, "Reaction"),
     .ke(object@pathway_mol_edge_weight |>
           dplyr::rename(from = pathway_id, to = mol_id) |>
-          dplyr::mutate(weight = 1), "molecule_pathway")
+          dplyr::mutate(weight = 1), "molecule_pathway"),
+    .ke(object@path_layer_edge_weight |>
+          dplyr::filter(weight >= sim_cutoff), "pathway_similarity")
   ) |>
     dplyr::distinct(from, to, edge_type, .keep_all = TRUE)
 

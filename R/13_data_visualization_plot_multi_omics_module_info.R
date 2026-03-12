@@ -49,7 +49,8 @@
 #'
 #' * **Knowledge edges** (solid lines, coloured by type):
 #'   TF-target, PPI, Reaction (metabolite_reaction + enzyme_metabolite),
-#'   molecule_pathway (pathway–molecule links).
+#'   molecule_pathway (pathway–molecule links), pathway_similarity (pathway–pathway
+#'   biotext-embedding cosine similarity).
 #'
 #' * **Computational edges** (dashed grey lines):
 #'   Diffusion-based similarity edges with no matching knowledge-layer
@@ -112,6 +113,7 @@ plot_multi_omics_module_info <- function(
       "PPI" = "#76B7B2",
       "Reaction" = "#B07AA1",
       "molecule_pathway" = "#F1CE63",
+      "pathway_similarity" = "#439222",
       "diffusion_similarity" = "grey"
     ),
     node_size = 5,
@@ -201,6 +203,7 @@ plot_multi_omics_module_info <- function(
     "PPI" = "solid",
     "Reaction" = "solid",
     "molecule_pathway" = "solid",
+    "pathway_similarity" = "solid",
     "diffusion_similarity" = "dashed"
   )
 
@@ -234,7 +237,6 @@ plot_multi_omics_module_info <- function(
   )
 
   # Draw
-  set.seed(42)
 
   p <- ggraph::ggraph(g, layout = "fr") +
 
@@ -246,7 +248,7 @@ plot_multi_omics_module_info <- function(
       ),
       alpha = 0.6
     ) +
-    ggraph::scale_edge_width(range = c(0.2, 1)) +
+    ggraph::scale_edge_width(range = c(0.4, 0.8)) +
     ggraph::scale_edge_colour_manual(
       name = "Edge type",
       values = edge_colors

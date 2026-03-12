@@ -27,7 +27,8 @@ plot_module_info(object, ...)
   node_colors = c(gene = "#4E79A7", metabolite = "#F28E2B", pathway = "#59A14F"),
   node_shapes = c(gene = 21, metabolite = 24, pathway = 22),
   edge_colors = c(`TF-target` = "#E15759", PPI = "#76B7B2", Reaction = "#B07AA1",
-    molecule_pathway = "#F1CE63", diffusion_similarity = "grey"),
+    molecule_pathway = "#F1CE63", pathway_similarity = "#439222", diffusion_similarity =
+    "grey"),
   node_size = 5,
   label_size = 3,
   show_rwr_edge = FALSE,

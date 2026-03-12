@@ -11,7 +11,8 @@ plot_multi_omics_module_info(
   node_colors = c(gene = "#4E79A7", metabolite = "#F28E2B", pathway = "#59A14F"),
   node_shapes = c(gene = 21, metabolite = 24, pathway = 22),
   edge_colors = c(`TF-target` = "#E15759", PPI = "#76B7B2", Reaction = "#B07AA1",
-    molecule_pathway = "#F1CE63", diffusion_similarity = "grey"),
+    molecule_pathway = "#F1CE63", pathway_similarity = "#439222", diffusion_similarity =
+    "grey"),
   node_size = 5,
   label_size = 3,
   show_rwr_edge = FALSE,
@@ -65,7 +66,8 @@ genes, metabolites, or enriched pathways. Edges are drawn in two categories:
 \itemize{
 \item \strong{Knowledge edges} (solid lines, coloured by type):
 TF-target, PPI, Reaction (metabolite_reaction + enzyme_metabolite),
-molecule_pathway (pathway–molecule links).
+molecule_pathway (pathway–molecule links), pathway_similarity (pathway–pathway
+biotext-embedding cosine similarity).
 \item \strong{Computational edges} (dashed grey lines):
 Diffusion-based similarity edges with no matching knowledge-layer
 connection (edge_type == "diffusion_similarity").
