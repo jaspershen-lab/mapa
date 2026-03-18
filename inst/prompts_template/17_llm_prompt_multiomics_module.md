@@ -61,7 +61,7 @@ Text: Phosphatidylinositol-5-phosphate (PtdIns5P)-4-kinases (PIP4Ks) are stress-
   "confidence_score": 0.89
 }
 
-Use the Example Input/Output only as a formatting and reasoning guide. Do not reuse its biological theme unless it is directly supported by the actual input.
+Use the Example Input/Output only as a formatting guide. Do not reuse its biological theme unless it is directly supported by the actual input.
 
 ---
 
