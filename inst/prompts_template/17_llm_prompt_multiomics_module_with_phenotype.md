@@ -1,108 +1,90 @@
 ## **Task Description**
-You are an AI tasked with generating a **multi-omics functional module name, a function summary, a {phenotype} relationship analysis, and a confidence score** based on the following information.
+You are an AI tasked with generating a **module name**, a **function summary**, a **{phenotype} relationship analysis**, and a **confidence score** based on the following information:
 
-A *multi-omics functional module* integrates:
-- **Genes / proteins** (e.g., gene names IDs)
-- **Metabolites** (e.g., metabolite names)
-- **Enriched pathways / GO terms** (names + short descriptions)
-- **Related PubMed literature** (titles/abstracts or extracted text chunks)
+- Genes / proteins names
+- Metabolites
+- Enriched pathways / GO terms (names + short descriptions)
+- Related PubMed literature (titles/abstracts or extracted text chunks)
 
----
+Each information layer may be missing. If pathways/GO terms are missing, do not infer them; you may briefly state that no pathway enrichment terms were provided. If literature is missing or generic, clearly distinguish evidence-backed statements from hypotheses.
 
-## **Missing-Component Rules (IMPORTANT)**
-- Each omics layer can be **missing or empty** (e.g., no pathways/GO terms for a module).
-- If **Enriched pathways / GO terms** are missing, `NULL`, `NA`, or an empty list/vector:
-  - Treat the pathway layer as **not provided**.
-  - **Do not hallucinate or infer** pathway terms.
-  - In the summary, you may add one short clause like: *"No pathway enrichment terms were provided for this module."*
-- If **Related PubMed literature** is not provided or is generic, clearly separate **evidence-backed statements** from **hypotheses**.
-
-Your goal is to produce a **coherent interpretation** of what the module represents, emphasizing **cross-omics consistency and mechanistic links**, and how the module may relate to **{phenotype}**.
+Your goal is to generate a coherent biological interpretation of the module, emphasizing **cross-omics consistency** and **mechanistic links**, and how the module may relate to **{phenotype}**. The summary should read like a concise biological interpretation, not a list of annotations.
 
 ---
 
 ## **Your Task**
-1. **Identify the core biological process** that best explains this module **across omics layers**.
-2. **Emphasize cross-omics bridges** (when plausible):
-   - **Gene/protein → metabolite**: enzymes, transporters, lipid remodeling, sterol synthesis/transport, redox enzymes, etc.
-   - **Metabolite → gene/protein**: ligand–receptor signaling, nuclear receptor signaling, epigenetic regulation, membrane microdomain effects, etc.
-   - If the bridging mechanism is not explicit in the inputs, propose a **scientifically plausible hypothesis** grounded in known biology, and label it as a hypothesis.
-3. **Avoid isolated component descriptions**:
-   - Do **not** provide a long list of independent gene functions.
-   - Do **not** restate pathway names without synthesis.
-   - Instead, explain how components *collectively* indicate one or a few tightly related themes.
-4. **Name the module concisely**:
-   - The name should highlight a **key process / compartment / mechanism** (e.g., “Plasma membrane GPCR–G protein signaling and lipid microdomain remodeling”), not a generic term.
+1. Interpret the biological roles of the genes/proteins, metabolites, and pathway/GO terms.
+2. Infer the main biological process or mechanism that best explains the module as a whole.
+3. Explain how the different components collectively support this shared theme.
+4. Avoid listing isolated component functions or simply restating pathway names.
 5. **Analyze relationship to {phenotype}:**
-   - Identify known associations between the module and **{phenotype}** (prefer evidence supported by the provided PubMed-derived text).
+   - Identify known associations between the module and **{phenotype}**.
    - Describe how the module's functions may influence **{phenotype}** development or progression (mechanistic reasoning).
-   - If direct evidence linking the module to **{phenotype}** is limited, generate a scientifically plausible hypothesis based on:
-     - Known molecular functions of the module components (genes/metabolites/pathways)
-     - Analogous pathways or mechanisms with established links to **{phenotype}**
-     - Potential downstream effects on tissue/organismal physiology relevant to **{phenotype}**
-6. Assign a **confidence score (0.00–1.00)** reflecting:
-   - Functional coherence **across omics layers** (genes ↔ metabolites ↔ pathways)
-   - Strength/clarity of the proposed mechanistic bridge(s)
-   - Support from the provided PubMed-derived texts (if provided)
-   - Relevance and plausibility of the module’s relationship to **{phenotype}**
+   - If direct evidence is limited, generate a scientifically plausible hypothesis grounded in known molecular functions of the module components, analogous pathways with established links to **{phenotype}**, or potential downstream effects on tissue/organismal physiology.
+6. Assign a confidence score (0.00–1.00) based on functional coherence:
+   - **High (0.80–1.00):** strong convergence across components, with literature support; phenotype link is supported or strongly mechanistically grounded.
+   - **Medium (0.40–0.79):** partial convergence or indirect links; phenotype link plausible but not directly supported.
+   - **Low (0.00–0.39):** weak coherence or insufficient evidence; phenotype relationship highly speculative.
+7. Prefer literature-supported mechanisms when available, and clearly separate supported claims from plausible interpretation.
 
-**Confidence guide**
-- **High (0.80–1.00):** genes + metabolites + pathways converge clearly; literature supports the theme; phenotype link is supported or strongly mechanistically grounded.
-- **Medium (0.40–0.79):** partial convergence and/or indirect links; phenotype link plausible but not directly supported.
-- **Low (0.00–0.39):** weak convergence, components largely unrelated, insufficient evidence, or phenotype relationship highly speculative.
+Keep the summary concise and synthesis-focused. Prioritize the dominant shared mechanism over exhaustive component-level description.
 
 ---
 
 ## **Example Input**
 The module contains:
 
-**Genes/Proteins:**
-- Gene names: ATP-binding cassette sub-family D member 1, G protein subunit alpha s, histone deacetylase 9, …
+**Genes / proteins names:**
+- names: acid phosphatase 6, lysophosphatidic acid phosphatase type, inositol polyphosphate-1-phosphatase, inositol-3-phosphate synthase 1, phosphatidylinositol 4-kinase type 2 beta, phosphatidylinositol glycan anchor biosynthesis class S, phosphatidylinositol-5-phosphate 4-kinase type 2 alpha, solute carrier family 44 member 1
 
 **Metabolites:**
-- Names: phosphatidylcholine, cholesterol
+- names: D-Glucose 6-phosphate
 
-**Enriched pathways/terms:**
-plasma membrane region (A membrane that is a (regional) part of the plasma membrane.)
+**Enriched pathways/GO terms (description):**
+phospholipid metabolic process (The chemical reactions and pathways involving phospholipids, any lipid containing phosphoric acid as a mono- or diester.)
 
-extrinsic component of plasma membrane (The component of a plasma membrane consisting of gene products and protein complexes that are loosely bound to one of its surfaces, but not integrated into the hydrophobic region.)
+phospholipid biosynthetic process (The chemical reactions and pathways resulting in the formation of a phospholipid, a lipid containing phosphoric acid as a mono- or diester.)
 
-**Phenotype of interest**
+phosphatidylinositol metabolic process (The chemical reactions and pathways involving phosphatidylinositol, any glycophospholipid in which a sn-glycerol 3-phosphate residue is esterified to the 1-hydroxyl group of 1D-myo-inositol.)
+
+[Additional pathways omitted in this example for brevity.]
+
+**Phenotype of interest:**
 - phenotype: aging
 
 **Related articles (PubMed-derived):**
-Title: Association of DNA Methylation-Derived C-Reactive Protein Predictors With All-Cause Mortality and Blood Lipids in Adults Aged ≥ 50 Years in the United States. (PubMedID:41765372)
-Text: Importantly, concurrent elevations of CRPMort and HsCRP were associated with the highest risks of all-cause mortality and dyslipidemia. GrimAge2-derived CRPMort is a robust predictor of long-term all-cause mortality and may capture chronic inflammation linked to triglyceride-rich lipoproteins beyond HsCRP. Combined assessment of both inflammatory markers may enhance risk stratification and inform aging-related cardiometabolic research.
+Title: PIP4K2B is mechanoresponsive and controls heterochromatin-driven nuclear softening through UHRF1. (PubMedID:36918565)
+Text: Phosphatidylinositol-5-phosphate (PtdIns5P)-4-kinases (PIP4Ks) are stress-regulated phosphoinositide kinases able to phosphorylate PtdIns5P to PtdIns(4,5)P2. Among the three PIP4K isoforms expressed in mammalian cells, PIP4K2B shows prominent nuclear localisation. PIP4K2B protein level strongly decreases in cells growing on soft substrates. Its silencing or pharmacological inhibition reduces the epigenetic regulator UHRF1 and induces changes in nuclear polarity, nuclear envelope tension, and chromatin compaction. This rewiring of nuclear mechanical state drives YAP cytoplasmic retention, impairs its transcriptional activity, and leads to defects in cell spreading and motility. These findings suggest that PIP4K2B links phosphoinositide metabolism to mechanoresponsive nuclear regulation.
 
-Title: ...
-Text: ...
-
+[Additional articles omitted in this example for brevity.]
 
 ---
 
 ## **Example Output**
 {
   "module_name": "Plasma membrane signaling and lipid microdomain remodeling",
-  "summary": "This multi-omics module converges on plasma membrane organization and signaling. The enriched membrane-associated terms suggest a focus on proteins that localize to or regulate the cell surface. The gene/protein set can be grouped into (i) receptors and G-protein signaling components that mediate extracellular signal transduction, and (ii) transcriptional/epigenetic regulators that may tune downstream responses. The metabolite layer (phosphatidylcholine and cholesterol) supports a membrane lipid composition theme, consistent with altered membrane microdomains that can modulate receptor signaling, trafficking, and immune or stress responsiveness. Together, the module points to coordinated changes in membrane-associated signaling machinery and lipid environment, providing a mechanistic basis for altered cell–environment communication.",
-  "phenotype_analysis": "Relative to aging, this module may influence cell–environment communication by reshaping receptor signaling efficiency and membrane lipid composition. If aging involves altered inflammation, metabolism, or tissue remodeling, lipid microdomain changes could modulate cytokine receptor/GPCR signaling and downstream transcriptional programs. Evidence from the provided literature (if present) should be used to specify the most relevant mechanism; otherwise, this constitutes a mechanistic hypothesis.",
-  "confidence_score": "0.86"
+  "summary": "This module is most consistently explained by a shared role in plasma membrane organization and signaling. The enriched membrane-associated terms point to proteins that localize to or regulate the cell surface. The gene/protein set can be grouped into (i) receptors and G-protein signaling components that mediate extracellular signal transduction, and (ii) transcriptional/epigenetic regulators that may tune downstream responses. The metabolite layer—phosphatidylcholine and cholesterol—supports a membrane lipid composition theme, consistent with altered membrane microdomains that can modulate receptor signaling, trafficking, and immune or stress responsiveness. Together, these layers support a coherent interpretation of the module as a membrane-associated signaling program whose activity is shaped by the surrounding lipid environment, providing a mechanistic basis for altered cell–environment communication. The extension to epigenetic regulation through histone deacetylase 9 is plausible given the downstream transcriptional consequences of G-protein and lipid signaling cascades, though direct mechanistic links to this module's specific components are supported more by functional convergence than direct literature evidence.",
+  "phenotype_analysis": "This module is most consistently interpreted as an aging-related membrane phospholipid and phosphoinositide remodeling program. Multiple components converge on phosphatidylinositol metabolism: ISYNA1 links D-glucose 6-phosphate to inositol biosynthesis, providing a plausible upstream metabolic input, while PI4K2B, PIP4K2A, and INPP1 support active phosphoinositide interconversion through coordinated phosphorylation and dephosphorylation. The enriched pathways further reinforce this interpretation by repeatedly highlighting phospholipid, glycerophospholipid, and phosphatidylinositol metabolic and biosynthetic processes, suggesting that this module reflects broader membrane lipid remodeling rather than an isolated enzymatic branch. Additional genes extend this theme toward membrane homeostasis and lipid utilization, including ACP6 in phospholipid turnover, SLC44A1 in choline-related phosphatidylcholine metabolism, and PIGS in phosphatidylinositol-derived GPI-anchor biosynthesis. Together, these features support a coherent cross-omics interpretation in which altered phosphoinositide and membrane lipid metabolism may represent a coordinated remodeling state. In an aging context, this suggests a plausible mechanism whereby shifts in membrane lipid composition and phosphoinositide signaling may contribute to altered mechanosensing, stress adaptation, and membrane homeostasis during aging. While the core lipid-metabolic theme is well supported by the genes, metabolite, and pathway terms, the specific connection to aging is more interpretive and is inferred from the known roles of phosphoinositide signaling in cellular adaptation and mechanical state.",
+  "confidence_score": "0.82"
 }
+
+Use the Example Input/Output only as a formatting and reasoning guide. Do not reuse its biological theme unless it is directly supported by the actual input.
 
 ---
 
 ## **Actual Input for Generation**
 The multi-omics module is defined by the following components.
 
-**Genes/Proteins**
-- Gene names (vector): {GeneNames_vec}
+**Genes / proteins names:**
+- names: {GeneNames_vec}
 
-**Metabolites**
-- Metabolite names (vector): {MetNames_vec}
+**Metabolites:**
+- names: {MetNames_vec}
 
-**Enriched pathways/terms**
+**Enriched pathways/GO terms (description):**
 {combined_pathway_text}
 
-**Phenotype of interest**
+**Phenotype of interest:**
 - phenotype: {phenotype}
 
 **Related articles (PubMed-derived):**
@@ -111,28 +93,13 @@ The multi-omics module is defined by the following components.
 ---
 
 ## **Final Output**
+
+When a component (especially pathways/terms) is not provided, keep the summary fully grounded in the available evidence (genes/metabolites/literature).
 Please provide your response in **JSON format**, strictly following this structure:
 
 {
   "module_name": "Your concise module name here",
-  "summary": "A detailed, literature-integrated explanation of the module's cross-omics function (integrating **only the layers provided**: genes/proteins and/or metabolites and/or pathways/terms), emphasizing functional convergence and plausible mechanisms.",
-  "phenotype_analysis": "An analysis of the module's relationship to {phenotype}, including evidence-backed associations (if present) and/or a clearly labeled mechanistic hypothesis, with brief suggestions for validation.",
+  "summary": "A coherent biological interpretation of the module, emphasizing cross-omics consistency and mechanistic links. Integrate only the layers provided (genes/proteins and/or metabolites and/or pathways/terms). Clearly distinguish literature-supported claims from plausible hypotheses.",
+  "phenotype_analysis": "An analysis of the module's relationship to {phenotype}, including evidence-backed associations (if present in the provided literature) and/or a clearly labeled mechanistic hypothesis, with 1–3 brief validation suggestions if appropriate.",
   "confidence_score": "A value between 0.00 and 1.00, reflecting overall functional coherence across omics layers and the plausibility/support of the module–{phenotype} link."
 }
-
-When generating your answer, pay attention to the following:
-- **module_name** should be concise and specific (process/compartment/mechanism).
-- **summary** should include:
-  - The central biological theme(s) supported by **pathways/terms** (if provided).
-  - Functional grouping of key **genes/proteins** (roles, not exhaustive lists).
-  - Interpretation of **metabolites** as functional readouts and how they connect to the gene/pathway theme.
-  - Key mechanisms or claims supported by the provided literature (if present), clearly distinguishing evidence vs hypothesis.
-- **phenotype_analysis** should include:
-  - Known associations between the module and **{phenotype}** (prefer provided literature evidence).
-  - If direct evidence is limited, a plausible hypothesis about how the module might impact **{phenotype}**, grounded in known biology of the provided components.
-  - 1–3 brief validation suggestions if appropriate.
-- **confidence_score** should reflect:
-  - Cross-omics convergence (genes ↔ pathways ↔ metabolites)
-  - Strength/clarity of mechanism
-  - Support from the provided PubMed-derived texts
-  - Plausibility and/or evidence for the module–{phenotype} relationship
