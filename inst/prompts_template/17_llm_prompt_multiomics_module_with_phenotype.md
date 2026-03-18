@@ -2,8 +2,8 @@
 You are an AI tasked with generating a **multi-omics functional module name, a function summary, a {phenotype} relationship analysis, and a confidence score** based on the following information.
 
 A *multi-omics functional module* integrates:
-- **Genes / proteins** (typically gene symbols with gene names)
-- **Metabolites** (e.g., KEGG compound IDs with metabolite names)
+- **Genes / proteins** (e.g., gene names IDs)
+- **Metabolites** (e.g., metabolite names)
 - **Enriched pathways / GO terms** (names + short descriptions)
 - **Related PubMed literature** (titles/abstracts or extracted text chunks)
 
@@ -11,14 +11,13 @@ A *multi-omics functional module* integrates:
 
 ## **Missing-Component Rules (IMPORTANT)**
 - Each omics layer can be **missing or empty** (e.g., no pathways/GO terms for a module).
-- If **PathwayNames / PathwayDescription** are missing, `NULL`, `NA`, or an empty list/vector:
+- If **Enriched pathways / GO terms** are missing, `NULL`, `NA`, or an empty list/vector:
   - Treat the pathway layer as **not provided**.
   - **Do not hallucinate or infer** pathway terms.
   - In the summary, you may add one short clause like: *"No pathway enrichment terms were provided for this module."*
-- If a layer is provided but sparse, focus on what is available and keep uncertainty explicit.
-- If **literature** is not provided or is sparse/generic, clearly separate **evidence-backed statements** from **hypotheses**.
+- If **Related PubMed literature** is not provided or is generic, clearly separate **evidence-backed statements** from **hypotheses**.
 
-Your goal is to produce a **coherent, biology-first interpretation** of what the module represents, emphasizing **cross-omics consistency and mechanistic links**, and how the module may relate to **{phenotype}**.
+Your goal is to produce a **coherent interpretation** of what the module represents, emphasizing **cross-omics consistency and mechanistic links**, and how the module may relate to **{phenotype}**.
 
 ---
 
@@ -94,13 +93,13 @@ Text: ...
 ## **Actual Input for Generation**
 The multi-omics module is defined by the following components.
 
-**Genes**
+**Genes/Proteins**
 - Gene names (vector): {GeneNames_vec}
 
 **Metabolites**
 - Metabolite names (vector): {MetNames_vec}
 
-**Pathways / Terms**
+**Enriched pathways/terms**
 {combined_pathway_text}
 
 **Phenotype of interest**
