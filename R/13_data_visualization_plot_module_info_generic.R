@@ -94,14 +94,18 @@ plot_module_info.list <- function(
     object,
     module_id,
     node_colors = c(
-      "gene"       = "#4E79A7",
-      "metabolite" = "#F28E2B",
-      "pathway"    = "#59A14F"
+      "gene_Transcriptome" = "#4E79A7",
+      "gene_Proteome"      = "#F28E2B",
+      "gene_T_and_P"       = "#9467BD",
+      "metabolite"         = "#FFBE7D",
+      "pathway"            = "#59A14F"
     ),
     node_shapes = c(
-      "gene"       = 21,
-      "metabolite" = 24,
-      "pathway"    = 22
+      "gene_Transcriptome" = 21, # circle (fill-able)
+      "gene_Proteome"      = 21,
+      "gene_T_and_P"       = 21,
+      "metabolite"         = 24, # triangle up
+      "pathway"            = 22  # square
     ),
     edge_colors = c(
       "TF-target"            = "#E15759",
