@@ -54,5 +54,6 @@ globalVariables(names = c(
   "enrichmentScore",
   "leading_edge",
   "setSize",
-  "temp_data"
+  "temp_data",
+  "node_type_detail"
 ))

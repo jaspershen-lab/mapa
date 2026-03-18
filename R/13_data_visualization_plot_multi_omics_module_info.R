@@ -99,14 +99,18 @@ plot_multi_omics_module_info <- function(
     merge_result,
     module_id,
     node_colors = c(
-      "gene" = "#4E79A7",
-      "metabolite" = "#F28E2B",
-      "pathway" = "#59A14F"
+      "gene_Transcriptome" = "#4E79A7",
+      "gene_Proteome"      = "#F28E2B",
+      "gene_T_and_P"       = "#9467BD",
+      "metabolite"         = "#FFBE7D",
+      "pathway"            = "#59A14F"
     ),
     node_shapes = c(
-      "gene" = 21, # circle (fill-able)
-      "metabolite" = 24, # triangle up
-      "pathway" = 22 # square
+      "gene_Transcriptome" = 21, # circle (fill-able)
+      "gene_Proteome"      = 21,
+      "gene_T_and_P"       = 21,
+      "metabolite"         = 24, # triangle up
+      "pathway"            = 22  # square
     ),
     edge_colors = c(
       "TF-target" = "#E15759",
@@ -124,7 +128,6 @@ plot_multi_omics_module_info <- function(
     llm_text = FALSE
 ) {
 
-  # Resolve module ID and extract nodes
   result_with_module <- merge_result$result_with_module
 
   plot_nodes <- result_with_module |>
@@ -141,6 +144,24 @@ plot_multi_omics_module_info <- function(
     stop(sprintf("Module '%s' not found.", module_id))
   }
 
+  # Derive per-node type detail for gene nodes based on dt_src in node_info
+  plot_nodes <- plot_nodes |>
+    dplyr::mutate(
+      .dt_src = purrr::map_chr(node_info, ~ {
+        v <- .x[["dt_src"]]
+        if (is.null(v) || length(v) == 0 || all(is.na(v))) NA_character_
+        else as.character(v[[1]])
+      }),
+      node_type_detail = dplyr::case_when(
+        node_type == "metabolite"                                    ~ "metabolite",
+        node_type == "pathway"                                       ~ "pathway",
+        node_type == "gene" & !is.na(.dt_src) &
+          grepl("T", .dt_src) & grepl("P", .dt_src)                ~ "gene_T_and_P",
+        node_type == "gene" & !is.na(.dt_src) & .dt_src == "P"     ~ "gene_Proteome",
+        node_type == "gene"                                         ~ "gene_Transcriptome"
+      )
+    )
+
   node_ids <- unique(plot_nodes$node_id)
 
   gd_nodes <- merge_result$graph_data |>
@@ -155,7 +176,7 @@ plot_multi_omics_module_info <- function(
     gd_edges_raw <- gd_edges_raw |>
       dplyr::mutate(
         from = gd_nodes$node_id[from],
-        to = gd_nodes$node_id[to]
+        to   = gd_nodes$node_id[to]
       )
   }
 
@@ -165,59 +186,71 @@ plot_multi_omics_module_info <- function(
       edge_category = dplyr::if_else(
         edge_type == "diffusion_similarity", "computational", "knowledge"
       ),
-      # Use knowledge weight when available, fall back to diffusion similarity
       display_weight = dplyr::if_else(!is.na(weight), weight, diff_weight)
     ) |>
     dplyr::select(from, to, diff_weight, edge_type, weight, display_weight, edge_category) |>
     dplyr::distinct(from, to, edge_type, .keep_all = TRUE)
 
-  # Optionally drop diffusion-only edges
-  if (!show_rwr_edge) {
-    all_edges <- all_edges |>
-      dplyr::filter(edge_category == "knowledge")
-  }
+  # Build knowledge-only graph and compute FR layout
+  knowledge_edges <- all_edges |>
+    dplyr::filter(edge_category == "knowledge")
 
-  # Build tidygraph object
-  if (nrow(all_edges) == 0) {
-    message(sprintf("No edges found for module '%s'. Plotting isolated nodes.", module_id))
-    all_edges <- tibble::tibble(
-      from = character(0),
-      to = character(0),
-      diff_weight = numeric(0),
-      edge_type = character(0),
-      weight = numeric(0),
-      display_weight = numeric(0),
+  layout_edges <- if (nrow(knowledge_edges) == 0) {
+    tibble::tibble(
+      from = character(0), to = character(0),
+      diff_weight = numeric(0), edge_type = character(0),
+      weight = numeric(0), display_weight = numeric(0),
       edge_category = character(0)
     )
+  } else {
+    knowledge_edges
   }
 
-  g <- tidygraph::tbl_graph(
+  g_layout <- tidygraph::tbl_graph(
     nodes = plot_nodes |> dplyr::distinct(node_id, .keep_all = TRUE),
-    edges = all_edges,
+    edges = layout_edges,
     directed = FALSE,
     node_key = "node_id"
   )
 
-  edge_lty <- c(
-    "TF-target" = "solid",
-    "PPI" = "solid",
-    "Reaction" = "solid",
-    "molecule_pathway" = "solid",
-    "pathway_similarity" = "solid",
-    "diffusion_similarity" = "dashed"
+  # Compute FR layout positions on the knowledge-only graph
+  layout_coords <- ggraph::create_layout(g_layout, layout = "fr")
+  fixed_xy <- layout_coords[, c("x", "y")]  # save positions keyed by row order
+
+  # Build final graph (knowledge + optional RWR edges)
+  plot_edges <- if (show_rwr_edge) all_edges else knowledge_edges
+
+  if (nrow(plot_edges) == 0) {
+    message(sprintf("No edges found for module '%s'. Plotting isolated nodes.", module_id))
+    plot_edges <- tibble::tibble(
+      from = character(0), to = character(0),
+      diff_weight = numeric(0), edge_type = character(0),
+      weight = numeric(0), display_weight = numeric(0),
+      edge_category = character(0)
+    )
+  }
+
+  g_final <- tidygraph::tbl_graph(
+    nodes = plot_nodes |> dplyr::distinct(node_id, .keep_all = TRUE),
+    edges = plot_edges,
+    directed = FALSE,
+    node_key = "node_id"
   )
 
-  # Count stats for subtitle
-  n_genes <- sum(plot_nodes$node_type == "gene", na.rm = TRUE)
+  # Inject fixed coordinates as a manual layout
+  final_layout <- ggraph::create_layout(g_final, layout = "manual",
+                                        x = fixed_xy$x, y = fixed_xy$y)
+
+  n_genes <- sum(plot_nodes$node_type == "gene",       na.rm = TRUE)
   n_mets  <- sum(plot_nodes$node_type == "metabolite", na.rm = TRUE)
-  n_paths <- sum(plot_nodes$node_type == "pathway", na.rm = TRUE)
-  n_ke <- all_edges |> dplyr::filter(edge_category == "knowledge") |> nrow()
-  n_de <- all_edges |> dplyr::filter(edge_category == "computational") |> nrow()
+  n_paths <- sum(plot_nodes$node_type == "pathway",    na.rm = TRUE)
+  n_ke    <- dplyr::filter(plot_edges, edge_category == "knowledge")      |> nrow()
+  n_de    <- dplyr::filter(plot_edges, edge_category == "computational")  |> nrow()
 
   if (!is.null(title)) {
     plot_title <- title
   } else if (llm_text) {
-    fmr <- merge_result$functional_module_result
+    fmr      <- merge_result$functional_module_result
     llm_name <- if (!is.null(fmr) && "llm_module_name" %in% colnames(fmr)) {
       fmr$llm_module_name[fmr$module == module_id][1]
     } else {
@@ -231,76 +264,63 @@ plot_multi_omics_module_info <- function(
   } else {
     plot_title <- module_id
   }
+
   plot_sub <- sprintf(
     "%d nodes  (%d genes  \u00b7  %d metabolites  \u00b7  %d pathways)   |   %d knowledge  \u00b7  %d diffusion edges",
     nrow(plot_nodes), n_genes, n_mets, n_paths, n_ke, n_de
   )
 
-  # Draw
+  edge_lty <- c(
+    "TF-target"           = "solid",
+    "PPI"                 = "solid",
+    "Reaction"            = "solid",
+    "molecule_pathway"    = "solid",
+    "pathway_similarity"  = "solid",
+    "diffusion_similarity" = "dashed"
+  )
 
-  p <- ggraph::ggraph(g, layout = "fr") +
+  p <- ggraph::ggraph(final_layout) +
 
     ggraph::geom_edge_link(
       ggplot2::aes(
-        colour = edge_type,
-        linetype = edge_type,
+        colour    = edge_type,
+        linetype  = edge_type,
         edge_width = display_weight
       ),
       alpha = 0.6
     ) +
     ggraph::scale_edge_width(range = c(0.4, 0.8)) +
-    ggraph::scale_edge_colour_manual(
-      name = "Edge type",
-      values = edge_colors
-    ) +
-    ggraph::scale_edge_linetype_manual(
-      name = "Edge type",
-      values = edge_lty
-    ) +
+    ggraph::scale_edge_colour_manual(name = "Edge type", values = edge_colors) +
+    ggraph::scale_edge_linetype_manual(name = "Edge type", values = edge_lty) +
 
-    # Nodes
     ggraph::geom_node_point(
-      ggplot2::aes(fill = node_type, shape = node_type),
-      size = node_size,
+      ggplot2::aes(fill = node_type_detail, shape = node_type_detail),
+      size   = node_size,
       colour = "black",
       stroke = 0.5
     ) +
-    ggplot2::scale_fill_manual(
-      name = "Node type",
-      values = node_colors,
-    ) +
-    ggplot2::scale_shape_manual(
-      name  = "Node type",
-      values = node_shapes
-    ) +
+    ggplot2::scale_fill_manual(name = "Node type", values = node_colors) +
+    ggplot2::scale_shape_manual(name = "Node type", values = node_shapes) +
 
-    # Labels
     {
       if (show_labels)
         ggraph::geom_node_text(
           ggplot2::aes(label = label),
-          size = label_size,
-          repel = TRUE,
-          colour = "grey15",
-          bg.colour = "white",
-          bg.r = 0.12,
+          size        = label_size,
+          repel       = TRUE,
+          colour      = "grey15",
+          bg.colour   = "white",
+          bg.r        = 0.12,
           max.overlaps = 20
         )
     } +
 
-    # Theme
     ggraph::theme_graph() +
-    ggplot2::labs(
-      title = plot_title,
-      subtitle = plot_sub
-    ) +
+    ggplot2::labs(title = plot_title, subtitle = plot_sub) +
     ggplot2::theme(
-      plot.title = ggplot2::element_text(face = "bold", size = 12),
+      plot.title    = ggplot2::element_text(face = "bold", size = 12),
       plot.subtitle = ggplot2::element_text(size = 9, colour = "grey35"),
-      # plot.caption  = ggplot2::element_text(size = 8, colour = "grey55",
-      #                                       face = "italic"),
       legend.title  = ggplot2::element_text(size = 9, face = "bold"),
-      # legend.text   = ggplot2::element_text(size = 8),
       legend.position = "right"
     )
 

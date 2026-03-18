@@ -230,23 +230,32 @@ build_node_tables <- function(transcriptome_enrich,
   # --- Gene nodes (union of transcriptome DE genes and proteome DE proteins) ---
   t_genes <- transcriptome_enrich@variable_info |>
     dplyr::select(symbol, ensembl, entrezid, uniprot) |>
-    dplyr::mutate(node_type = "gene")
+    dplyr::mutate(node_type = "gene", dt_src = "T")
 
   p_genes <- proteome_enrich@variable_info |>
     dplyr::select(symbol, ensembl, entrezid, uniprot) |>
-    dplyr::mutate(node_type = "gene")
+    dplyr::mutate(node_type = "gene", dt_src = "P")
 
   gene_nodes <- dplyr::bind_rows(t_genes, p_genes) |>
-    dplyr::distinct(symbol, .keep_all = TRUE) |>
+    dplyr::group_by(symbol) |>
+    dplyr::summarise(
+      dt_src = paste(sort(unique(dt_src)), collapse = ", "),
+      ensembl = first(ensembl),
+      entrezid = first(entrezid),
+      uniprot = first(uniprot),
+      .groups = "drop"
+    ) |>
     dplyr::mutate(
       node_id = symbol,
+      node_type = "gene",
       node_info = purrr::pmap(
         list(symbol = symbol, ensembl = ensembl,
-             entrezid = entrezid, uniprot = uniprot),
+             entrezid = entrezid, uniprot = uniprot,
+             dt_src = dt_src),
         function(...) list(...)
       )
     ) |>
-    dplyr::select(-c(symbol, ensembl, entrezid, uniprot))
+    dplyr::select(-c(symbol, ensembl, entrezid, uniprot, dt_src))
 
 
   # --- Metabolite nodes ---
@@ -254,15 +263,14 @@ build_node_tables <- function(transcriptome_enrich,
     dplyr::select(keggid, cpd_name) |>
     dplyr::filter(!is.na(keggid), keggid != "") |>
     dplyr::distinct() |>
-    dplyr::mutate(node_type = "metabolite",
-                  node_id   = keggid,
+    dplyr::mutate(node_id = keggid,
+                  node_type = "metabolite",
                   node_info = purrr::pmap(
                     list(keggid = keggid,
                          cpd_name = cpd_name),
                     function(...) list(...)
                   )) |>
     dplyr::select(-c(keggid, cpd_name))
-
 
   # --- Pathway nodes ---
   pathway_nodes <- enriched_pathway |>

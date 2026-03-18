@@ -8,8 +8,10 @@
 plot_multi_omics_module_info(
   merge_result,
   module_id,
-  node_colors = c(gene = "#4E79A7", metabolite = "#F28E2B", pathway = "#59A14F"),
-  node_shapes = c(gene = 21, metabolite = 24, pathway = 22),
+  node_colors = c(gene_Transcriptome = "#4E79A7", gene_Proteome = "#F28E2B", gene_T_and_P
+    = "#9467BD", metabolite = "#FFBE7D", pathway = "#59A14F"),
+  node_shapes = c(gene_Transcriptome = 21, gene_Proteome = 21, gene_T_and_P = 21,
+    metabolite = 24, pathway = 22),
   edge_colors = c(`TF-target` = "#E15759", PPI = "#76B7B2", Reaction = "#B07AA1",
     molecule_pathway = "#F1CE63", pathway_similarity = "#439222", diffusion_similarity =
     "grey"),
