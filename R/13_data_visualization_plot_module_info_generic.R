@@ -77,7 +77,7 @@ plot_module_info.functional_module <- function(
 #' defined in \file{13_data_visualization_plot_multi_omics_module_info.R}.
 #'
 #' @param node_colors Named character vector of fill colours for each node type
-#'   (\code{"gene"}, \code{"metabolite"}, \code{"pathway"}).
+#'   (\code{"gene"}, \code{"pathway"}).
 #' @param node_shapes Named integer vector of point shapes for each node type.
 #' @param edge_colors Named character vector of colours for each edge type.
 #' @param node_size Numeric. Base node size. Default \code{5}.
@@ -87,6 +87,10 @@ plot_module_info.functional_module <- function(
 #' @param show_labels Logical. Whether to display node labels. Default \code{TRUE}.
 #' @param title Character string or \code{NULL}. Plot title.
 #'   When \code{NULL} (default), \code{module_id} is used as the title.
+#' @param metabolite_colors \code{character(2)}. Diverging fill colours for
+#'   the metabolite \code{diff_metric} colour bar: first element = most
+#'   negative value, second element = most positive value. The midpoint
+#'   (zero) is always \code{"#F2F2F2"}. Default \code{c("#6CB9D2", "#D55640")}.
 #'
 #' @return A \code{ggplot} / \code{ggraph} object.
 #' @export
@@ -94,46 +98,46 @@ plot_module_info.list <- function(
     object,
     module_id,
     node_colors = c(
-      "gene_Transcriptome" = "#4E79A7",
+      "gene_Transcriptome" = "#FFBE7D",
       "gene_Proteome"      = "#F28E2B",
       "gene_T_and_P"       = "#9467BD",
-      "metabolite"         = "#FFBE7D",
       "pathway"            = "#59A14F"
     ),
     node_shapes = c(
-      "gene_Transcriptome" = 21, # circle (fill-able)
+      "gene_Transcriptome" = 21,
       "gene_Proteome"      = 21,
       "gene_T_and_P"       = 21,
-      "metabolite"         = 24, # triangle up
-      "pathway"            = 22  # square
+      "metabolite"         = 24,
+      "pathway"            = 22
     ),
     edge_colors = c(
-      "TF-target"            = "#E15759",
-      "PPI"                  = "#76B7B2",
-      "Reaction"             = "#B07AA1",
-      "molecule_pathway"     = "#F1CE63",
-      "pathway_similarity" = "#439222",
+      "TF-target"           = "#E15759",
+      "PPI"                 = "#76B7B2",
+      "Reaction"            = "#B07AA1",
+      "molecule_pathway"    = "#F1CE63",
+      "pathway_similarity"  = "#439222",
       "diffusion_similarity" = "grey"
     ),
-    node_size     = 5,
-    label_size    = 3,
-    show_rwr_edge = FALSE,
-    show_labels   = TRUE,
-    title         = NULL,
+    node_size          = 5,
+    label_size         = 3,
+    show_rwr_edge      = FALSE,
+    show_labels        = TRUE,
+    title              = NULL,
+    metabolite_colors  = c("#6CB9D2", "#D55640"),
     ...
 ) {
-  # Forward directly to the original implementation function.
   plot_multi_omics_module_info(
-    merge_result  = object,
-    module_id     = module_id,
-    node_colors   = node_colors,
-    node_shapes   = node_shapes,
-    edge_colors   = edge_colors,
-    node_size     = node_size,
-    label_size    = label_size,
-    show_rwr_edge = show_rwr_edge,
-    show_labels   = show_labels,
-    title         = title,
+    merge_result      = object,
+    module_id         = module_id,
+    node_colors       = node_colors,
+    node_shapes       = node_shapes,
+    edge_colors       = edge_colors,
+    node_size         = node_size,
+    label_size        = label_size,
+    show_rwr_edge     = show_rwr_edge,
+    show_labels       = show_labels,
+    title             = title,
+    metabolite_colors = metabolite_colors,
     ...
   )
 }

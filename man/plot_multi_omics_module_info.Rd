@@ -8,8 +8,8 @@
 plot_multi_omics_module_info(
   merge_result,
   module_id,
-  node_colors = c(gene_Transcriptome = "#4E79A7", gene_Proteome = "#F28E2B", gene_T_and_P
-    = "#9467BD", metabolite = "#FFBE7D", pathway = "#59A14F"),
+  node_colors = c(gene_Transcriptome = "#FFBE7D", gene_Proteome = "#F28E2B", gene_T_and_P
+    = "#9467BD", pathway = "#59A14F"),
   node_shapes = c(gene_Transcriptome = 21, gene_Proteome = 21, gene_T_and_P = 21,
     metabolite = 24, pathway = 22),
   edge_colors = c(`TF-target` = "#E15759", PPI = "#76B7B2", Reaction = "#B07AA1",
@@ -20,6 +20,7 @@ plot_multi_omics_module_info(
   show_rwr_edge = FALSE,
   show_labels = TRUE,
   title = NULL,
+  metabolite_colors = c("#6CB9D2", "#D55640"),
   llm_text = FALSE
 )
 }
@@ -51,6 +52,12 @@ edges in addition to knowledge edges. Default \code{FALSE}.}
 
 \item{title}{\code{character(1)} or \code{NULL}. Plot title. When \code{NULL}
 (default) the module name is used.}
+
+\item{metabolite_colors}{\code{character(2)}. A length-2 vector giving the
+diverging fill colours for the metabolite \code{diff_metric} colour bar:
+first element is the colour for the most negative value, second for the
+most positive value. The midpoint (zero) is always \code{"#F2F2F2"}.
+Default \code{c("#6CB9D2", "#D55640")}.}
 
 \item{llm_text}{\code{logical(1)}. When \code{TRUE} and a \code{llm_module_name} column is
 present in \code{merge_result$functional_module_result}, the plot title is

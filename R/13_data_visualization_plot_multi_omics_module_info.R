@@ -79,6 +79,11 @@
 #' @param show_labels `logical(1)`. Whether to display node labels. Default `TRUE`.
 #' @param title `character(1)` or `NULL`. Plot title. When `NULL`
 #'   (default) the module name is used.
+#' @param metabolite_colors `character(2)`. A length-2 vector giving the
+#'   diverging fill colours for the metabolite `diff_metric` colour bar:
+#'   first element is the colour for the most negative value, second for the
+#'   most positive value. The midpoint (zero) is always `"#F2F2F2"`.
+#'   Default `c("#6CB9D2", "#D55640")`.
 #' @param llm_text `logical(1)`. When `TRUE` and a `llm_module_name` column is
 #'   present in `merge_result$functional_module_result`, the plot title is
 #'   formatted as `"<module_id>: <llm_module_name>"`. Ignored when `title` is
@@ -89,20 +94,20 @@
 #' @importFrom ggraph ggraph geom_edge_link geom_node_point geom_node_text
 #'   scale_edge_colour_manual theme_graph
 #' @importFrom ggplot2 aes scale_colour_manual labs theme element_text
-#'   guides guide_legend
+#'   guides guide_legend scale_fill_gradient2
+#' @importFrom ggnewscale new_scale_fill
 #' @importFrom dplyr filter select mutate left_join bind_rows distinct case_when
 #' @importFrom tidygraph tbl_graph activate as_tibble
-#' @importFrom purrr map_chr
+#' @importFrom purrr map_chr map_dbl
 #'
 #' @export
 plot_multi_omics_module_info <- function(
     merge_result,
     module_id,
     node_colors = c(
-      "gene_Transcriptome" = "#4E79A7",
+      "gene_Transcriptome" = "#FFBE7D",
       "gene_Proteome"      = "#F28E2B",
       "gene_T_and_P"       = "#9467BD",
-      "metabolite"         = "#FFBE7D",
       "pathway"            = "#59A14F"
     ),
     node_shapes = c(
@@ -125,6 +130,7 @@ plot_multi_omics_module_info <- function(
     show_rwr_edge = FALSE,
     show_labels = TRUE,
     title = NULL,
+    metabolite_colors = c("#6CB9D2", "#D55640"),
     llm_text = FALSE
 ) {
 
@@ -159,7 +165,12 @@ plot_multi_omics_module_info <- function(
           grepl("T", .dt_src) & grepl("P", .dt_src)                ~ "gene_T_and_P",
         node_type == "gene" & !is.na(.dt_src) & .dt_src == "P"     ~ "gene_Proteome",
         node_type == "gene"                                         ~ "gene_Transcriptome"
-      )
+      ),
+      diff_metric = purrr::map_dbl(node_info, ~ {
+        v <- .x[["diff_metric"]]
+        if (is.null(v) || length(v) == 0 || all(is.na(v))) NA_real_
+        else as.numeric(v[[1]])
+      })
     )
 
   node_ids <- unique(plot_nodes$node_id)
@@ -279,6 +290,18 @@ plot_multi_omics_module_info <- function(
     "diffusion_similarity" = "dashed"
   )
 
+  # Internal node_colors with a neutral placeholder for metabolite so the first
+  # layer can render all nodes; metabolites are overdrawn by the second layer.
+  node_colors_all <- c(node_colors, "metabolite" = "#F2F2F2")
+
+  # Fill values for the shape-legend override, in node_shapes order.
+  used_types <- names(node_shapes)[
+    names(node_shapes) %in% unique(plot_nodes$node_type_detail)
+  ]
+  fill_for_legend <- vapply(used_types, function(nt) {
+    if (nt == "metabolite") "#F2F2F2" else node_colors[[nt]] %||% "grey50"
+  }, character(1))
+
   p <- ggraph::ggraph(final_layout) +
 
     ggraph::geom_edge_link(
@@ -293,14 +316,44 @@ plot_multi_omics_module_info <- function(
     ggraph::scale_edge_colour_manual(name = "Edge type", values = edge_colors) +
     ggraph::scale_edge_linetype_manual(name = "Edge type", values = edge_lty) +
 
+    # All nodes: placeholder fill (metabolites overdrawn below); drives shape legend.
     ggraph::geom_node_point(
       ggplot2::aes(fill = node_type_detail, shape = node_type_detail),
       size   = node_size,
       colour = "black",
       stroke = 0.5
     ) +
-    ggplot2::scale_fill_manual(name = "Node type", values = node_colors) +
-    ggplot2::scale_shape_manual(name = "Node type", values = node_shapes) +
+    ggplot2::scale_fill_manual(
+      name   = "Node type",
+      values = node_colors_all,
+      guide  = "none"          # legend driven by shape scale instead
+    ) +
+    ggplot2::scale_shape_manual(
+      name  = "Node type",
+      values = node_shapes,
+      guide = ggplot2::guide_legend(
+        override.aes = list(fill = fill_for_legend, colour = "black", stroke = 0.5)
+      )
+    ) +
+
+    # Metabolite nodes: continuous fill mapped to diff_metric (fixed shape).
+    ggnewscale::new_scale_fill() +
+    ggraph::geom_node_point(
+      data   = function(x) dplyr::filter(x, .data$node_type == "metabolite"),
+      ggplot2::aes(fill = diff_metric),
+      shape  = 24,
+      size   = node_size,
+      colour = "black",
+      stroke = 0.5
+    ) +
+    ggplot2::scale_fill_gradient2(
+      name     = "diff_metric",
+      low      = metabolite_colors[1],
+      mid      = "#F2F2F2",
+      high     = metabolite_colors[2],
+      midpoint = 0,
+      na.value = "grey80"
+    ) +
 
     {
       if (show_labels)

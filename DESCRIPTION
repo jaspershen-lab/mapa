@@ -33,6 +33,7 @@ Imports:
     extrafont,
     factoextra,
     ggforce,
+    ggnewscale,
     ggplot2,
     ggplotify,
     ggraph,
