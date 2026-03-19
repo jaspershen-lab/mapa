@@ -98,10 +98,10 @@ plot_module_info.list <- function(
     object,
     module_id,
     node_colors = c(
-      "gene_Transcriptome" = "#FFBE7D",
-      "gene_Proteome"      = "#F28E2B",
-      "gene_T_and_P"       = "#9467BD",
-      "pathway"            = "#59A14F"
+      "gene_Transcriptome" = "#fae69e",
+      "gene_Proteome"      = "#f2b56f",
+      "gene_T_and_P"       = "#b8aeeb",
+      "pathway"            = "#bcd59b"
     ),
     node_shapes = c(
       "gene_Transcriptome" = 21,
@@ -123,7 +123,7 @@ plot_module_info.list <- function(
     show_rwr_edge      = FALSE,
     show_labels        = TRUE,
     title              = NULL,
-    metabolite_colors  = c("#6CB9D2", "#D55640"),
+    metabolite_colors = c("#71b7ed", "#f57c6e"),
     ...
 ) {
   plot_multi_omics_module_info(

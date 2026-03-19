@@ -105,10 +105,10 @@ plot_multi_omics_module_info <- function(
     merge_result,
     module_id,
     node_colors = c(
-      "gene_Transcriptome" = "#FFBE7D",
-      "gene_Proteome"      = "#F28E2B",
-      "gene_T_and_P"       = "#9467BD",
-      "pathway"            = "#59A14F"
+      "gene_Transcriptome" = "#fae69e",
+      "gene_Proteome"      = "#f2b56f",
+      "gene_T_and_P"       = "#b8aeeb",
+      "pathway"            = "#bcd59b"
     ),
     node_shapes = c(
       "gene_Transcriptome" = 21, # circle (fill-able)
@@ -130,7 +130,7 @@ plot_multi_omics_module_info <- function(
     show_rwr_edge = FALSE,
     show_labels = TRUE,
     title = NULL,
-    metabolite_colors = c("#6CB9D2", "#D55640"),
+    metabolite_colors = c("#71b7ed", "#f57c6e"),
     llm_text = FALSE
 ) {
 
@@ -172,6 +172,18 @@ plot_multi_omics_module_info <- function(
         else as.numeric(v[[1]])
       })
     )
+
+  # Compute symmetric gradient limits so sign of diff_metric is preserved even
+  # when there is only one metabolite (degenerate range would otherwise map the
+  # single value to the midpoint colour regardless of sign).
+  met_diff_vals <- plot_nodes$diff_metric[plot_nodes$node_type == "metabolite"]
+  met_diff_vals <- met_diff_vals[!is.na(met_diff_vals)]
+  met_limits <- if (length(met_diff_vals) > 0) {
+    max_abs <- max(abs(met_diff_vals), na.rm = TRUE)
+    if (is.finite(max_abs) && max_abs > 0) c(-max_abs, max_abs) else NULL
+  } else {
+    NULL
+  }
 
   node_ids <- unique(plot_nodes$node_id)
 
@@ -352,6 +364,7 @@ plot_multi_omics_module_info <- function(
       mid      = "#F2F2F2",
       high     = metabolite_colors[2],
       midpoint = 0,
+      limits   = met_limits,
       na.value = "grey80"
     ) +
 
