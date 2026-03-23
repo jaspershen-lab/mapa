@@ -310,7 +310,7 @@ GPT_process_chunk <- function(chunks, module_list = NULL,
     })
     parallel::stopCluster(cl)
   } else {
-    reranked_results <- pbmclapply(
+    reranked_results <- pbmcapply::pbmclapply(
       chunks, process_chunk,
       pathways = pathways,
       molecules = molecules,

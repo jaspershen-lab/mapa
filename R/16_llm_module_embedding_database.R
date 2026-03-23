@@ -156,7 +156,7 @@ embedding_single_pdf <- function(pdf_path,
                                       })
     parallel::stopCluster(cl) # Stop the clusters and close the parallel backend.
   } else if (.Platform$OS.type == "unix") {
-    embeddings <- pbmclapply(chunks, function(chunk) {
+    embeddings <- pbmcapply::pbmclapply(chunks, function(chunk) {
       Sys.sleep(1)
       embedding <- get_embedding(chunk, api_key, model_name = embedding_model, api_provider)
       return(embedding)
@@ -482,7 +482,7 @@ embedding_single_module_pubmed_search <- function(module_name,
 
     parallel::stopCluster(cl)
   } else {
-    embeddings <- pbmclapply(abstracts, function(abstract) {
+    embeddings <- pbmcapply::pbmclapply(abstracts, function(abstract) {
       get_embedding(abstract, api_key, model_name = embedding_model,api_provider= api_provider)
     }, mc.cores = thread)
   }

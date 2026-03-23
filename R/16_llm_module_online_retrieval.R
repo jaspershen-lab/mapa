@@ -22,7 +22,7 @@
 #' @author Yifei Ge \email{yifeii.ge@outlook.com}
 #'
 #' @noRd
-pubmed_search <- function(processed_data, phenotype, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
+pubmed_search <- function(processed_data, phenotype = NULL, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
   if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread)  # Creates clusters based on available cores
     parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search", "perform_query", "build_anchor_block", "test_siliconflow_url"))
