@@ -42,9 +42,17 @@ pubmed_search <- function(processed_data, phenotype = NULL, chunk_size = 5, year
   } else {
     results <- pbmcapply::pbmclapply(names(processed_data), function(module_name) {
       module <- processed_data[[module_name]]
-      result <- process_module(module_name, module, phenotype, chunk_size, years, retmax)
+      result <- withCallingHandlers(
+        process_module(module_name, module, phenotype, chunk_size, years, retmax),
+        warning = function(w) invokeRestart("muffleWarning")
+      )
       return(result)
     }, mc.cores = thread)
+
+    # Unwrap any warning-wrapped results from pbmclapply
+    results <- lapply(results, function(r) {
+      if (is.list(r) && !is.null(r$value)) r$value else r
+    })
   }
 
   for (result in results) {
