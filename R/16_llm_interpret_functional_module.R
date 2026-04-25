@@ -252,6 +252,7 @@ llm_interpret_functional_module <- function(object,
   # 4. Retrieve PubMedIDs of related articles
   pubmed_result <- pubmed_search(processed_data = processed_data,
                                  chunk_size = chunk_size,
+                                 phenotype = phenotype,
                                  years = years,
                                  retmax = retmax,
                                  thread = thread)
