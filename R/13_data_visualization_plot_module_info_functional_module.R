@@ -581,7 +581,7 @@
 
       if(analysis_type == "enrich_pathway") {
         temp_data <- temp_data %>%
-          dplyr::mutate(log.p = -log(as.numeric(p_adjust, 10))) %>%
+          dplyr::mutate(log.p = -log(as.numeric(p_adjust), 10)) %>%
           dplyr::arrange(log.p)
       } else {
         temp_data <- temp_data %>%
@@ -605,7 +605,7 @@
 
       if(analysis_type == "enrich_pathway") {
         temp_data <- temp_data %>%
-          dplyr::mutate(log.p = -log(as.numeric(p_adjust, 10))) %>%
+          dplyr::mutate(log.p = -log(as.numeric(p_adjust), 10)) %>%
           dplyr::arrange(log.p)
       } else {
         temp_data <- temp_data %>%
@@ -674,7 +674,7 @@
         result_with_module %>%
         dplyr::filter(module == module_id) %>%
         dplyr::mutate(value = if(analysis_type == "enrich_pathway")
-          -log(as.numeric(p_adjust, 10))
+          -log(as.numeric(p_adjust), 10)
           else abs(as.numeric(NES))) %>%
         dplyr::mutate(text_field = if(query_type == "gene") Description else pathway_name) %>%
         dplyr::select(text_field, value) %>%
