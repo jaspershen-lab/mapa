@@ -38,13 +38,13 @@ Text: Overexpression of receptor tyrosine kinases like DDR2, RET, and PDGFRA cor
 ## **Example Output**
 {
   "module_name": "Receptor Tyrosine Kinase Signaling in Fibrosis and Cancer",
-  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2’s central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression. Additionally, DDR2-mediated PIK3C2α signaling has been implicated in fibroblast function and fibrosis, presenting a potential therapeutic target."
+  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2’s central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression. Additionally, DDR2-mediated PIK3C2α signaling has been implicated in fibroblast function and fibrosis, presenting a potential therapeutic target.",
   "confidence_score": "0.95"
 }
 
 ## **Actual Input for Generation**
-The biological module is defined by following pathways: {pathway_info}
-The module also focuses on following {query_molecules}: {query_molecule_names}
+The biological module is defined by the following pathways: {pathway_info}
+The module also focuses on the following {query_molecules}: {query_molecule_names}
 Below are related articles: {combined_texts}
 
 ## **Final Output**
@@ -62,4 +62,4 @@ summary should include:
 The central biological function or process.
 Key {query_molecules} and their roles within the identified pathways.
 Insights from the provided articles or research (if provided).
-confidence_score should reflect how well the {query_molecules} and pathways associated with each other and support a coherent biological process, with 1.00 indicating very high confidence and 0.00 indicating minimal or no overlap.
+confidence_score should reflect how well the {query_molecules} and pathways are associated with each other and support a coherent biological process, with 1.00 indicating very high confidence and 0.00 indicating minimal or no overlap.

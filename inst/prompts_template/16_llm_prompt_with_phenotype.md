@@ -57,14 +57,14 @@ Text: Overexpression of receptor tyrosine kinases like DDR2, RET, and PDGFRA cor
 ## **Example Output**
 {
   "module_name": "Receptor Tyrosine Kinase Signaling in Fibrosis and Cancer",
-  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2’s central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression. Additionally, DDR2-mediated PIK3C2α signaling has been implicated in fibroblast function and fibrosis, presenting a potential therapeutic target."
+  "summary": "This module focuses on the role of receptor tyrosine kinases (RTKs) in fibrosis and cancer, particularly emphasizing pathways related to transmembrane receptor protein kinase activity. Key genes involved include DDR2, PDGFRA, RET, EGFR, and EPH receptors, which regulate cellular signaling in fibroblasts, neuroblastoma, and other disease contexts. The studies highlight DDR2’s central role in fibrosis through collagen autocrine signaling and its involvement in cancer progression. Inhibitors like sitravatinib and WRG-28 have shown promise in targeting DDR2 and other RTKs, affecting tumor growth and fibrosis progression. Additionally, DDR2-mediated PIK3C2α signaling has been implicated in fibroblast function and fibrosis, presenting a potential therapeutic target.",
   "phenotype_analysis": "This module directly impacts fibrosis, which was the specified phenotype of interest. The RTK signaling (particularly through DDR2) influences myofibroblast differentiation, collagen deposition, and tissue remodeling, ultimately determining the severity of fibrotic disease in organs like liver, lung, and heart. The module affects fibrosis through multiple mechanisms: promoting fibroblast proliferation, preventing fibroblast apoptosis, enhancing extracellular matrix production, and modulating inflammatory responses. The literature directly supports DDR2's critical role in fibrosis progression, and inhibitors like WRG-28 have demonstrated efficacy in reducing fibrosis severity by blocking DDR2 activation. Additionally, while not directly evidenced in the provided literature, this module likely influences chronic wound healing processes that can lead to pathological fibrosis, representing a promising area for therapeutic intervention.",
   "confidence_score": "0.95"
 }
 
 ## **Actual Input for Generation**
-The biological module is defined by following pathways: {pathway_info}.
-The module also focuses on following {query_molecules}: {query_molecule_names}.
+The biological module is defined by the following pathways: {pathway_info}.
+The module also focuses on the following {query_molecules}: {query_molecule_names}.
 The phenotype of interest is: {phenotype}.
 Below are related articles: {combined_texts}
 
