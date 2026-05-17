@@ -6,6 +6,8 @@
 \usage{
 get_bioembedsim(
   object,
+  embedding_source = c("local", "realtime"),
+  db_version = "v1",
   api_provider = c("openai", "gemini", "siliconflow"),
   text_embedding_model = NULL,
   api_key = NULL,
@@ -27,14 +29,25 @@ get_bioembedsim(
 \arguments{
 \item{object}{An object of class "functional_module", typically a result from enrich_pathway function.}
 
+\item{embedding_source}{Character string. \code{"local"} (default) retrieves pre-computed
+embeddings from the MAPA pathway embedding database, which is downloaded automatically on
+first use. \code{"realtime"} generates embeddings on-the-fly using the specified API
+provider; in this case \code{api_provider}, \code{text_embedding_model}, and \code{api_key}
+are required and no external text APIs (QuickGO, KEGG, Reactome) are called in local mode.}
+
+\item{db_version}{Character string. Version of the pre-built embedding database to use
+(default \code{"v1"}). Only relevant when \code{embedding_source = "local_db"}.}
+
 \item{api_provider}{Character string specifying the API provider for text embeddings.
-Options are "openai", "gemini", or "siliconflow.}
+Options are "openai", "gemini", or "siliconflow". Only used when
+\code{embedding_source = "api"}.}
 
 \item{text_embedding_model}{Character string specifying the embedding model to use
 (e.g., "text-embedding-3-small" for OpenAI, "models/text-embedding-004" for Gemini, or
-"Qwen/Qwen3-Embedding-8B" for SiliconFlow)}
+"Qwen/Qwen3-Embedding-8B" for SiliconFlow). Only used when \code{embedding_source = "api"}.}
 
-\item{api_key}{Character string of the API key for the specified provider}
+\item{api_key}{Character string of the API key for the specified provider. Only used when
+\code{embedding_source = "api"}.}
 
 \item{database}{Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
 and/or "reactome". Multiple selections allowed.}

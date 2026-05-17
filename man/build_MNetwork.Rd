@@ -6,9 +6,11 @@
 \usage{
 build_MNetwork(
   network_tables,
+  embedding_source = c("local", "realtime"),
+  db_version = "v1",
   api_provider = c("openai", "gemini", "siliconflow"),
-  text_embedding_model,
-  api_key,
+  text_embedding_model = NULL,
+  api_key = NULL,
   layer_weights = NULL,
   params = list()
 )
@@ -24,14 +26,26 @@ build_MNetwork(
 \code{pathway_mol}.}
 }}
 
+\item{embedding_source}{\code{character(1)}. \code{"local"} (default) uses the
+pre-built MAPA pathway embedding database (downloaded automatically on first
+use). \code{"realtime"} generates embeddings on-the-fly; in that case
+\code{api_provider}, \code{text_embedding_model}, and \code{api_key} are
+required.}
+
+\item{db_version}{\code{character(1)}. Version of the pre-built embedding database
+to use (default \code{"v1"}). Only relevant when
+\code{embedding_source = "local_db"}.}
+
 \item{api_provider}{\code{character(1)}. Embedding API provider for computing
-pathway–pathway text similarities. One of \code{"c"}, \code{"gemini"}, or
-\code{"siliconflow"}.}
+pathway–pathway text similarities. One of \code{"openai"}, \code{"gemini"}, or
+\code{"siliconflow"}. Only used when \code{embedding_source = "api"}.}
 
 \item{text_embedding_model}{\code{character(1)}. Name of the text embedding model
-to use (e.g. \code{"text-embedding-3-small"} for OpenAI).}
+to use (e.g. \code{"text-embedding-3-small"} for OpenAI). Only used when
+\code{embedding_source = "api"}.}
 
-\item{api_key}{\code{character(1)}. API key for the chosen \code{api_provider}.}
+\item{api_key}{\code{character(1)}. API key for the chosen \code{api_provider}. Only
+used when \code{embedding_source = "api"}.}
 
 \item{layer_weights}{\code{numeric} or \code{NULL}. Named numeric vector of length L
 (one value per molecular layer) supplying custom layer weights. When

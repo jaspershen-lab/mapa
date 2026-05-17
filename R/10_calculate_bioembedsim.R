@@ -50,6 +50,14 @@
 #                   database = c("go", "kegg", "reactome"),
 #                   save_to_local = FALSE)
 # save(openai_semantic_sim_matrix, file = "openai_semantic_sim_matrix.rda")
+
+# test_embedding_db <-
+# get_bioembedsim(
+#   object = enriched_pathways,
+#   embedding_source = "local_db",
+#   db_version = "v1",
+#   database = c("go", "kegg", "reactome"))
+
 # gemini_semantic_sim_matrix <- get_bioembedsim(object = object, api_provider = "gemini",  text_embedding_model = "text-embedding-004", api_key = api_key)
 ## GSEA
 # openai_semantic_sim_matrix <-
@@ -69,7 +77,21 @@
 #                   api_key = api_key,
 #                   count.cutoff.metkegg = 0,
 #                   save_to_local = FALSE)
-
+# sim_matrix_met <-
+#   get_bioembedsim(object = enriched_pathways,
+#                   embedding_source = "realtime",
+#                   api_provider = "openai",
+#                   database = c("hmdb", "metkegg"),
+#                   text_embedding_model = "text-embedding-3-small",
+#                   api_key = api_key,
+#                   count.cutoff.metkegg = 0,
+#                   save_to_local = FALSE)
+# test_embedding_db <-
+# get_bioembedsim(
+#   object = enriched_pathways,
+#   embedding_source = "local",
+#   db_version = "v1",
+#   database = c("hmdb", "metkegg"))
 
 #' Calculate Biological Pathway Similarity Based on BioText Embeddings (biotext embedding similarity)
 #'
@@ -81,12 +103,21 @@
 #' to generate embeddings.
 #'
 #' @param object An object of class "functional_module", typically a result from enrich_pathway function.
+#' @param embedding_source Character string. \code{"local"} (default) retrieves pre-computed
+#'   embeddings from the MAPA pathway embedding database, which is downloaded automatically on
+#'   first use. \code{"realtime"} generates embeddings on-the-fly using the specified API
+#'   provider; in this case \code{api_provider}, \code{text_embedding_model}, and \code{api_key}
+#'   are required and no external text APIs (QuickGO, KEGG, Reactome) are called in local mode.
+#' @param db_version Character string. Version of the pre-built embedding database to use
+#'   (default \code{"v1"}). Only relevant when \code{embedding_source = "local_db"}.
 #' @param api_provider Character string specifying the API provider for text embeddings.
-#'   Options are "openai", "gemini", or "siliconflow.
+#'   Options are "openai", "gemini", or "siliconflow". Only used when
+#'   \code{embedding_source = "api"}.
 #' @param text_embedding_model Character string specifying the embedding model to use
 #'   (e.g., "text-embedding-3-small" for OpenAI, "models/text-embedding-004" for Gemini, or
-#'   "Qwen/Qwen3-Embedding-8B" for SiliconFlow)
-#' @param api_key Character string of the API key for the specified provider
+#'   "Qwen/Qwen3-Embedding-8B" for SiliconFlow). Only used when \code{embedding_source = "api"}.
+#' @param api_key Character string of the API key for the specified provider. Only used when
+#'   \code{embedding_source = "api"}.
 #' @param database Character vector of databases to include. Options are "go", "kegg", "hmdb", "metkegg",
 #'   and/or "reactome". Multiple selections allowed.
 #' @param p.adjust.cutoff.go Numeric cutoff for adjusted p-value for GO terms (default: 0.05)
@@ -148,6 +179,8 @@
 
 get_bioembedsim <-
   function(object,
+           embedding_source = c("local", "realtime"),
+           db_version = "v1",
            api_provider = c("openai", "gemini", "siliconflow"),
            text_embedding_model = NULL,
            api_key = NULL,
@@ -179,22 +212,24 @@ get_bioembedsim <-
       query_type <- object@process_info$do_gsea@parameter$query_type
     }
 
-    if (missing(api_provider)) {
-      stop("api_provider is required.")
-    }
-    api_provider <- match.arg(api_provider)
-
-    if (missing(text_embedding_model)) {
-      stop("text_embedding_model is required.")
-    }
-
-    if (missing(api_key)) {
-      stop("api_key is required.")
-    }
-
+    embedding_source <- match.arg(embedding_source)
     database <- match.arg(database, several.ok = TRUE)
 
-    ## Collect text information from databases
+    if (embedding_source == "realtime") {
+      if (missing(api_provider)) {
+        stop("api_provider is required when embedding_source = \"realtime\".")
+      }
+      api_provider <- match.arg(api_provider)
+      if (is.null(text_embedding_model)) {
+        stop("text_embedding_model is required when embedding_source = \"realtime\".")
+      }
+      if (is.null(api_key)) {
+        stop("api_key is required when embedding_source = \"realtime\".")
+      }
+    }
+
+    ## Collect filtered pathway IDs; fetch text only in api mode (local_db reads from DB directly)
+    all_ids <- character(0)
     all_text_info <- list()
 
     if (query_type == "gene") {
@@ -206,18 +241,16 @@ get_bioembedsim <-
             dplyr::filter(p_adjust < p.adjust.cutoff.go) %>%
             dplyr::filter(Count > count.cutoff.go) %>%
             dplyr::pull(ID)
-
-          # Check if any pathways meet the criteria
           if (length(filtered_ids) == 0) {
-            go_info <- NA
             message("No GO pathways meet the specified criteria (p_adjust < ",
-                    p.adjust.cutoff.go, " and Count > ", count.cutoff.go,
-                    "). go_info set to NA.")
+                    p.adjust.cutoff.go, " and Count > ", count.cutoff.go, ").")
           } else {
-            message("Collecting pathway text information for GO terms from Gene Ontology database...")
-            go_info <- get_go_info(filtered_ids)
+            all_ids <- c(all_ids, filtered_ids)
+            if (embedding_source == "realtime") {
+              message("Collecting pathway text information for GO terms from Gene Ontology database...")
+              all_text_info <- c(all_text_info, get_go_info(filtered_ids))
+            }
           }
-          all_text_info <- c(all_text_info, go_info)
         }
       }
 
@@ -229,18 +262,16 @@ get_bioembedsim <-
             dplyr::filter(p_adjust < p.adjust.cutoff.kegg) %>%
             dplyr::filter(Count > count.cutoff.kegg) %>%
             dplyr::pull(ID)
-
-          # Check if any pathways meet the criteria
           if (length(filtered_ids) == 0) {
-            kegg_info <- NA
             message("No KEGG pathways meet the specified criteria (p_adjust < ",
-                    p.adjust.cutoff.kegg, " and Count > ", count.cutoff.kegg,
-                    "). kegg_info set to NA.")
+                    p.adjust.cutoff.kegg, " and Count > ", count.cutoff.kegg, ").")
           } else {
-            message("Collecting pathway text information for KEGG pathways from KEGG database...")
-            kegg_info <- get_kegg_pathway_info(filtered_ids)
+            all_ids <- c(all_ids, filtered_ids)
+            if (embedding_source == "realtime") {
+              message("Collecting pathway text information for KEGG pathways from KEGG database...")
+              all_text_info <- c(all_text_info, get_kegg_pathway_info(filtered_ids))
+            }
           }
-          all_text_info <- c(all_text_info, kegg_info)
         }
       }
 
@@ -252,18 +283,16 @@ get_bioembedsim <-
             dplyr::filter(p_adjust < p.adjust.cutoff.reactome) %>%
             dplyr::filter(Count > count.cutoff.reactome) %>%
             dplyr::pull(ID)
-
-          # Check if any pathways meet the criteria
           if (length(filtered_ids) == 0) {
-            reactome_info <- NA
             message("No Reactome pathways meet the specified criteria (p_adjust < ",
-                    p.adjust.cutoff.reactome, " and Count > ", count.cutoff.reactome,
-                    "). reactome_info set to NA.")
+                    p.adjust.cutoff.reactome, " and Count > ", count.cutoff.reactome, ").")
           } else {
-            message("Collecting pathway text information for Reactome pathways from Reactome database...")
-            reactome_info <- get_reactome_pathway_info(filtered_ids)
+            all_ids <- c(all_ids, filtered_ids)
+            if (embedding_source == "realtime") {
+              message("Collecting pathway text information for Reactome pathways from Reactome database...")
+              all_text_info <- c(all_text_info, get_reactome_pathway_info(filtered_ids))
+            }
           }
-          all_text_info <- c(all_text_info, reactome_info)
         }
       }
     } else if (query_type == "metabolite") {
@@ -271,76 +300,70 @@ get_bioembedsim <-
         if (is.null(object@enrichment_metkegg_result)) {
           stop("Please perform pathway enrichment based on KEGG database at first.")
         } else {
-          metkegg_info <- list()
           metkegg_enrichment_result <-
             object@enrichment_metkegg_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.metkegg) %>%
             dplyr::filter(mapped_number > count.cutoff.metkegg)
           if (nrow(metkegg_enrichment_result) == 0) {
-            metkegg_info <- NA
+            message("No KEGG metabolite pathways meet the specified criteria.")
           } else {
-            for (i in 1:nrow(metkegg_enrichment_result)) {
-              entry <- metkegg_enrichment_result[i,]
-              all_info <- list(
-                "id" = entry$pathway_id,
-                "term_name" = entry$pathway_name,
-                "term_definition" = entry$describtion
-              )
-              metkegg_info <- c(metkegg_info, list(all_info))
+            all_ids <- c(all_ids, metkegg_enrichment_result$pathway_id)
+            if (embedding_source == "realtime") {
+              metkegg_info <- lapply(seq_len(nrow(metkegg_enrichment_result)), function(i) {
+                entry <- metkegg_enrichment_result[i, ]
+                list(id = entry$pathway_id, term_name = entry$pathway_name,
+                     term_definition = entry$describtion)
+              })
+              all_text_info <- c(all_text_info, metkegg_info)
             }
           }
-          all_text_info <- c(all_text_info, metkegg_info)
         }
       }
 
       if ("hmdb" %in% database) {
         if (is.null(object@enrichment_hmdb_result)) {
-          stop("Please perform pathway enrichment based on KEGG database at first.")
+          stop("Please perform pathway enrichment based on HMDB database at first.")
         } else {
-          hmdb_info <- list()
           hmdb_enrichment_result <-
             object@enrichment_hmdb_result@result %>%
             dplyr::filter(p_adjust < p.adjust.cutoff.hmdb) %>%
             dplyr::filter(mapped_number > count.cutoff.hmdb)
           if (nrow(hmdb_enrichment_result) == 0) {
-            hmdb_info <- NA
+            message("No HMDB pathways meet the specified criteria.")
           } else {
-            for (i in 1:nrow(hmdb_enrichment_result)) {
-              entry <- hmdb_enrichment_result[i,]
-              all_info <- list(
-                "id" = entry$pathway_id,
-                "term_name" = entry$pathway_name,
-                "term_definition" = entry$describtion
-              )
-              hmdb_info <- c(hmdb_info, list(all_info))
+            all_ids <- c(all_ids, hmdb_enrichment_result$pathway_id)
+            if (embedding_source == "realtime") {
+              hmdb_info <- lapply(seq_len(nrow(hmdb_enrichment_result)), function(i) {
+                entry <- hmdb_enrichment_result[i, ]
+                list(id = entry$pathway_id, term_name = entry$pathway_name,
+                     term_definition = entry$describtion)
+              })
+              all_text_info <- c(all_text_info, hmdb_info)
             }
           }
-          all_text_info <- c(all_text_info, hmdb_info)
         }
       }
     }
 
-    if (all(is.na(unlist(all_text_info)))) {
+    if (length(all_ids) == 0) {
       stop("No pathways found for embedding calculation. Try: (1) increasing p.adjust.cutoff, (2) reducing count.cutoff.")
     }
 
-    if (any(is.na(unlist(all_text_info)))) {
-      all_text_info <- all_text_info[!is.na(all_text_info)]
+    ## Get embedding matrix
+    if (embedding_source == "local") {
+      message("Retrieving pathway embeddings from local database ...")
+      embedding_matrix <- get_pathway_embeddings_from_db(all_ids, version = db_version)
+    } else {
+      all_combined_info <- combine_info(info = all_text_info)
+      message("Getting pathway text embeddings ...")
+      embedding_matrix <- get_embedding_matrix(text = all_combined_info,
+                                               api_provider = api_provider,
+                                               text_embedding_model = text_embedding_model,
+                                               api_key = api_key)
     }
 
-    all_combined_info <- combine_info(info = all_text_info)
-
-
-    ## Get embedding matrix
-    message("Getting pathway text embeddings ...")
-    embedding_matrix <- get_embedding_matrix(text = all_combined_info,
-                                             api_provider = api_provider,
-                                             text_embedding_model = text_embedding_model,
-                                             api_key = api_key)
-
-
     ## Calculate pairwise cosine similarity
-    message("Calculating cosine similairty ...")
+    message("Calculating cosine similarity ...")
     sim_matrix <- calculate_cosine_sim(m = embedding_matrix)
 
     ## Store parameters

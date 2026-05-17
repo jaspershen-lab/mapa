@@ -110,25 +110,21 @@ build_mol_layers_weight <- function(mol_layers,
 #' @return A data frame with columns \code{from}, \code{to}, \code{weight} (cosine similarity).
 #' @noRd
 build_path_layer_weight <- function(path_nodes,
+                                    embedding_source = c("local", "realtime"),
+                                    db_version = "v1",
                                     api_provider = c("openai", "gemini", "siliconflow"),
                                     text_embedding_model = NULL,
                                     api_key = NULL) {
 
-    if (missing(api_provider)) {
-      stop("api_provider is required.")
-    }
-    api_provider <- match.arg(api_provider)
+    embedding_source <- match.arg(embedding_source)
 
-    if (missing(text_embedding_model)) {
-      stop("text_embedding_model is required.")
-    }
-
-    if (missing(api_key)) {
-      stop("api_key is required.")
+    if (embedding_source == "api") {
+      if (missing(api_provider)) stop("api_provider is required when embedding_source = \"realtime\".")
+      api_provider <- match.arg(api_provider)
+      if (is.null(text_embedding_model)) stop("text_embedding_model is required when embedding_source = \"realtime\".")
+      if (is.null(api_key)) stop("api_key is required when embedding_source = \"realtime\".")
     }
 
-    ## Collect text information from databases
-    all_text_info <- list()
     pathway_nodes <- path_nodes |> tibble::tibble()
     pathway_nodes <- pathway_nodes |>
       dplyr::mutate(source = dplyr::case_when(
@@ -137,52 +133,46 @@ build_path_layer_weight <- function(path_nodes,
         startsWith(node_id, "R-") ~ "Reactome"
       ))
 
-    dbs <- unique(pathway_nodes$source)
-    if ("GO" %in% dbs) {
-      go_ids <- pathway_nodes |>
-        dplyr::filter(source == "GO") |>
-        dplyr::pull(node_id)
+    all_ids <- pathway_nodes$node_id
 
-      message("Collecting pathway text information for GO terms from Gene Ontology database...")
-      go_info <- get_go_info(go_ids)
-      all_text_info <- c(all_text_info, go_info)
+    if (embedding_source == "local") {
+      message("Retrieving pathway embeddings from local database ...")
+      embedding_matrix <- get_pathway_embeddings_from_db(all_ids, version = db_version)
+    } else {
+      all_text_info <- list()
+      dbs <- unique(pathway_nodes$source)
+
+      if ("GO" %in% dbs) {
+        go_ids <- pathway_nodes |> dplyr::filter(source == "GO") |> dplyr::pull(node_id)
+        message("Collecting pathway text information for GO terms from Gene Ontology database...")
+        all_text_info <- c(all_text_info, get_go_info(go_ids))
+      }
+
+      if ("KEGG" %in% dbs) {
+        kegg_ids <- pathway_nodes |> dplyr::filter(source == "KEGG") |> dplyr::pull(node_id)
+        message("Collecting pathway text information for KEGG pathways from KEGG database...")
+        all_text_info <- c(all_text_info, get_kegg_pathway_info(kegg_ids))
+      }
+
+      if ("Reactome" %in% dbs) {
+        reactome_ids <- pathway_nodes |> dplyr::filter(source == "Reactome") |> dplyr::pull(node_id)
+        message("Collecting pathway text information for Reactome pathways from Reactome database...")
+        all_text_info <- c(all_text_info, get_reactome_pathway_info(reactome_ids))
+      }
+
+      if (any(is.na(unlist(all_text_info)))) {
+        all_text_info <- all_text_info[!is.na(all_text_info)]
+      }
+
+      all_combined_info <- combine_info(info = all_text_info)
+      message("Getting pathway text embeddings ...")
+      embedding_matrix <- get_embedding_matrix(text = all_combined_info,
+                                               api_provider = api_provider,
+                                               text_embedding_model = text_embedding_model,
+                                               api_key = api_key)
     }
 
-    if ("KEGG" %in% dbs) {
-      kegg_ids <- pathway_nodes |>
-        dplyr::filter(source == "KEGG") |>
-        dplyr::pull(node_id)
-
-      message("Collecting pathway text information for KEGG pathways from KEGG database...")
-      kegg_info <- get_kegg_pathway_info(kegg_ids)
-      all_text_info <- c(all_text_info, kegg_info)
-    }
-
-    if ("Reactome" %in% dbs) {
-      reactome_ids <- pathway_nodes |>
-        dplyr::filter(source == "Reactome") |>
-        dplyr::pull(node_id)
-
-      message("Collecting pathway text information for Reactome pathways from Reactome database...")
-      reactome_info <- get_reactome_pathway_info(reactome_ids)
-      all_text_info <- c(all_text_info, reactome_info)
-    }
-
-    if (any(is.na(unlist(all_text_info)))) {
-      all_text_info <- all_text_info[!is.na(all_text_info)]
-    }
-
-    all_combined_info <- combine_info(info = all_text_info)
-
-    ## Get embedding matrix
-    message("Getting pathway text embeddings ...")
-    embedding_matrix <- get_embedding_matrix(text = all_combined_info,
-                                             api_provider = api_provider,
-                                             text_embedding_model = text_embedding_model,
-                                             api_key = api_key)
-
-    ## Calculate pairwise cosine similarity
-    message("Calculating cosine similairty ...")
+    message("Calculating cosine similarity ...")
     sim_matrix <- calculate_cosine_sim(m = embedding_matrix)
     message("Biotext embedding and similarity calculation finished.\n")
 

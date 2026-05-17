@@ -303,20 +303,32 @@ setReplaceMethod("layer_weights", "multi_omics_functional_module", function(x, v
 #'   override the defaults. Recognised keys: `restart` (default `0.7`),
 #'   `interlayer` (default `0.5`), `gamma` (default `1.0`), `tol` (default
 #'   `1e-6`), `max_iter` (default `1000`).
+#' @param embedding_source `character(1)`. \code{"local"} (default) uses the
+#'   pre-built MAPA pathway embedding database (downloaded automatically on first
+#'   use). \code{"realtime"} generates embeddings on-the-fly; in that case
+#'   \code{api_provider}, \code{text_embedding_model}, and \code{api_key} are
+#'   required.
+#' @param db_version `character(1)`. Version of the pre-built embedding database
+#'   to use (default \code{"v1"}). Only relevant when
+#'   \code{embedding_source = "local_db"}.
 #' @param api_provider `character(1)`. Embedding API provider for computing
-#'   pathway–pathway text similarities. One of `"c"`, `"gemini"`, or
-#'   `"siliconflow"`.
+#'   pathway–pathway text similarities. One of `"openai"`, `"gemini"`, or
+#'   `"siliconflow"`. Only used when \code{embedding_source = "api"}.
 #' @param text_embedding_model `character(1)`. Name of the text embedding model
-#'   to use (e.g. `"text-embedding-3-small"` for OpenAI).
-#' @param api_key `character(1)`. API key for the chosen `api_provider`.
+#'   to use (e.g. `"text-embedding-3-small"` for OpenAI). Only used when
+#'   \code{embedding_source = "api"}.
+#' @param api_key `character(1)`. API key for the chosen `api_provider`. Only
+#'   used when \code{embedding_source = "api"}.
 #'
 #' @return A validated [multi_omics_functional_module] S4 object.
 #'
 #' @export
 build_MNetwork <- function(network_tables,
+                           embedding_source = c("local", "realtime"),
+                           db_version = "v1",
                            api_provider = c("openai", "gemini", "siliconflow"),
-                           text_embedding_model,
-                           api_key,
+                           text_embedding_model = NULL,
+                           api_key = NULL,
                            layer_weights = NULL,
                            params = list()) {
   mol_nodes <- network_tables$node_tables$mol_nodes |> tibble::tibble()
@@ -330,10 +342,14 @@ build_MNetwork <- function(network_tables,
   mol_layers_edge_weight <- mol_layers_edge_weight_raw[nonempty_mask]
 
   path_nodes <- network_tables$node_tables$pathway_nodes |> tibble::tibble()
-  path_layer_edge_weight <- build_path_layer_weight(path_nodes = path_nodes,
-                                                    api_provider = api_provider,
-                                                    text_embedding_model = text_embedding_model,
-                                                    api_key = api_key)
+  path_layer_edge_weight <- build_path_layer_weight(
+    path_nodes = path_nodes,
+    embedding_source = embedding_source,
+    db_version = db_version,
+    api_provider = api_provider,
+    text_embedding_model = text_embedding_model,
+    api_key = api_key
+  )
 
   path_to_mol <- network_tables$edge_table$pathway_mol |> tibble::tibble()
   pathway_mol_edge_weight <- build_pathway_mol_weight(network_tables,
