@@ -2,14 +2,21 @@
 % Please edit documentation in R/18_report_functional_module.R
 \name{report_functional_module}
 \alias{report_functional_module}
+\alias{report_functional_module.functional_module}
+\alias{report_functional_module.list}
 \title{Generate a Report for a Functional Module}
 \usage{
-report_functional_module(
+report_functional_module(object, path = ".", ...)
+
+\method{report_functional_module}{functional_module}(
   object,
   path = ".",
   degree_cutoff = 1,
-  type = c("html", "pdf", "word", "md", "all")
+  type = c("html", "pdf", "word", "md", "all"),
+  ...
 )
+
+\method{report_functional_module}{list}(object, path = ".", ...)
 }
 \arguments{
 \item{object}{An object of class 'functional_module'. The function will
@@ -18,12 +25,10 @@ generate a report based on this object.}
 \item{path}{A character string specifying the directory path where the report
 and associated files will be saved. Defaults to the current directory.}
 
-\item{degree_cutoff}{A numeric value specifying the minimum degree for network
-analysis. Default is 1. Must be 0 or a positive number.}
+\item{degree_cutoff}{Minimum node degree for network plots (default 1).}
 
-\item{type}{A character vector specifying the format of the report.
-Can be 'html', 'pdf', 'md', 'word', or 'all' to generate the report
-in all three formats. Default is 'html'.}
+\item{type}{Output format: \code{"html"}, \code{"pdf"}, \code{"word"},
+\code{"md"}, or \code{"all"}. Default \code{"html"}.}
 }
 \value{
 This function does not return a value but generates a report in the

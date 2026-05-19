@@ -48,11 +48,21 @@
 #'
 #' @export
 
-report_functional_module <-
+report_functional_module <- function(object, path = ".", ...) {
+  UseMethod("report_functional_module")
+}
+
+#' @rdname report_functional_module
+#' @param degree_cutoff Minimum node degree for network plots (default 1).
+#' @param type Output format: \code{"html"}, \code{"pdf"}, \code{"word"},
+#'   \code{"md"}, or \code{"all"}. Default \code{"html"}.
+#' @export
+report_functional_module.functional_module <-
   function(object,
            path = ".",
            degree_cutoff = 1,
-           type = c("html", "pdf", "word", "md", "all")) {
+           type = c("html", "pdf", "word", "md", "all"),
+           ...) {
 
     if (identical(type, "pdf") && Sys.which("pdflatex") == "") {
       stop("PDF output requires a LaTeX distribution. ",
@@ -69,10 +79,6 @@ report_functional_module <-
 
     if (missing(object)) {
       stop("object is missing")
-    }
-
-    if (!is(object, "functional_module")) {
-      stop("object must be functional_module class")
     }
 
     dir.create(path, showWarnings = FALSE, recursive = TRUE)
@@ -492,4 +498,16 @@ report_functional_module <-
       recursive = TRUE,
       force = TRUE
     )
+}
+
+#' @rdname report_functional_module
+#' @export
+report_functional_module.list <- function(object, path = ".", ...) {
+  if (all(c("graph_data", "functional_module_result", "result_with_module")
+          %in% names(object))) {
+    report_multi_omics_functional_module(object = object, path = path)
+  } else {
+    stop("'object' is a list but does not appear to be a supported ",
+         "multi-omics functional module result.")
+  }
 }
