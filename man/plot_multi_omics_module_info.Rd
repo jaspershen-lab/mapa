@@ -53,11 +53,12 @@ edges in addition to knowledge edges. Default \code{FALSE}.}
 \item{title}{\code{character(1)} or \code{NULL}. Plot title. When \code{NULL}
 (default) the module name is used.}
 
-\item{metabolite_colors}{\code{character(2)}. A length-2 vector giving the
-diverging fill colours for the metabolite \code{diff_metric} colour bar:
-first element is the colour for the most negative value, second for the
-most positive value. The midpoint (zero) is always \code{"#F2F2F2"}.
-Default \code{c("#6CB9D2", "#D55640")}.}
+\item{metabolite_colors}{\code{character(2)}. A length-2 vector of colours for
+metabolite nodes. When \code{diff_metric} values are present, the two colours
+define the diverging gradient (first = most negative, second = most
+positive; midpoint \code{"#F2F2F2"}). When all \code{diff_metric} values are \code{NA}
+(e.g. no differential metric was supplied), the first colour is used as a
+solid fill for all metabolite nodes. Default \code{c("#71b7ed", "#f57c6e")}.}
 
 \item{llm_text}{\code{logical(1)}. When \code{TRUE} and a \code{llm_module_name} column is
 present in \code{merge_result$functional_module_result}, the plot title is

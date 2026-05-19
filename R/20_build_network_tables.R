@@ -1,22 +1,19 @@
 # setwd(r4projects::get_project_wd())
-# source("R/19_extract_enrichment_results.R")
-# source("R/20_build_edges.R")
-# library(mapa)
-# load("demo_data/demo_multi-omics/T_brain_up_enrich_pathway_res.rda")
-# T_input <- enrich_pathway_res
-# load("demo_data/demo_multi-omics/M_functional_module_res_u_and_d_met.rda")
-# M_input <- functional_module_res
-# load("demo_data/demo_multi-omics/P_up_enrich_pathway_res.rda")
-# P_input <- enrich_pathway_res
+# rm(list = ls())
+# load("demo_data/demo_multi-omics/multi-omics/results/transcriptomics_enrichment_2026-05-18.rda")
+# T_input <- enrich_result
+# load("demo_data/demo_multi-omics/multi-omics/results/metabolomics_enrichment_2026-05-18.rda")
+# M_input <- enrich_result
+# load("demo_data/demo_multi-omics/multi-omics/results/proteomics_enrichment_2026-05-18.rda")
+# P_input <- enrich_result
 # network_tables <- build_network_tables(transcriptome_enrich = T_input,
 #                                        proteome_enrich = P_input,
 #                                        metabolome_enrich = M_input,
-#                                        reactome_dir = "demo_data/reactome_db/",
-#                                        input_directory = "demo_data/string_db/",
 #                                        taxon_id = 9606,
 #                                        string_score_cutoff  = 0.9,
 #                                        tf_confidence_levels = "A")
-# save(network_tables, file = "demo_data/demo_multi-omics/network_tables.rda")
+# attr(network_tables, "process_info")
+# save(network_tables, file = "demo_data/demo_multi-omics/multi-omics/results/network_tables.rda")
 
 #' Build Network Node and Edge Tables from Multi-Omics Enrichment Results
 #'
@@ -24,8 +21,6 @@
 #' @param proteome_enrich A \code{functional_module} object from proteome analysis.
 #' @param metabolome_enrich A \code{functional_module} object from metabolome analysis.
 #' @param taxon_id Integer. NCBI taxonomy ID for STRING. Default \code{9606}.
-#' @param reactome_dir Character or NA. Path to local Reactome database files.
-#' @param input_directory Character or NA. Path to local STRING database directory.
 #' @param string_score_cutoff Numeric. Minimum STRING combined score. Default \code{0.9}.
 #' @param tf_confidence_levels Character. DoRothEA confidence levels. Default \code{"A"}.
 #' @return A list with \code{node_tables} and \code{edge_table}.
@@ -34,10 +29,10 @@ build_network_tables <- function(transcriptome_enrich,
                                  proteome_enrich,
                                  metabolome_enrich,
                                  taxon_id = 9606,
-                                 reactome_dir = NA,
-                                 input_directory = NA,
                                  string_score_cutoff  = 0.9,
                                  tf_confidence_levels = "A") {
+  message("Ensuring edge databases are available ...")
+  mapa_ensure_edge_databases()
   message("Step 1: Extracting enrichment results ...")
   enrich_out <- extract_enrichment_result(
     transcriptome_enrich = transcriptome_enrich,
@@ -75,8 +70,7 @@ build_network_tables <- function(transcriptome_enrich,
   ppi_edges <- get_ppi_edges(
     gene_symbols = all_gene_symbols,
     taxon_id = taxon_id,
-    score_cutoff = string_score_cutoff,
-    input_directory = input_directory
+    score_cutoff = string_score_cutoff
   )
 
   message("Step 5: Building enzyme-metabolite edges ...")
@@ -88,8 +82,7 @@ build_network_tables <- function(transcriptome_enrich,
   reactome_em_edges <- get_reactome_enzyme_metabolite_edges(
     protein_symbols = all_gene_symbols,
     metabolite_kegg = all_met_keggids,
-    species_prefix = "HSA",
-    reactome_dir = reactome_dir
+    species_prefix = "HSA"
   )
   em_edges <- combine_enzyme_metabolite_edges(
     kegg_edges = kegg_em_edges,
@@ -99,7 +92,6 @@ build_network_tables <- function(transcriptome_enrich,
   message("Step 6: Building metabolite-metabolite edges ...")
   mmrn_edges <- get_metabolite_metabolite_edges(
     metabolite_kegg = all_met_keggids,
-    reactome_dir = reactome_dir,
     organism = "hsa",
     species_prefix = "HSA"
   )
@@ -118,10 +110,87 @@ build_network_tables <- function(transcriptome_enrich,
     molecule_pathway_edges  = mp_edges
   )
 
-  list(
+  result <- list(
     node_tables = node_tables,
     edge_table = edge_tables
   )
+
+  attr(result, "process_info") <- list(
+    transcriptome_enrich = transcriptome_enrich@process_info,
+    proteome_enrich      = proteome_enrich@process_info,
+    metabolome_enrich    = metabolome_enrich@process_info,
+    build_network_tables = list(
+      package_name  = "mapa",
+      function_name = "build_network_tables()",
+      parameter     = list(
+        taxon_id             = taxon_id,
+        string_score_cutoff  = string_score_cutoff,
+        tf_confidence_levels = tf_confidence_levels
+      ),
+      data_sources = list(
+        ppi = list(
+          edge_type = "protein_protein_interaction",
+          database  = "STRING v12.0",
+          taxon_id  = taxon_id,
+          files     = c(
+            "https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz",
+            "https://stringdb-downloads.org/download/protein.info.v12.0/9606.protein.info.v12.0.txt.gz",
+            "https://stringdb-downloads.org/download/protein.aliases.v12.0/9606.protein.aliases.v12.0.txt.gz"
+          ),
+          local_cache = .mapa_string_dir()
+        ),
+        tf_target = list(
+          edge_type        = "TF_target_regulation",
+          database         = "DoRothEA",
+          r_package        = "dorothea",
+          package_version  = as.character(utils::packageVersion("dorothea")),
+          data_object      = "dorothea_hs",
+          confidence_levels = tf_confidence_levels
+        ),
+        enzyme_metabolite = list(
+          edge_type = "enzyme_metabolite",
+          sources   = list(
+            reactome = list(
+              database    = "Reactome v96",
+              files       = c(
+                "https://download.reactome.org/96/ChEBI2Reactome_PE_Reactions.txt",
+                "https://download.reactome.org/96/UniProt2Reactome_PE_Reactions.txt",
+                "https://download.reactome.org/96/ProteinRoleReaction.txt"
+              ),
+              local_cache = .mapa_reactome_dir()
+            ),
+            kegg = list(
+              database = "KEGG",
+              access   = "realtime",
+              r_package = "KEGGREST",
+              package_version = as.character(utils::packageVersion("KEGGREST"))
+            )
+          )
+        ),
+        metabolite_reaction = list(
+          edge_type = "metabolite_metabolite_reaction",
+          sources   = list(
+            reactome = list(
+              database    = "Reactome v96",
+              files       = c(
+                "https://download.reactome.org/96/ChEBI2Reactome_PE_Reactions.txt"
+              ),
+              local_cache = .mapa_reactome_dir()
+            ),
+            kegg = list(
+              database = "KEGG",
+              access   = "realtime",
+              r_package = "KEGGREST",
+              package_version = as.character(utils::packageVersion("KEGGREST"))
+            )
+          )
+        )
+      ),
+      time = Sys.time()
+    )
+  )
+
+  result
 }
 
 #' Extract Enrichment Results from a Transcriptome/Proteome Object
@@ -259,7 +328,11 @@ build_node_tables <- function(transcriptome_enrich,
 
 
   # --- Metabolite nodes ---
-  met_nodes <- metabolome_enrich@variable_info |>
+  met_var_info <- metabolome_enrich@variable_info
+  if (!"diff_metric" %in% colnames(met_var_info)) {
+    met_var_info$diff_metric <- NA_real_
+  }
+  met_nodes <- met_var_info |>
     dplyr::select(keggid, cpd_name, diff_metric) |>
     dplyr::filter(!is.na(keggid), keggid != "") |>
     dplyr::distinct() |>

@@ -236,6 +236,31 @@ llm_interpret_multi_omics_module <- function(object,
 
   message("Done")
 
+  attr(object, "process_info") <- c(
+    attr(object, "process_info"),
+    list(
+      llm_interpret_multi_omics_module = list(
+        package_name  = "mapa",
+        function_name = "llm_interpret_multi_omics_module()",
+        parameter     = list(
+          module_content_number_cutoff = module_content_number_cutoff,
+          llm_model                    = llm_model,
+          embedding_model              = embedding_model,
+          api_provider                 = api_provider,
+          phenotype                    = phenotype,
+          chunk_size                   = chunk_size,
+          years                        = years,
+          retmax                       = retmax,
+          similarity_filter_num        = similarity_filter_num,
+          GPT_filter_num               = GPT_filter_num,
+          thinkingBudget               = thinkingBudget,
+          thread                       = thread
+        ),
+        time = Sys.time()
+      )
+    )
+  )
+
   # 11. Return the updated object
   return(object)
 }

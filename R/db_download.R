@@ -1,6 +1,119 @@
 # setwd(r4projects::get_project_wd())
 # mapa_download_embedding_db()
 
+# ── Edge database (STRING + Reactome) caching ─────────────────────────────────
+# Files are stored under:
+#   tools::R_user_dir("mapa", which = "cache") / edge_database /
+# Downloaded once on first use; a failed download never leaves a corrupt file.
+
+.mapa_edge_db_dir  <- function() file.path(tools::R_user_dir("mapa", which = "cache"), "edge_database")
+.mapa_string_dir   <- function() file.path(.mapa_edge_db_dir(), "string_db")
+.mapa_reactome_dir <- function() file.path(.mapa_edge_db_dir(), "reactome_db")
+
+#' Check Whether the STRING and Reactome Edge Databases Are Cached
+#'
+#' Returns a list with logical flags \code{string_ok} and \code{reactome_ok},
+#' plus the resolved \code{string_dir} and \code{reactome_dir} paths within
+#' the mapa user cache directory.
+#'
+#' @return A named list with elements \code{string_ok}, \code{reactome_ok},
+#'   \code{string_dir}, and \code{reactome_dir}.
+#' @export
+mapa_db_status_check <- function() {
+  string_dir   <- .mapa_string_dir()
+  reactome_dir <- .mapa_reactome_dir()
+  list(
+    string_ok    = all(file.exists(file.path(string_dir, c(
+      "9606.protein.links.v12.0.txt.gz",
+      "9606.protein.info.v12.0.txt.gz",
+      "9606.protein.aliases.v12.0.txt.gz"
+    )))),
+    reactome_ok  = all(file.exists(file.path(reactome_dir, c(
+      "ChEBI2Reactome_PE_Reactions.txt",
+      "UniProt2Reactome_PE_Reactions.txt",
+      "ProteinRoleReaction.txt"
+    )))),
+    string_dir   = string_dir,
+    reactome_dir = reactome_dir
+  )
+}
+
+#' Download and Cache the STRING and Reactome Edge Databases
+#'
+#' Ensures that all required STRING (PPI) and Reactome (enzyme–metabolite)
+#' database files are present in the mapa user cache directory.  Files that
+#' already exist are skipped; only missing files are downloaded.  Downloads are
+#' written to a \code{.download} temp file and renamed only on success, so a
+#' failed or interrupted download never leaves a corrupt cached file.
+#'
+#' @param on_file Optional callback \code{function(label)} called just before
+#'   each new file download starts (useful for progress reporting in Shiny).
+#' @return A named list with elements \code{string_dir} and
+#'   \code{reactome_dir} giving the local paths to the two database
+#'   directories.
+#' @export
+mapa_ensure_edge_databases <- function(on_file = NULL) {
+  if (!requireNamespace("curl", quietly = TRUE))
+    stop("Package 'curl' is required to download edge databases. ",
+         "Install with: install.packages('curl')")
+
+  string_dir   <- .mapa_string_dir()
+  reactome_dir <- .mapa_reactome_dir()
+  dir.create(string_dir,   showWarnings = FALSE, recursive = TRUE)
+  dir.create(reactome_dir, showWarnings = FALSE, recursive = TRUE)
+
+  dl <- list(
+    list(
+      url   = "https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz",
+      dest  = file.path(string_dir, "9606.protein.links.v12.0.txt.gz"),
+      label = "STRING protein links (~400 MB)"
+    ),
+    list(
+      url   = "https://stringdb-downloads.org/download/protein.info.v12.0/9606.protein.info.v12.0.txt.gz",
+      dest  = file.path(string_dir, "9606.protein.info.v12.0.txt.gz"),
+      label = "STRING protein info (~3 MB)"
+    ),
+    list(
+      url   = "https://stringdb-downloads.org/download/protein.aliases.v12.0/9606.protein.aliases.v12.0.txt.gz",
+      dest  = file.path(string_dir, "9606.protein.aliases.v12.0.txt.gz"),
+      label = "STRING protein aliases (~90 MB)"
+    ),
+    list(
+      url   = "https://download.reactome.org/96/ChEBI2Reactome_PE_Reactions.txt",
+      dest  = file.path(reactome_dir, "ChEBI2Reactome_PE_Reactions.txt"),
+      label = "Reactome ChEBI reactions"
+    ),
+    list(
+      url   = "https://download.reactome.org/96/UniProt2Reactome_PE_Reactions.txt",
+      dest  = file.path(reactome_dir, "UniProt2Reactome_PE_Reactions.txt"),
+      label = "Reactome UniProt reactions"
+    ),
+    list(
+      url   = "https://download.reactome.org/96/ProteinRoleReaction.txt",
+      dest  = file.path(reactome_dir, "ProteinRoleReaction.txt"),
+      label = "Reactome protein roles"
+    )
+  )
+
+  for (f in dl) {
+    if (!file.exists(f$dest)) {
+      if (is.function(on_file)) on_file(f$label)
+      message("Downloading ", f$label, " ...")
+      dest_tmp <- paste0(f$dest, ".download")
+      tryCatch({
+        curl::curl_download(f$url, dest_tmp, quiet = FALSE)
+        file.rename(dest_tmp, f$dest)
+        message("  Done.")
+      }, error = function(e) {
+        if (file.exists(dest_tmp)) file.remove(dest_tmp)
+        stop("Failed to download ", f$label, ": ", e$message, call. = FALSE)
+      })
+    }
+  }
+
+  list(string_dir = string_dir, reactome_dir = reactome_dir)
+}
+
 #' Download the MAPA Pathway Embedding Database
 #'
 #' Downloads a pre-built SQLite embedding database from the MAPA GitHub release
@@ -65,6 +178,27 @@ mapa_download_embedding_db <- function(version = "v1",
 
   message("MAPA embedding database downloaded to: ", db_path)
   invisible(db_path)
+}
+
+
+#' Retrieve Source Metadata from the Local SQLite Database
+#'
+#' Returns the \code{source_metadata} table from the MAPA pathway embedding
+#' database, which records the version and access method used to build each
+#' pathway source (GO, KEGG, Reactome).
+#'
+#' @param version Character string. Database version (default \code{"v1"}).
+#' @return A data frame with columns \code{source_db}, \code{source_version},
+#'   and \code{access_method}.
+#' @keywords internal
+get_db_source_metadata <- function(version = "v1") {
+  db_path <- mapa_download_embedding_db(version = version)
+  con <- DBI::dbConnect(RSQLite::SQLite(), db_path)
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  DBI::dbGetQuery(
+    con,
+    "SELECT source_db, source_version, access_method FROM source_metadata"
+  )
 }
 
 

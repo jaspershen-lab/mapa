@@ -22,6 +22,7 @@
 #   sim_cutoff = 0.45,
 #   cluster_method = "louvain"
 # )
+# info <- attr(multi_omics_modules, "process_info")
 # save(multi_omics_modules, file = "demo_data/demo_multi-omics/multi_omics_modules.rda")
 
 #' Merge Multi-Omics Nodes into Functional Modules
@@ -112,11 +113,29 @@ merge_multi_omics_nodes <- function(
     dplyr::mutate(multi_omics_num = include_genes + include_metabolites + include_pathways) |>
     dplyr::select(module, module_content_number, multi_omics_num, everything())
 
-  list(
+  result <- list(
     graph_data = graph_data,
     functional_module_result = functional_module_result,
     result_with_module = result_with_module
   )
+
+  attr(result, "process_info") <- c(
+    attr(object, "process_info"),
+    attr(sim_matrix, "process_info"),
+    list(
+      merge_multi_omics_nodes = list(
+        package_name  = "mapa",
+        function_name = "merge_multi_omics_nodes()",
+        parameter     = list(
+          sim_cutoff     = sim_cutoff,
+          cluster_method = cluster_method
+        ),
+        time = Sys.time()
+      )
+    )
+  )
+
+  result
 }
 
 #' Cluster Nodes by Similarity

@@ -79,11 +79,12 @@
 #' @param show_labels `logical(1)`. Whether to display node labels. Default `TRUE`.
 #' @param title `character(1)` or `NULL`. Plot title. When `NULL`
 #'   (default) the module name is used.
-#' @param metabolite_colors `character(2)`. A length-2 vector giving the
-#'   diverging fill colours for the metabolite `diff_metric` colour bar:
-#'   first element is the colour for the most negative value, second for the
-#'   most positive value. The midpoint (zero) is always `"#F2F2F2"`.
-#'   Default `c("#6CB9D2", "#D55640")`.
+#' @param metabolite_colors `character(2)`. A length-2 vector of colours for
+#'   metabolite nodes. When `diff_metric` values are present, the two colours
+#'   define the diverging gradient (first = most negative, second = most
+#'   positive; midpoint `"#F2F2F2"`). When all `diff_metric` values are `NA`
+#'   (e.g. no differential metric was supplied), the first colour is used as a
+#'   solid fill for all metabolite nodes. Default `c("#71b7ed", "#f57c6e")`.
 #' @param llm_text `logical(1)`. When `TRUE` and a `llm_module_name` column is
 #'   present in `merge_result$functional_module_result`, the plot title is
 #'   formatted as `"<module_id>: <llm_module_name>"`. Ignored when `title` is
@@ -178,7 +179,8 @@ plot_multi_omics_module_info <- function(
   # single value to the midpoint colour regardless of sign).
   met_diff_vals <- plot_nodes$diff_metric[plot_nodes$node_type == "metabolite"]
   met_diff_vals <- met_diff_vals[!is.na(met_diff_vals)]
-  met_limits <- if (length(met_diff_vals) > 0) {
+  has_diff_metric <- length(met_diff_vals) > 0
+  met_limits <- if (has_diff_metric) {
     max_abs <- max(abs(met_diff_vals), na.rm = TRUE)
     if (is.finite(max_abs) && max_abs > 0) c(-max_abs, max_abs) else NULL
   } else {
@@ -348,25 +350,39 @@ plot_multi_omics_module_info <- function(
       )
     ) +
 
-    # Metabolite nodes: continuous fill mapped to diff_metric (fixed shape).
-    ggnewscale::new_scale_fill() +
-    ggraph::geom_node_point(
-      data   = function(x) dplyr::filter(x, .data$node_type == "metabolite"),
-      ggplot2::aes(fill = diff_metric),
-      shape  = 24,
-      size   = node_size,
-      colour = "black",
-      stroke = 0.5
-    ) +
-    ggplot2::scale_fill_gradient2(
-      name     = "diff_metric",
-      low      = metabolite_colors[1],
-      mid      = "#F2F2F2",
-      high     = metabolite_colors[2],
-      midpoint = 0,
-      limits   = met_limits,
-      na.value = "grey80"
-    ) +
+    # Metabolite nodes: gradient if diff_metric exists, solid blue otherwise.
+    {if (has_diff_metric) {
+        list(
+          ggnewscale::new_scale_fill(),
+          ggraph::geom_node_point(
+            data   = \(x) dplyr::filter(x, .data$node_type == "metabolite"),
+            ggplot2::aes(fill = .data$diff_metric),
+            shape  = 24,
+            size   = node_size,
+            colour = "black",
+            stroke = 0.5
+          ),
+          ggplot2::scale_fill_gradient2(
+            name     = "diff_metric",
+            low      = metabolite_colors[1],
+            mid      = "#F2F2F2",
+            high     = metabolite_colors[2],
+            midpoint = 0,
+            limits   = met_limits,
+            na.value = "grey80"
+          )
+        )
+      } else {
+        ggraph::geom_node_point(
+          data   = \(x) dplyr::filter(x, .data$node_type == "metabolite"),
+          fill   = "#71b7ed",
+          shape  = 24,
+          size   = node_size,
+          colour = "black",
+          stroke = 0.5
+        )
+      }
+    } +
 
     {
       if (show_labels)

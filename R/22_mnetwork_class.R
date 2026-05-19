@@ -9,16 +9,15 @@
 # network_tables <- build_network_tables(transcriptome_enrich = T_input,
 #                              proteome_enrich = P_input,
 #                              metabolome_enrich = M_input,
-#                              reactome_dir = "demo_data/reactome_db/",
-#                              input_directory = "demo_data/string_db/",
 #                              taxon_id = 9606,
 #                              string_score_cutoff  = 0.9,
 #                              tf_confidence_levels = "A")
-# load("demo_data/demo_multi-omics/network_tables.rda")
+# info <- attr(network_tables, "process_info")
+# save(network_tables, file = "demo_data/demo_multi-omics/multi-omics/results/network_tables.rda")
+# load("demo_data/demo_multi-omics/multi-omics/results/network_tables.rda")
 # mnet_obj <- build_MNetwork(network_tables = network_tables,
-#                            api_provider = "openai",
-#                            text_embedding_model = "text-embedding-3-small",
-#                            api_key = api_key)
+#                            embedding_source = "local")
+# info <- attr(mnet_obj, "process_info")
 # save(mnet_obj, file = "demo_data/demo_multi-omics/mnet_obj.rda")
 
 #' @import methods
@@ -331,6 +330,7 @@ build_MNetwork <- function(network_tables,
                            api_key = NULL,
                            layer_weights = NULL,
                            params = list()) {
+  embedding_source <- match.arg(embedding_source)
   mol_nodes <- network_tables$node_tables$mol_nodes |> tibble::tibble()
   mol_layers_raw <- network_tables$edge_table[names(network_tables$edge_table) != "pathway_mol"]
   mol_layers_edge_weight_raw <- build_mol_layers_weight(mol_layers = mol_layers_raw,
@@ -381,7 +381,7 @@ build_MNetwork <- function(network_tables,
   )
   params <- utils::modifyList(default_params, params)
 
-  methods::new(
+  mnet_obj <- methods::new(
     "multi_omics_functional_module",
     mol_nodes = mol_nodes,
     mol_layers = mol_layers,
@@ -397,4 +397,35 @@ build_MNetwork <- function(network_tables,
       path_index = path_index
     )
   )
+
+  embedding_params <- if (embedding_source == "local") {
+    list(
+      embedding_source             = embedding_source,
+      db_version                   = db_version,
+      embedding_db_source_metadata = get_db_source_metadata(version = db_version)
+    )
+  } else {
+    list(
+      embedding_source     = embedding_source,
+      api_provider         = api_provider,
+      text_embedding_model = text_embedding_model
+    )
+  }
+
+  attr(mnet_obj, "process_info") <- c(
+    attr(network_tables, "process_info"),
+    list(
+      build_MNetwork = list(
+        package_name  = "mapa",
+        function_name = "build_MNetwork()",
+        parameter     = c(
+          embedding_params,
+          list(layer_weights = lw, params = params)
+        ),
+        time = Sys.time()
+      )
+    )
+  )
+
+  mnet_obj
 }

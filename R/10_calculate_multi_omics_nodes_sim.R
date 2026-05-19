@@ -1,5 +1,18 @@
 # setwd(r4projects::get_project_wd())
 # load("demo_data/demo_multi-omics/mnet_obj.rda")
+# sim_matrix <-
+# get_multi_omics_sim(
+#     mnet_obj,
+#     # build_MultiplexHet args
+#     min_path_sim = 0.55,
+#     min_bipartite_weight = 0,
+#     # compute_diffusion_profiles args
+#     TransitionMatrix = NULL,
+#     r = 0.7, eta = 0.5, lambda = 0.2, delta1 = 0.5, delta2 = 0.5,
+#     verbose = TRUE
+# )
+# info <- attr(sim_matrix, "process_info")
+# save(sim_matrix, file = "demo_data/demo_multi-omics/sim_matrix.rda")
 
 #' Compute Multi-Omics Similarity Matrix
 #'
@@ -58,6 +71,23 @@ get_multi_omics_sim <- function(
     m = diffusion_profile,
     zero_diag = TRUE,
     renorm_rows = TRUE
+  )
+
+  attr(sim_matrix, "process_info") <- list(
+    get_multi_omics_sim = list(
+      package_name  = "mapa",
+      function_name = "get_multi_omics_sim()",
+      parameter     = list(
+        min_path_sim        = min_path_sim,
+        min_bipartite_weight = min_bipartite_weight,
+        r                   = r,
+        eta                 = eta,
+        lambda              = lambda,
+        delta1              = delta1,
+        delta2              = delta2
+      ),
+      time = Sys.time()
+    )
   )
 
   sim_matrix

@@ -9,8 +9,6 @@ build_network_tables(
   proteome_enrich,
   metabolome_enrich,
   taxon_id = 9606,
-  reactome_dir = NA,
-  input_directory = NA,
   string_score_cutoff = 0.9,
   tf_confidence_levels = "A"
 )
@@ -23,10 +21,6 @@ build_network_tables(
 \item{metabolome_enrich}{A \code{functional_module} object from metabolome analysis.}
 
 \item{taxon_id}{Integer. NCBI taxonomy ID for STRING. Default \code{9606}.}
-
-\item{reactome_dir}{Character or NA. Path to local Reactome database files.}
-
-\item{input_directory}{Character or NA. Path to local STRING database directory.}
 
 \item{string_score_cutoff}{Numeric. Minimum STRING combined score. Default \code{0.9}.}
 

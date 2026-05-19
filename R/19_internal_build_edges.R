@@ -45,21 +45,18 @@ get_tf_target_edges <- function(gene_symbols,
 #' @param gene_symbols Character vector of gene symbols.
 #' @param taxon_id Integer. NCBI taxonomy ID. Default \code{9606} (human).
 #' @param score_cutoff Numeric. Minimum combined score (0–1). Default \code{0.9}.
-#' @param input_directory Character or NA. Local STRING database directory. Default \code{NA}.
 #' @return A tibble with columns \code{from}, \code{to}, \code{combined_score}, \code{edge_type}.
 #' @noRd
 get_ppi_edges <- function(gene_symbols,
                           taxon_id = 9606,
-                          score_cutoff = 0.9,
-                          input_directory = NA
-                          ) {
+                          score_cutoff = 0.9) {
   options(timeout = 600)
 
   string_db <- STRINGdb::STRINGdb$new(
     version = "12.0",
     species = taxon_id,
     score_threshold = score_cutoff*1000,
-    input_directory = ifelse(is.na(input_directory), "", input_directory)
+    input_directory = .mapa_string_dir()
   )
 
   symbol_df <- data.frame(symbol = unique(gene_symbols),
@@ -164,14 +161,13 @@ get_ppi_edges <- function(gene_symbols,
 #'
 #' @param protein_symbols Character vector of gene/protein symbols.
 #' @param metabolite_kegg Character vector of KEGG compound IDs.
-#' @param reactome_dir Character. Path to local Reactome database files.
 #' @param species_prefix Character. Reactome species prefix. Default \code{"HSA"}.
 #' @return A data frame with enzyme–metabolite edges and \code{edge_type = "enzyme_metabolite"}.
 #' @noRd
 get_reactome_enzyme_metabolite_edges <- function(protein_symbols,
                                                  metabolite_kegg,
-                                                 reactome_dir,
                                                  species_prefix = "HSA") {
+  reactome_dir <- .mapa_reactome_dir()
   rxn_pat <- paste0("^R-", species_prefix, "-")
 
   # --- Protein: symbol -> UniProt -> catalyst reactions ---
@@ -381,7 +377,6 @@ combine_enzyme_metabolite_edges <- function(kegg_edges, reactome_edges) {
 #' Get Metabolite–Metabolite Edges from KEGG and Reactome
 #'
 #' @param metabolite_kegg Character vector of KEGG compound IDs.
-#' @param reactome_dir Character. Path to local Reactome database files.
 #' @param organism Character. KEGG organism code. Default \code{"hsa"}.
 #' @param species_prefix Character. Reactome species prefix. Default \code{"HSA"}.
 #' @param sleep_sec Numeric. Pause between API requests. Default \code{0.2}.
@@ -390,11 +385,11 @@ combine_enzyme_metabolite_edges <- function(kegg_edges, reactome_edges) {
 #' @noRd
 get_metabolite_metabolite_edges <- function(
     metabolite_kegg,
-    reactome_dir,
     organism = "hsa",
     species_prefix = "HSA",
     sleep_sec = 0.2,
     chunk_size = 50) {
+  reactome_dir <- .mapa_reactome_dir()
   # From KEGG database
   cpd_keys <- paste0("cpd:", unique(metabolite_kegg))
 
