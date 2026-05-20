@@ -1,10 +1,10 @@
-#' Demo Dataset for Over-Representation Analysis
+#' Example Dataset for Over-Representation Analysis
 #'
 #' Significantly downregulated proteins from the muscle of aging mice
-#' (6 vs 30 months, male C57BL/6). Contains 66 proteins with |log2FC| ≥ 0.5
+#' (6 vs 30 months, male C57BL/6). Contains 66 proteins with |log2FC| >= 0.5
 #' and FDR < 0.05, suitable for pathway enrichment analysis.
 #'
-#' @format A tibble with 66 rows and 3 columns:
+#' @format A data frame with 66 rows and 3 columns:
 #' \describe{
 #'   \item{symbol}{Gene symbols}
 #'   \item{log2FC (6 vs 30mo)}{Log2 fold changes (all negative)}
@@ -18,21 +18,18 @@
 #' \doi{10.1038/s41467-024-52845-x}
 #'
 #' @examples
-#' data(demo_data_ora)
-#' head(demo_data_ora)
+#' data(example_ora_data)
+#' head(example_ora_data)
 #'
-#' # Extract gene symbols for ORA
-#' genes <- demo_data_ora$symbol
-#'
-"demo_data_ora"
+"example_ora_data"
 
-#' Demo Dataset for Gene Set Enrichment Analysis
+#' Example Dataset for Gene Set Enrichment Analysis
 #'
 #' Complete proteomics dataset from liver of aging mice (6 vs 30 months,
 #' male C57BL/6). Contains 5,290 proteins with fold changes and adjusted
 #' p-values, suitable for gene set enrichment analysis (GSEA).
 #'
-#' @format A tibble with 5,290 rows and 3 columns:
+#' @format A data frame with 5,290 rows and 3 columns:
 #' \describe{
 #'   \item{symbol}{Gene symbols}
 #'   \item{fc}{Fold changes (6 vs 30 months)}
@@ -46,82 +43,75 @@
 #' \doi{10.1038/s41467-024-52845-x}
 #'
 #' @examples
-#' data(demo_data_gsea)
-#' head(demo_data_gsea)
+#' data(example_gsea_data)
+#' head(example_gsea_data)
 #'
-#' # Create ranked gene list for GSEA
-#' ranked_genes <- setNames(demo_data_gsea$fc, demo_data_gsea$symbol)
-#' ranked_genes <- sort(ranked_genes, decreasing = TRUE)
-#'
-"demo_data_gsea"
+"example_gsea_data"
 
-#' Demo Dataset for Metabolite Enrichment Analysis
+#' Example Metabolomics Dataset for Pathway Enrichment Analysis
 #'
 #' Significantly altered metabolites identified through untargeted metabolomics
-#' analysis. Contains 106 metabolite features with their corresponding KEGG IDs,
-#' FDR values, suitable for metabolite pathway enrichment
-#' analysis.
+#' analysis. Contains 106 metabolite features with KEGG IDs and statistical
+#' measures, suitable for metabolite pathway enrichment analysis.
 #'
-#' @format A tibble with 106 rows and 4 columns:
+#' @format A data frame with 106 rows and 4 columns:
 #' \describe{
-#'   \item{variable_id}{Unique metabolite feature identifiers}
-#'   \item{keggid}{KEGG compound identifiers}
-#'   \item{fdr}{False discovery rates from statistical testing}
-#'   \item{score}{fold-change scores}
+#'   \item{variable_id}{Metabolite feature identifiers in the format
+#'                     "M[mass]T[retention_time]_[ionization_mode]"}
+#'   \item{keggid}{KEGG compound identifiers (e.g., "C05466");
+#'                 contains NA for unidentified metabolites}
+#'   \item{fdr}{False discovery rate adjusted p-values from differential
+#'              abundance testing}
+#'   \item{score}{Abundance fold change scores or effect sizes}
 #' }
-#'
 #'
 #' @examples
-#' data(demo_data_met)
-#' head(demo_data_met)
+#' data(example_met_data)
+#' head(example_met_data)
 #'
-"demo_data_met"
+"example_met_data"
 
-#' Demo Expression Dataset for Relationship Heatmap Visualization
+#' Multi-Omics Demo Dataset: Transcriptomics
 #'
-#' Gene expression data from muscle tissue of aging mice (6 vs 30 months,
-#' male C57BL/6). Contains 65 genes with expression values across 8 samples
-#' (4 samples per age group). This dataset is designed to work with the
-#' analysis results from \code{demo_data_ora} to create integrated relationship
-#' heatmaps using \code{plot_relationship_heatmap()}.
+#' Differentially expressed genes from human transcriptomics data, provided
+#' as a demo for multi-omics pathway enrichment analysis.
+#' Contains gene symbols with fold changes and adjusted p-values.
 #'
-#' @format A tibble with 65 rows and 9 columns:
-#' \describe{
-#'   \item{id}{ENSEMBL gene identifiers}
-#'   \item{6mo-1, 6mo-2, 6mo-3, 6mo-4}{Expression values for 6-month-old samples}
-#'   \item{30mo-1, 30mo-2, 30mo-3, 30mo-4}{Expression values for 30-month-old samples}
-#' }
+#' @format A data frame with gene symbols (human, symbol IDs) and associated
+#' statistical measures from differential expression analysis.
 #'
-#' @source
-#' Takasugi, M., et al. An atlas of the aging mouse proteome reveals the
-#' features of age-related post-transcriptional dysregulation.
-#' \emph{Nat Commun} \strong{15}, 8520 (2024).
-#' \doi{10.1038/s41467-024-52845-x}
+#' @examples
+#' data(demo_mo_T_data)
+#' head(demo_mo_T_data)
 #'
-"ora_expression_dt"
+"demo_mo_T_data"
 
+#' Multi-Omics Demo Dataset: Proteomics
+#'
+#' Differentially expressed proteins from human proteomics data, provided
+#' as a demo for multi-omics pathway enrichment analysis.
+#' Contains protein symbols with fold changes and adjusted p-values.
+#'
+#' @format A data frame with protein symbols (human, symbol IDs) and associated
+#' statistical measures from differential expression analysis.
+#'
+#' @examples
+#' data(demo_mo_P_data)
+#' head(demo_mo_P_data)
+#'
+"demo_mo_P_data"
 
-#' Demo Expression Dataset for Relationship Heatmap Visualization
+#' Multi-Omics Demo Dataset: Metabolomics
 #'
-#' Gene expression data from liver tissue of aging mice (6 vs 30 months,
-#' male C57BL/6). Contains 5,167 genes with expression values across 8 samples
-#' (4 samples per age group). This dataset is designed to work with the
-#' analysis results from \code{demo_data_gsea} to create integrated relationship
-#' heatmaps using \code{plot_relationship_heatmap()}.
+#' Significantly altered metabolites from human metabolomics data, provided
+#' as a demo for multi-omics pathway enrichment analysis.
+#' Contains KEGG compound IDs with statistical measures.
 #'
-#' @format A tibble with 5,167 rows and 9 columns:
-#' \describe{
-#'   \item{id}{ENSEMBL gene identifiers}
-#'   \item{6mo-1, 6mo-2, 6mo-3, 6mo-4}{Expression values for 6-month-old samples}
-#'   \item{30mo-1, 30mo-2, 30mo-3, 30mo-4}{Expression values for 30-month-old samples}
-#' }
+#' @format A data frame with KEGG compound identifiers (human/hsa) and
+#' associated statistical measures from differential abundance analysis.
 #'
-#' @source
-#' Takasugi, M., et al. An atlas of the aging mouse proteome reveals the
-#' features of age-related post-transcriptional dysregulation.
-#' \emph{Nat Commun} \strong{15}, 8520 (2024).
-#' \doi{10.1038/s41467-024-52845-x}
+#' @examples
+#' data(demo_mo_M_data)
+#' head(demo_mo_M_data)
 #'
-"gsea_expression_dt"
-
-
+"demo_mo_M_data"

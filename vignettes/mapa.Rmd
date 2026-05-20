@@ -39,9 +39,8 @@ if(!require(massdataset)){
   remotes::install_gitlab("tidymass/massdataset")
 }
 
-data("demo_data_ora.rda", package = "mapa")
-load("demo_data_ora.rda")
-str(demo_data_ora)
+data("example_ora_data", package = "mapa")
+str(example_ora_data)
 ```
 
 # Data Preprocessing
@@ -49,7 +48,7 @@ str(demo_data_ora)
 ```{r,eval=TRUE,warning=FALSE, R.options="", message=FALSE, cache=TRUE, error=TRUE}
 variable_info <-
   convert_id(
-    data = demo_data_ora,
+    data = example_ora_data,
     query_type = "gene",
     from_id_type = "symbol",
     organism = "org.Mm.eg.db"
