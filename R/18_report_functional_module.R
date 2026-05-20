@@ -5,9 +5,7 @@
 # load("demo_data/demo_mouse/liver/gsea_res/openai_module_annotation_res.rda")
 #
 # report_functional_module(
-#   object = openai_module_annotation_res,
-#   degree_cutoff = 1,
-#   path = "demo_data/demo_mouse/liver/gsea_res/",
+#   object = llm_annotated_modules,
 #   type = "html"
 # )
 
@@ -53,9 +51,8 @@ report_functional_module <- function(object, path = ".", ...) {
 }
 
 #' @rdname report_functional_module
-#' @param degree_cutoff Minimum node degree for network plots (default 1).
-#' @param type Output format: \code{"html"}, \code{"pdf"}, \code{"word"},
-#'   \code{"md"}, or \code{"all"}. Default \code{"html"}.
+#' @param degree_cutoff Minimum node degree for the similarity network plot
+#'   (default 1).
 #' @export
 report_functional_module.functional_module <-
   function(object,
@@ -64,440 +61,368 @@ report_functional_module.functional_module <-
            type = c("html", "pdf", "word", "md", "all"),
            ...) {
 
-    if (identical(type, "pdf") && Sys.which("pdflatex") == "") {
-      stop("PDF output requires a LaTeX distribution. ",
-           "Install TinyTeX via install.packages('tinytex') and tinytex::install_tinytex(), ",
-           "or re-run with type = 'html' or 'word'.")
-    }
-
-    has_kableExtra <- requireNamespace("kableExtra", quietly = TRUE)
-
-    if (!has_kableExtra && identical(type, "pdf")) {
-      warning("kableExtra not found; tables will not scale to page width in PDF. ",
-              "Run install.packages('kableExtra') for prettier tables.")
-    }
-
-    if (missing(object)) {
-      stop("object is missing")
-    }
-
+    if (missing(object)) stop("object is missing")
     dir.create(path, showWarnings = FALSE, recursive = TRUE)
-
-    type <- match.arg(type)
-
     options(warn = -1)
 
-    ###path
-    if (length(grep("Report", dir(path))) > 0) {
-      idx <-
-      max(
-        as.numeric(stringr::str_extract(
-          grep(pattern = "Report", dir(path), value = TRUE),
-          "[0-9]{1,10}"
-        )), na.rm = TRUE
-      )
+    # ── 1. Output directory ───────────────────────────────────────────────────
+    out_dir    <- file.path(path, "MAPA_report")
+    tables_dir <- file.path(out_dir, "tables")
+    dir.create(tables_dir, showWarnings = FALSE, recursive = TRUE)
+    message("Report directory: ", out_dir)
 
-      if(is.na(idx)){
-        idx <- 0
-      }
+    proc    <- object@process_info
+    has_llm <- "llm_interpret_module" %in% names(proc)
 
-      if (!is.finite(idx))          # catches -Inf as well as Inf
-        idx <- 0
-
-      output_path <-
-        file.path(path, paste('Report', idx + 1, sep = "_"))
-    } else{
-      output_path <- file.path(path, "Report")
-    }
-
-    ####get the template
-    message("Get report template.")
-
-    rmarkdown::draft(
-      file = output_path,
-      template = "mapa",
-      package = "mapa",
-      create_dir = TRUE,
-      edit = FALSE
+    # ── 2. Detect query type and analysis method ──────────────────────────────
+    qt <- tryCatch(
+      if ("enrich_pathway" %in% names(proc))
+        proc$enrich_pathway@parameter$query_type
+      else
+        proc$do_gsea@parameter$query_type,
+      error = function(e) "gene"
     )
+    analysis_type <- if ("enrich_pathway" %in% names(proc)) "ORA" else "GSEA"
 
-    ## Parameters ====
-    message("Saving parameters ...")
+    fm  <- object@merged_module$functional_module_result
+    rwm <- object@merged_module$result_with_module
 
-    parameters <-
-      object@process_info %>%
-      lapply(function(x) {
-        if (length(x) == 1) {
-          mapa_parse_tidymass_parameter(object = x)
-        } else{
-          x %>%
-            lapply(function(y) {
-              mapa_parse_tidymass_parameter(object = y)
-            }) %>%
-            dplyr::bind_rows()
+    # ── 3. Copy MAPA logo ─────────────────────────────────────────────────────
+    logo_src <- system.file(
+      "rmarkdown/templates/mapa/skeleton/mapa_logo.png",
+      package = "mapa"
+    )
+    has_logo <- nzchar(logo_src) && file.exists(logo_src)
+    if (has_logo)
+      file.copy(logo_src, file.path(out_dir, "mapa_logo.png"), overwrite = TRUE)
+
+    # ── 4. Export CSV tables ──────────────────────────────────────────────────
+    message("Writing CSV tables ...")
+
+    utils::write.csv(fm,  file.path(tables_dir, "functional_module_table.csv"),
+                     row.names = FALSE)
+    utils::write.csv(rwm, file.path(tables_dir, "pathway_table.csv"),
+                     row.names = FALSE)
+
+    if (has_llm) {
+      llm_tbl <- do.call(rbind, lapply(
+        names(object@llm_module_interpretation), function(mod) {
+          x <- tryCatch(
+            object@llm_module_interpretation[[mod]]$generated_name,
+            error = function(e) list()
+          )
+          data.frame(
+            module             = mod,
+            llm_module_name    = .so_str(tryCatch(x$module_name,        error = function(e) NA)),
+            summary            = .so_str(tryCatch(x$summary,             error = function(e) NA)),
+            phenotype_analysis = .so_str(tryCatch(x$phenotype_analysis,  error = function(e) NA)),
+            confidence_score   = .so_str(tryCatch(x$confidence_score,    error = function(e) NA)),
+            stringsAsFactors   = FALSE
+          )
         }
-      }) %>%
-      dplyr::bind_rows() %>%
-      dplyr::arrange(time)
-
-    save(parameters, file = file.path(output_path, "parameters.rda"))
-    save(object, file = file.path(output_path, "object.rda"))
-
-    ## Barplot to show the top 10 pathways ====
-    message("Saving barplots ...")
-
-    if (length(c(object@merged_pathway_go,
-                 object@merged_pathway_kegg,
-                 object@merged_pathway_reactome,
-                 object@merged_pathway_hmdb,
-                 object@merged_pathway_metkegg)) == 0) {
-      module <- FALSE
-    } else {
-      module <- TRUE
+      ))
+      utils::write.csv(llm_tbl,
+                       file.path(tables_dir, "llm_interpretation_table.csv"),
+                       row.names = FALSE)
     }
 
-    if ("llm_interpret_module" %in% names(object@process_info)) {
-      llm_text <- TRUE
-    } else {
-      llm_text <- FALSE
-    }
+    # ── 5. Build summary and report data ─────────────────────────────────────
+    message("Preparing report data ...")
 
-    plot_functional_module <-
-      plot_pathway_bar(
-        object = object,
-        top_n = 10,
-        p.adjust.cutoff = 0.05,
-        count.cutoff = 5,
-        y_label_width = 30,
-        level = "functional_module",
-        llm_text = llm_text
-      )
-
-    if (module) {
-      plot_module <-
-        plot_pathway_bar(
-          object = object,
-          top_n = 10,
-          p.adjust.cutoff = 0.05,
-          count.cutoff = 5,
-          y_label_width = 30,
-          level = "module"
-        )
-    }
-
-    plot_pathway <-
-      plot_pathway_bar(
-        object = object,
-        top_n = 10,
-        p.adjust.cutoff = 0.05,
-        count.cutoff = 5,
-        y_label_width = 30,
-        level = "pathway"
-      )
-
-    tryCatch({
-      ggplot2::ggsave(
-        filename = file.path(output_path, "plot_functional_module.png"),
-        plot = plot_functional_module,
-        width = 8,
-        height = 6,
-        dpi = 600
-      )
-      message("Plot plot_functional_module.png saved successfully to: ", file.path(output_path, "plot_functional_module.png"), "!")
-    }, error = function(e) {
-      message("Error saving plot: ", e$message)
-    })
-
-    if (!module) {
-      message("No module level result was generated - no plot to save.")
-    } else {
-      tryCatch({
-        ggsave(
-          filename = file.path(output_path, "plot_module.png"),
-          plot = plot_module,
-          width = 8,
-          height = 6
-        )
-        message("Plot plot_module.png saved successfully to: ", file.path(output_path, "plot_module.png"), "!")
-      }, error = function(e) {
-        message("Error saving plot: ", e$message)
-      })
-    }
-
-    tryCatch({
-      ggplot2::ggsave(
-        filename = file.path(output_path, "plot_pathway.png"),
-        plot = plot_pathway,
-        width = 8,
-        height = 6
-      )
-      message("Plot plot_pathway.png saved successfully to: ", file.path(output_path, "plot_pathway.png"), "!")
-    }, error = function(e) {
-      message("Error saving plot: ", e$message)
-    })
-
-    ## Whole module network ====
-    message("Saving similarity networks ...")
-
-    if (length(object@merged_pathway_go) != 0) {
-      if (sum(object@merged_pathway_go$module_result$module_content_number > degree_cutoff) > 0) {
-        similarity_network_go <-
-          plot_similarity_network(object = object,
-                                  level = "module",
-                                  degree_cutoff = degree_cutoff,
-                                  database = "go") +
-          labs(title = "GO Modules")
-
-        tryCatch({
-          ggplot2::ggsave(
-            filename = file.path(output_path, "similarity_network_go.png"),
-            plot = similarity_network_go,
-            width = 8,
-            height = 6
-          )
-          message("Plot similarity_network_go.png saved successfully to: ", file.path(output_path, "similarity_network_go.png"), "!")
-        }, error = function(e) {
-          message("Error saving plot: ", e$message)
-        })
-      } else {
-        message("GO similarity network plot not generated: No modules with content number > ", degree_cutoff)
-      }
-    } else {
-      message("GO similarity network plot not generated: No GO pathway data available")
-    }
-
-    if (length(object@merged_pathway_kegg) != 0) {
-      if (sum(object@merged_pathway_kegg$module_result$module_content_number > degree_cutoff) > 0) {
-        similarity_network_kegg <-
-          plot_similarity_network(object = object,
-                                  level = "module",
-                                  degree_cutoff = degree_cutoff,
-                                  database = "kegg") +
-          ggplot2::labs(title = "KEGG Modules")
-
-        tryCatch({
-          ggplot2::ggsave(
-            filename = file.path(output_path, "similarity_network_kegg.png"),
-            plot = similarity_network_kegg,
-            width = 8,
-            height = 6
-          )
-          message("Plot similarity_network_kegg.png saved successfully to: ", file.path(output_path, "similarity_network_kegg.png"), "!")
-        }, error = function(e) {
-          message("Error saving plot: ", e$message)
-        })
-      } else {
-        message("KEGG similarity network plot not generated: No modules with content number > ", degree_cutoff)
-      }
-    } else {
-      message("KEGG similarity network plot not generated: No KEGG pathway data available")
-    }
-
-    if (length(object@merged_pathway_reactome) != 0) {
-      if (sum(object@merged_pathway_reactome$module_result$module_content_number > degree_cutoff) > 0) {
-        similarity_network_reactome <-
-          plot_similarity_network(object = object,
-                                  level = "module",
-                                  degree_cutoff = degree_cutoff,
-                                  database = "reactome") +
-          ggplot2::labs(title = "Reactome Modules")
-
-        tryCatch({
-          ggplot2::ggsave(
-            filename = file.path(output_path, "similarity_network_reactome.png"),
-            plot = similarity_network_reactome,
-            width = 8,
-            height = 6
-          )
-          message("Plot similarity_network_reactome.png saved successfully to: ", file.path(output_path, "similarity_network_reactome.png"), "!")
-        }, error = function(e) {
-          message("Error saving plot: ", e$message)
-        })
-      } else {
-        message("Reactome similarity network plot not generated: No modules with content number > ", degree_cutoff)
-      }
-    } else {
-      message("Reactome similarity network plot not generated: No Reactome pathway data available")
-    }
-
-    if (length(object@merged_pathway_hmdb) != 0) {
-      if (sum(object@merged_pathway_hmdb$module_result$module_content_number > degree_cutoff) > 0) {
-        similarity_network_hmdb <-
-          plot_similarity_network(object = object,
-                                  level = "module",
-                                  degree_cutoff = degree_cutoff,
-                                  database = "hmdb") +
-          ggplot2::labs(title = "HMDB Modules")
-
-        tryCatch({
-          ggplot2::ggsave(
-            filename = file.path(output_path, "similarity_network_hmdb.png"),
-            plot = similarity_network_hmdb,
-            width = 8,
-            height = 6
-          )
-          message("Plot similarity_network_hmdb.png saved successfully to: ", file.path(output_path, "similarity_network_hmdb.png"), "!")
-        }, error = function(e) {
-          message("Error saving plot: ", e$message)
-        })
-      } else {
-        message("HMDB similarity network plot not generated: No modules with content number > ", degree_cutoff)
-      }
-    } else {
-      message("HMDB similarity network plot not generated: No HMDB pathway data available")
-    }
-
-    if (length(object@merged_pathway_metkegg) != 0) {
-      if (sum(object@merged_pathway_metkegg$module_result$module_content_number > degree_cutoff) > 0) {
-        similarity_network_metkegg <-
-          plot_similarity_network(object = object,
-                                  level = "module",
-                                  degree_cutoff = degree_cutoff,
-                                  database = "metkegg") +
-          ggplot2::labs(title = "KEGG Modules")
-
-        tryCatch({
-          ggplot2::ggsave(
-            filename = file.path(output_path, "similarity_network_metkegg.png"),
-            plot = similarity_network_metkegg,
-            width = 8,
-            height = 6
-          )
-          message("Plot similarity_network_metkegg.png saved successfully to: ", file.path(output_path, "similarity_network_metkegg.png"), "!")
-        }, error = function(e) {
-          message("Error saving plot: ", e$message)
-        })
-      } else {
-        message("MetKEGG similarity network plot not generated: No modules with content number > ", degree_cutoff)
-      }
-    } else {
-      message("MetKEGG similarity network plot not generated: No MetKEGG pathway data available")
-    }
-
-    if (sum(object@merged_module$functional_module_result$module_content_number > degree_cutoff) > 0) {
-      similarity_network_function_module <-
-        plot_similarity_network(object = object,
-                                level = "functional_module",
-                                degree_cutoff = degree_cutoff,
-                                llm_text = llm_text) +
-        labs(title = "Functional Modules")
-
-      tryCatch({
-        ggplot2::ggsave(
-          filename = file.path(output_path, "similarity_network_function_module.png"),
-          plot = similarity_network_function_module,
-          width = 8,
-          height = 6
-        )
-        message("Plot similarity_network_function_module.png saved successfully to: ", file.path(output_path, "similarity_network_function_module.png"), "!")
-      }, error = function(e) {
-        message("Error saving plot: ", e$message)
-      })
-    } else {
-      message("Functional module similarity network plot not generated: No modules with content number > ", degree_cutoff)
-    }
-
-    ## Module network analysis ====
-    # functional_module_id <-
-    #   object@merged_module$functional_module_result %>%
-    #   dplyr::filter(p_adjust < 0.05 & Count >= 5) %>%
-    #   dplyr::arrange(p_adjust) %>%
-    #   head(10) %>%
-    #   pull(module)
-    #
-    # if (length(functional_module_id) > 0) {
-    #   functional_module_length <-
-    #     lapply(functional_module_id, function(x) {
-    #       sum(object@merged_module$result_with_module$module == x)
-    #     }) %>%
-    #     unlist()
-    #
-    #   functional_module_id <-
-    #     functional_module_id[functional_module_length > 1]
-    # }
-    #
-    # if (length(functional_module_id) > 0) {
-    #   plot <-
-    #     plot_module_info(object = object,
-    #                      level = "functional_module",
-    #                      module_id = functional_module_id[1])
-    # }
-
-    ## Interpretation of functional modules ====
-    message("Saving the interpretation of functional modules ...")
-
-    if (llm_text) {
-      interpretation_result <- extract_llm_module_data(llm_module_interpretation = object@llm_module_interpretation)
-    } else {
-      interpretation_result <- object@merged_module$functional_module_result
-    }
-
-    save(interpretation_result, file = file.path(output_path, "interpretation_result.rda"))
-
-    message("Rendering report ...")
-
-    ##transform rmd to HTML or pdf
-    if (type == "html" | type == "all") {
-      rmarkdown::render(
-        file.path(output_path, "mapa.template.Rmd"),
-        output_format = rmarkdown::html_document(),
-        params = list(text_data = NULL)
-      )
-
-      file.rename(
-        from = file.path(output_path, "mapa.template.html"),
-        to = file.path(output_path, "mapa_report.html")
-      )
-    }
-
-    ########render rmarkddown to html or pdf
-    if (type == "pdf" | type == "all") {
-      rmarkdown::render(
-        input = file.path(output_path, "mapa.template.Rmd"),
-        output_format = rmarkdown::pdf_document(),
-        params = list(text_data = NULL)
-      )
-      file.rename(
-        from = file.path(output_path, "mapa.template.pdf"),
-        to = file.path(output_path, "mapa_report.pdf")
-      )
-    }
-
-    ########render rmarkddown to word or all
-    if (type == "word" | type == "all") {
-      rmarkdown::render(
-        file.path(output_path, "mapa.template.Rmd"),
-        output_format = rmarkdown::word_document(),
-        params = list(text_data = NULL)
-      )
-      file.rename(
-        from = file.path(output_path, "mapa.template.docx"),
-        to = file.path(output_path, "mapa_report.docx")
-      )
-    }
-
-    ########render rmarkddown to md or all
-    if (type == "md" | type == "all") {
-      rmarkdown::render(
-        file.path(output_path, "mapa.template.Rmd"),
-        output_format = rmarkdown::md_document(),
-        params = list(text_data =  NULL)
-      )
-      file.rename(
-        from = file.path(output_path, "mapa.template.md"),
-        to = file.path(output_path, "mapa_report.md")
-      )
-    }
-
-    ####remove some files
-    message("Remove some files.")
-    file = dir(output_path)
-    remove_file = grep("png|Rmd|parameters|rda", file, value = TRUE)
-    unlink(
-      x = file.path(output_path, remove_file),
-      recursive = TRUE,
-      force = TRUE
+    ep_proc   <- if ("enrich_pathway" %in% names(proc)) proc$enrich_pathway
+                 else proc$do_gsea
+    databases <- tryCatch(
+      paste(ep_proc@parameter$database, collapse = ", "),
+      error = function(e) "—"
     )
+
+    summary_df <- data.frame(
+      Item = c(
+        "Analysis mode", "Query type", "Analysis method", "Database(s)",
+        "Enriched pathways", "Functional modules identified",
+        "LLM interpretation", "MAPA version"
+      ),
+      Value = c(
+        "Single-Omics",
+        if (qt == "gene") "Gene" else "Metabolite",
+        analysis_type,
+        databases,
+        as.character(nrow(rwm)),
+        as.character(nrow(fm)),
+        if (has_llm) "Yes" else "No",
+        as.character(utils::packageVersion("mapa"))
+      ),
+      stringsAsFactors = FALSE
+    )
+
+    n_show      <- min(30L, nrow(fm))
+    plot_height <- max(4, n_show * 0.28)
+
+    report_data <- list(
+      summary_df    = summary_df,
+      param_tables  = .build_so_param_tables(proc, qt, analysis_type),
+      has_llm       = has_llm,
+      n_show        = n_show,
+      degree_cutoff = degree_cutoff,
+      has_logo      = has_logo
+    )
+
+    rda_path     <- file.path(out_dir, "report_data.rda")
+    rda_obj_path <- file.path(out_dir, "report_object.rda")
+    save(report_data, file = rda_path)
+    save(object,      file = rda_obj_path)
+
+    # ── 6. Write and render Rmd ───────────────────────────────────────────────
+    message("Rendering HTML report ...")
+    rmd_path <- file.path(out_dir, "mapa_so_report.Rmd")
+    writeLines(.build_so_rmd_lines(n_show, plot_height), rmd_path)
+
+    rmarkdown::render(
+      input         = rmd_path,
+      output_format = rmarkdown::html_document(
+        theme          = "flatly",
+        toc            = TRUE,
+        toc_float      = TRUE,
+        self_contained = TRUE,
+        df_print       = "paged"
+      ),
+      output_file = "index.html",
+      output_dir  = out_dir,
+      quiet       = TRUE
+    )
+
+    # ── 7. Clean up temp files ────────────────────────────────────────────────
+    unlink(rmd_path)
+    unlink(rda_path)
+    unlink(rda_obj_path)
+    if (has_logo) unlink(file.path(out_dir, "mapa_logo.png"))
+
+    message("Done. Report saved to: ", file.path(out_dir, "index.html"))
+    invisible(file.path(out_dir, "index.html"))
+}
+
+# ── Internal helpers (single-omics) ──────────────────────────────────────────
+
+.so_str <- function(x) {
+  if (is.null(x) || length(x) == 0) NA_character_ else as.character(x[[1]])
+}
+
+.so_safe <- function(params, key) {
+  v <- tryCatch(params[[key]], error = function(e) NULL)
+  if (is.null(v) || length(v) == 0) "—" else paste(v, collapse = ", ")
+}
+
+.build_so_param_tables <- function(proc, qt, analysis_type) {
+  out <- list()
+
+  ep <- if ("enrich_pathway" %in% names(proc)) proc$enrich_pathway
+        else proc$do_gsea
+  if (!is.null(ep)) {
+    params <- tryCatch(ep@parameter, error = function(e) list())
+    out$enrichment <- data.frame(
+      Parameter = c("Method", "Query type", "Database(s)", "P-value cutoff",
+                    "P-adjust method", "Min gene set size", "Max gene set size"),
+      Value = c(
+        analysis_type,
+        if (qt == "gene") "Gene" else "Metabolite",
+        .so_safe(params, "database"),
+        .so_safe(params, "pvalueCutoff"),
+        .so_safe(params, "pAdjustMethod"),
+        .so_safe(params, "minGSSize"),
+        .so_safe(params, "maxGSSize")
+      ),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  ll <- proc[["llm_interpret_module"]]
+  if (!is.null(ll)) {
+    lp <- tryCatch(ll@parameter, error = function(e) list())
+    out$llm <- data.frame(
+      Parameter = c("LLM model", "Embedding model", "API provider",
+                    "Module size cutoff", "Phenotype context"),
+      Value = c(
+        .so_safe(lp, "llm_model"),
+        .so_safe(lp, "embedding_model"),
+        .so_safe(lp, "api_provider"),
+        .so_safe(lp, "module_content_number_cutoff"),
+        .so_safe(lp, "phenotype")
+      ),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  out
+}
+
+.build_so_rmd_lines <- function(n_show, plot_height) {
+  barplot_chunk <- paste0(
+    "```{r barplot, fig.width=9, fig.height=", round(plot_height, 2),
+    ", error=TRUE}"
+  )
+
+  c(
+    "---",
+    'title: "MAPA Single-Omics Analysis Report"',
+    "date: \"`r format(Sys.Date(), '%B %d, %Y')`\"",
+    "output:",
+    "  html_document:",
+    "    theme: flatly",
+    "    toc: true",
+    "    toc_float: true",
+    "    self_contained: true",
+    "    df_print: paged",
+    "---",
+    "",
+    "```{r setup, include=FALSE}",
+    "knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)",
+    "load(\"report_data.rda\")",
+    "load(\"report_object.rda\")",
+    "```",
+    "",
+    "```{r header-info, results='asis'}",
+    "cat('<style>h1.title, .date { display:none; }</style>')",
+    "mapa_ver <- report_data$summary_df$Value[",
+    "  report_data$summary_df$Item == 'MAPA version']",
+    "logo_html <- if (report_data$has_logo) {",
+    "  '<img src=\"mapa_logo.png\" alt=\"MAPA\"",
+    "    style=\"width:64px; height:64px; object-fit:contain;",
+    "    flex-shrink:0; margin-right:14px;\">'",
+    "} else ''",
+    "cat(paste0(",
+    "  '<div style=\"display:flex; align-items:center; margin:0.5rem 0 1rem 0;\">',",
+    "  logo_html,",
+    "  '<span style=\"font-size:1.9em; font-weight:700; color:#1a3a5c;",
+    "    line-height:1.2;\">MAPA Single-Omics Analysis Report</span>',",
+    "  '</div>',",
+    "  '<div style=\"background:#f0f5fb; border-left:4px solid #2c6fac;",
+    "    padding:12px 18px; border-radius:6px; margin-bottom:1.5rem;\">',",
+    "  '<p style=\"margin:0; font-size:0.88em; color:#444; line-height:1.8;\">',",
+    "  'Generated on ', format(Sys.Date(), '%B %d, %Y'), ' by the ',",
+    "  '<strong>MAPA</strong> package (v', mapa_ver, '), developed by the ',",
+    "  '<strong><a href=\"https://www.shen-lab.org\" target=\"_blank\"",
+    "    style=\"color:#2c6fac; text-decoration:none;\">Shen Lab</a></strong>.',",
+    "  ' For documentation, tutorials, and updates, visit the ',",
+    "  '<a href=\"https://www.shen-lab.org/mapa-website/\" target=\"_blank\"",
+    "    style=\"color:#2c6fac; font-weight:600; text-decoration:none;\">",
+    "    MAPA website &#8594;</a>.',",
+    "  '</p>',",
+    "  '</div>'",
+    "))",
+    "```",
+    "",
+    "<hr>",
+    "",
+    "## 1. Report Structure",
+    "",
+    "This report was generated by the **MAPA** package.",
+    "The output folder contains the following files:",
+    "",
+    "```",
+    "MAPA_report/",
+    "├── index.html                        # this report",
+    "└── tables/",
+    "    ├── functional_module_table.csv",
+    "    ├── pathway_table.csv",
+    "    └── llm_interpretation_table.csv   # if LLM was run",
+    "```",
+    "",
+    "<hr>",
+    "",
+    "## 2. Analysis Summary",
+    "",
+    "```{r summary-table}",
+    "knitr::kable(report_data$summary_df,",
+    "             col.names = c(\"Item\", \"Value\"), align = c(\"l\", \"l\"))",
+    "```",
+    "",
+    "<hr>",
+    "",
+    "## 3. Key Parameters",
+    "",
+    "### 3.1 Pathway Enrichment",
+    "",
+    "```{r enrich-params}",
+    "knitr::kable(report_data$param_tables$enrichment,",
+    "             col.names = c(\"Parameter\", \"Value\"),",
+    "             align = c(\"l\", \"l\"))",
+    "```",
+    "",
+    "```{r llm-header, results='asis', eval=report_data$has_llm}",
+    "cat('\\n### 3.2 LLM Annotation\\n')",
+    "```",
+    "",
+    "```{r llm-params, eval=report_data$has_llm}",
+    "knitr::kable(report_data$param_tables$llm,",
+    "             col.names = c(\"Parameter\", \"Value\"),",
+    "             align = c(\"l\", \"l\"))",
+    "```",
+    "",
+    "<hr>",
+    "",
+    "## 4. Functional Module Barplot",
+    "",
+    paste0("Top ", n_show, " functional modules ranked by pathway count."),
+    "",
+    barplot_chunk,
+    paste0("mapa::plot_pathway_bar(object, level = \"functional_module\","),
+    paste0("  top_n = ", n_show, "L, p.adjust.cutoff = 0.05,"),
+    "  count.cutoff = 5, y_label_width = 30,",
+    "  llm_text = report_data$has_llm)",
+    "```",
+    "",
+    "<hr>",
+    "",
+    "## 5. Functional Module Similarity Network",
+    "",
+    "```{r simnet, fig.width=7, fig.height=7, error=TRUE}",
+    "mapa::plot_similarity_network(object,",
+    "  level = \"functional_module\",",
+    "  degree_cutoff = report_data$degree_cutoff,",
+    "  llm_text = report_data$has_llm)",
+    "```",
+    "",
+    "<hr>",
+    "",
+    "## 6. Module Composition Table",
+    "",
+    "```{r module-table}",
+    "fm <- object@merged_module$functional_module_result",
+    "show_cols <- intersect(",
+    "  c('module', 'Description', 'Count', 'pvalue', 'p_adjust', 'llm_module_name'),",
+    "  colnames(fm))",
+    "knitr::kable(head(fm[, show_cols, drop = FALSE], 50), align = 'l')",
+    "```",
+    "",
+    "```{r llm-table-header, results='asis', eval=report_data$has_llm}",
+    "cat('\\n<hr>\\n\\n## 7. LLM Interpretation\\n')",
+    "```",
+    "",
+    "```{r llm-table, eval=report_data$has_llm}",
+    "llm_tbl <- do.call(rbind, lapply(",
+    "  names(object@llm_module_interpretation), function(mod) {",
+    "    x <- tryCatch(object@llm_module_interpretation[[mod]]$generated_name,",
+    "                  error = function(e) list())",
+    "    data.frame(",
+    "      module           = mod,",
+    "      llm_module_name  = tryCatch(x$module_name,     error = function(e) NA),",
+    "      summary          = tryCatch(x$summary,          error = function(e) NA),",
+    "      confidence_score = tryCatch(x$confidence_score, error = function(e) NA),",
+    "      stringsAsFactors = FALSE",
+    "    )",
+    "  }",
+    "))",
+    "knitr::kable(llm_tbl, align = 'l')",
+    "```",
+    "",
+    "<hr>",
+    "",
+    "<p style=\"color:#888;font-size:0.85em;\">",
+    paste0("Report generated by MAPA ",
+           "`r report_data$summary_df$Value[",
+           "report_data$summary_df$Item == 'MAPA version']`"),
+    "</p>"
+  )
 }
 
 #' @rdname report_functional_module

@@ -1,0 +1,2 @@
+"module_annotation","module","node","pathway_name","pathway_class","p_value","p_adjust","mapped_id","Count","degree","module_content_number","Description","llm_module_name"
+"Caffeine metabolism","Functional_module_2","hsa00232;SMP0000028","Caffeine metabolism","Metabolism; Biosynthesis of other secondary metabolites",1.56978618449667e-07,2.20554958921782e-05,"C16361/C07480/C16358/C07130/C13747/C07481/HMDB0002123/HMDB0002825/HMDB0010738/HMDB0001889/HMDB0001860/HMDB0001847",12,1,2,"Caffeine metabolism;Caffeine Metabolism","Caffeine Metabolism and Its Physiological Impacts"

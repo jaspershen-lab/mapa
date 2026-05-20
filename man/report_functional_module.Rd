@@ -25,10 +25,12 @@ generate a report based on this object.}
 \item{path}{A character string specifying the directory path where the report
 and associated files will be saved. Defaults to the current directory.}
 
-\item{degree_cutoff}{Minimum node degree for network plots (default 1).}
+\item{degree_cutoff}{Minimum node degree for the similarity network plot
+(default 1).}
 
-\item{type}{Output format: \code{"html"}, \code{"pdf"}, \code{"word"},
-\code{"md"}, or \code{"all"}. Default \code{"html"}.}
+\item{type}{A character vector specifying the format of the report.
+Can be 'html', 'pdf', 'md', 'word', or 'all' to generate the report
+in all three formats. Default is 'html'.}
 }
 \value{
 This function does not return a value but generates a report in the

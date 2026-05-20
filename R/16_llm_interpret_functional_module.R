@@ -39,16 +39,17 @@
 # )
 # Gene
 # load("demo_data/updated_object_results_for_genes_ora/biotext_sim_result/biotext_functional_modules.rda")
+# library(org.Mm.eg.db)
 # llm_interpreted_functional_module <-
 #   llm_interpret_module(
-#     object = biotext_functional_modules,
+#     object = enriched_functional_module,
 #     module_content_number_cutoff = 1,
 #     api_provider = "openai",
 #     api_key = api_key,
 #     llm_model = "gpt-4o-mini-2024-07-18",
 #     embedding_model = "text-embedding-3-small",
-#     orgdb = org.Hs.eg.db,
-#     embedding_output_dir = "demo_data/updated_object_results_for_genes_ora/biotext_sim_result/embedding_output/"
+#     orgdb = org.Mm.eg.db,
+#     embedding_output_dir = "demo_data/embedding_output/"
 #   )
 
 # ah <- AnnotationHub::AnnotationHub()
