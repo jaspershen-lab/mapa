@@ -1,5 +1,3 @@
-# mapa 3.0.0
-
 # mapa 2.1.0
 
 * 1. Allow data visualization for expression data and functional module bipartite graph.
@@ -166,4 +164,3 @@
 # mapa 0.1.30
 
 * Allow analysis of the association between functional modules and specified phenotype using LLM.
-

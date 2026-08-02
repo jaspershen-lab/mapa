@@ -25,6 +25,76 @@
 # info <- attr(multi_omics_modules, "process_info")
 # save(multi_omics_modules, file = "demo_data/demo_multi-omics/multi_omics_modules.rda")
 
+.node_has_omics_source <- function(node_info, omics_source) {
+  if (!is.list(node_info)) return(FALSE)
+
+  dt_src <- node_info[["dt_src"]]
+  if (is.null(dt_src) || length(dt_src) == 0) return(FALSE)
+
+  dt_src <- as.character(dt_src)
+  dt_src <- dt_src[!is.na(dt_src) & nzchar(dt_src)]
+  if (length(dt_src) == 0) return(FALSE)
+
+  sources <- trimws(unlist(strsplit(
+    paste(dt_src, collapse = ","),
+    split = ",",
+    fixed = TRUE
+  )))
+  omics_source %in% sources
+}
+
+.summarise_module_omics <- function(x) {
+  required_columns <- c("module", "node_type", "node_info")
+  missing_columns <- setdiff(required_columns, colnames(x))
+  if (length(missing_columns) > 0) {
+    stop(
+      "Missing required columns: ",
+      paste(missing_columns, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  modules <- as.character(x[["module"]])
+  module_levels <- unique(modules)
+  node_types <- tolower(as.character(x[["node_type"]]))
+  node_info <- x[["node_info"]]
+
+  node_has_T <- node_types == "gene" & purrr::map_lgl(
+    node_info,
+    .node_has_omics_source,
+    omics_source = "T"
+  )
+  node_has_P <- node_types == "gene" & purrr::map_lgl(
+    node_info,
+    .node_has_omics_source,
+    omics_source = "P"
+  )
+  node_has_M <- node_types == "metabolite"
+
+  has_T <- vapply(
+    module_levels,
+    function(module_id) any(node_has_T[modules == module_id], na.rm = TRUE),
+    logical(1)
+  )
+  has_P <- vapply(
+    module_levels,
+    function(module_id) any(node_has_P[modules == module_id], na.rm = TRUE),
+    logical(1)
+  )
+  has_M <- vapply(
+    module_levels,
+    function(module_id) any(node_has_M[modules == module_id], na.rm = TRUE),
+    logical(1)
+  )
+
+  tibble::tibble(
+    module = module_levels,
+    multi_omics_num = as.integer(has_T) +
+      as.integer(has_P) +
+      as.integer(has_M)
+  )
+}
+
 #' Merge Multi-Omics Nodes into Functional Modules
 #'
 #' Clusters molecules (genes, metabolites) and enriched pathways from a
@@ -44,7 +114,9 @@
 #' @return A named list with elements:
 #' \describe{
 #'   \item{\code{graph_data}}{A \code{tbl_graph} with node and edge annotations.}
-#'   \item{\code{functional_module_result}}{A data frame summarising each module.}
+#'   \item{\code{functional_module_result}}{A data frame summarising each module.
+#'   The \code{multi_omics_num} column is the number of represented omics layers
+#'   among transcriptomics (T), proteomics (P), and metabolomics (M).}
 #'   \item{\code{result_with_module}}{A data frame of all nodes with module assignments.}
 #' }
 #'
@@ -79,6 +151,8 @@ merge_multi_omics_nodes <- function(
   # functional_module_result
   x <- result_with_module |> dplyr::mutate(node_type = tolower(node_type))
 
+  module_omics <- .summarise_module_omics(x)
+
   module_sizes <- x |>
     dplyr::group_by(module) |>
     dplyr::summarise(
@@ -110,7 +184,7 @@ merge_multi_omics_nodes <- function(
       include_pathways = !is.na(pathway) & pathway != "",
       pathways = ifelse(include_pathways, pathway, NA_character_)
     ) |>
-    dplyr::mutate(multi_omics_num = include_genes + include_metabolites + include_pathways) |>
+    dplyr::left_join(module_omics, by = "module") |>
     dplyr::select(module, module_content_number, multi_omics_num, everything())
 
   result <- list(

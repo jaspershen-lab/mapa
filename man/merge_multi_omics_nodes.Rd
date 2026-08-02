@@ -31,7 +31,9 @@ Default \code{"louvain"}.}
 A named list with elements:
 \describe{
 \item{\code{graph_data}}{A \code{tbl_graph} with node and edge annotations.}
-\item{\code{functional_module_result}}{A data frame summarising each module.}
+\item{\code{functional_module_result}}{A data frame summarising each module.
+The \code{multi_omics_num} column is the number of represented omics layers
+among transcriptomics (T), proteomics (P), and metabolomics (M).}
 \item{\code{result_with_module}}{A data frame of all nodes with module assignments.}
 }
 }
