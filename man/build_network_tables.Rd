@@ -5,20 +5,24 @@
 \title{Build Network Node and Edge Tables from Multi-Omics Enrichment Results}
 \usage{
 build_network_tables(
-  transcriptome_enrich,
-  proteome_enrich,
-  metabolome_enrich,
+  transcriptome_enrich = NULL,
+  proteome_enrich = NULL,
+  metabolome_enrich = NULL,
   taxon_id = 9606,
   string_score_cutoff = 0.9,
   tf_confidence_levels = "A"
 )
 }
 \arguments{
-\item{transcriptome_enrich}{A \code{functional_module} object from transcriptome analysis.}
+\item{transcriptome_enrich}{A \code{functional_module} object from transcriptome
+analysis, or \code{NULL} when transcriptomics data are unavailable.}
 
-\item{proteome_enrich}{A \code{functional_module} object from proteome analysis.}
+\item{proteome_enrich}{A \code{functional_module} object from proteome analysis,
+or \code{NULL} when proteomics data are unavailable.}
 
-\item{metabolome_enrich}{A \code{functional_module} object from metabolome analysis.}
+\item{metabolome_enrich}{A \code{functional_module} object from metabolome
+analysis, or \code{NULL} when metabolomics data are unavailable. At least two
+of the three omics inputs must be supplied.}
 
 \item{taxon_id}{Integer. NCBI taxonomy ID for STRING. Default \code{9606}.}
 
@@ -27,7 +31,8 @@ build_network_tables(
 \item{tf_confidence_levels}{Character. DoRothEA confidence levels. Default \code{"A"}.}
 }
 \value{
-A list with \code{node_tables} and \code{edge_table}.
+A list with \code{node_tables}, \code{edge_table}, and
+\code{pathway_version_harmonization_report}.
 }
 \description{
 Build Network Node and Edge Tables from Multi-Omics Enrichment Results

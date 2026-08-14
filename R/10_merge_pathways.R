@@ -365,6 +365,20 @@ merge_pathways <-
       merged_pathway_metkegg <- list()
     }
 
+    pathway_version_harmonization_report <-
+      .empty_pathway_version_harmonization_report()
+    if (length(merged_pathway_go) > 0 &&
+        !is.null(merged_pathway_go$pathway_version_harmonization_report)) {
+      pathway_version_harmonization_report <-
+        merged_pathway_go$pathway_version_harmonization_report
+      if (!is.null(object@enrichment_go_result)) {
+        object@enrichment_go_result@result <- .apply_go_harmonization(
+          object@enrichment_go_result@result,
+          pathway_version_harmonization_report
+        )
+      }
+    }
+
     slot(object, "merged_pathway_go") <-
       merged_pathway_go
     slot(object, "merged_pathway_kegg") <-
@@ -430,6 +444,8 @@ merge_pathways <-
 
     slot(object, "process_info") <-
       process_info
+    attr(object, "pathway_version_harmonization_report") <-
+      pathway_version_harmonization_report
 
     message("Done")
 
@@ -546,6 +562,17 @@ merge_pathways_internal <-
         dplyr::arrange(p_adjust)
     }
 
+    pathway_version_harmonization_report <-
+      .empty_pathway_version_harmonization_report()
+    if (database == "go") {
+      message("Harmonizing GO term versions ...")
+      pathway_version_harmonization_report <- .harmonize_go_ids(result$ID)
+      result <- .apply_go_harmonization(
+        result,
+        pathway_version_harmonization_report
+      )
+    }
+
 
     # if (database == "go") {
     #   result <-
@@ -553,6 +580,22 @@ merge_pathways_internal <-
     # }
 
     if (nrow(result) == 0) {
+      if (database == "go") {
+        if (save_to_local) {
+          utils::write.csv(
+            pathway_version_harmonization_report,
+            file = file.path(path, "pathway_version_harmonization_report.csv"),
+            row.names = FALSE
+          )
+        }
+        return(list(
+          graph_data = NULL,
+          module_result = NULL,
+          result_with_module = NULL,
+          pathway_version_harmonization_report =
+            pathway_version_harmonization_report
+        ))
+      }
       return(NULL)
     }
 
@@ -707,7 +750,7 @@ merge_pathways_internal <-
     ####module detection
     message("Identifying modules...")
 
-    identify_modules(
+    module_output <- identify_modules(
       sim_matrix = sim_matrix,
       query_type = query_type,
       analysis_type = analysis_type,
@@ -717,6 +760,16 @@ merge_pathways_internal <-
       save_to_local = save_to_local,
       path = path
     )
+    module_output$pathway_version_harmonization_report <-
+      pathway_version_harmonization_report
+    if (save_to_local && database == "go") {
+      utils::write.csv(
+        pathway_version_harmonization_report,
+        file = file.path(path, "pathway_version_harmonization_report.csv"),
+        row.names = FALSE
+      )
+    }
+    module_output
   }
 
 

@@ -17,20 +17,83 @@
 
 #' Build Network Node and Edge Tables from Multi-Omics Enrichment Results
 #'
-#' @param transcriptome_enrich A \code{functional_module} object from transcriptome analysis.
-#' @param proteome_enrich A \code{functional_module} object from proteome analysis.
-#' @param metabolome_enrich A \code{functional_module} object from metabolome analysis.
+#' @param transcriptome_enrich A \code{functional_module} object from transcriptome
+#'   analysis, or \code{NULL} when transcriptomics data are unavailable.
+#' @param proteome_enrich A \code{functional_module} object from proteome analysis,
+#'   or \code{NULL} when proteomics data are unavailable.
+#' @param metabolome_enrich A \code{functional_module} object from metabolome
+#'   analysis, or \code{NULL} when metabolomics data are unavailable. At least two
+#'   of the three omics inputs must be supplied.
 #' @param taxon_id Integer. NCBI taxonomy ID for STRING. Default \code{9606}.
 #' @param string_score_cutoff Numeric. Minimum STRING combined score. Default \code{0.9}.
 #' @param tf_confidence_levels Character. DoRothEA confidence levels. Default \code{"A"}.
-#' @return A list with \code{node_tables} and \code{edge_table}.
+#' @return A list with \code{node_tables}, \code{edge_table}, and
+#'   \code{pathway_version_harmonization_report}.
 #' @export
-build_network_tables <- function(transcriptome_enrich,
-                                 proteome_enrich,
-                                 metabolome_enrich,
+build_network_tables <- function(transcriptome_enrich = NULL,
+                                 proteome_enrich = NULL,
+                                 metabolome_enrich = NULL,
                                  taxon_id = 9606,
                                  string_score_cutoff  = 0.9,
                                  tf_confidence_levels = "A") {
+  omics_inputs <- list(
+    transcriptome_enrich = transcriptome_enrich,
+    proteome_enrich = proteome_enrich,
+    metabolome_enrich = metabolome_enrich
+  )
+  provided <- !vapply(omics_inputs, is.null, logical(1))
+
+  if (sum(provided) < 2L) {
+    stop(
+      "At least two of `transcriptome_enrich`, `proteome_enrich`, and ",
+      "`metabolome_enrich` must be provided.",
+      call. = FALSE
+    )
+  }
+
+  invalid <- names(omics_inputs)[provided & !vapply(
+    omics_inputs,
+    function(x) is.null(x) || methods::is(x, "functional_module"),
+    logical(1)
+  )]
+  if (length(invalid) > 0) {
+    stop(
+      "Non-NULL omics inputs must be `functional_module` objects: ",
+      paste(invalid, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  go_ids <- unique(unlist(lapply(
+    omics_inputs[provided],
+    function(x) {
+      if (is.null(x@enrichment_go_result)) character() else
+        as.character(x@enrichment_go_result@result$ID)
+    }
+  ), use.names = FALSE))
+  pathway_version_harmonization_report <-
+    .empty_pathway_version_harmonization_report()
+  if (length(go_ids) > 0) {
+    message("Harmonizing GO term versions ...")
+    pathway_version_harmonization_report <- .harmonize_go_ids(go_ids)
+    if (!is.null(transcriptome_enrich) &&
+        !is.null(transcriptome_enrich@enrichment_go_result)) {
+      transcriptome_enrich@enrichment_go_result@result <-
+        .apply_go_harmonization(
+          transcriptome_enrich@enrichment_go_result@result,
+          pathway_version_harmonization_report
+        )
+    }
+    if (!is.null(proteome_enrich) &&
+        !is.null(proteome_enrich@enrichment_go_result)) {
+      proteome_enrich@enrichment_go_result@result <-
+        .apply_go_harmonization(
+          proteome_enrich@enrichment_go_result@result,
+          pathway_version_harmonization_report
+        )
+    }
+  }
+
   message("Ensuring edge databases are available ...")
   mapa_ensure_edge_databases()
   message("Step 1: Extracting enrichment results ...")
@@ -60,41 +123,71 @@ build_network_tables <- function(transcriptome_enrich,
     stats::na.omit() |>
     unique()
 
-  message("Step 3: Building TF-target edges ...")
-  tf_edges <- get_tf_target_edges(
-    gene_symbols = all_gene_symbols,
-    confidence_levels = tf_confidence_levels
-  )
+  empty_edges <- .empty_raw_edge_tables()
 
-  message("Step 4: Building PPI edges (STRING) ...")
-  ppi_edges <- get_ppi_edges(
-    gene_symbols = all_gene_symbols,
-    taxon_id = taxon_id,
-    score_cutoff = string_score_cutoff
-  )
+  tf_edges <- if (length(all_gene_symbols) > 0) {
+    message("Step 3: Building TF-target edges ...")
+    get_tf_target_edges(
+      gene_symbols = all_gene_symbols,
+      confidence_levels = tf_confidence_levels
+    )
+  } else {
+    message("Step 3: Skipped TF-target edges (no gene/protein nodes).")
+    empty_edges$tf_target
+  }
 
-  message("Step 5: Building enzyme-metabolite edges ...")
-  kegg_em_edges <- get_kegg_enzyme_metabolite_edges(
-    protein_symbols = all_gene_symbols,
-    metabolite_kegg = all_met_keggids,
-    organism = "hsa"
-  )
-  reactome_em_edges <- get_reactome_enzyme_metabolite_edges(
-    protein_symbols = all_gene_symbols,
-    metabolite_kegg = all_met_keggids,
-    species_prefix = "HSA"
-  )
-  em_edges <- combine_enzyme_metabolite_edges(
-    kegg_edges = kegg_em_edges,
-    reactome_edges = reactome_em_edges
-  )
+  ppi_edges <- if (length(all_gene_symbols) > 0) {
+    message("Step 4: Building PPI edges (STRING) ...")
+    get_ppi_edges(
+      gene_symbols = all_gene_symbols,
+      taxon_id = taxon_id,
+      score_cutoff = string_score_cutoff
+    )
+  } else {
+    message("Step 4: Skipped PPI edges (no gene/protein nodes).")
+    empty_edges$ppi
+  }
 
-  message("Step 6: Building metabolite-metabolite edges ...")
-  mmrn_edges <- get_metabolite_metabolite_edges(
-    metabolite_kegg = all_met_keggids,
-    organism = "hsa",
-    species_prefix = "HSA"
-  )
+  em_edges <- if (length(all_gene_symbols) > 0 && length(all_met_keggids) > 0) {
+    message("Step 5: Building enzyme-metabolite edges ...")
+    kegg_em_edges <- get_kegg_enzyme_metabolite_edges(
+      protein_symbols = all_gene_symbols,
+      metabolite_kegg = all_met_keggids,
+      organism = "hsa"
+    )
+    reactome_em_edges <- get_reactome_enzyme_metabolite_edges(
+      protein_symbols = all_gene_symbols,
+      metabolite_kegg = all_met_keggids,
+      species_prefix = "HSA"
+    )
+    combine_enzyme_metabolite_edges(
+      kegg_edges = kegg_em_edges,
+      reactome_edges = reactome_em_edges
+    )
+  } else {
+    missing_node_types <- c(
+      if (length(all_gene_symbols) == 0) "gene/protein",
+      if (length(all_met_keggids) == 0) "metabolite"
+    )
+    message(
+      "Step 5: Skipped enzyme-metabolite edges (no ",
+      paste(missing_node_types, collapse = " or "),
+      " nodes)."
+    )
+    empty_edges$enzyme_metabolite
+  }
+
+  mmrn_edges <- if (length(all_met_keggids) > 0) {
+    message("Step 6: Building metabolite-metabolite edges ...")
+    get_metabolite_metabolite_edges(
+      metabolite_kegg = all_met_keggids,
+      organism = "hsa",
+      species_prefix = "HSA"
+    )
+  } else {
+    message("Step 6: Skipped metabolite-metabolite edges (no metabolite nodes).")
+    empty_edges$metabolite_reaction
+  }
 
   message("Step 7: Building molecule-pathway edges ...")
   mp_edges <- get_molecule_pathway_edges(
@@ -112,13 +205,15 @@ build_network_tables <- function(transcriptome_enrich,
 
   result <- list(
     node_tables = node_tables,
-    edge_table = edge_tables
+    edge_table = edge_tables,
+    pathway_version_harmonization_report =
+      pathway_version_harmonization_report
   )
 
   attr(result, "process_info") <- list(
-    transcriptome_enrich = transcriptome_enrich@process_info,
-    proteome_enrich      = proteome_enrich@process_info,
-    metabolome_enrich    = metabolome_enrich@process_info,
+    transcriptome_enrich = if (is.null(transcriptome_enrich)) NULL else transcriptome_enrich@process_info,
+    proteome_enrich      = if (is.null(proteome_enrich)) NULL else proteome_enrich@process_info,
+    metabolome_enrich    = if (is.null(metabolome_enrich)) NULL else metabolome_enrich@process_info,
     build_network_tables = list(
       package_name  = "mapa",
       function_name = "build_network_tables()",
@@ -200,15 +295,21 @@ build_network_tables <- function(transcriptome_enrich,
 #'   \code{p_adjust}, \code{mapped_id}.
 #' @noRd
 .extract_tp_enrichment <- function(enrich_obj) {
+  empty_result <- function() {
+    tibble::tibble(
+      pathway_id = character(),
+      pathway_name = character(),
+      BgRatio = character(),
+      p_adjust = numeric(),
+      mapped_id = character()
+    )
+  }
+
+  if (is.null(enrich_obj)) return(empty_result())
+
   extract_slot <- function(slot_result) {
     if (is.null(slot_result)) {
-      return(tibble::tibble(
-        pathway_id = NA_character_,
-        pathway_name = NA_character_,
-        BgRatio = NA_character_,
-        p_adjust = NA_real_,
-        mapped_id = NA_character_
-      ))
+      return(empty_result())
     }
 
     enrich_res <-
@@ -223,13 +324,7 @@ build_network_tables <- function(transcriptome_enrich,
       dplyr::filter(p_adjust < 0.05)
 
     if (nrow(enrich_res) == 0) {
-      return(tibble::tibble(
-        pathway_id = NA_character_,
-        pathway_name = NA_character_,
-        BgRatio = NA_character_,
-        p_adjust = NA_real_,
-        mapped_id = NA_character_
-      ))
+      return(empty_result())
     } else {
       if (slot_result@keytype != "SYMBOL") {
         enrich_res |>
@@ -297,13 +392,21 @@ build_node_tables <- function(transcriptome_enrich,
                               metabolome_enrich,
                               enriched_pathway) {
   # --- Gene nodes (union of transcriptome DE genes and proteome DE proteins) ---
-  t_genes <- transcriptome_enrich@variable_info |>
-    dplyr::select(symbol, ensembl, entrezid, uniprot) |>
-    dplyr::mutate(node_type = "gene", dt_src = "T")
+  t_genes <- if (is.null(transcriptome_enrich)) {
+    NULL
+  } else {
+    transcriptome_enrich@variable_info |>
+      dplyr::select(symbol, ensembl, entrezid, uniprot) |>
+      dplyr::mutate(node_type = "gene", dt_src = "T")
+  }
 
-  p_genes <- proteome_enrich@variable_info |>
-    dplyr::select(symbol, ensembl, entrezid, uniprot) |>
-    dplyr::mutate(node_type = "gene", dt_src = "P")
+  p_genes <- if (is.null(proteome_enrich)) {
+    NULL
+  } else {
+    proteome_enrich@variable_info |>
+      dplyr::select(symbol, ensembl, entrezid, uniprot) |>
+      dplyr::mutate(node_type = "gene", dt_src = "P")
+  }
 
   gene_nodes <- dplyr::bind_rows(t_genes, p_genes) |>
     dplyr::group_by(symbol) |>
@@ -328,7 +431,15 @@ build_node_tables <- function(transcriptome_enrich,
 
 
   # --- Metabolite nodes ---
-  met_var_info <- metabolome_enrich@variable_info
+  met_var_info <- if (is.null(metabolome_enrich)) {
+    tibble::tibble(
+      keggid = character(),
+      cpd_name = character(),
+      diff_metric = numeric()
+    )
+  } else {
+    metabolome_enrich@variable_info
+  }
   if (!"diff_metric" %in% colnames(met_var_info)) {
     met_var_info$diff_metric <- NA_real_
   }
@@ -361,6 +472,33 @@ build_node_tables <- function(transcriptome_enrich,
 
   list(mol_nodes = rbind(gene_nodes, met_nodes) |> dplyr::select(node_id, node_type, node_info),
        pathway_nodes = pathway_nodes |> dplyr::select(node_id, node_type, node_info))
+}
+
+#' Create Typed Empty Edge Tables
+#'
+#' @return A named list matching the raw edge schemas consumed by
+#'   \code{build_edge_tables()}.
+#' @noRd
+.empty_raw_edge_tables <- function() {
+  list(
+    tf_target = tibble::tibble(
+      tf = character(), target = character(), mor = numeric(),
+      confidence = character(), edge_type = character()
+    ),
+    ppi = tibble::tibble(
+      from = character(), to = character(), combined_score = numeric(),
+      edge_type = character()
+    ),
+    metabolite_reaction = tibble::tibble(
+      from = character(), to = character(), reaction_id = character(),
+      reaction_info = character(), edge_type = character(), source = character()
+    ),
+    enzyme_metabolite = tibble::tibble(
+      edge_type = character(), source = character(), reaction_id = character(),
+      reaction_info = character(), symbol = character(), ec = character(),
+      keggid = character(), reactome_entity_id = character()
+    )
+  )
 }
 
 #' Assemble Normalized Edge Tables

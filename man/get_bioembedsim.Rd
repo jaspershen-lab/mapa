@@ -33,7 +33,8 @@ get_bioembedsim(
 embeddings from the MAPA pathway embedding database, which is downloaded automatically on
 first use. \code{"realtime"} generates embeddings on-the-fly using the specified API
 provider; in this case \code{api_provider}, \code{text_embedding_model}, and \code{api_key}
-are required and no external text APIs (QuickGO, KEGG, Reactome) are called in local mode.}
+are required. When GO results are included, QuickGO is queried in either mode to verify
+current term status; local mode does not use external APIs to generate embeddings.}
 
 \item{db_version}{Character string. Version of the pre-built embedding database to use
 (default \code{"v1"}). Only relevant when \code{embedding_source = "local_db"}.}
@@ -77,8 +78,9 @@ and/or "reactome". Multiple selections allowed.}
 \item{path}{Character. The directory path where intermediate results will be saved, if \code{save_to_local = TRUE}. Default is "result".}
 }
 \value{
-A list containing a matrix of pairwise cosine similarity values between pathways and
-an object of class "functional_module" with updated parameter information.
+A list containing a matrix of pairwise cosine similarity values, an
+updated \code{functional_module} object, and a
+\code{pathway_version_harmonization_report} data frame.
 }
 \description{
 This function calculates similarity between biological pathways by using text embedding

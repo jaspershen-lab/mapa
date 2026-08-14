@@ -8,6 +8,8 @@ You are an AI tasked with generating a **module name**, a **function summary**, 
 
 Each information layer may be missing. If pathways/GO terms are missing, do not infer them; you may briefly state that no pathway enrichment terms were provided. If literature is missing or generic, clearly distinguish evidence-backed statements from hypotheses.
 
+**Mandatory evidence rule:** Compare and integrate only the omics layers explicitly provided in the Actual Input. Treat `NULL` or an omitted layer as unavailable data, not as biological evidence. Do not infer results from a missing transcriptomic, proteomic, or metabolomic layer, and do not claim cross-omics agreement or disagreement involving an unavailable layer.
+
 Your goal is to generate a coherent biological interpretation of the module, emphasizing **cross-omics consistency** and **mechanistic links**, and how the module may relate to **{phenotype}**. The summary should read like a concise biological interpretation, not a list of annotations.
 
 ---
@@ -94,7 +96,7 @@ The multi-omics module is defined by the following components.
 
 ## **Final Output**
 
-When a component (especially pathways/terms) is not provided, keep the summary fully grounded in the available evidence (genes/metabolites/literature).
+When a component (especially pathways/terms) is not provided, keep the summary fully grounded in the available evidence (genes/metabolites/literature). Compare only the omics layers actually provided, and do not infer or discuss evidence from an unavailable layer.
 Please provide your response in **JSON format**, strictly following this structure:
 
 {

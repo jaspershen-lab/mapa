@@ -142,7 +142,16 @@ embedding_single_pdf <- function(pdf_path,
   full_text <- paste(text_pages, collapse = "\n")
   chunks <- split_into_chunks(full_text)
 
-  if (.Platform$OS.type == "windows") {
+  if (interactive()) {
+    message(
+      "Interactive R session detected; generating local-corpus embeddings ",
+      "sequentially to avoid forked processes."
+    )
+    embeddings <- lapply(chunks, function(chunk) {
+      Sys.sleep(1)
+      get_embedding(chunk, api_key, model_name = embedding_model, api_provider)
+    })
+  } else if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread) # Creates four clusters
     parallel::clusterExport(cl, varlist = c("chunks", "api_key", "embedding_model", "get_embedding","test_siliconflow_url"), envir = environment()) # Export the variables into the global environment of newly created clusters so that they can use them
     parallel::clusterEvalQ(cl, {
@@ -469,7 +478,20 @@ embedding_single_module_pubmed_search <- function(module_name,
   abstracts <- sapply(abstracts_and_titles_list, function(x) x$abstract)
 
   # 并行处理embeddings生成
-  if (.Platform$OS.type == "windows") {
+  if (interactive()) {
+    message(
+      "Interactive R session detected; generating PubMed embeddings ",
+      "sequentially to avoid forked processes."
+    )
+    embeddings <- lapply(abstracts, function(abstract) {
+      get_embedding(
+        abstract,
+        api_key,
+        model_name = embedding_model,
+        api_provider = api_provider
+      )
+    })
+  } else if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread)
     parallel::clusterExport(cl, varlist = c("get_embedding", "api_key", "embedding_model","test_siliconflow_url"),envir = environment())
     parallel::clusterEvalQ(cl, {

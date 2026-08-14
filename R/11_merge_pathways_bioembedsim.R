@@ -185,6 +185,22 @@ merge_pathways_bioembedsim <-
       node_data <- result %>% dplyr::rename(node = pathway_id)
     }
 
+    # Keep the node table synchronized with the embedding matrix. This is also
+    # a compatibility guard for legacy similarity objects in which unavailable
+    # or obsolete pathways were omitted only from the matrix.
+    embedded_ids <- base::union(
+      rownames(object$sim_matrix),
+      colnames(object$sim_matrix)
+    )
+    node_data <- node_data %>%
+      dplyr::filter(as.character(node) %in% embedded_ids)
+    if (nrow(node_data) == 0) {
+      stop(
+        "No harmonized pathway nodes are represented in the similarity matrix.",
+        call. = FALSE
+      )
+    }
+
     ## Get clustering results ====
     # cluster_result <- switch(cluster_method,
     #                          "binary cut" = merge_by_binary_cut(
