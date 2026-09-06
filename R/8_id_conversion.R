@@ -37,7 +37,8 @@
 #' This function converts between different identifier types for genes or metabolites.
 #' For genes, it uses the clusterProfiler package and the output will always contain
 #' four columns: ensembl, entrezid, uniprot, and symbol. For metabolites (human only),
-#' it converts between HMDB and KEGG identifiers using the metpath package.
+#' it converts between HMDB and KEGG identifiers using the metpath package and
+#' retrieves the KEGG compound name using KEGGREST.
 #'
 #' @param data Data frame containing the data with identifiers to be converted.
 #'   Must contain a column with the identifier type specified in \code{from_id_type}.
@@ -62,7 +63,8 @@
 #'   preserved from the original data. If no identifier is available for conversion,
 #'   NA is returned. If multiple identifiers are available for one from_id_type,
 #'   only the first match is retained. For metabolites, both HMDB and KEGG IDs are
-#'   added regardless of the input type. If return_orgdb = TRUE and ah_id is provided,
+#'   added regardless of the input type, together with a `cpd_name` column containing
+#'   the primary KEGG compound name. If return_orgdb = TRUE and ah_id is provided,
 #'   returns a list with elements 'data' (converted data) and 'orgdb' (OrgDb object).
 #'
 #' @examples
@@ -288,6 +290,54 @@ convert_id <- function(data = NULL,
       dplyr::filter(!is.na(.data[[tolower(from_id_type)]])) |>
       dplyr::left_join(id_lookup, by = tolower(from_id_type))
 
+    converted$cpd_name <- .get_kegg_compound_names(converted$keggid)
+
     return(converted)
   }
+}
+
+# Retrieve the primary KEGG name while preserving the input order and length.
+# KEGG's REST API accepts at most ten entries in one keggGet request.
+#' @noRd
+.get_kegg_compound_names <- function(kegg_ids,
+                                     kegg_get = KEGGREST::keggGet) {
+  query_ids <- sub("^cpd:", "", trimws(as.character(kegg_ids)))
+  valid_ids <- unique(query_ids[
+    !is.na(query_ids) & grepl("^C[0-9]{5}$", query_ids)
+  ])
+
+  compound_names <- stats::setNames(
+    rep(NA_character_, length(valid_ids)),
+    valid_ids
+  )
+
+  if (length(valid_ids) == 0L) {
+    return(rep(NA_character_, length(query_ids)))
+  }
+
+  chunks <- split(valid_ids, ceiling(seq_along(valid_ids) / 10L))
+  for (chunk in chunks) {
+    entries <- tryCatch(
+      kegg_get(paste0("cpd:", chunk)),
+      error = function(e) {
+        warning(
+          "Failed to retrieve KEGG compound names: ",
+          conditionMessage(e),
+          call. = FALSE
+        )
+        list()
+      }
+    )
+
+    for (entry in entries) {
+      entry_id <- unname(entry$ENTRY[1])
+      entry_name <- entry$NAME[1]
+      if (length(entry_id) == 1L && !is.na(entry_id) &&
+          length(entry_name) == 1L && !is.na(entry_name)) {
+        compound_names[[entry_id]] <- sub(";$", "", entry_name)
+      }
+    }
+  }
+
+  unname(compound_names[query_ids])
 }
