@@ -282,7 +282,24 @@ GPT_process_chunk <- function(chunks, module_list = NULL,
     mo_module <- multi_omics_module
   }
 
-  if (.Platform$OS.type == "windows") {
+  if (interactive()) {
+    message(
+      "Interactive R session detected; reranking document chunks ",
+      "sequentially to avoid forked processes."
+    )
+    reranked_results <- lapply(chunks, function(chunk) {
+      process_chunk(
+        chunk,
+        pathways = pathways,
+        molecules = molecules,
+        api_key = api_key,
+        model = model,
+        api_provider = api_provider,
+        thinkingBudget = thinkingBudget,
+        multi_omics_module = mo_module
+      )
+    })
+  } else if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread)
     parallel::clusterExport(
       cl,
@@ -708,4 +725,3 @@ retrieve_strategy <- function(pubmed_result,
   cat("\nAll modules processing completed!\n")
   return(result)
 }
-

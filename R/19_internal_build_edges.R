@@ -61,7 +61,22 @@ get_ppi_edges <- function(gene_symbols,
 
   symbol_df <- data.frame(symbol = unique(gene_symbols),
                           stringsAsFactors = FALSE)
-  mapped <- string_db$map(symbol_df, "symbol", removeUnmappedRows = TRUE)
+  # STRINGdb prints its unmapped-ID warning with cat() but without a trailing
+  # newline. Suppress that output and report the same information cleanly here.
+  mapped <- string_db$map(
+    symbol_df,
+    "symbol",
+    removeUnmappedRows = TRUE,
+    quiet = TRUE
+  )
+  unmapped_count <- sum(!symbol_df$symbol %in% mapped$symbol)
+  if (unmapped_count > 0) {
+    unmapped_percent <- as.integer(unmapped_count / nrow(symbol_df) * 100)
+    message(
+      "Warning: STRING could not map ", unmapped_percent,
+      "% of your identifiers."
+    )
+  }
   ppi <- string_db$get_interactions(mapped$STRING_id)
 
   ppi |>
@@ -84,10 +99,10 @@ get_ppi_edges <- function(gene_symbols,
 #' @return A data frame with columns \code{symbol} and \code{uniprotkb}.
 #' @noRd
 .map_symbol_to_uniprot <- function(gene_symbols) {
-  ensembl  <- biomaRt::useMart("ensembl")
-  datasets <- biomaRt::listDatasets(ensembl)
-  dataset_name <- datasets$dataset[grepl("hsapiens_", datasets$dataset)]
-  mart <- biomaRt::useMart("ensembl", dataset = dataset_name)
+  mart <- biomaRt::useEnsembl(
+    biomart = "ensembl",
+    dataset = "hsapiens_gene_ensembl"
+  )
 
   sym_attr <- if ("hgnc_symbol" %in% biomaRt::listAttributes(mart)$name) {
     "hgnc_symbol"

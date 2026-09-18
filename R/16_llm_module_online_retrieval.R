@@ -23,9 +23,28 @@
 #'
 #' @noRd
 pubmed_search <- function(processed_data, phenotype = NULL, chunk_size = 5, years = 5, retmax = 10, thread = 10) {
-  if (.Platform$OS.type == "windows") {
+  process_one_module <- function(module_name) {
+    module <- processed_data[[module_name]]
+    withCallingHandlers(
+      process_module(module_name, module, phenotype, chunk_size, years, retmax),
+      warning = function(w) invokeRestart("muffleWarning")
+    )
+  }
+
+  if (interactive()) {
+    message(
+      "Interactive R session detected; using sequential PubMed search ",
+      "to avoid forked processes."
+    )
+    results <- lapply(names(processed_data), process_one_module)
+  } else if (.Platform$OS.type == "windows") {
     cl <- parallel::makeCluster(thread)  # Creates clusters based on available cores
-    parallel::clusterExport(cl, varlist = c("process_module", "safe_entrez_search", "perform_query", "build_anchor_block", "test_siliconflow_url"))
+    parallel::clusterExport(
+      cl,
+      varlist = c("process_module", "safe_entrez_search", "perform_query",
+                  "build_anchor_block", "test_siliconflow_url"),
+      envir = environment()
+    )
     parallel::clusterExport(cl, varlist = c("phenotype", "chunk_size", "years", "retmax", "thread"), envir = environment())
     parallel::clusterEvalQ(cl, {
       library(rentrez)
@@ -40,14 +59,11 @@ pubmed_search <- function(processed_data, phenotype = NULL, chunk_size = 5, year
 
     parallel::stopCluster(cl)
   } else {
-    results <- pbmcapply::pbmclapply(names(processed_data), function(module_name) {
-      module <- processed_data[[module_name]]
-      result <- withCallingHandlers(
-        process_module(module_name, module, phenotype, chunk_size, years, retmax),
-        warning = function(w) invokeRestart("muffleWarning")
-      )
-      return(result)
-    }, mc.cores = thread)
+    results <- pbmcapply::pbmclapply(
+      names(processed_data),
+      process_one_module,
+      mc.cores = thread
+    )
 
     # Unwrap any warning-wrapped results from pbmclapply
     results <- lapply(results, function(r) {

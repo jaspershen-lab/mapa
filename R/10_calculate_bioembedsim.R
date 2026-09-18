@@ -107,7 +107,8 @@
 #'   embeddings from the MAPA pathway embedding database, which is downloaded automatically on
 #'   first use. \code{"realtime"} generates embeddings on-the-fly using the specified API
 #'   provider; in this case \code{api_provider}, \code{text_embedding_model}, and \code{api_key}
-#'   are required and no external text APIs (QuickGO, KEGG, Reactome) are called in local mode.
+#'   are required. When GO results are included, QuickGO is queried in either mode to verify
+#'   current term status; local mode does not use external APIs to generate embeddings.
 #' @param db_version Character string. Version of the pre-built embedding database to use
 #'   (default \code{"v1"}). Only relevant when \code{embedding_source = "local_db"}.
 #' @param api_provider Character string specifying the API provider for text embeddings.
@@ -133,8 +134,9 @@
 #' @param save_to_local Logical. Whether to save the resulting data to local files. Default is `FALSE`.
 #' @param path Character. The directory path where intermediate results will be saved, if `save_to_local = TRUE`. Default is "result".
 #'
-#' @return A list containing a matrix of pairwise cosine similarity values between pathways and
-#' an object of class "functional_module" with updated parameter information.
+#' @return A list containing a matrix of pairwise cosine similarity values, an
+#'   updated `functional_module` object, and a
+#'   `pathway_version_harmonization_report` data frame.
 #'
 #' @details
 #' The function works in three main steps:
@@ -214,6 +216,17 @@ get_bioembedsim <-
 
     embedding_source <- match.arg(embedding_source)
     database <- match.arg(database, several.ok = TRUE)
+
+    pathway_version_harmonization_report <-
+      .empty_pathway_version_harmonization_report()
+    if (query_type == "gene" && "go" %in% database &&
+        !is.null(object@enrichment_go_result)) {
+      message("Harmonizing GO term versions ...")
+      harmonized_go <- .harmonize_go_result_object(object@enrichment_go_result)
+      object@enrichment_go_result <- harmonized_go$object
+      pathway_version_harmonization_report <-
+        harmonized_go$pathway_version_harmonization_report
+    }
 
     if (embedding_source == "realtime") {
       if (missing(api_provider)) {
@@ -407,6 +420,8 @@ get_bioembedsim <-
 
     slot(object, "process_info") <-
       process_info
+    attr(object, "pathway_version_harmonization_report") <-
+      pathway_version_harmonization_report
 
     message("Biotext embedding and similarity calculation finished.\n")
 
@@ -419,9 +434,19 @@ get_bioembedsim <-
         recursive = TRUE
       )
       save(sim_matrix, file = file.path(path, "intermediate_data/sim_matrix.RData"))
+      utils::write.csv(
+        pathway_version_harmonization_report,
+        file = file.path(path, "pathway_version_harmonization_report.csv"),
+        row.names = FALSE
+      )
     }
 
-    return(list(sim_matrix = sim_matrix, enriched_pathway = object))
+    return(list(
+      sim_matrix = sim_matrix,
+      enriched_pathway = object,
+      pathway_version_harmonization_report =
+        pathway_version_harmonization_report
+    ))
 }
 
 # Step1: Extract text info =====
@@ -1199,4 +1224,3 @@ calculate_cosine_sim <- function(m){
   cosine_sim <- dot_product / norm_product
   return(cosine_sim)
 }
-

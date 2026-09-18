@@ -43,14 +43,16 @@ entrezid, uniprot, and symbol. The column corresponding to from_id_type is
 preserved from the original data. If no identifier is available for conversion,
 NA is returned. If multiple identifiers are available for one from_id_type,
 only the first match is retained. For metabolites, both HMDB and KEGG IDs are
-added regardless of the input type. If return_orgdb = TRUE and ah_id is provided,
+added regardless of the input type, together with a \code{cpd_name} column containing
+the primary KEGG compound name. If return_orgdb = TRUE and ah_id is provided,
 returns a list with elements 'data' (converted data) and 'orgdb' (OrgDb object).
 }
 \description{
 This function converts between different identifier types for genes or metabolites.
 For genes, it uses the clusterProfiler package and the output will always contain
 four columns: ensembl, entrezid, uniprot, and symbol. For metabolites (human only),
-it converts between HMDB and KEGG identifiers using the metpath package.
+it converts between HMDB and KEGG identifiers using the metpath package and
+retrieves the KEGG compound name using KEGGREST.
 }
 \examples{
 \dontrun{
